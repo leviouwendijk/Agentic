@@ -1,0 +1,26 @@
+import Position
+
+public struct WriteFileToolOutput: Sendable, Codable, Hashable {
+    public let path: String
+    public let bytesWritten: Int
+    public let diffSummary: FileDiffSummary
+    public let changeCount: Int
+    public let originalChangedLineRanges: [LineRange]
+    public let editedChangedLineRanges: [LineRange]
+
+    public init(
+        path: String,
+        bytesWritten: Int,
+        diffSummary: FileDiffSummary,
+        changeCount: Int,
+        originalChangedLineRanges: [LineRange],
+        editedChangedLineRanges: [LineRange]
+    ) {
+        self.path = path
+        self.bytesWritten = bytesWritten
+        self.diffSummary = diffSummary
+        self.changeCount = changeCount
+        self.originalChangedLineRanges = originalChangedLineRanges
+        self.editedChangedLineRanges = editedChangedLineRanges
+    }
+}
