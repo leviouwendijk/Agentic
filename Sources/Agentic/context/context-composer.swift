@@ -59,6 +59,15 @@ public struct ContextComposer: Sendable {
                     sections.append(rendered)
                     appendedFileContext = true
                 }
+
+            case .skill(let skill):
+                let text = skill.contextText.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+
+                if !text.isEmpty {
+                    sections.append(text)
+                }
             }
         }
 

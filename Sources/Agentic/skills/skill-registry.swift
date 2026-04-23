@@ -13,7 +13,11 @@ public struct SkillRegistry: Sendable {
 
     public var skills_sorted: [AgentSkill] {
         skills.values.sorted { lhs, rhs in
-            lhs.name < rhs.name
+            if lhs.name == rhs.name {
+                return lhs.id < rhs.id
+            }
+
+            return lhs.name < rhs.name
         }
     }
 
@@ -63,5 +67,50 @@ public struct SkillRegistry: Sendable {
         skills.values.first { skill in
             skill.name == name
         }
+    }
+
+    public func skill(
+        matching value: String
+    ) -> AgentSkill? {
+        if let exact = skill(id: value) {
+            return exact
+        }
+
+        if let exact = skill(named: value) {
+            return exact
+        }
+
+        let normalized = value.lowercased()
+
+        return skills.values.first { skill in
+            skill.id.lowercased() == normalized
+                || skill.name.lowercased() == normalized
+        }
+    }
+
+    public func requireSkill(
+        matching value: String
+    ) throws -> AgentSkill {
+        guard let skill = skill(matching: value) else {
+            throw SkillRegistryError.unknownSkill(value)
+        }
+
+        return skill
+    }
+
+    public func descriptions() -> String {
+        skills_sorted
+            .map(\.descriptionLine)
+            .joined(separator: "\n")
+    }
+
+    public func promptCatalog(
+        title: String = "Skills available:"
+    ) -> String {
+        guard !isEmpty else {
+            return "\(title)\n- none"
+        }
+
+        return "\(title)\n\(descriptions())"
     }
 }

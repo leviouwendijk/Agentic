@@ -22,21 +22,70 @@ public struct SkillLoader: Sendable {
                 continue
             }
 
-            let body = try String(contentsOf: fileURL, encoding: .utf8)
-            let name = fileURL.deletingLastPathComponent().lastPathComponent
+            let text = try String(
+                contentsOf: fileURL,
+                encoding: .utf8
+            )
+            let document = SkillFrontmatter.parse(text)
+            let directoryName = fileURL
+                .deletingLastPathComponent()
+                .lastPathComponent
+
+            let id = normalizedMetadataValue(
+                document.metadata["id"]
+            )
+                ?? normalizedMetadataValue(
+                    document.metadata["name"]
+                )
+                ?? directoryName
+
+            let name = normalizedMetadataValue(
+                document.metadata["name"]
+            ) ?? id
+
+            let summary = normalizedMetadataValue(
+                document.metadata["summary"]
+            )
+                ?? normalizedMetadataValue(
+                    document.metadata["description"]
+                )
+                ?? ""
 
             skills.append(
                 AgentSkill(
-                    id: name,
+                    id: id,
                     name: name,
-                    summary: "",
-                    body: body
+                    summary: summary,
+                    body: document.body,
+                    metadata: document.metadata
                 )
             )
         }
 
         return skills.sorted { lhs, rhs in
-            lhs.name < rhs.name
+            if lhs.name == rhs.name {
+                return lhs.id < rhs.id
+            }
+
+            return lhs.name < rhs.name
         }
+    }
+}
+
+private extension SkillLoader {
+    func normalizedMetadataValue(
+        _ value: String?
+    ) -> String? {
+        let trimmed = value?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard let trimmed,
+              !trimmed.isEmpty
+        else {
+            return nil
+        }
+
+        return trimmed
     }
 }
