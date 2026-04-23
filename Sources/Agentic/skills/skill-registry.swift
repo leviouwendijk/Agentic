@@ -1,12 +1,12 @@
 public struct SkillRegistry: Sendable {
-    private var skills: [String: AgentSkill]
+    private var skills: [AgentSkillIdentifier: AgentSkill]
 
     public init(
         skills: [AgentSkill] = []
     ) {
         self.skills = Dictionary(
             uniqueKeysWithValues: skills.map { skill in
-                (skill.id, skill)
+                (skill.identifier, skill)
             }
         )
     }
@@ -14,7 +14,7 @@ public struct SkillRegistry: Sendable {
     public var skills_sorted: [AgentSkill] {
         skills.values.sorted { lhs, rhs in
             if lhs.name == rhs.name {
-                return lhs.id < rhs.id
+                return lhs.identifier.rawValue < rhs.identifier.rawValue
             }
 
             return lhs.name < rhs.name
@@ -32,11 +32,13 @@ public struct SkillRegistry: Sendable {
     public mutating func register(
         _ skill: AgentSkill
     ) throws {
-        guard skills[skill.id] == nil else {
-            throw SkillRegistryError.duplicateSkill(skill.id)
+        guard skills[skill.identifier] == nil else {
+            throw SkillRegistryError.duplicateSkill(
+                skill.identifier.rawValue
+            )
         }
 
-        skills[skill.id] = skill
+        skills[skill.identifier] = skill
     }
 
     public mutating func register(
@@ -56,9 +58,17 @@ public struct SkillRegistry: Sendable {
     }
 
     public func skill(
+        identifiedBy identifier: AgentSkillIdentifier
+    ) -> AgentSkill? {
+        skills[identifier]
+    }
+
+    public func skill(
         id: String
     ) -> AgentSkill? {
-        skills[id]
+        skill(
+            identifiedBy: .init(id)
+        )
     }
 
     public func skill(
@@ -83,7 +93,7 @@ public struct SkillRegistry: Sendable {
         let normalized = value.lowercased()
 
         return skills.values.first { skill in
-            skill.id.lowercased() == normalized
+            skill.identifier.rawValue.lowercased() == normalized
                 || skill.name.lowercased() == normalized
         }
     }
@@ -100,7 +110,9 @@ public struct SkillRegistry: Sendable {
 
     public func descriptions() -> String {
         skills_sorted
-            .map(\.descriptionLine)
+            .map { skill in
+                skill.descriptionLine
+            }
             .joined(separator: "\n")
     }
 

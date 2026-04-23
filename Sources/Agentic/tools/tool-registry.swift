@@ -1,12 +1,12 @@
 public struct ToolRegistry: Sendable {
-    private var tools: [String: any AgentTool]
+    private var tools: [AgentToolIdentifier: any AgentTool]
 
     public init(
         tools: [any AgentTool] = []
     ) {
         self.tools = Dictionary(
             uniqueKeysWithValues: tools.map { tool in
-                (tool.definition.name, tool)
+                (tool.identifier, tool)
             }
         )
     }
@@ -28,13 +28,15 @@ public struct ToolRegistry: Sendable {
     public mutating func register(
         _ tool: any AgentTool
     ) throws {
-        let name = tool.definition.name
+        let identifier = tool.identifier
 
-        guard tools[name] == nil else {
-            throw ToolRegistryError.duplicateTool(name)
+        guard tools[identifier] == nil else {
+            throw ToolRegistryError.duplicateTool(
+                identifier.rawValue
+            )
         }
 
-        tools[name] = tool
+        tools[identifier] = tool
     }
 
     public mutating func register(
@@ -62,16 +64,24 @@ public struct ToolRegistry: Sendable {
     }
 
     public func tool(
+        identifiedBy identifier: AgentToolIdentifier
+    ) -> (any AgentTool)? {
+        tools[identifier]
+    }
+
+    public func tool(
         named name: String
     ) -> (any AgentTool)? {
-        tools[name]
+        tool(
+            identifiedBy: .init(name)
+        )
     }
 
     public func preflight(
         _ toolCall: AgentToolCall,
         workspace: AgentWorkspace? = nil
     ) async throws -> ToolPreflight {
-        guard let tool = tools[toolCall.name] else {
+        guard let tool = tool(named: toolCall.name) else {
             throw ToolDispatchError.unknownTool(toolCall.name)
         }
 
@@ -83,9 +93,9 @@ public struct ToolRegistry: Sendable {
 
     public func call(
         _ toolCall: AgentToolCall,
-        workspace: AgentWorkspace? = nil
+        workspace: AgentWorkspace?
     ) async throws -> AgentToolResult {
-        guard let tool = tools[toolCall.name] else {
+        guard let tool = tool(named: toolCall.name) else {
             throw ToolDispatchError.unknownTool(toolCall.name)
         }
 
@@ -96,7 +106,7 @@ public struct ToolRegistry: Sendable {
 
         return AgentToolResult(
             toolCallID: toolCall.id,
-            name: toolCall.name,
+            name: tool.identifier.rawValue,
             output: output
         )
     }

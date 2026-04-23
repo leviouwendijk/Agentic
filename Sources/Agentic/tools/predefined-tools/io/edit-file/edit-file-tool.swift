@@ -2,18 +2,11 @@ import Primitives
 import Writers
 
 public struct EditFileTool: AgentTool {
-    public let definition: AgentToolDefinition
+    public static let identifier: AgentToolIdentifier = "edit_file"
+    public static let description = "Apply one or more structured edit operations to a file in the workspace."
+    public static let risk: ActionRisk = .boundedmutate
 
-    public var actionRisk: ActionRisk {
-        .boundedmutate
-    }
-
-    public init() {
-        self.definition = .init(
-            name: "edit_file",
-            description: "Apply one or more structured edit operations to a file in the workspace."
-        )
-    }
+    public init() {}
 
     public func preflight(
         input: JSONValue,
@@ -36,13 +29,13 @@ public struct EditFileTool: AgentTool {
         }
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             targetPaths: [targetPath],
             summary: "Apply \(decoded.operations.count) structured edit operation(s) to \(targetPath)",
             estimatedWriteCount: decoded.operations.isEmpty ? 0 : 1,
-            sideEffects: actionRisk.defaultSideEffects
+            sideEffects: risk.defaultSideEffects
         )
     }
 
@@ -52,7 +45,7 @@ public struct EditFileTool: AgentTool {
     ) async throws -> JSONValue {
         let workspace = try FileToolSupport.requireWorkspace(
             workspace,
-            toolName: definition.name
+            toolName: name
         )
 
         let decoded = try JSONToolBridge.decode(

@@ -2,7 +2,7 @@ import Foundation
 
 public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertible {
     public let toolName: String
-    public let actionRisk: ActionRisk
+    public let risk: ActionRisk
     public let workspaceRoot: String?
     public let targetPaths: [String]
     public let summary: String
@@ -15,7 +15,7 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
 
     public init(
         toolName: String,
-        actionRisk: ActionRisk,
+        risk: ActionRisk,
         workspaceRoot: String? = nil,
         targetPaths: [String] = [],
         summary: String,
@@ -27,7 +27,7 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
         limits: ExecutionLimits? = nil
     ) {
         self.toolName = toolName
-        self.actionRisk = actionRisk
+        self.risk = risk
         self.workspaceRoot = workspaceRoot
         self.targetPaths = targetPaths
         self.summary = summary
@@ -42,7 +42,7 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
     public var description: String {
         var lines: [String] = [
             "tool: \(toolName)",
-            "risk: \(actionRisk.rawValue)",
+            "risk: \(risk.rawValue)",
             "summary: \(summary)"
         ]
 

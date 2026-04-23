@@ -1,33 +1,37 @@
 import Primitives
 
 public struct AgentToolDefinition: Sendable, Codable, Hashable, Identifiable {
-    public let id: String
-    public let name: String
+    public let identifier: AgentToolIdentifier
     public let description: String
     public let inputSchema: JSONValue?
 
     public init(
-        id: String,
-        name: String,
+        identifier: AgentToolIdentifier,
         description: String,
         inputSchema: JSONValue? = nil
     ) {
-        self.id = id
-        self.name = name
+        self.identifier = identifier
         self.description = description
         self.inputSchema = inputSchema
     }
 }
 
 public extension AgentToolDefinition {
+    var id: AgentToolIdentifier {
+        identifier
+    }
+
+    var name: String {
+        identifier.rawValue
+    }
+
     init(
         name: String,
         description: String,
         inputSchema: JSONValue? = nil
     ) {
         self.init(
-            id: name,
-            name: name,
+            identifier: .init(name),
             description: description,
             inputSchema: inputSchema
         )

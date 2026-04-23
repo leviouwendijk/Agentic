@@ -53,18 +53,20 @@ public struct SkillLoader: Sendable {
 
             skills.append(
                 AgentSkill(
-                    id: id,
+                    identifier: .init(id),
                     name: name,
                     summary: summary,
                     body: document.body,
-                    metadata: document.metadata
+                    metadata: .init(
+                        attributes: document.metadata
+                    )
                 )
             )
         }
 
         return skills.sorted { lhs, rhs in
             if lhs.name == rhs.name {
-                return lhs.id < rhs.id
+                return lhs.identifier.rawValue < rhs.identifier.rawValue
             }
 
             return lhs.name < rhs.name

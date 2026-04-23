@@ -1,18 +1,18 @@
 public struct AgentSkill: Sendable, Codable, Hashable, Identifiable {
-    public let id: String
+    public let identifier: AgentSkillIdentifier
     public let name: String
     public let summary: String
     public let body: String
-    public let metadata: [String: String]
+    public let metadata: AgentSkillMetadata
 
     public init(
-        id: String,
+        identifier: AgentSkillIdentifier,
         name: String,
         summary: String,
         body: String,
-        metadata: [String: String] = [:]
+        metadata: AgentSkillMetadata = .empty
     ) {
-        self.id = id
+        self.identifier = identifier
         self.name = name
         self.summary = summary
         self.body = body
@@ -21,22 +21,26 @@ public struct AgentSkill: Sendable, Codable, Hashable, Identifiable {
 }
 
 public extension AgentSkill {
+    var id: AgentSkillIdentifier {
+        identifier
+    }
+
     var descriptionLine: String {
         let renderedSummary = summary.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
 
         if renderedSummary.isEmpty {
-            return "- \(id): \(name)"
+            return "- \(identifier.rawValue): \(name)"
         }
 
-        return "- \(id): \(renderedSummary)"
+        return "- \(identifier.rawValue): \(renderedSummary)"
     }
 
     var contextText: String {
         var sections: [String] = [
             "# Skill: \(name)",
-            "Skill ID: \(id)"
+            "Skill ID: \(identifier.rawValue)"
         ]
 
         let renderedSummary = summary.trimmingCharacters(

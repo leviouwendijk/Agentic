@@ -13,7 +13,7 @@ public struct ToolExecutionPolicy: Sendable, Codable, Hashable {
     public func evaluate(
         _ preflight: ToolPreflight
     ) -> ApprovalRequirement {
-        if preflight.actionRisk == .forbidden {
+        if preflight.risk == .forbidden {
             return .denied_forbidden
         }
 
@@ -32,7 +32,7 @@ public struct ToolExecutionPolicy: Sendable, Codable, Hashable {
             return .needs_human_review
 
         case .auto_observe:
-            switch preflight.actionRisk {
+            switch preflight.risk {
             case .observe:
                 return .no_approval_needed
 
@@ -44,7 +44,7 @@ public struct ToolExecutionPolicy: Sendable, Codable, Hashable {
             }
 
         case .auto_bounded_mutate:
-            switch preflight.actionRisk {
+            switch preflight.risk {
             case .observe, .boundedmutate:
                 return .no_approval_needed
 
@@ -53,7 +53,7 @@ public struct ToolExecutionPolicy: Sendable, Codable, Hashable {
             }
 
         case .review_privileged:
-            switch preflight.actionRisk {
+            switch preflight.risk {
             case .observe, .boundedmutate:
                 return .no_approval_needed
 

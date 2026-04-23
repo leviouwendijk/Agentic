@@ -3,14 +3,14 @@ public struct LoadSkillToolOutput: Sendable, Codable, Hashable {
     public let name: String
     public let summary: String
     public let content: String
-    public let metadata: [String: String]?
+    public let metadata: AgentSkillMetadata?
 
     public init(
         id: String,
         name: String,
         summary: String,
         content: String,
-        metadata: [String: String]?
+        metadata: AgentSkillMetadata?
     ) {
         self.id = id
         self.name = name

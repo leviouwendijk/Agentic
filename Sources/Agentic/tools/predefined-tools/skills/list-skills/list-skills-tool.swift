@@ -1,20 +1,15 @@
 import Primitives
 
 public struct ListSkillsTool: AgentTool {
-    public let definition: AgentToolDefinition
-    public let registry: SkillRegistry
+    public static let identifier: AgentToolIdentifier = "list_skills"
+    public static let description = "List available skills and their summaries."
+    public static let risk: ActionRisk = .observe
 
-    public var actionRisk: ActionRisk {
-        .observe
-    }
+    public let registry: SkillRegistry
 
     public init(
         registry: SkillRegistry
     ) {
-        self.definition = .init(
-            name: "list_skills",
-            description: "List available skills and their summaries."
-        )
         self.registry = registry
     }
 
@@ -39,11 +34,11 @@ public struct ListSkillsTool: AgentTool {
         }
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             summary: summary,
-            sideEffects: actionRisk.defaultSideEffects
+            sideEffects: risk.defaultSideEffects
         )
     }
 
@@ -70,14 +65,14 @@ public struct ListSkillsTool: AgentTool {
 
             let normalized = query.lowercased()
 
-            return skill.id.lowercased().contains(normalized)
+            return skill.identifier.rawValue.lowercased().contains(normalized)
                 || skill.name.lowercased().contains(normalized)
                 || skill.summary.lowercased().contains(normalized)
         }
 
         let skills = selected.map { skill in
             ListedSkill(
-                id: skill.id,
+                id: skill.identifier.rawValue,
                 name: skill.name,
                 summary: skill.summary,
                 metadata: skill.metadata,
@@ -90,7 +85,9 @@ public struct ListSkillsTool: AgentTool {
                 skills: skills,
                 count: skills.count,
                 catalog: selected
-                    .map(\.descriptionLine)
+                    .map { skill in
+                        skill.descriptionLine
+                    }
                     .joined(separator: "\n")
             )
         )

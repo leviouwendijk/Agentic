@@ -3,18 +3,11 @@ import Path
 import PathParsing
 
 public struct ScanPathsTool: AgentTool {
-    public let definition: AgentToolDefinition
+    public static let identifier: AgentToolIdentifier = "scan_paths"
+    public static let description = "Scan paths inside the workspace using PathScan."
+    public static let risk: ActionRisk = .observe
 
-    public var actionRisk: ActionRisk {
-        .observe
-    }
-
-    public init() {
-        self.definition = .init(
-            name: "scan_paths",
-            description: "Scan paths inside the workspace using PathScan."
-        )
-    }
+    public init() {}
 
     public func preflight(
         input: JSONValue,
@@ -47,8 +40,8 @@ public struct ScanPathsTool: AgentTool {
         )
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             targetPaths: targetPaths,
             summary: decoded.excludes.isEmpty
@@ -63,7 +56,7 @@ public struct ScanPathsTool: AgentTool {
     ) async throws -> JSONValue {
         let workspace = try FileToolSupport.requireWorkspace(
             workspace,
-            toolName: definition.name
+            toolName: name
         )
 
         let decoded = try JSONToolBridge.decode(
@@ -140,8 +133,8 @@ private extension ScanPathsTool {
     ) throws -> ScopedPath? {
         guard let trimmedPath = input.path?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-            !trimmedPath.isEmpty,
-            trimmedPath != "." else {
+              !trimmedPath.isEmpty,
+              trimmedPath != "." else {
             return nil
         }
 
@@ -157,7 +150,7 @@ private extension ScanPathsTool {
             of: scoped
         ) == .file {
             throw PredefinedFileToolError.invalidValue(
-                tool: "scan_paths",
+                tool: name,
                 field: "path",
                 reason: "must reference a directory, not a file"
             )

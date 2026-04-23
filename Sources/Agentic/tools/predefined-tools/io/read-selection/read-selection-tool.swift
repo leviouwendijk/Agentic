@@ -2,18 +2,11 @@ import Position
 import Primitives
 
 public struct ReadSelectionTool: AgentTool {
-    public let definition: AgentToolDefinition
+    public static let identifier: AgentToolIdentifier = "read_selection"
+    public static let description = "Read one or more content selections from a file in the workspace."
+    public static let risk: ActionRisk = .observe
 
-    public var actionRisk: ActionRisk {
-        .observe
-    }
-
-    public init() {
-        self.definition = .init(
-            name: "read_selection",
-            description: "Read one or more content selections from a file in the workspace."
-        )
-    }
+    public init() {}
 
     public func preflight(
         input: JSONValue,
@@ -36,8 +29,8 @@ public struct ReadSelectionTool: AgentTool {
         }
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             targetPaths: [targetPath],
             summary: summary(
@@ -53,7 +46,7 @@ public struct ReadSelectionTool: AgentTool {
     ) async throws -> JSONValue {
         let workspace = try FileToolSupport.requireWorkspace(
             workspace,
-            toolName: definition.name
+            toolName: name
         )
 
         let decoded = try JSONToolBridge.decode(

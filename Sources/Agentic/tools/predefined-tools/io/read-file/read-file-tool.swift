@@ -1,18 +1,11 @@
 import Primitives
 
 public struct ReadFileTool: AgentTool {
-    public let definition: AgentToolDefinition
+    public static let identifier: AgentToolIdentifier = "read_file"
+    public static let description = "Read a file from the workspace, optionally constrained to a line window."
+    public static let risk: ActionRisk = .observe
 
-    public var actionRisk: ActionRisk {
-        .observe
-    }
-
-    public init() {
-        self.definition = .init(
-            name: "read_file",
-            description: "Read a file from the workspace, optionally constrained to a line window."
-        )
-    }
+    public init() {}
 
     public func preflight(
         input: JSONValue,
@@ -41,8 +34,8 @@ public struct ReadFileTool: AgentTool {
         }
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             targetPaths: [targetPath],
             summary: summary(
@@ -58,7 +51,7 @@ public struct ReadFileTool: AgentTool {
     ) async throws -> JSONValue {
         let workspace = try FileToolSupport.requireWorkspace(
             workspace,
-            toolName: definition.name
+            toolName: name
         )
 
         let decoded = try JSONToolBridge.decode(

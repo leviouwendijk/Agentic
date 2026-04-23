@@ -1,20 +1,15 @@
 import Primitives
 
 public struct LoadSkillTool: AgentTool {
-    public let definition: AgentToolDefinition
-    public let registry: SkillRegistry
+    public static let identifier: AgentToolIdentifier = "load_skill"
+    public static let description = "Load the full instructions for one available skill by id or name."
+    public static let risk: ActionRisk = .observe
 
-    public var actionRisk: ActionRisk {
-        .observe
-    }
+    public let registry: SkillRegistry
 
     public init(
         registry: SkillRegistry
     ) {
-        self.definition = .init(
-            name: "load_skill",
-            description: "Load the full instructions for one available skill by id or name."
-        )
         self.registry = registry
     }
 
@@ -32,11 +27,11 @@ public struct LoadSkillTool: AgentTool {
         )
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             summary: "Load skill '\(lookup)'.",
-            sideEffects: actionRisk.defaultSideEffects
+            sideEffects: risk.defaultSideEffects
         )
     }
 
@@ -58,7 +53,7 @@ public struct LoadSkillTool: AgentTool {
 
         return try JSONToolBridge.encode(
             LoadSkillToolOutput(
-                id: skill.id,
+                id: skill.identifier.rawValue,
                 name: skill.name,
                 summary: skill.summary,
                 content: skill.contextText,

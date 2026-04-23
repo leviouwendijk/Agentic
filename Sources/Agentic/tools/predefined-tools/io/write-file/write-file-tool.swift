@@ -1,18 +1,11 @@
 import Primitives
 
 public struct WriteFileTool: AgentTool {
-    public let definition: AgentToolDefinition
+    public static let identifier: AgentToolIdentifier = "write_file"
+    public static let description = "Replace the entire contents of a file in the workspace."
+    public static let risk: ActionRisk = .boundedmutate
 
-    public var actionRisk: ActionRisk {
-        .boundedmutate
-    }
-
-    public init() {
-        self.definition = .init(
-            name: "write_file",
-            description: "Replace the entire contents of a file in the workspace."
-        )
-    }
+    public init() {}
 
     public func preflight(
         input: JSONValue,
@@ -35,14 +28,14 @@ public struct WriteFileTool: AgentTool {
         }
 
         return .init(
-            toolName: definition.name,
-            actionRisk: actionRisk,
+            toolName: name,
+            risk: risk,
             workspaceRoot: workspace?.rootURL.path,
             targetPaths: [targetPath],
             summary: "Replace entire file contents at \(targetPath)",
             estimatedWriteCount: 1,
             estimatedByteCount: decoded.content.utf8.count,
-            sideEffects: actionRisk.defaultSideEffects
+            sideEffects: risk.defaultSideEffects
         )
     }
 
@@ -52,7 +45,7 @@ public struct WriteFileTool: AgentTool {
     ) async throws -> JSONValue {
         let workspace = try FileToolSupport.requireWorkspace(
             workspace,
-            toolName: definition.name
+            toolName: name
         )
 
         let decoded = try JSONToolBridge.decode(
