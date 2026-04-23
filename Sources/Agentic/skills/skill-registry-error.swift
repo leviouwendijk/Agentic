@@ -1,0 +1,12 @@
+import Foundation
+
+public enum SkillRegistryError: Error, Sendable, LocalizedError {
+    case duplicateSkill(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .duplicateSkill(let id):
+            return "A skill with id '\(id)' is already registered."
+        }
+    }
+}
