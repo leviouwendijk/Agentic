@@ -24,12 +24,23 @@ public struct EditFileTool: AgentTool {
             from: input
         )
 
+        let targetPath: String
+        if let workspace {
+            targetPath = try workspace.resolve(
+                decoded.path
+            ).presentingRelative(
+                filetype: true
+            )
+        } else {
+            targetPath = decoded.path
+        }
+
         return .init(
             toolName: definition.name,
             actionRisk: actionRisk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [decoded.path],
-            summary: "Apply \(decoded.operations.count) structured edit operation(s) to \(decoded.path)",
+            targetPaths: [targetPath],
+            summary: "Apply \(decoded.operations.count) structured edit operation(s) to \(targetPath)",
             estimatedWriteCount: decoded.operations.isEmpty ? 0 : 1,
             sideEffects: actionRisk.defaultSideEffects
         )

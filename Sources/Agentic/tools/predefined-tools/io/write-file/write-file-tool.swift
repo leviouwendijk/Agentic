@@ -23,12 +23,23 @@ public struct WriteFileTool: AgentTool {
             from: input
         )
 
+        let targetPath: String
+        if let workspace {
+            targetPath = try workspace.resolve(
+                decoded.path
+            ).presentingRelative(
+                filetype: true
+            )
+        } else {
+            targetPath = decoded.path
+        }
+
         return .init(
             toolName: definition.name,
             actionRisk: actionRisk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [decoded.path],
-            summary: "Replace entire file contents at \(decoded.path)",
+            targetPaths: [targetPath],
+            summary: "Replace entire file contents at \(targetPath)",
             estimatedWriteCount: 1,
             estimatedByteCount: decoded.content.utf8.count,
             sideEffects: actionRisk.defaultSideEffects

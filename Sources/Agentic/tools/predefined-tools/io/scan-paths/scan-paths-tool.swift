@@ -25,26 +25,26 @@ public struct ScanPathsTool: AgentTool {
             from: input
         )
 
+        let directory = try resolvedDirectory(
+            from: decoded,
+            workspace: workspace
+        )
+
         let targetPaths: [String]
-        if let path = decoded.path?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !path.isEmpty,
-           path != "." {
-            targetPaths = [path]
+        if let directory {
+            targetPaths = [
+                directory.presentingRelative(
+                    filetype: true
+                )
+            ]
         } else {
             targetPaths = []
         }
 
-        let summary: String
-        if let target = targetPaths.first {
-            summary = decoded.recursive
-                ? "Recursively scan \(target)"
-                : "Scan direct entries in \(target)"
-        } else {
-            summary = decoded.recursive
-                ? "Recursively scan workspace root"
-                : "Scan direct entries in workspace root"
-        }
+        let summary = summary(
+            for: decoded,
+            directory: directory
+        )
 
         return .init(
             toolName: definition.name,
@@ -71,19 +71,10 @@ public struct ScanPathsTool: AgentTool {
             from: input
         )
 
-        let trimmedPath = decoded.path?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let directory: ScopedPath?
-        if let trimmedPath,
-           !trimmedPath.isEmpty,
-           trimmedPath != "." {
-            directory = try workspace.resolve(
-                trimmedPath
-            )
-        } else {
-            directory = nil
-        }
+        let directory = try resolvedDirectory(
+            from: decoded,
+            workspace: workspace
+        )
 
         let includeRaw: String
         if let directory {
@@ -139,5 +130,54 @@ public struct ScanPathsTool: AgentTool {
                 truncated: truncated
             )
         )
+    }
+}
+
+private extension ScanPathsTool {
+    func resolvedDirectory(
+        from input: ScanPathsToolInput,
+        workspace: AgentWorkspace?
+    ) throws -> ScopedPath? {
+        guard let trimmedPath = input.path?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !trimmedPath.isEmpty,
+            trimmedPath != "." else {
+            return nil
+        }
+
+        guard let workspace else {
+            return nil
+        }
+
+        let scoped = try workspace.resolve(
+            trimmedPath
+        )
+
+        if try workspace.existingType(
+            of: scoped
+        ) == .file {
+            throw PredefinedFileToolError.invalidValue(
+                tool: "scan_paths",
+                field: "path",
+                reason: "must reference a directory, not a file"
+            )
+        }
+
+        return scoped
+    }
+
+    func summary(
+        for input: ScanPathsToolInput,
+        directory: ScopedPath?
+    ) -> String {
+        if let directory {
+            return input.recursive
+                ? "Recursively scan \(directory.presentingRelative(filetype: true))"
+                : "Scan direct entries in \(directory.presentingRelative(filetype: true))"
+        }
+
+        return input.recursive
+            ? "Recursively scan workspace root"
+            : "Scan direct entries in workspace root"
     }
 }

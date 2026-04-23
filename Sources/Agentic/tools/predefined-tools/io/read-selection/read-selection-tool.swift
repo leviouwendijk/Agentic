@@ -24,12 +24,26 @@ public struct ReadSelectionTool: AgentTool {
             from: input
         )
 
+        let targetPath: String
+        if let workspace {
+            targetPath = try workspace.resolve(
+                decoded.path
+            ).presentingRelative(
+                filetype: true
+            )
+        } else {
+            targetPath = decoded.path
+        }
+
         return .init(
             toolName: definition.name,
             actionRisk: actionRisk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [decoded.path],
-            summary: summary(for: decoded)
+            targetPaths: [targetPath],
+            summary: summary(
+                for: decoded,
+                renderedPath: targetPath
+            )
         )
     }
 
@@ -83,19 +97,20 @@ public struct ReadSelectionTool: AgentTool {
 
 private extension ReadSelectionTool {
     func summary(
-        for input: ReadSelectionToolInput
+        for input: ReadSelectionToolInput,
+        renderedPath: String
     ) -> String {
         let selectionCount = input.selections.count
 
         if selectionCount == 0 {
             return input.includeLineNumbers
-                ? "Read full file selection from \(input.path) with line numbers"
-                : "Read full file selection from \(input.path)"
+                ? "Read full file selection from \(renderedPath) with line numbers"
+                : "Read full file selection from \(renderedPath)"
         }
 
         return input.includeLineNumbers
-            ? "Read \(selectionCount) selection(s) from \(input.path) with line numbers"
-            : "Read \(selectionCount) selection(s) from \(input.path)"
+            ? "Read \(selectionCount) selection(s) from \(renderedPath) with line numbers"
+            : "Read \(selectionCount) selection(s) from \(renderedPath)"
     }
 
     func lineRange(

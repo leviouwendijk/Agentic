@@ -147,7 +147,19 @@ private extension ContextComposer {
             )
         )
 
-        guard !result.matches.isEmpty else {
+        let allowedMatches: [(url: URL, contentSelections: [ContentSelection])] = result.matches.compactMap { match in
+            guard let scoped = try? workspace.scope(match.url),
+                  let url = try? workspace.absoluteURL(for: scoped) else {
+                return nil
+            }
+
+            return (
+                url: url,
+                contentSelections: match.contentSelections
+            )
+        }
+
+        guard !allowedMatches.isEmpty else {
             return ""
         }
 
@@ -158,11 +170,11 @@ private extension ContextComposer {
             )
 
         let concatenator = FileConcatenator(
-            inputFiles: result.matches.map { $0.url },
+            inputFiles: allowedMatches.map(\.url),
             outputURL: syntheticOutputURL,
             context: nil,
             selectedContentByFile: selectedContentByFile(
-                from: result
+                from: allowedMatches
             ),
             delimiterStyle: source.delimiterStyle,
             delimiterClosure: false,
@@ -226,9 +238,9 @@ private extension ContextComposer {
     }
 
     func selectedContentByFile(
-        from result: SelectionScanResult
+        from matches: [(url: URL, contentSelections: [ContentSelection])]
     ) -> [URL: [ContentSelection]] {
-        result.matches.reduce(
+        matches.reduce(
             into: [URL: [ContentSelection]]()
         ) { partial, match in
             guard !match.contentSelections.isEmpty else {

@@ -29,12 +29,26 @@ public struct ReadFileTool: AgentTool {
             maxLines: decoded.maxLines
         )
 
+        let targetPath: String
+        if let workspace {
+            targetPath = try workspace.resolve(
+                decoded.path
+            ).presentingRelative(
+                filetype: true
+            )
+        } else {
+            targetPath = decoded.path
+        }
+
         return .init(
             toolName: definition.name,
             actionRisk: actionRisk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [decoded.path],
-            summary: summary(for: decoded)
+            targetPaths: [targetPath],
+            summary: summary(
+                for: decoded,
+                renderedPath: targetPath
+            )
         )
     }
 
@@ -97,7 +111,8 @@ public struct ReadFileTool: AgentTool {
 
 private extension ReadFileTool {
     func summary(
-        for input: ReadFileToolInput
+        for input: ReadFileToolInput,
+        renderedPath: String
     ) -> String {
         var parts: [String] = []
 
@@ -119,9 +134,9 @@ private extension ReadFileTool {
         }
 
         guard !parts.isEmpty else {
-            return "Read file \(input.path)"
+            return "Read file \(renderedPath)"
         }
 
-        return "Read file \(input.path) (\(parts.joined(separator: ", ")))"
+        return "Read file \(renderedPath) (\(parts.joined(separator: ", ")))"
     }
 }

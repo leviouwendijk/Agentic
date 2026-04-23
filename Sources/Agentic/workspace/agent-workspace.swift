@@ -7,22 +7,27 @@ import Selection
 
 public struct AgentWorkspace: Sendable, Equatable {
     public let sandbox: PathSandbox
+    public let accessPolicy: PathAccessPolicy
 
     public init(
-        root: StandardPath
+        root: StandardPath,
+        accessPolicy: PathAccessPolicy = .agenticWorkspaceDefault
     ) throws {
         self.sandbox = try .init(root: root)
+        self.accessPolicy = accessPolicy
     }
 
     public init(
-        root: URL
+        root: URL,
+        accessPolicy: PathAccessPolicy = .agenticWorkspaceDefault
     ) throws {
         try self.init(
             root: StandardPath(
                 fileURL: root,
                 terminalHint: .directory,
                 inferFileType: false
-            )
+            ),
+            accessPolicy: accessPolicy
         )
     }
 
@@ -40,38 +45,124 @@ public struct AgentWorkspace: Sendable, Equatable {
         ).standardizedFileURL
     }
 
+    public func evaluateAccess(
+        _ path: ScopedPath,
+        type: PathSegmentType? = nil
+    ) -> PathAccessEvaluation {
+        accessPolicy.evaluate(
+            path,
+            type: type
+        )
+    }
+
+    @discardableResult
+    public func requireAccessible(
+        _ path: ScopedPath,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        guard sandbox.contains(path) else {
+            throw PathSandboxError.pathEscapesSandbox(
+                path: path.absolute,
+                root: root
+            )
+        }
+
+        let evaluation = accessPolicy.evaluate(
+            path,
+            type: type
+        )
+
+        guard evaluation.isAllowed else {
+            throw PathAccessError.denied(evaluation)
+        }
+
+        return path
+    }
+
     public func resolve(
         _ path: StandardPath
     ) throws -> ScopedPath {
-        try sandbox.sandbox(path)
+        try sandbox.sandbox(
+            path,
+            policy: accessPolicy,
+            type: inferredType(for: path)
+        )
     }
 
     public func resolve(
         _ rawPath: String,
         filetype: AnyFileType? = nil
     ) throws -> ScopedPath {
-        try sandbox.sandbox(
+        let scoped = try sandbox.sandbox(
             rawPath: rawPath,
             filetype: filetype
+        )
+
+        return try requireAccessible(
+            scoped,
+            type: hintedType(
+                rawPath: rawPath,
+                filetype: filetype,
+                resolved: scoped
+            )
+        )
+    }
+
+    public func scope(
+        _ url: URL
+    ) throws -> ScopedPath {
+        let existence = PathExistence.check(
+            url: url
+        )
+        let type = existence.1
+        let terminalHint = terminalHint(
+            for: type
+        )
+
+        let path = StandardPath(
+            fileURL: url,
+            terminalHint: terminalHint,
+            inferFileType: type == .file
+        )
+
+        return try sandbox.sandbox(
+            path,
+            policy: accessPolicy,
+            type: type
         )
     }
 
     public func contains(
         _ path: ScopedPath
     ) -> Bool {
-        sandbox.contains(path)
+        (try? requireAccessible(path)) != nil
+    }
+
+    public func contains(
+        _ path: StandardPath
+    ) -> Bool {
+        (try? resolve(path)) != nil
     }
 
     public func absoluteURL(
         for path: ScopedPath
-    ) -> URL {
-        URL(
-            fileURLWithPath: path.absolute.render(
-                as: .root,
-                filetype: true
-            ),
-            isDirectory: path.relative.filetype == nil
-        ).standardizedFileURL
+    ) throws -> URL {
+        let path = try requireAccessible(path)
+
+        return absoluteURLUnchecked(
+            for: path
+        )
+    }
+
+    public func existingType(
+        of path: ScopedPath
+    ) throws -> PathSegmentType? {
+        let url = try absoluteURL(
+            for: path
+        )
+        return PathExistence.check(
+            url: url
+        ).1
     }
 
     public func read(
@@ -98,8 +189,12 @@ public struct AgentWorkspace: Sendable, Equatable {
             newlineNormalization: .unix
         )
     ) throws -> ScopedWorkspaceRead {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try TextFileReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).read(
             options: options
         )
@@ -117,8 +212,12 @@ public struct AgentWorkspace: Sendable, Equatable {
         _ path: ScopedPath,
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceLineRead {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try LineReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).read(
             options: options
         )
@@ -138,8 +237,12 @@ public struct AgentWorkspace: Sendable, Equatable {
         maxLines: Int? = nil,
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceLineSliceRead {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try LineReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).readSlice(
             range: range,
             maxLines: maxLines,
@@ -165,8 +268,12 @@ public struct AgentWorkspace: Sendable, Equatable {
         maxLines: Int? = nil,
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceLineSliceRead {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try LineReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).readSlice(
             startLine: startLine,
             endLine: endLine,
@@ -190,8 +297,12 @@ public struct AgentWorkspace: Sendable, Equatable {
         _ path: ScopedPath,
         options: DataReadOptions = .default
     ) throws -> ScopedWorkspaceDataRead {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try DataFileReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).read(
             options: options
         )
@@ -208,8 +319,12 @@ public struct AgentWorkspace: Sendable, Equatable {
         _ path: ScopedPath,
         options: DataReadOptions = .default
     ) throws -> ScopedWorkspaceBase64Read {
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
         let result = try DataFileReader(
-            absoluteURL(for: path)
+            absoluteURLUnchecked(for: path)
         ).readBase64(
             options: options
         )
@@ -240,7 +355,13 @@ public struct AgentWorkspace: Sendable, Equatable {
         _ selections: [ContentSelection],
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceSelectionRead {
-        let url = absoluteURL(for: path)
+        let path = try requireAccessible(
+            path,
+            type: .file
+        )
+        let url = absoluteURLUnchecked(
+            for: path
+        )
         let readResult = try LineReader(url).read(
             options: options
         )
@@ -260,10 +381,17 @@ public struct AgentWorkspace: Sendable, Equatable {
         _ specification: PathScanSpecification,
         configuration: PathWalkConfiguration = .init()
     ) throws -> PathScanResult {
-        try PathScan.scan(
+        let result = try PathScan.scan(
             specification,
             relativeTo: .directoryURL(rootURL),
             configuration: configuration
+        )
+
+        return .init(
+            matches: filteredMatches(
+                from: result
+            ),
+            warnings: result.warnings
         )
     }
 
@@ -271,10 +399,10 @@ public struct AgentWorkspace: Sendable, Equatable {
         from result: PathScanResult,
         excluding scannedPath: ScopedPath? = nil
     ) -> [ScopedWorkspaceScan.Entry] {
-        let tree = PathTree(root: root)
-
-        return result.matches.compactMap { match in
-            guard let relative = tree.relative(match.path) else {
+        result.matches.compactMap { match in
+            guard let relative = sandbox.tree.relative(
+                match.path
+            ) else {
                 return nil
             }
 
@@ -287,13 +415,107 @@ public struct AgentWorkspace: Sendable, Equatable {
                 return nil
             }
 
-            return .init(
-                path: .init(
-                    root: root,
-                    relative: relative
-                ),
-                isDirectory: match.path.filetype == nil
+            let scoped = ScopedPath(
+                root: root,
+                relative: relative
             )
+
+            guard (try? requireAccessible(
+                scoped,
+                type: match.type
+            )) != nil else {
+                return nil
+            }
+
+            return .init(
+                path: scoped,
+                isDirectory: match.type == .directory
+            )
+        }
+    }
+}
+
+private extension AgentWorkspace {
+    func absoluteURLUnchecked(
+        for path: ScopedPath
+    ) -> URL {
+        URL(
+            fileURLWithPath: path.absolute.render(
+                as: .root,
+                filetype: true
+            ),
+            isDirectory: path.relative.filetype == nil
+        ).standardizedFileURL
+    }
+
+    func filteredMatches(
+        from result: PathScanResult
+    ) -> [PathScanMatch] {
+        result.matches.filter { match in
+            guard let relative = sandbox.tree.relative(
+                match.path
+            ) else {
+                return false
+            }
+
+            let scoped = ScopedPath(
+                root: root,
+                relative: relative
+            )
+
+            return accessPolicy.allows(
+                scoped,
+                type: match.type
+            )
+        }
+    }
+
+    func inferredType(
+        for path: StandardPath
+    ) -> PathSegmentType? {
+        if path.filetype != nil {
+            return .file
+        }
+
+        return nil
+    }
+
+    func hintedType(
+        rawPath: String,
+        filetype: AnyFileType?,
+        resolved: ScopedPath
+    ) -> PathSegmentType? {
+        if filetype != nil {
+            return .file
+        }
+
+        let trimmed = rawPath.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        if trimmed.hasSuffix("/") {
+            return .directory
+        }
+
+        if resolved.relative.filetype != nil {
+            return .file
+        }
+
+        return nil
+    }
+
+    func terminalHint(
+        for type: PathSegmentType?
+    ) -> PathTerminalHint {
+        switch type {
+        case .file?:
+            return .file
+
+        case .directory?:
+            return .directory
+
+        case nil:
+            return .unspecified
         }
     }
 }
