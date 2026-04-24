@@ -1,5 +1,5 @@
 {
-  "originHash" : "1b9ef976160a8e65dd9e7b8ee3a25045f45c6779ebf17eb47c46c2686ab37fac",
+  "originHash" : "5ee2ce35d7a76b9691a1442cc0df7f0b572ddadcf4cd45837056e7f0e8e4181f",
   "pins" : [
     {
       "identity" : "ansi",
@@ -197,6 +197,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "d4a3338604127da3c6e8c42ff62d8468cbfe9f4a"
+      }
+    },
+    {
+      "identity" : "testflows",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/TestFlows.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "07ccde049e0233af49c291e5b377b3a844d9e3dc"
       }
     },
     {

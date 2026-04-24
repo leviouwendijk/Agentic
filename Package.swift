@@ -34,8 +34,10 @@ let package = Package(
         .package(url: "https://github.com/leviouwendijk/Fuzzy.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Milieu.git", branch: "master"),
 
-        .package(url: "https://github.com/leviouwendijk/ANSI.git", branch: "master"),
-        .package(url: "https://github.com/leviouwendijk/Terminal.git", branch: "master"),
+        // .package(url: "https://github.com/leviouwendijk/ANSI.git", branch: "master"),
+        // .package(url: "https://github.com/leviouwendijk/Terminal.git", branch: "master"),
+
+        .package(url: "https://github.com/leviouwendijk/TestFlows.git", branch: "master"),
 
         // .package(url: "https://github.com/leviouwendijk/Executable.git", branch: "master"),
     ],
@@ -66,9 +68,10 @@ let package = Package(
             name: "AgenticFlowTesting",
             dependencies: [
                 "Agentic",
+                .product(name: "TestFlows", package: "TestFlows"),
                 .product(name: "Primitives", package: "Primitives"),
-                .product(name: "ANSI", package: "ANSI"),
-                .product(name: "Terminal", package: "Terminal"),
+                // .product(name: "ANSI", package: "ANSI"),
+                // .product(name: "Terminal", package: "Terminal"),
             ]
         ),
         // .testTarget(

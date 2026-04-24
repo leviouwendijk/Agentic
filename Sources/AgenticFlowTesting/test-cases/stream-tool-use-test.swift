@@ -1,8 +1,9 @@
 import Agentic
 import Primitives
+import TestFlows
 
 extension AgenticFlowTesting {
-    static func runStreamToolUse() async throws -> FlowTestResult {
+    static func runStreamToolUse() async throws -> [TestFlowDiagnostic] {
         let toolCall = AgentToolCall(
             id: "flowtest-tool-call-1",
             name: EchoTool.identifier.rawValue,
@@ -40,7 +41,7 @@ extension AgenticFlowTesting {
         )
 
         let harness = try await FlowHarness(
-            name: FlowTestCase.stream_tool_use.rawValue,
+            name: AgenticFlowSuite.ID.stream_tool_use,
             delivery: .stream,
             maximumIterations: 2,
             adapter: .stream(
@@ -91,13 +92,10 @@ extension AgenticFlowTesting {
             ]
         )
 
-        return .passed(
-            name: FlowTestCase.stream_tool_use.rawValue,
-            diagnostics: [
-                "response=tool use ok",
-                "phase=\(checkpoint.phase.rawValue)",
-                "events=\(eventNames(result.events))"
-            ]
+        return flowDiagnostics(
+            response: "tool use ok",
+            checkpoint: checkpoint,
+            events: result.events
         )
     }
 }

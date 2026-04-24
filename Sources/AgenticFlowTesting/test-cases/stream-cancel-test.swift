@@ -1,10 +1,10 @@
 import Agentic
-import Foundation
+import TestFlows
 
 extension AgenticFlowTesting {
-    static func runStreamCancel() async throws -> FlowTestResult {
+    static func runStreamCancel() async throws -> [TestFlowDiagnostic] {
         let harness = try await FlowHarness(
-            name: FlowTestCase.stream_cancel.rawValue,
+            name: AgenticFlowSuite.ID.stream_cancel,
             delivery: .stream,
             maximumIterations: 1,
             adapter: .stream(
@@ -49,18 +49,17 @@ extension AgenticFlowTesting {
         } catch is CancellationError {
             let checkpoint = try await harness.checkpoint()
 
-            try assertEqual(
+            try Expect.equal(
                 checkpoint.phase,
                 .interrupted,
                 "checkpoint.phase"
             )
 
-            guard let partialText = checkpoint.partialResponse?.message.content.text,
-                  partialText.hasPrefix("cancel") else {
-                throw FlowTestError.assertionFailed(
-                    "expected partial response beginning with 'cancel', got '\(checkpoint.partialResponse?.message.content.text ?? "<nil>")'"
-                )
-            }
+            let partialText = try Expect.hasPrefix(
+                checkpoint.partialResponse?.message.content.text,
+                "cancel",
+                "checkpoint.partialResponse.text"
+            )
 
             try assertHasEvents(
                 checkpoint.events,
@@ -71,13 +70,10 @@ extension AgenticFlowTesting {
                 ]
             )
 
-            return .passed(
-                name: FlowTestCase.stream_cancel.rawValue,
-                diagnostics: [
-                    "phase=\(checkpoint.phase.rawValue)",
-                    "partial=\(partialText)",
-                    "events=\(eventNames(checkpoint.events))"
-                ]
+            return flowDiagnostics(
+                partial: partialText,
+                checkpoint: checkpoint,
+                events: checkpoint.events
             )
         }
     }

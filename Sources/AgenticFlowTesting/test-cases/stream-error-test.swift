@@ -1,9 +1,10 @@
 import Agentic
+import TestFlows
 
 extension AgenticFlowTesting {
-    static func runStreamError() async throws -> FlowTestResult {
+    static func runStreamError() async throws -> [TestFlowDiagnostic] {
         let harness = try await FlowHarness(
-            name: FlowTestCase.stream_error.rawValue,
+            name: AgenticFlowSuite.ID.stream_error,
             delivery: .stream,
             maximumIterations: 1,
             adapter: .stream(
@@ -31,13 +32,13 @@ extension AgenticFlowTesting {
         } catch FlowTestError.intentionalStreamFailure {
             let checkpoint = try await harness.checkpoint()
 
-            try assertEqual(
+            try Expect.equal(
                 checkpoint.phase,
                 .failed,
                 "checkpoint.phase"
             )
 
-            try assertEqual(
+            try Expect.equal(
                 checkpoint.partialResponse?.message.content.text,
                 "partial output",
                 "checkpoint.partialResponse.text"
@@ -53,13 +54,10 @@ extension AgenticFlowTesting {
                 ]
             )
 
-            return .passed(
-                name: FlowTestCase.stream_error.rawValue,
-                diagnostics: [
-                    "phase=\(checkpoint.phase.rawValue)",
-                    "partial=\(checkpoint.partialResponse?.message.content.text ?? "<nil>")",
-                    "events=\(eventNames(checkpoint.events))"
-                ]
+            return flowDiagnostics(
+                partial: checkpoint.partialResponse?.message.content.text ?? "<nil>",
+                checkpoint: checkpoint,
+                events: checkpoint.events
             )
         }
     }

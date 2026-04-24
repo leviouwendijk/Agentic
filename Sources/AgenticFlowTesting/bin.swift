@@ -1,8 +1,10 @@
-import Foundation
+import TestFlows
 
 @main
 struct AgenticFlowTesting {
     static func main() async {
-        await FlowTestRunner.main()
+        await TestFlowCLI.run(
+            suite: AgenticFlowSuite.self
+        )
     }
 }

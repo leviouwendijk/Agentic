@@ -1,9 +1,10 @@
 import Agentic
+import TestFlows
 
 extension AgenticFlowTesting {
-    static func runBuffered() async throws -> FlowTestResult {
+    static func runBuffered() async throws -> [TestFlowDiagnostic] {
         let harness = try await FlowHarness(
-            name: FlowTestCase.buffered.rawValue,
+            name: AgenticFlowSuite.ID.buffered,
             delivery: .buffered,
             maximumIterations: 1,
             adapter: .buffered(
@@ -26,13 +27,10 @@ extension AgenticFlowTesting {
             ]
         )
 
-        return .passed(
-            name: FlowTestCase.buffered.rawValue,
-            diagnostics: [
-                "response=buffered ok",
-                "phase=\(checkpoint.phase.rawValue)",
-                "events=\(eventNames(result.events))"
-            ]
+        return flowDiagnostics(
+            response: "buffered ok",
+            checkpoint: checkpoint,
+            events: result.events
         )
     }
 }

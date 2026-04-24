@@ -1,4 +1,5 @@
 import Agentic
+import TestFlows
 
 func assertCompleted(
     result: AgentRunResult,
@@ -6,19 +7,19 @@ func assertCompleted(
     expectedText: String,
     expectedEvents: [AgentRunEvent.Kind]
 ) throws {
-    try assertEqual(
+    try Expect.equal(
         result.response?.message.content.text,
         expectedText,
         "result.response.text"
     )
 
-    try assertEqual(
+    try Expect.equal(
         checkpoint.phase,
         .completed,
         "checkpoint.phase"
     )
 
-    try assertEqual(
+    try Expect.equal(
         checkpoint.partialResponse?.message.content.text,
         nil,
         "checkpoint.partialResponse.text"
@@ -30,36 +31,57 @@ func assertCompleted(
     )
 }
 
-func assertEqual<T: Equatable>(
-    _ actual: T,
-    _ expected: T,
-    _ label: String
-) throws {
-    guard actual == expected else {
-        throw FlowTestError.assertionFailed(
-            "\(label): expected '\(expected)', got '\(actual)'"
-        )
-    }
-}
-
 func assertHasEvents(
     _ events: [AgentRunEvent],
     _ expected: [AgentRunEvent.Kind]
 ) throws {
-    let actualKinds = events.map(\.kind)
-    var searchStart = actualKinds.startIndex
+    try Expect.containsOrdered(
+        events.map(\.kind),
+        expected,
+        "events"
+    )
+}
 
-    for expectedKind in expected {
-        guard let index = actualKinds[searchStart...].firstIndex(of: expectedKind) else {
-            throw FlowTestError.assertionFailed(
-                "missing event '\(expectedKind.rawValue)' in ordered events '\(eventNames(events))'"
+func flowDiagnostics(
+    response: String? = nil,
+    partial: String? = nil,
+    checkpoint: AgentHistoryCheckpoint,
+    events: [AgentRunEvent]
+) -> [TestFlowDiagnostic] {
+    var diagnostics: [TestFlowDiagnostic] = []
+
+    if let response {
+        diagnostics.append(
+            .field(
+                "response",
+                response
             )
-        }
-
-        searchStart = actualKinds.index(
-            after: index
         )
     }
+
+    if let partial {
+        diagnostics.append(
+            .field(
+                "partial",
+                partial
+            )
+        )
+    }
+
+    diagnostics.append(
+        .field(
+            "phase",
+            checkpoint.phase.rawValue
+        )
+    )
+    diagnostics.append(
+        .field(
+            "events",
+            eventNames(events)
+        )
+    )
+
+    return diagnostics
 }
 
 func eventNames(
