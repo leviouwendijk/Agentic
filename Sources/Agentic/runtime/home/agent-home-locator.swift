@@ -1,5 +1,6 @@
 import Foundation
 import Milieu
+import Path
 
 public struct AgentHomeLocator: Sendable {
     public init() {}
@@ -25,12 +26,13 @@ public struct AgentHomeLocator: Sendable {
         }
 
         let canonical = Self.canonicalGlobalHomeURL()
+        let legacy = Self.legacyHomeURL()
 
         if allowLegacyHome,
-           !FileManager.default.fileExists(atPath: canonical.path),
-           FileManager.default.fileExists(atPath: Self.legacyHomeURL().path) {
+           !PathExistence.exists(url: canonical),
+           PathExistence.exists(url: legacy) {
             return .init(
-                root: Self.legacyHomeURL(),
+                root: legacy,
                 kind: .user_global
             )
         }
@@ -42,72 +44,54 @@ public struct AgentHomeLocator: Sendable {
     }
 
     public func resolveEphemeralHome() -> AgentHome {
-        .init(
-            root: FileManager.default.temporaryDirectory
-                .appendingPathComponent(
-                    "agentic-\(UUID().uuidString)",
-                    isDirectory: true
-                ),
+        let temporaryRoot = StandardPath(
+            fileURL: FileManager.default.temporaryDirectory,
+            terminalHint: .directory,
+            inferFileType: false
+        )
+
+        return .init(
+            root: temporaryRoot
+                .child
+                .directory(
+                    "agentic-\(UUID().uuidString)"
+                )
+                .directory_url,
             kind: .ephemeral
         )
     }
 
-    public func findNearestProjectHome(
+    public func findNearestProject(
         from startURL: URL = URL(
             fileURLWithPath: FileManager.default.currentDirectoryPath,
             isDirectory: true
         )
-    ) -> AgentProjectHomeDiscovery? {
-        var current = startURL.standardizedFileURL
-
-        while true {
-            let agenticDirectoryURL = current.appendingPathComponent(
-                ".agentic",
-                isDirectory: true
-            )
-
-            var isDirectory: ObjCBool = false
-            let exists = FileManager.default.fileExists(
-                atPath: agenticDirectoryURL.path,
-                isDirectory: &isDirectory
-            )
-
-            if exists, isDirectory.boolValue {
-                let projectConfigurationFileURL = agenticDirectoryURL
-                    .appendingPathComponent(
-                        "project.json",
-                        isDirectory: false
-                    )
-                let localConfigurationFileURL = agenticDirectoryURL
-                    .appendingPathComponent(
-                        "local.json",
-                        isDirectory: false
-                    )
-
-                return .init(
-                    projectroot: current,
-                    agenticdir: agenticDirectoryURL,
-                    projectConfigurationExists: FileManager.default.fileExists(
-                        atPath: projectConfigurationFileURL.path
-                    ),
-                    localConfigurationExists: FileManager.default.fileExists(
-                        atPath: localConfigurationFileURL.path
-                    )
-                )
-            }
-
-            let parent = current.deletingLastPathComponent()
-
-            guard parent.path != current.path else {
-                return nil
-            }
-
-            current = parent
+    ) -> AgentProjectDiscovery? {
+        guard let match = PathLookup.nearestAncestorDirectory(
+            named: ".agentic",
+            from: startURL
+        ) else {
+            return nil
         }
+
+        let layout = AgentProjectLayout(
+            root: match.directoryURL
+        )
+
+        return .init(
+            projectroot: match.ancestorURL,
+            agenticdir: match.directoryURL,
+            projectConfigurationExists: PathExistence.exists(
+                url: layout.projectConfigurationFileURL
+            ),
+            localConfigurationExists: PathExistence.exists(
+                url: layout.localConfigurationFileURL
+            )
+        )
     }
 
     public func loadProjectConfiguration(
-        from discovery: AgentProjectHomeDiscovery
+        from discovery: AgentProjectDiscovery
     ) throws -> AgentProjectConfiguration? {
         guard discovery.projectConfigurationExists else {
             return nil
@@ -119,7 +103,7 @@ public struct AgentHomeLocator: Sendable {
     }
 
     public func loadProjectLocalConfiguration(
-        from discovery: AgentProjectHomeDiscovery
+        from discovery: AgentProjectDiscovery
     ) throws -> AgentProjectLocalConfiguration? {
         guard discovery.localConfigurationExists else {
             return nil
@@ -133,36 +117,32 @@ public struct AgentHomeLocator: Sendable {
 
 public extension AgentHomeLocator {
     static func canonicalGlobalHomeURL() -> URL {
-        if let raw = AgenticEnvironmentVariable.xdg_config_home.optionalValue() {
-            return expandedDirectoryURL(
-                raw
-            )
-            .appendingPathComponent(
-                "agentic",
-                isDirectory: true
-            )
-            .standardizedFileURL
+        if let raw = AgenticEnvironmentVariable.xdg_config_home.optionalValue(),
+           let xdgConfigHome = try? PathResolver.resolveStandardPath(
+                raw,
+                relativeTo: .cwd,
+                terminalHint: .directory
+           ) {
+            return xdgConfigHome
+                .child
+                .directory("agentic")
+                .directory_url
         }
 
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(
+        return StandardPath.home
+            .child
+            .directory(
                 ".config",
-                isDirectory: true
+                "agentic"
             )
-            .appendingPathComponent(
-                "agentic",
-                isDirectory: true
-            )
-            .standardizedFileURL
+            .directory_url
     }
 
     static func legacyHomeURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(
-                ".agentic",
-                isDirectory: true
-            )
-            .standardizedFileURL
+        StandardPath.home
+            .child
+            .directory(".agentic")
+            .directory_url
     }
 }
 
@@ -170,32 +150,14 @@ private extension AgentHomeLocator {
     static func expandedDirectoryURL(
         _ raw: String
     ) -> URL {
-        let trimmed = raw.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        if trimmed == "~" {
-            return FileManager.default.homeDirectoryForCurrentUser
-                .standardizedFileURL
+        if let url = try? PathResolver.resolveURL(
+            raw,
+            relativeTo: .cwd,
+            terminalHint: .directory
+        ) {
+            return url.standardizedFileURL
         }
 
-        if trimmed.hasPrefix("~/") {
-            let suffix = String(
-                trimmed.dropFirst(2)
-            )
-
-            return FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent(
-                    suffix,
-                    isDirectory: true
-                )
-                .standardizedFileURL
-        }
-
-        return URL(
-            fileURLWithPath: trimmed,
-            isDirectory: true
-        )
-        .standardizedFileURL
+        return StandardPath.cwd.directory_url
     }
 }

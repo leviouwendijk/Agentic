@@ -1,5 +1,5 @@
 {
-  "originHash" : "4eac1656a13ec68671f668c1ee4b7476e156ae4cea3b2aa6caae5e0da2446c0c",
+  "originHash" : "1b9ef976160a8e65dd9e7b8ee3a25045f45c6779ebf17eb47c46c2686ab37fac",
   "pins" : [
     {
       "identity" : "ansi",
@@ -115,7 +115,7 @@
       "location" : "https://github.com/leviouwendijk/Path.git",
       "state" : {
         "branch" : "master",
-        "revision" : "04da920960f43074ad06da8e3421547ddbc43973"
+        "revision" : "e057dd9e500db43d0a8ab6a7e3b9303620bf7e69"
       }
     },
     {

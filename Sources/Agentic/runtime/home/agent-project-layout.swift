@@ -1,13 +1,13 @@
 import Foundation
 import Path
 
-public struct AgentHomeLayout: Sendable, Codable, Hashable {
+public struct AgentProjectLayout: Sendable, Codable, Hashable {
     public let root: URL
-    public let schema: AgentHomeTreeSchema
+    public let schema: AgentProjectTreeSchema
 
     public init(
         root: URL,
-        schema: AgentHomeTreeSchema = .init()
+        schema: AgentProjectTreeSchema = .init()
     ) {
         self.root = root.standardizedFileURL
         self.schema = schema
@@ -17,12 +17,16 @@ public struct AgentHomeLayout: Sendable, Codable, Hashable {
         schema.tree
     }
 
-    public var configfile: URL {
-        fileURL(for: schema.configfile)
+    public var projectConfigurationFileURL: URL {
+        fileURL(for: schema.projectConfigurationFile)
     }
 
-    public var profilesdir: URL {
-        directoryURL(for: schema.profilesdir)
+    public var localConfigurationFileURL: URL {
+        fileURL(for: schema.localConfigurationFile)
+    }
+
+    public var localdir: URL {
+        directoryURL(for: schema.localdir)
     }
 
     public var runtimeStorage: AgentRuntimeStorageLayout {
@@ -32,13 +36,23 @@ public struct AgentHomeLayout: Sendable, Codable, Hashable {
         )
     }
 
+    public var projectRootGitIgnoreEntries: [String] {
+        schema.projectRootGitIgnoreEntries
+    }
+
+    public func createInitialDirectories() throws {
+        try createDirectories(
+            schema.initialDirectories.map(directoryURL)
+        )
+    }
+
     public func createBaseDirectories() throws {
         try createDirectories(
             [
                 directoryURL(
                     for: schema.root
                 ),
-                profilesdir
+                localdir
             ]
         )
 
@@ -54,7 +68,7 @@ public struct AgentHomeLayout: Sendable, Codable, Hashable {
     }
 }
 
-public extension AgentHomeLayout {
+public extension AgentProjectLayout {
     func directoryURL(
         for address: PathTreeDirectoryAddress
     ) -> URL {
@@ -78,7 +92,7 @@ public extension AgentHomeLayout {
     }
 }
 
-private extension AgentHomeLayout {
+private extension AgentProjectLayout {
     func createDirectories(
         _ urls: [URL]
     ) throws {

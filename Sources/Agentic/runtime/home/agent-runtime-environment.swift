@@ -4,7 +4,7 @@ import Path
 public struct AgentRuntimeEnvironment: Sendable {
     public let home: AgentHome
     public let workspace: AgentWorkspace?
-    public let projectDiscovery: AgentProjectHomeDiscovery?
+    public let projectDiscovery: AgentProjectDiscovery?
     public let projectConfiguration: AgentProjectConfiguration?
     public let projectLocalConfiguration: AgentProjectLocalConfiguration?
     public let sessionStorageMode: SessionStorageMode
@@ -12,7 +12,7 @@ public struct AgentRuntimeEnvironment: Sendable {
     public init(
         home: AgentHome,
         workspace: AgentWorkspace? = nil,
-        projectDiscovery: AgentProjectHomeDiscovery? = nil,
+        projectDiscovery: AgentProjectDiscovery? = nil,
         projectConfiguration: AgentProjectConfiguration? = nil,
         projectLocalConfiguration: AgentProjectLocalConfiguration? = nil,
         sessionStorageMode: SessionStorageMode = .global_home
@@ -40,7 +40,7 @@ public extension AgentRuntimeEnvironment {
         createHomeDirectories: Bool = true
     ) throws -> Self {
         let locator = AgentHomeLocator()
-        let projectDiscovery = locator.findNearestProjectHome(
+        let projectDiscovery = locator.findNearestProject(
             from: currentdir
         )
         let projectConfiguration = try projectDiscovery.flatMap {
@@ -82,195 +82,11 @@ public extension AgentRuntimeEnvironment {
             sessionStorageMode: effectiveSessionStorageMode
         )
     }
-
-    func sessiondir(
-        sessionID: String
-    ) -> URL? {
-        switch sessionStorageMode {
-        case .global_home:
-            return home.layout.sessiondir(
-                sessionID: sessionID
-            )
-
-        case .project_local:
-            return projectDiscovery?.agenticdir
-                .appendingPathComponent(
-                    "sessions",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    sessionID,
-                    isDirectory: true
-                )
-
-        case .custom(let rootURL):
-            return rootURL
-                .appendingPathComponent(
-                    "sessions",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    sessionID,
-                    isDirectory: true
-                )
-
-        case .ephemeral:
-            return nil
-        }
-    }
-
-    func checkpointFileURL(
-        sessionID: String
-    ) -> URL? {
-        sessiondir(
-            sessionID: sessionID
-        )?
-        .appendingPathComponent(
-            "checkpoint.json",
-            isDirectory: false
-        )
-    }
-
-    func transcriptFileURL(
-        sessionID: String
-    ) -> URL? {
-        switch sessionStorageMode {
-        case .global_home:
-            return home.layout.transcriptFileURL(
-                sessionID: sessionID
-            )
-
-        case .project_local:
-            return projectDiscovery?.agenticdir
-                .appendingPathComponent(
-                    "transcripts",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    "\(sessionID).jsonl",
-                    isDirectory: false
-                )
-
-        case .custom(let rootURL):
-            return rootURL
-                .appendingPathComponent(
-                    "transcripts",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    "\(sessionID).jsonl",
-                    isDirectory: false
-                )
-
-        case .ephemeral:
-            return nil
-        }
-    }
-
-    func approvalsFileURL(
-        sessionID: String
-    ) -> URL? {
-        switch sessionStorageMode {
-        case .global_home:
-            return home.layout.approvalsFileURL(
-                sessionID: sessionID
-            )
-
-        case .project_local:
-            return projectDiscovery?.agenticdir
-                .appendingPathComponent(
-                    "approvals",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    "\(sessionID).jsonl",
-                    isDirectory: false
-                )
-
-        case .custom(let rootURL):
-            return rootURL
-                .appendingPathComponent(
-                    "approvals",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    "\(sessionID).jsonl",
-                    isDirectory: false
-                )
-
-        case .ephemeral:
-            return nil
-        }
-    }
-
-    func artifactdir(
-        sessionID: String
-    ) -> URL? {
-        switch sessionStorageMode {
-        case .global_home:
-            return home.layout.artifactdir(
-                sessionID: sessionID
-            )
-
-        case .project_local:
-            return projectDiscovery?.agenticdir
-                .appendingPathComponent(
-                    "artifacts",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    sessionID,
-                    isDirectory: true
-                )
-
-        case .custom(let rootURL):
-            return rootURL
-                .appendingPathComponent(
-                    "artifacts",
-                    isDirectory: true
-                )
-                .appendingPathComponent(
-                    sessionID,
-                    isDirectory: true
-                )
-
-        case .ephemeral:
-            return nil
-        }
-    }
-
-    func createSessionDirectories(
-        sessionID: String
-    ) throws {
-        let urls = [
-            sessiondir(
-                sessionID: sessionID
-            ),
-            transcriptFileURL(
-                sessionID: sessionID
-            )?.deletingLastPathComponent(),
-            approvalsFileURL(
-                sessionID: sessionID
-            )?.deletingLastPathComponent(),
-            artifactdir(
-                sessionID: sessionID
-            )
-        ]
-        .compactMap { $0 }
-
-        for url in urls {
-            try FileManager.default.createDirectory(
-                at: url,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-        }
-    }
 }
 
 private extension AgentRuntimeEnvironment {
     static func resolvedWorkspace(
-        projectDiscovery: AgentProjectHomeDiscovery?,
+        projectDiscovery: AgentProjectDiscovery?,
         projectConfiguration: AgentProjectConfiguration?,
         attachWorkspaceIfProjectDiscovered: Bool
     ) throws -> AgentWorkspace? {
@@ -304,26 +120,19 @@ private extension AgentRuntimeEnvironment {
             return projectRootURL.standardizedFileURL
         }
 
-        let trimmed = rawWorkspaceRoot.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        if trimmed.hasPrefix("/") {
-            return URL(
-                fileURLWithPath: trimmed,
-                isDirectory: true
-            )
-            .standardizedFileURL
+        if let url = try? PathResolver.resolveURL(
+            rawWorkspaceRoot,
+            relativeTo: .directoryURL(projectRootURL),
+            terminalHint: .directory
+        ) {
+            return url.standardizedFileURL
         }
 
-        if trimmed == "." {
-            return projectRootURL.standardizedFileURL
-        }
-
-        return URL(
-            fileURLWithPath: trimmed,
-            relativeTo: projectRootURL
+        return StandardPath(
+            fileURL: projectRootURL,
+            terminalHint: .directory,
+            inferFileType: false
         )
-        .standardizedFileURL
+        .directory_url
     }
 }

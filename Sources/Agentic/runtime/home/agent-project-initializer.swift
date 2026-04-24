@@ -1,4 +1,5 @@
 import Foundation
+import Path
 
 public enum AgentProjectInitializer {
     public static func initialize(
@@ -8,48 +9,42 @@ public enum AgentProjectInitializer {
         ),
         configuration: AgentProjectConfiguration = .init(),
         createLocalGitIgnoreEntries: Bool = true
-    ) throws -> AgentProjectHomeDiscovery {
-        let root = projectroot.standardizedFileURL
-        let agenticdir = root.appendingPathComponent(
-            ".agentic",
-            isDirectory: true
+    ) throws -> AgentProjectDiscovery {
+        let rootPath = StandardPath(
+            fileURL: projectroot,
+            terminalHint: .directory,
+            inferFileType: false
         )
-        let projectConfigurationFileURL = agenticdir.appendingPathComponent(
-            "project.json",
-            isDirectory: false
+        let agenticPath = rootPath.child.directory(
+            ".agentic"
         )
-
-        try FileManager.default.createDirectory(
-            at: agenticdir,
-            withIntermediateDirectories: true,
-            attributes: nil
+        let layout = AgentProjectLayout(
+            root: agenticPath.directory_url
         )
 
-        if !FileManager.default.fileExists(
-            atPath: projectConfigurationFileURL.path
+        try layout.createInitialDirectories()
+
+        if !PathExistence.exists(
+            url: layout.projectConfigurationFileURL
         ) {
             try configuration.write(
-                to: projectConfigurationFileURL
+                to: layout.projectConfigurationFileURL
             )
         }
 
         if createLocalGitIgnoreEntries {
             try ensureGitIgnoreEntries(
-                projectroot: root
+                projectroot: rootPath,
+                entries: layout.projectRootGitIgnoreEntries
             )
         }
 
-        let localConfigurationFileURL = agenticdir.appendingPathComponent(
-            "local.json",
-            isDirectory: false
-        )
-
         return .init(
-            projectroot: root,
-            agenticdir: agenticdir,
+            projectroot: rootPath.directory_url,
+            agenticdir: agenticPath.directory_url,
             projectConfigurationExists: true,
-            localConfigurationExists: FileManager.default.fileExists(
-                atPath: localConfigurationFileURL.path
+            localConfigurationExists: PathExistence.exists(
+                url: layout.localConfigurationFileURL
             )
         )
     }
@@ -57,37 +52,27 @@ public enum AgentProjectInitializer {
 
 private extension AgentProjectInitializer {
     static func ensureGitIgnoreEntries(
-        projectroot: URL
+        projectroot: StandardPath,
+        entries: [String]
     ) throws {
-        let gitdir = projectroot.appendingPathComponent(
-            ".git",
-            isDirectory: true
+        let gitdir = projectroot.child.directory(
+            ".git"
         )
 
-        guard FileManager.default.fileExists(
-            atPath: gitdir.path
+        guard PathExistence.isDirectory(
+            url: gitdir.directory_url
         ) else {
             return
         }
 
-        let gitIgnoreURL = projectroot.appendingPathComponent(
-            ".gitignore",
-            isDirectory: false
-        )
-
-        let entries = [
-            ".agentic/local.json",
-            ".agentic/local/",
-            ".agentic/sessions/",
-            ".agentic/transcripts/",
-            ".agentic/approvals/",
-            ".agentic/cache/",
-            ".agentic/artifacts/"
-        ]
+        let gitIgnoreURL = projectroot
+            .child
+            .file(".gitignore")
+            .root_url
 
         let existing: String
-        if FileManager.default.fileExists(
-            atPath: gitIgnoreURL.path
+        if PathExistence.exists(
+            url: gitIgnoreURL
         ) {
             existing = try String(
                 contentsOf: gitIgnoreURL,

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct AgentProjectHomeDiscovery: Sendable, Codable, Hashable {
+public struct AgentProjectDiscovery: Sendable, Codable, Hashable {
     public let projectroot: URL
     public let agenticdir: URL
     public let projectConfigurationExists: Bool
@@ -18,21 +18,21 @@ public struct AgentProjectHomeDiscovery: Sendable, Codable, Hashable {
         self.localConfigurationExists = localConfigurationExists
     }
 
-    public var projectConfigurationFileURL: URL {
-        agenticdir.appendingPathComponent(
-            "project.json",
-            isDirectory: false
+    public var layout: AgentProjectLayout {
+        .init(
+            root: agenticdir
         )
+    }
+
+    public var projectConfigurationFileURL: URL {
+        layout.projectConfigurationFileURL
     }
 
     public var localConfigurationFileURL: URL {
-        agenticdir.appendingPathComponent(
-            "local.json",
-            isDirectory: false
-        )
+        layout.localConfigurationFileURL
     }
 
-    public var projectHome: AgentHome {
+    public var projectLocalHome: AgentHome {
         .init(
             root: agenticdir,
             kind: .project_local

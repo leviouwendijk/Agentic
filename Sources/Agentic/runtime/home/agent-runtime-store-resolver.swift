@@ -1,4 +1,5 @@
 import Foundation
+import Path
 
 public struct AgentRuntimeStoreResolver: Sendable {
     public let environment: AgentRuntimeEnvironment
@@ -12,7 +13,7 @@ public struct AgentRuntimeStoreResolver: Sendable {
     public func resolveStores(
         sessionID: String
     ) throws -> AgentRuntimeStores {
-        let locations = storageLocations()
+        let locations = environment.storageLocations()
 
         guard environment.sessionStorageMode.isDurable else {
             return .init()
@@ -61,30 +62,21 @@ public struct AgentRuntimeStoreResolver: Sendable {
 }
 
 private extension AgentRuntimeStoreResolver {
-    struct StorageLocations: Sendable {
-        let sessionsdir: URL?
-        let transcriptsdir: URL?
-        let approvalsdir: URL?
-        let artifactsdir: URL?
-    }
-
     func transcriptEventSinks(
         sessionID: String
     ) throws -> [any AgentRunEventSink] {
-        guard let transcriptFileURL = environment.transcriptFileURL(
+        guard let transcriptfile = environment.transcriptfile(
             sessionID: sessionID
         ) else {
             return []
         }
 
-        try FileManager.default.createDirectory(
-            at: transcriptFileURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true,
-            attributes: nil
+        try PathCreation.parent(
+            of: transcriptfile
         )
 
         let store = FileTranscriptStore(
-            fileURL: transcriptFileURL
+            fileURL: transcriptfile
         )
 
         return [
@@ -97,20 +89,18 @@ private extension AgentRuntimeStoreResolver {
     func approvalEventStore(
         sessionID: String
     ) throws -> (any AgentApprovalEventStore)? {
-        guard let approvalFileURL = environment.approvalsFileURL(
+        guard let approvalsfile = environment.approvalsfile(
             sessionID: sessionID
         ) else {
             return nil
         }
 
-        try FileManager.default.createDirectory(
-            at: approvalFileURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true,
-            attributes: nil
+        try PathCreation.parent(
+            of: approvalsfile
         )
 
         return FileApprovalEventStore(
-            fileURL: approvalFileURL
+            fileURL: approvalsfile
         )
     }
 
@@ -128,69 +118,5 @@ private extension AgentRuntimeStoreResolver {
                 store: approvalEventStore
             )
         ]
-    }
-
-    func storageLocations() -> StorageLocations {
-        switch environment.sessionStorageMode {
-        case .global_home:
-            return .init(
-                sessionsdir: environment.home.layout.sessionsdir,
-                transcriptsdir: environment.home.layout.transcriptsdir,
-                approvalsdir: environment.home.layout.approvalsdir,
-                artifactsdir: environment.home.layout.artifactsdir
-            )
-
-        case .project_local:
-            return .init(
-                sessionsdir: environment.projectDiscovery?.agenticdir
-                    .appendingPathComponent(
-                        "sessions",
-                        isDirectory: true
-                    ),
-                transcriptsdir: environment.projectDiscovery?.agenticdir
-                    .appendingPathComponent(
-                        "transcripts",
-                        isDirectory: true
-                    ),
-                approvalsdir: environment.projectDiscovery?.agenticdir
-                    .appendingPathComponent(
-                        "approvals",
-                        isDirectory: true
-                    ),
-                artifactsdir: environment.projectDiscovery?.agenticdir
-                    .appendingPathComponent(
-                        "artifacts",
-                        isDirectory: true
-                    )
-            )
-
-        case .custom(let root):
-            return .init(
-                sessionsdir: root.appendingPathComponent(
-                    "sessions",
-                    isDirectory: true
-                ),
-                transcriptsdir: root.appendingPathComponent(
-                    "transcripts",
-                    isDirectory: true
-                ),
-                approvalsdir: root.appendingPathComponent(
-                    "approvals",
-                    isDirectory: true
-                ),
-                artifactsdir: root.appendingPathComponent(
-                    "artifacts",
-                    isDirectory: true
-                )
-            )
-
-        case .ephemeral:
-            return .init(
-                sessionsdir: nil,
-                transcriptsdir: nil,
-                approvalsdir: nil,
-                artifactsdir: nil
-            )
-        }
     }
 }

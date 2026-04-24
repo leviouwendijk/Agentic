@@ -236,28 +236,30 @@ public struct AgentSessionCatalog: Sendable {
     public func loadTranscript(
         sessionID: String
     ) async throws -> [AgentTranscriptEvent] {
-        guard let url = environment.transcriptFileURL(
-            sessionID: sessionID
-        ) else {
+        guard
+            let transcriptfile = environment.transcriptfile(
+                sessionID: sessionID
+            )
+        else {
             return []
         }
 
         return try await FileTranscriptStore(
-            fileURL: url
+            fileURL: transcriptfile
         ).loadEvents()
     }
 
     public func loadApprovals(
         sessionID: String
     ) async throws -> [AgentApprovalEvent] {
-        guard let url = environment.approvalsFileURL(
+        guard let approvalsfile = environment.approvalsfile(
             sessionID: sessionID
         ) else {
             return []
         }
 
         return try await FileApprovalEventStore(
-            fileURL: url
+            fileURL: approvalsfile
         ).loadEvents()
     }
 }
@@ -289,20 +291,17 @@ private extension AgentSessionCatalog {
         return .init(
             metadata: metadata,
             hasCheckpoint: exists(
-                environment.sessiondir(
+                environment.checkpointfile(
                     sessionID: sessionID
-                )?.appendingPathComponent(
-                    "checkpoint.json",
-                    isDirectory: false
                 )
             ),
             hasTranscript: exists(
-                environment.transcriptFileURL(
+                environment.transcriptfile(
                     sessionID: sessionID
                 )
             ),
             hasApprovals: exists(
-                environment.approvalsFileURL(
+                environment.approvalsfile(
                     sessionID: sessionID
                 )
             ),
