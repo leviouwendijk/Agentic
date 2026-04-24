@@ -69,26 +69,10 @@ public actor AgentRunner {
         }
 
         switch checkpoint.phase {
-        case .awaiting_approval:
-            guard let response = checkpoint.lastResponse else {
-                throw AgentHistoryError.corruptedCheckpoint(
-                    "awaiting approval without last response"
-                )
-            }
-
-            guard let pendingApproval = checkpoint.pendingApproval else {
-                throw AgentHistoryError.corruptedCheckpoint(
-                    "awaiting approval without pending approval payload"
-                )
-            }
-
-            return .awaitingApproval(
-                sessionID: checkpoint.id,
-                response: response,
-                pendingApproval: pendingApproval,
-                state: checkpoint.state,
-                events: checkpoint.events,
-                costRecord: checkpoint.costRecord
+        case .suspended,
+             .awaiting_approval:
+            return try suspendedResult(
+                from: checkpoint
             )
 
         case .completed:
@@ -106,7 +90,8 @@ public actor AgentRunner {
                 costRecord: checkpoint.costRecord
             )
 
-        case .ready_for_model, .processing_tool_calls:
+        case .ready_for_model,
+             .processing_tool_calls:
             return try await ToolLoopExecutor(
                 adapter: adapter,
                 configuration: configuration,
@@ -118,6 +103,94 @@ public actor AgentRunner {
                 eventSinks: eventSinks,
                 costTracker: costTracker
             ).resume(checkpoint)
+        }
+    }
+
+    public func resume(
+        sessionID: String,
+        userInput: String,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        try await resume(
+            sessionID: sessionID,
+            answer: .text(
+                userInput
+            ),
+            metadata: metadata
+        )
+    }
+
+    public func resume(
+        sessionID: String,
+        answer: UserInputAnswer,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        guard let historyStore else {
+            throw AgentHistoryError.historyStoreRequired
+        }
+
+        guard let checkpoint = try await historyStore.loadCheckpoint(
+            sessionID: sessionID
+        ) else {
+            throw AgentHistoryError.checkpointNotFound(
+                sessionID
+            )
+        }
+
+        return try await ToolLoopExecutor(
+            adapter: adapter,
+            configuration: configuration,
+            toolRegistry: toolRegistry,
+            extensions: extensions,
+            workspace: workspace,
+            approvalHandler: approvalHandler,
+            historyStore: historyStore,
+            eventSinks: eventSinks,
+            costTracker: costTracker
+        ).resume(
+            checkpoint,
+            answer: answer,
+            metadata: metadata
+        )
+    }
+}
+
+private extension AgentRunner {
+    func suspendedResult(
+        from checkpoint: AgentHistoryCheckpoint
+    ) throws -> AgentRunResult {
+        guard let response = checkpoint.lastResponse else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "suspended checkpoint without last response"
+            )
+        }
+
+        guard let suspension = checkpoint.resolvedSuspension else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "suspended checkpoint without suspension payload"
+            )
+        }
+
+        switch suspension.reason {
+        case .approval(let pendingApproval):
+            return .awaitingApproval(
+                sessionID: checkpoint.id,
+                response: response,
+                pendingApproval: pendingApproval,
+                state: checkpoint.state,
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
+            )
+
+        case .user_input(let pendingUserInput):
+            return .awaitingUserInput(
+                sessionID: checkpoint.id,
+                response: response,
+                pendingUserInput: pendingUserInput,
+                state: checkpoint.state,
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
+            )
         }
     }
 }

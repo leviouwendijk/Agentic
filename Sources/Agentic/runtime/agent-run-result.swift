@@ -1,6 +1,7 @@
 public struct AgentRunResult: Sendable, Codable, Hashable {
     public let sessionID: String
     public let response: AgentResponse?
+    public let suspension: AgentSuspension?
     public let pendingApproval: PendingApproval?
     public let state: AgentLoopState
     public let events: [AgentRunEvent]
@@ -9,6 +10,7 @@ public struct AgentRunResult: Sendable, Codable, Hashable {
     public init(
         sessionID: String,
         response: AgentResponse?,
+        suspension: AgentSuspension? = nil,
         pendingApproval: PendingApproval? = nil,
         state: AgentLoopState,
         events: [AgentRunEvent] = [],
@@ -16,7 +18,8 @@ public struct AgentRunResult: Sendable, Codable, Hashable {
     ) {
         self.sessionID = sessionID
         self.response = response
-        self.pendingApproval = pendingApproval
+        self.suspension = suspension
+        self.pendingApproval = pendingApproval ?? suspension?.pendingApproval
         self.state = state
         self.events = events
         self.costRecord = costRecord
@@ -32,7 +35,27 @@ public struct AgentRunResult: Sendable, Codable, Hashable {
         .init(
             sessionID: sessionID,
             response: response,
+            suspension: nil,
             pendingApproval: nil,
+            state: state,
+            events: events,
+            costRecord: costRecord
+        )
+    }
+
+    public static func suspended(
+        sessionID: String,
+        response: AgentResponse,
+        suspension: AgentSuspension,
+        state: AgentLoopState,
+        events: [AgentRunEvent] = [],
+        costRecord: AgentCostRecord? = nil
+    ) -> Self {
+        .init(
+            sessionID: sessionID,
+            response: response,
+            suspension: suspension,
+            pendingApproval: suspension.pendingApproval,
             state: state,
             events: events,
             costRecord: costRecord
@@ -47,21 +70,55 @@ public struct AgentRunResult: Sendable, Codable, Hashable {
         events: [AgentRunEvent] = [],
         costRecord: AgentCostRecord? = nil
     ) -> Self {
-        .init(
+        .suspended(
             sessionID: sessionID,
             response: response,
-            pendingApproval: pendingApproval,
+            suspension: .approval(
+                pendingApproval
+            ),
             state: state,
             events: events,
             costRecord: costRecord
         )
     }
 
+    public static func awaitingUserInput(
+        sessionID: String,
+        response: AgentResponse,
+        pendingUserInput: PendingUserInput,
+        state: AgentLoopState,
+        events: [AgentRunEvent] = [],
+        costRecord: AgentCostRecord? = nil
+    ) -> Self {
+        .suspended(
+            sessionID: sessionID,
+            response: response,
+            suspension: .user_input(
+                pendingUserInput
+            ),
+            state: state,
+            events: events,
+            costRecord: costRecord
+        )
+    }
+
+    public var pendingUserInput: PendingUserInput? {
+        suspension?.pendingUserInput
+    }
+
     public var isCompleted: Bool {
-        response != nil && pendingApproval == nil
+        response != nil && suspension == nil && pendingApproval == nil
+    }
+
+    public var isSuspended: Bool {
+        suspension != nil || pendingApproval != nil
     }
 
     public var isAwaitingApproval: Bool {
-        pendingApproval != nil
+        pendingApproval != nil || suspension?.pendingApproval != nil
+    }
+
+    public var isAwaitingUserInput: Bool {
+        pendingUserInput != nil
     }
 }

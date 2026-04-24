@@ -189,6 +189,72 @@ public struct AgentSessionRuntime: Sendable {
 
         return result
     }
+
+    public func resume(
+        userInput: String,
+        adapter: any AgentModelAdapter,
+        configuration: AgentRunnerConfiguration = .default,
+        toolRegistry: ToolRegistry = .init(),
+        extensions: [any AgentHarnessExtension] = [],
+        approvalHandler: (any ToolApprovalHandler)? = nil,
+        enableHistoryPersistence: Bool = true,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        try await resume(
+            answer: .text(
+                userInput
+            ),
+            adapter: adapter,
+            configuration: configuration,
+            toolRegistry: toolRegistry,
+            extensions: extensions,
+            approvalHandler: approvalHandler,
+            enableHistoryPersistence: enableHistoryPersistence,
+            metadata: metadata
+        )
+    }
+
+    public func resume(
+        answer: UserInputAnswer,
+        adapter: any AgentModelAdapter,
+        configuration: AgentRunnerConfiguration = .default,
+        toolRegistry: ToolRegistry = .init(),
+        extensions: [any AgentHarnessExtension] = [],
+        approvalHandler: (any ToolApprovalHandler)? = nil,
+        enableHistoryPersistence: Bool = true,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        try saveMetadata(
+            self.metadata.withStatus(
+                .active
+            )
+        )
+
+        let runner = try makeRunner(
+            adapter: adapter,
+            configuration: configuration,
+            toolRegistry: toolRegistry,
+            extensions: extensions,
+            approvalHandler: approvalHandler,
+            enableHistoryPersistence: enableHistoryPersistence
+        )
+
+        let result = try await runner.resume(
+            sessionID: sessionID,
+            answer: answer,
+            metadata: metadata
+        )
+
+        try saveMetadata(
+            self.metadata.withStatus(
+                status(
+                    for: result
+                )
+            )
+        )
+
+        return result
+    }
 }
 
 private extension AgentSessionRuntime {
@@ -264,6 +330,10 @@ private extension AgentSessionRuntime {
     ) -> AgentSessionStatus {
         if result.isAwaitingApproval {
             return .awaiting_approval
+        }
+
+        if result.isAwaitingUserInput {
+            return .awaiting_user_input
         }
 
         if result.isCompleted {

@@ -70,6 +70,7 @@ public extension AgentApprovalEvent {
 
         case .assistant_response,
              .compaction,
+             .pending_user_input,
              .tool_result,
              .tool_error,
              .cost_projected,

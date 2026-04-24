@@ -15,13 +15,30 @@ public struct CoreFileToolSet: AgentToolSet {
     }
 }
 
+public struct CoreInteractionToolSet: AgentToolSet {
+    public init() {}
+
+    public func register(
+        into registry: inout ToolRegistry
+    ) throws {
+        try registry.register(
+            [
+                ClarifyWithUserTool()
+            ]
+        )
+    }
+}
+
 public struct CoreToolSet: AgentToolSet {
     public let contextComposer: ContextComposer
+    public let includeInteractionTools: Bool
 
     public init(
-        contextComposer: ContextComposer = .init()
+        contextComposer: ContextComposer = .init(),
+        includeInteractionTools: Bool = false
     ) {
         self.contextComposer = contextComposer
+        self.includeInteractionTools = includeInteractionTools
     }
 
     public func register(
@@ -35,5 +52,11 @@ public struct CoreToolSet: AgentToolSet {
                 composer: contextComposer
             )
         )
+
+        if includeInteractionTools {
+            try registry.register(
+                CoreInteractionToolSet()
+            )
+        }
     }
 }

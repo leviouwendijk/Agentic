@@ -150,6 +150,423 @@ extension ToolLoopExecutor {
         )
     }
 
+    func suspendedResult(
+        from checkpoint: AgentHistoryCheckpoint
+    ) throws -> AgentRunResult {
+        guard let response = checkpoint.lastResponse else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "suspended checkpoint without last response"
+            )
+        }
+
+        guard let suspension = checkpoint.resolvedSuspension else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "suspended checkpoint without suspension payload"
+            )
+        }
+
+        switch suspension.reason {
+        case .approval(let pendingApproval):
+            return .awaitingApproval(
+                sessionID: checkpoint.id,
+                response: response,
+                pendingApproval: pendingApproval,
+                state: checkpoint.state,
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
+            )
+
+        case .user_input(let pendingUserInput):
+            return .awaitingUserInput(
+                sessionID: checkpoint.id,
+                response: response,
+                pendingUserInput: pendingUserInput,
+                state: checkpoint.state,
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
+            )
+        }
+    }
+
+    func suspendForUserInput(
+        _ toolCall: AgentToolCall,
+        checkpoint: inout AgentHistoryCheckpoint
+    ) async throws -> ToolProcessingOutcome {
+        try await recordToolCall(
+            toolCall
+        )
+
+        let input = try JSONToolBridge.decode(
+            ClarifyWithUserToolInput.self,
+            from: toolCall.input
+        )
+        let pendingUserInput = input.pendingUserInput
+        let suspension = AgentSuspension.user_input(
+            pendingUserInput,
+            metadata: [
+                "toolCallID": toolCall.id,
+                "toolName": toolCall.name
+            ]
+        )
+
+        checkpoint.suspend(
+            suspension
+        )
+
+        try await appendRunEvent(
+            .init(
+                kind: .pending_user_input,
+                iteration: checkpoint.state.iteration,
+                toolCallID: toolCall.id,
+                toolName: toolCall.name,
+                summary: pendingUserInput.prompt
+            ),
+            to: &checkpoint
+        )
+
+        try await saveCheckpoint(
+            &checkpoint
+        )
+
+        return .result(
+            try suspendedResult(
+                from: checkpoint
+            )
+        )
+    }
+
+    func resumeWithUserInput(
+        _ checkpoint: AgentHistoryCheckpoint,
+        userInput: String,
+        metadata: [String: String]
+    ) async throws -> AgentRunResult {
+        try await resumeWithUserInput(
+            checkpoint,
+            answer: .text(
+                userInput
+            ),
+            metadata: metadata
+        )
+    }
+
+    func resumeWithUserInput(
+        _ checkpoint: AgentHistoryCheckpoint,
+        answer: UserInputAnswer,
+        metadata: [String: String]
+    ) async throws -> AgentRunResult {
+        var checkpoint = checkpoint
+
+        guard checkpoint.phase == .suspended
+            || checkpoint.phase == .awaiting_approval
+        else {
+            throw AgentHistoryError.sessionNotAwaitingUserInput(
+                checkpoint.id
+            )
+        }
+
+        guard let suspension = checkpoint.resolvedSuspension else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "resume with user input without suspension payload"
+            )
+        }
+
+        guard case .user_input(let pendingUserInput) = suspension.reason else {
+            throw AgentHistoryError.sessionNotAwaitingUserInput(
+                checkpoint.id
+            )
+        }
+
+        guard let toolCallID = suspension.metadata["toolCallID"] else {
+            throw AgentHistoryError.corruptedCheckpoint(
+                "user-input suspension without tool call id"
+            )
+        }
+
+        let toolName = suspension.metadata["toolName"]
+            ?? ClarifyWithUserTool.identifier.rawValue
+
+        let normalizedAnswer = try normalizedUserInputAnswer(
+            answer,
+            for: pendingUserInput
+        )
+
+        var payloadMetadata = pendingUserInput.metadata
+
+        payloadMetadata.merge(
+            suspension.metadata
+        ) { _, new in
+            new
+        }
+
+        payloadMetadata.merge(
+            metadata
+        ) { _, new in
+            new
+        }
+
+        let result = AgentToolResult(
+            toolCallID: toolCallID,
+            name: toolName,
+            output: try JSONToolBridge.encode(
+                UserInputResumePayload(
+                    kind: "user_input_received",
+                    prompt: pendingUserInput.prompt,
+                    answer: normalizedAnswer,
+                    metadata: payloadMetadata
+                )
+            ),
+            isError: false
+        )
+
+        appendToolResultBlock(
+            .tool_result(result),
+            to: &checkpoint.state
+        )
+
+        try await recordToolResult(
+            result
+        )
+
+        try await appendRunEvent(
+            .init(
+                kind: .tool_result,
+                iteration: checkpoint.state.iteration,
+                toolCallID: toolCallID,
+                toolName: toolName,
+                summary: "user input received"
+            ),
+            to: &checkpoint
+        )
+
+        checkpoint.clearSuspension()
+        checkpoint.lastResponse = nil
+        checkpoint.phase = .ready_for_model
+
+        try await saveCheckpoint(
+            &checkpoint
+        )
+
+        return try await runLoop(
+            from: checkpoint
+        )
+    }
+
+    func normalizedUserInputAnswer(
+        _ answer: UserInputAnswer,
+        for pendingUserInput: PendingUserInput
+    ) throws -> UserInputAnswer {
+        switch (pendingUserInput.input, answer) {
+        case (.text(let spec), .text(let value)):
+            return .text(
+                try normalizedTextAnswer(
+                    value,
+                    validation: spec.validation
+                )
+            )
+
+        case (.single_choice(let spec), .single_choice(let value)):
+            return .single_choice(
+                try normalizedSingleChoiceAnswer(
+                    value,
+                    spec: spec
+                )
+            )
+
+        case (.multi_choice(let spec), .multi_choice(let value)):
+            return .multi_choice(
+                try normalizedMultiChoiceAnswer(
+                    value,
+                    spec: spec
+                )
+            )
+
+        case (.confirmation, .confirmation(let value)):
+            return .confirmation(
+                value
+            )
+
+        case (.form(let spec), .form(let value)):
+            return .form(
+                try normalizedFormAnswer(
+                    value,
+                    spec: spec
+                )
+            )
+
+        default:
+            throw AgentHistoryError.invalidUserInput(
+                "Answer kind does not match pending input kind."
+            )
+        }
+    }
+
+    func normalizedTextAnswer(
+        _ value: String,
+        validation: UserInputValidation?
+    ) throws -> String {
+        let trimmed = value.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let validation = validation ?? .init()
+
+        if validation.required,
+           trimmed.isEmpty {
+            throw AgentHistoryError.emptyUserInput
+        }
+
+        if let minimumLength = validation.minimumLength,
+           trimmed.count < minimumLength {
+            throw AgentHistoryError.invalidUserInput(
+                "Text answer must contain at least \(minimumLength) character(s)."
+            )
+        }
+
+        if let maximumLength = validation.maximumLength,
+           trimmed.count > maximumLength {
+            throw AgentHistoryError.invalidUserInput(
+                "Text answer must contain at most \(maximumLength) character(s)."
+            )
+        }
+
+        return trimmed
+    }
+
+    func normalizedSingleChoiceAnswer(
+        _ answer: SingleChoiceUserInputAnswer,
+        spec: SingleChoiceUserInput
+    ) throws -> SingleChoiceUserInputAnswer {
+        switch answer {
+        case .choice(let id):
+            let id = id.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+            guard !id.isEmpty else {
+                throw AgentHistoryError.emptyUserInput
+            }
+
+            guard spec.choices.contains(where: { $0.id == id }) else {
+                throw AgentHistoryError.invalidUserInput(
+                    "Unknown choice id '\(id)'."
+                )
+            }
+
+            return .choice(
+                id
+            )
+
+        case .custom(let value):
+            guard spec.allowsCustomValue else {
+                throw AgentHistoryError.invalidUserInput(
+                    "Custom values are not allowed for this single-choice input."
+                )
+            }
+
+            let value = value.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+            guard !value.isEmpty else {
+                throw AgentHistoryError.emptyUserInput
+            }
+
+            return .custom(
+                value
+            )
+        }
+    }
+
+    func normalizedMultiChoiceAnswer(
+        _ answer: MultiChoiceUserInputAnswer,
+        spec: MultiChoiceUserInput
+    ) throws -> MultiChoiceUserInputAnswer {
+        let knownChoiceIDs = Set(
+            spec.choices.map(\.id)
+        )
+        var seen: Set<String> = []
+        var choiceIDs: [String] = []
+
+        for rawID in answer.choiceIDs {
+            let id = rawID.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+            guard !id.isEmpty else {
+                continue
+            }
+
+            guard knownChoiceIDs.contains(id) else {
+                throw AgentHistoryError.invalidUserInput(
+                    "Unknown choice id '\(id)'."
+                )
+            }
+
+            guard !seen.contains(id) else {
+                continue
+            }
+
+            seen.insert(
+                id
+            )
+            choiceIDs.append(
+                id
+            )
+        }
+
+        if choiceIDs.count < spec.minimumSelectionCount {
+            throw AgentHistoryError.invalidUserInput(
+                "Expected at least \(spec.minimumSelectionCount) selected choice(s)."
+            )
+        }
+
+        if let maximumSelectionCount = spec.maximumSelectionCount,
+           choiceIDs.count > maximumSelectionCount {
+            throw AgentHistoryError.invalidUserInput(
+                "Expected at most \(maximumSelectionCount) selected choice(s)."
+            )
+        }
+
+        return .init(
+            choiceIDs: choiceIDs
+        )
+    }
+
+    func normalizedFormAnswer(
+        _ answer: FormUserInputAnswer,
+        spec: FormUserInput
+    ) throws -> FormUserInputAnswer {
+        let knownFieldIDs = Set(
+            spec.fields.map(\.id)
+        )
+
+        for key in answer.values.keys where !knownFieldIDs.contains(key) {
+            throw AgentHistoryError.invalidUserInput(
+                "Unknown form field id '\(key)'."
+            )
+        }
+
+        var values: [String: String] = [:]
+
+        for field in spec.fields {
+            let rawValue = answer.values[field.id]
+                ?? field.defaultText
+                ?? ""
+
+            let normalized = try normalizedTextAnswer(
+                rawValue,
+                validation: field.validation
+            )
+
+            if !normalized.isEmpty {
+                values[field.id] = normalized
+            }
+        }
+
+        return .init(
+            values: values
+        )
+    }
+
     func localizedDescription(
         for error: Error
     ) -> String {

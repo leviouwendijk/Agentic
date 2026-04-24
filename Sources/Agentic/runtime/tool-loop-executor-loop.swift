@@ -48,26 +48,10 @@ extension ToolLoopExecutor {
                     return result
                 }
 
-            case .awaiting_approval:
-                guard let response = checkpoint.lastResponse else {
-                    throw AgentHistoryError.corruptedCheckpoint(
-                        "awaiting approval without last response"
-                    )
-                }
-
-                guard let pendingApproval = checkpoint.pendingApproval else {
-                    throw AgentHistoryError.corruptedCheckpoint(
-                        "awaiting approval without pending approval payload"
-                    )
-                }
-
-                return .awaitingApproval(
-                    sessionID: checkpoint.id,
-                    response: response,
-                    pendingApproval: pendingApproval,
-                    state: checkpoint.state,
-                    events: checkpoint.events,
-                    costRecord: checkpoint.costRecord
+            case .suspended,
+                 .awaiting_approval:
+                return try suspendedResult(
+                    from: checkpoint
                 )
 
             case .completed:
@@ -126,7 +110,7 @@ extension ToolLoopExecutor {
             response.message
         )
         checkpoint.lastResponse = response
-        checkpoint.pendingApproval = nil
+        checkpoint.clearSuspension()
 
         try await recordMessage(
             response.message
@@ -192,7 +176,7 @@ extension ToolLoopExecutor {
         guard !calls.isEmpty else {
             checkpoint.phase = .ready_for_model
             checkpoint.lastResponse = nil
-            checkpoint.pendingApproval = nil
+            checkpoint.clearSuspension()
 
             try await saveCheckpoint(
                 &checkpoint
@@ -202,6 +186,13 @@ extension ToolLoopExecutor {
         }
 
         for toolCall in calls {
+            if toolCall.name == ClarifyWithUserTool.identifier.rawValue {
+                return try await suspendForUserInput(
+                    toolCall,
+                    checkpoint: &checkpoint
+                )
+            }
+
             try await recordToolCall(
                 toolCall
             )
@@ -410,9 +401,13 @@ extension ToolLoopExecutor {
                         preflight: preflight,
                         requirement: requirement
                     )
+                    let suspension = AgentSuspension.approval(
+                        pendingApproval
+                    )
 
-                    checkpoint.pendingApproval = pendingApproval
-                    checkpoint.phase = .awaiting_approval
+                    checkpoint.suspend(
+                        suspension
+                    )
 
                     try await appendRunEvent(
                         .init(
@@ -429,20 +424,9 @@ extension ToolLoopExecutor {
                         &checkpoint
                     )
 
-                    guard let response = checkpoint.lastResponse else {
-                        throw AgentHistoryError.corruptedCheckpoint(
-                            "awaiting approval without last response"
-                        )
-                    }
-
                     return .result(
-                        .awaitingApproval(
-                            sessionID: checkpoint.id,
-                            response: response,
-                            pendingApproval: pendingApproval,
-                            state: checkpoint.state,
-                            events: checkpoint.events,
-                            costRecord: checkpoint.costRecord
+                        try suspendedResult(
+                            from: checkpoint
                         )
                     )
                 }
@@ -451,7 +435,7 @@ extension ToolLoopExecutor {
 
         checkpoint.phase = .ready_for_model
         checkpoint.lastResponse = nil
-        checkpoint.pendingApproval = nil
+        checkpoint.clearSuspension()
 
         try await saveCheckpoint(
             &checkpoint

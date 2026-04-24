@@ -3,6 +3,7 @@ import Foundation
 public enum AgentHistoryPhase: String, Sendable, Codable, Hashable, CaseIterable {
     case ready_for_model
     case processing_tool_calls
+    case suspended
     case awaiting_approval
     case completed
 }
@@ -14,6 +15,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
     public var events: [AgentRunEvent]
     public var phase: AgentHistoryPhase
     public var lastResponse: AgentResponse?
+    public var suspension: AgentSuspension?
     public var pendingApproval: PendingApproval?
     public var costRecord: AgentCostRecord?
     public var updatedAt: Date
@@ -25,6 +27,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         events: [AgentRunEvent] = [],
         phase: AgentHistoryPhase = .ready_for_model,
         lastResponse: AgentResponse? = nil,
+        suspension: AgentSuspension? = nil,
         pendingApproval: PendingApproval? = nil,
         costRecord: AgentCostRecord? = nil,
         updatedAt: Date = Date()
@@ -35,7 +38,8 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         self.events = events
         self.phase = phase
         self.lastResponse = lastResponse
-        self.pendingApproval = pendingApproval
+        self.suspension = suspension
+        self.pendingApproval = pendingApproval ?? suspension?.pendingApproval
         self.costRecord = costRecord
         self.updatedAt = updatedAt
     }
@@ -47,6 +51,41 @@ public extension AgentHistoryCheckpoint {
             id: id,
             messages: state.messages
         )
+    }
+
+    var resolvedSuspension: AgentSuspension? {
+        if let suspension {
+            return suspension
+        }
+
+        if let pendingApproval {
+            return .approval(
+                pendingApproval
+            )
+        }
+
+        return nil
+    }
+
+    var pendingUserInput: PendingUserInput? {
+        resolvedSuspension?.pendingUserInput
+    }
+
+    mutating func suspend(
+        _ suspension: AgentSuspension
+    ) {
+        self.suspension = suspension
+        self.pendingApproval = suspension.pendingApproval
+        self.phase = .suspended
+    }
+
+    mutating func clearSuspension() {
+        suspension = nil
+        pendingApproval = nil
+
+        if phase == .suspended || phase == .awaiting_approval {
+            phase = .ready_for_model
+        }
     }
 
     mutating func touch(

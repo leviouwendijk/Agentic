@@ -66,6 +66,30 @@ public struct ToolLoopExecutor: Sendable {
             from: checkpoint
         )
     }
+
+    public func resume(
+        _ checkpoint: AgentHistoryCheckpoint,
+        userInput: String,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        try await resumeWithUserInput(
+            checkpoint,
+            userInput: userInput,
+            metadata: metadata
+        )
+    }
+
+    public func resume(
+        _ checkpoint: AgentHistoryCheckpoint,
+        answer: UserInputAnswer,
+        metadata: [String: String] = [:]
+    ) async throws -> AgentRunResult {
+        try await resumeWithUserInput(
+            checkpoint,
+            answer: answer,
+            metadata: metadata
+        )
+    }
 }
 
 extension ToolLoopExecutor {
@@ -82,6 +106,13 @@ extension ToolLoopExecutor {
         let toolCallID: String
         let toolName: String
         let message: String
+    }
+
+    struct UserInputResumePayload: Encodable, Sendable {
+        let kind: String
+        let prompt: String
+        let answer: UserInputAnswer
+        let metadata: [String: String]
     }
 
     enum ToolProcessingOutcome {
