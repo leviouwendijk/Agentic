@@ -117,13 +117,18 @@ extension ToolLoopExecutor {
         checkpoint.lastResponse = response
         checkpoint.pendingApproval = nil
 
-        checkpoint.events.append(
+        try await recordMessage(
+            response.message
+        )
+
+        try await appendRunEvent(
             .init(
                 kind: .assistant_response,
                 iteration: checkpoint.state.iteration,
                 messageID: response.message.id,
                 summary: response.stopReason.rawValue
-            )
+            ),
+            to: &checkpoint
         )
 
         for harnessExtension in extensions {
@@ -179,6 +184,10 @@ extension ToolLoopExecutor {
         }
 
         for toolCall in calls {
+            try await recordToolCall(
+                toolCall
+            )
+
             let preflight: ToolPreflight
 
             do {
@@ -197,14 +206,19 @@ extension ToolLoopExecutor {
                     to: &checkpoint.state
                 )
 
-                checkpoint.events.append(
+                try await recordToolResult(
+                    result
+                )
+
+                try await appendRunEvent(
                     .init(
                         kind: .tool_error,
                         iteration: checkpoint.state.iteration,
                         toolCallID: toolCall.id,
                         toolName: toolCall.name,
                         summary: localizedDescription(for: error)
-                    )
+                    ),
+                    to: &checkpoint
                 )
 
                 try await saveCheckpoint(
@@ -214,14 +228,15 @@ extension ToolLoopExecutor {
                 continue
             }
 
-            checkpoint.events.append(
+            try await appendRunEvent(
                 .init(
                     kind: .tool_preflight,
                     iteration: checkpoint.state.iteration,
                     toolCallID: toolCall.id,
                     toolName: toolCall.name,
                     summary: preflight.summary
-                )
+                ),
+                to: &checkpoint
             )
 
             let requirement = configuration.toolExecutionPolicy.evaluate(
@@ -239,7 +254,11 @@ extension ToolLoopExecutor {
                     to: &checkpoint.state
                 )
 
-                checkpoint.events.append(
+                try await recordToolResult(
+                    result
+                )
+
+                try await appendRunEvent(
                     .init(
                         kind: result.isError ? .tool_error : .tool_result,
                         iteration: checkpoint.state.iteration,
@@ -248,7 +267,8 @@ extension ToolLoopExecutor {
                         summary: result.isError
                             ? "tool execution failed"
                             : "tool executed"
-                    )
+                    ),
+                    to: &checkpoint
                 )
 
                 try await saveCheckpoint(
@@ -267,14 +287,19 @@ extension ToolLoopExecutor {
                     to: &checkpoint.state
                 )
 
-                checkpoint.events.append(
+                try await recordToolResult(
+                    result
+                )
+
+                try await appendRunEvent(
                     .init(
                         kind: .tool_denied,
                         iteration: checkpoint.state.iteration,
                         toolCallID: toolCall.id,
                         toolName: toolCall.name,
                         summary: "denied by execution policy"
-                    )
+                    ),
+                    to: &checkpoint
                 )
 
                 try await saveCheckpoint(
@@ -289,14 +314,15 @@ extension ToolLoopExecutor {
 
                 switch decision {
                 case .approved:
-                    checkpoint.events.append(
+                    try await appendRunEvent(
                         .init(
                             kind: .tool_approved,
                             iteration: checkpoint.state.iteration,
                             toolCallID: toolCall.id,
                             toolName: toolCall.name,
                             summary: "approved"
-                        )
+                        ),
+                        to: &checkpoint
                     )
 
                     let result = await executeApprovedToolCall(
@@ -308,7 +334,11 @@ extension ToolLoopExecutor {
                         to: &checkpoint.state
                     )
 
-                    checkpoint.events.append(
+                    try await recordToolResult(
+                        result
+                    )
+
+                    try await appendRunEvent(
                         .init(
                             kind: result.isError ? .tool_error : .tool_result,
                             iteration: checkpoint.state.iteration,
@@ -317,7 +347,8 @@ extension ToolLoopExecutor {
                             summary: result.isError
                                 ? "tool execution failed"
                                 : "tool executed"
-                        )
+                        ),
+                        to: &checkpoint
                     )
 
                     try await saveCheckpoint(
@@ -336,14 +367,19 @@ extension ToolLoopExecutor {
                         to: &checkpoint.state
                     )
 
-                    checkpoint.events.append(
+                    try await recordToolResult(
+                        result
+                    )
+
+                    try await appendRunEvent(
                         .init(
                             kind: .tool_denied,
                             iteration: checkpoint.state.iteration,
                             toolCallID: toolCall.id,
                             toolName: toolCall.name,
                             summary: "denied after review"
-                        )
+                        ),
+                        to: &checkpoint
                     )
 
                     try await saveCheckpoint(
@@ -360,14 +396,15 @@ extension ToolLoopExecutor {
                     checkpoint.pendingApproval = pendingApproval
                     checkpoint.phase = .awaiting_approval
 
-                    checkpoint.events.append(
+                    try await appendRunEvent(
                         .init(
                             kind: .pending_approval,
                             iteration: checkpoint.state.iteration,
                             toolCallID: toolCall.id,
                             toolName: toolCall.name,
                             summary: preflight.summary
-                        )
+                        ),
+                        to: &checkpoint
                     )
 
                     try await saveCheckpoint(

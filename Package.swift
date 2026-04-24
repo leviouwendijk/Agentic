@@ -27,6 +27,7 @@ let package = Package(
         .package(url: "https://github.com/leviouwendijk/Matching.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Ranking.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Fuzzy.git", branch: "master"),
+        .package(url: "https://github.com/leviouwendijk/Milieu.git", branch: "master"),
 
         // .package(url: "https://github.com/leviouwendijk/Executable.git", branch: "master"),
     ],
@@ -48,6 +49,7 @@ let package = Package(
                 .product(name: "Matching", package: "Matching"),
                 .product(name: "Ranking", package: "Ranking"),
                 .product(name: "Fuzzy", package: "Fuzzy"),
+                .product(name: "Milieu", package: "Milieu"),
 
                 // .product(name: "Executable", package: "Executable"),
             ],

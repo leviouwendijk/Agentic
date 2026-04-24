@@ -8,6 +8,7 @@ public actor AgentRunner {
     public let workspace: AgentWorkspace?
     public let approvalHandler: (any ToolApprovalHandler)?
     public let historyStore: (any AgentHistoryStore)?
+    public let eventSinks: [any AgentRunEventSink]
 
     public init(
         adapter: any AgentModelAdapter,
@@ -16,7 +17,8 @@ public actor AgentRunner {
         extensions: [any AgentHarnessExtension] = [],
         workspace: AgentWorkspace? = nil,
         approvalHandler: (any ToolApprovalHandler)? = nil,
-        historyStore: (any AgentHistoryStore)? = nil
+        historyStore: (any AgentHistoryStore)? = nil,
+        eventSinks: [any AgentRunEventSink] = []
     ) {
         self.adapter = adapter
         self.configuration = configuration
@@ -25,6 +27,7 @@ public actor AgentRunner {
         self.workspace = workspace
         self.approvalHandler = approvalHandler
         self.historyStore = historyStore
+        self.eventSinks = eventSinks
     }
 
     public func run(
@@ -38,7 +41,8 @@ public actor AgentRunner {
             extensions: extensions,
             workspace: workspace,
             approvalHandler: approvalHandler,
-            historyStore: historyStore
+            historyStore: historyStore,
+            eventSinks: eventSinks
         ).run(
             request,
             sessionID: sessionID
@@ -104,7 +108,8 @@ public actor AgentRunner {
                 extensions: extensions,
                 workspace: workspace,
                 approvalHandler: approvalHandler,
-                historyStore: historyStore
+                historyStore: historyStore,
+                eventSinks: eventSinks
             ).resume(checkpoint)
         }
     }

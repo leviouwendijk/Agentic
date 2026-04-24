@@ -118,6 +118,14 @@ private extension TranscriptRetriever {
                 weight: 11
             )
 
+        case .session_branch:
+            return .init(
+                name: "sessionBranch",
+                text: text.isEmpty ? fallback : text,
+                role: .primary,
+                weight: 12
+            )
+
         case .note:
             return .init(
                 name: "note",
@@ -235,6 +243,72 @@ private extension TranscriptRetriever {
 
             return fields
 
+        case .session_branch(let event):
+            var fields: [MatchField] = [
+                .init(
+                    name: "kind",
+                    text: "session_branch",
+                    role: .tag,
+                    weight: 2
+                ),
+                .init(
+                    name: "alias",
+                    text: "session branch branched fork parent",
+                    role: .alias,
+                    weight: 3
+                ),
+                .init(
+                    name: "sessionID",
+                    text: event.sessionID,
+                    role: .keyword,
+                    weight: 5
+                ),
+                .init(
+                    name: "parentSessionID",
+                    text: event.branch.parentSessionID,
+                    role: .keyword,
+                    weight: 5
+                )
+            ]
+
+            if let branchedAtEventID = event.branch.branchedAtEventID,
+               !branchedAtEventID.isEmpty {
+                fields.append(
+                    .init(
+                        name: "branchedAtEventID",
+                        text: branchedAtEventID,
+                        role: .secondary,
+                        weight: 2
+                    )
+                )
+            }
+
+            if let branchedAtCheckpointID = event.branch.branchedAtCheckpointID,
+               !branchedAtCheckpointID.isEmpty {
+                fields.append(
+                    .init(
+                        name: "branchedAtCheckpointID",
+                        text: branchedAtCheckpointID,
+                        role: .secondary,
+                        weight: 2
+                    )
+                )
+            }
+
+            if let note = event.branch.note,
+               !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                fields.append(
+                    .init(
+                        name: "note",
+                        text: note,
+                        role: .body,
+                        weight: 6
+                    )
+                )
+            }
+
+            return fields
+
         case .note(_, let text):
             return [
                 .init(
@@ -294,6 +368,30 @@ private extension TranscriptRetriever {
             return .init(
                 values: values
             )
+
+        case .session_branch(let event):
+            var values: [String: String] = [
+                "kind": "session_branch",
+                "id": event.id,
+                "sessionID": event.sessionID,
+                "parentSessionID": event.branch.parentSessionID,
+                "sourceOrder": String(sourceOrder)
+            ]
+
+            if let branchedAtEventID = event.branch.branchedAtEventID,
+               !branchedAtEventID.isEmpty {
+                values["branchedAtEventID"] = branchedAtEventID
+            }
+
+            if let branchedAtCheckpointID = event.branch.branchedAtCheckpointID,
+               !branchedAtCheckpointID.isEmpty {
+                values["branchedAtCheckpointID"] = branchedAtCheckpointID
+            }
+
+            return .init(
+                values: values
+            )
+
 
         case .note(let id, _):
             return .init(

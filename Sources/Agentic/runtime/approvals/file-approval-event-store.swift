@@ -1,15 +1,15 @@
 import Foundation
 
-public actor FileTranscriptStore: AgentTranscriptStore {
+public actor FileApprovalEventStore: AgentApprovalEventStore {
     public let fileURL: URL
 
     public init(
         fileURL: URL
     ) {
-        self.fileURL = fileURL
+        self.fileURL = fileURL.standardizedFileURL
     }
 
-    public func loadEvents() async throws -> [AgentTranscriptEvent] {
+    public func loadEvents() async throws -> [AgentApprovalEvent] {
         guard FileManager.default.fileExists(
             atPath: fileURL.path
         ) else {
@@ -25,7 +25,7 @@ public actor FileTranscriptStore: AgentTranscriptStore {
         }
 
         if let events = try? JSONDecoder().decode(
-            [AgentTranscriptEvent].self,
+            [AgentApprovalEvent].self,
             from: data
         ) {
             return events
@@ -44,17 +44,15 @@ public actor FileTranscriptStore: AgentTranscriptStore {
                 omittingEmptySubsequences: true
             )
             .map { line in
-                let data = Data(line.utf8)
-
-                return try JSONDecoder().decode(
-                    AgentTranscriptEvent.self,
-                    from: data
+                try JSONDecoder().decode(
+                    AgentApprovalEvent.self,
+                    from: Data(line.utf8)
                 )
             }
     }
 
     public func append(
-        _ event: AgentTranscriptEvent
+        _ event: AgentApprovalEvent
     ) async throws {
         try ensureParentDirectoryExists()
 
@@ -98,13 +96,12 @@ public actor FileTranscriptStore: AgentTranscriptStore {
     }
 }
 
-private extension FileTranscriptStore {
+private extension FileApprovalEventStore {
     func ensureParentDirectoryExists() throws {
-        let directoryURL = fileURL.deletingLastPathComponent()
-
         try FileManager.default.createDirectory(
-            at: directoryURL,
-            withIntermediateDirectories: true
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true,
+            attributes: nil
         )
     }
 
@@ -124,30 +121,14 @@ private extension FileTranscriptStore {
     }
 
     func needsLeadingNewline() throws -> Bool {
-        let handle = try FileHandle(
-            forReadingFrom: fileURL
+        let data = try Data(
+            contentsOf: fileURL
         )
 
-        defer {
-            try? handle.close()
-        }
-
-        let length = try handle.seekToEnd()
-
-        guard length > 0 else {
+        guard let last = data.last else {
             return false
         }
 
-        try handle.seek(
-            toOffset: length - 1
-        )
-
-        let data = handle.readDataToEndOfFile()
-
-        guard let lastByte = data.first else {
-            return false
-        }
-
-        return lastByte != Character("\n").asciiValue
+        return last != Character("\n").asciiValue
     }
 }

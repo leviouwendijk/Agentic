@@ -1,0 +1,358 @@
+import Foundation
+
+public struct AgentSessionSummary: Sendable, Codable, Hashable, Identifiable {
+    public let metadata: AgentSessionMetadata
+    public let hasCheckpoint: Bool
+    public let hasTranscript: Bool
+    public let hasApprovals: Bool
+    public let artifactCount: Int
+
+    public init(
+        metadata: AgentSessionMetadata,
+        hasCheckpoint: Bool,
+        hasTranscript: Bool,
+        hasApprovals: Bool,
+        artifactCount: Int
+    ) {
+        self.metadata = metadata
+        self.hasCheckpoint = hasCheckpoint
+        self.hasTranscript = hasTranscript
+        self.hasApprovals = hasApprovals
+        self.artifactCount = artifactCount
+    }
+
+    public var id: String {
+        metadata.sessionID
+    }
+}
+
+public struct AgentSessionInspection: Sendable, Codable, Hashable {
+    public let summary: AgentSessionSummary
+    public let transcriptEventCount: Int
+    public let approvalEventCount: Int
+    public let childBranchCount: Int
+
+    public init(
+        summary: AgentSessionSummary,
+        transcriptEventCount: Int,
+        approvalEventCount: Int,
+        childBranchCount: Int
+    ) {
+        self.summary = summary
+        self.transcriptEventCount = transcriptEventCount
+        self.approvalEventCount = approvalEventCount
+        self.childBranchCount = childBranchCount
+    }
+}
+
+public enum AgentSessionCatalogError: Error, Sendable, LocalizedError {
+    case durableStorageRequired
+    case sessionNotFound(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .durableStorageRequired:
+            return "Session catalog operations require durable Agentic storage."
+
+        case .sessionNotFound(let sessionID):
+            return "No Agentic session exists for sessionID '\(sessionID)'."
+        }
+    }
+}
+
+public struct AgentSessionCatalog: Sendable {
+    public let environment: AgentRuntimeEnvironment
+
+    public init(
+        environment: AgentRuntimeEnvironment
+    ) {
+        self.environment = environment
+    }
+
+    public func listSessions(
+        statuses: [AgentSessionStatus] = [],
+        includeArchived: Bool = false
+    ) throws -> [AgentSessionSummary] {
+        guard let sessionsdir = environment.sessionsdir() else {
+            return []
+        }
+
+        guard FileManager.default.fileExists(
+            atPath: sessionsdir.path
+        ) else {
+            return []
+        }
+
+        let urls = try FileManager.default.contentsOfDirectory(
+            at: sessionsdir,
+            includingPropertiesForKeys: [
+                .isDirectoryKey
+            ],
+            options: [
+                .skipsHiddenFiles
+            ]
+        )
+
+        let summaries = try urls.compactMap { url -> AgentSessionSummary? in
+            guard try isDirectory(url) else {
+                return nil
+            }
+
+            let sessionID = url.lastPathComponent
+            let metadata = try loadMetadata(
+                sessionID: sessionID
+            ) ?? AgentSessionMetadata(
+                sessionID: sessionID,
+                workspaceAttached: environment.workspace != nil
+            )
+
+            guard includeArchived || metadata.status != .archived else {
+                return nil
+            }
+
+            if !statuses.isEmpty,
+               !statuses.contains(metadata.status) {
+                return nil
+            }
+
+            return summary(
+                metadata: metadata
+            )
+        }
+
+        return summaries.sorted { lhs, rhs in
+            if lhs.metadata.updatedAt == rhs.metadata.updatedAt {
+                return lhs.id < rhs.id
+            }
+
+            return lhs.metadata.updatedAt > rhs.metadata.updatedAt
+        }
+    }
+
+    public func loadSession(
+        sessionID: String
+    ) throws -> AgentSessionSummary {
+        if let metadata = try loadMetadata(
+            sessionID: sessionID
+        ) {
+            return summary(
+                metadata: metadata
+            )
+        }
+
+        guard let sessiondir = environment.sessiondir(
+            sessionID: sessionID
+        ),
+              FileManager.default.fileExists(
+                atPath: sessiondir.path
+              )
+        else {
+            throw AgentSessionCatalogError.sessionNotFound(
+                sessionID
+            )
+        }
+
+        return summary(
+            metadata: .init(
+                sessionID: sessionID,
+                workspaceAttached: environment.workspace != nil
+            )
+        )
+    }
+
+    public func inspectSession(
+        sessionID: String
+    ) async throws -> AgentSessionInspection {
+        let session = try loadSession(
+            sessionID: sessionID
+        )
+        let transcriptEvents = try await loadTranscript(
+            sessionID: sessionID
+        )
+        let approvalEvents = try await loadApprovals(
+            sessionID: sessionID
+        )
+        let branches = try listBranches(
+            parentSessionID: sessionID
+        )
+
+        return .init(
+            summary: session,
+            transcriptEventCount: transcriptEvents.count,
+            approvalEventCount: approvalEvents.count,
+            childBranchCount: branches.count
+        )
+    }
+
+    public func listBranches(
+        parentSessionID: String
+    ) throws -> [AgentSessionSummary] {
+        try listSessions(
+            includeArchived: true
+        ).filter { summary in
+            summary.metadata.branch?.parentSessionID == parentSessionID
+        }
+    }
+
+    public func updateSession(
+        sessionID: String,
+        title: String? = nil,
+        status: AgentSessionStatus? = nil,
+        metadata extraMetadata: [String: String] = [:]
+    ) throws -> AgentSessionMetadata {
+        var metadata = try loadMetadata(
+            sessionID: sessionID
+        ) ?? AgentSessionMetadata(
+            sessionID: sessionID,
+            workspaceAttached: environment.workspace != nil
+        )
+
+        if let title {
+            metadata.title = title
+        }
+
+        if let status {
+            metadata.status = status
+        }
+
+        if !extraMetadata.isEmpty {
+            metadata.metadata.merge(
+                extraMetadata,
+                uniquingKeysWith: { _, new in
+                    new
+                }
+            )
+        }
+
+        metadata.updatedAt = Date()
+
+        try metadataStore()?.save(
+            metadata
+        )
+
+        return metadata
+    }
+
+    public func loadTranscript(
+        sessionID: String
+    ) async throws -> [AgentTranscriptEvent] {
+        guard let url = environment.transcriptFileURL(
+            sessionID: sessionID
+        ) else {
+            return []
+        }
+
+        return try await FileTranscriptStore(
+            fileURL: url
+        ).loadEvents()
+    }
+
+    public func loadApprovals(
+        sessionID: String
+    ) async throws -> [AgentApprovalEvent] {
+        guard let url = environment.approvalsFileURL(
+            sessionID: sessionID
+        ) else {
+            return []
+        }
+
+        return try await FileApprovalEventStore(
+            fileURL: url
+        ).loadEvents()
+    }
+}
+
+private extension AgentSessionCatalog {
+    func metadataStore() -> FileSessionMetadataStore? {
+        guard let sessionsdir = environment.sessionsdir() else {
+            return nil
+        }
+
+        return FileSessionMetadataStore(
+            sessionsdir: sessionsdir
+        )
+    }
+
+    func loadMetadata(
+        sessionID: String
+    ) throws -> AgentSessionMetadata? {
+        try metadataStore()?.load(
+            sessionID: sessionID
+        )
+    }
+
+    func summary(
+        metadata: AgentSessionMetadata
+    ) -> AgentSessionSummary {
+        let sessionID = metadata.sessionID
+
+        return .init(
+            metadata: metadata,
+            hasCheckpoint: exists(
+                environment.sessiondir(
+                    sessionID: sessionID
+                )?.appendingPathComponent(
+                    "checkpoint.json",
+                    isDirectory: false
+                )
+            ),
+            hasTranscript: exists(
+                environment.transcriptFileURL(
+                    sessionID: sessionID
+                )
+            ),
+            hasApprovals: exists(
+                environment.approvalsFileURL(
+                    sessionID: sessionID
+                )
+            ),
+            artifactCount: artifactCount(
+                sessionID: sessionID
+            )
+        )
+    }
+
+    func artifactCount(
+        sessionID: String
+    ) -> Int {
+        guard let url = environment.artifactdir(
+            sessionID: sessionID
+        ),
+              FileManager.default.fileExists(
+                atPath: url.path
+              ),
+              let urls = try? FileManager.default.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: nil
+              )
+        else {
+            return 0
+        }
+
+        return urls.count
+    }
+
+    func exists(
+        _ url: URL?
+    ) -> Bool {
+        guard let url else {
+            return false
+        }
+
+        return FileManager.default.fileExists(
+            atPath: url.path
+        )
+    }
+
+    func isDirectory(
+        _ url: URL
+    ) throws -> Bool {
+        let values = try url.resourceValues(
+            forKeys: [
+                .isDirectoryKey
+            ]
+        )
+
+        return values.isDirectory == true
+    }
+}

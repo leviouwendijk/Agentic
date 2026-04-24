@@ -185,13 +185,16 @@ extension ToolLoopExecutor {
             return
         }
 
-        checkpoint.events.append(
-            .init(
-                kind: .compaction,
-                iteration: checkpoint.state.iteration,
-                messageID: compacted.summaryMessageID,
-                summary: "compacted \(compacted.replacedMessageCount) earlier message(s)"
-            )
+        let event = AgentRunEvent(
+            kind: .compaction,
+            iteration: checkpoint.state.iteration,
+            messageID: compacted.summaryMessageID,
+            summary: "compacted \(compacted.replacedMessageCount) earlier message(s)"
+        )
+
+        try await appendRunEvent(
+            event,
+            to: &checkpoint
         )
 
         try await saveCheckpoint(
@@ -215,5 +218,68 @@ extension ToolLoopExecutor {
         try await historyStore.saveCheckpoint(
             checkpoint
         )
+    }
+
+    func appendRunEvent(
+        _ event: AgentRunEvent,
+        to checkpoint: inout AgentHistoryCheckpoint
+    ) async throws {
+        checkpoint.events.append(
+            event
+        )
+
+        try await recordRunEvent(
+            event
+        )
+    }
+
+    func recordMessage(
+        _ message: AgentMessage
+    ) async throws {
+        for sink in eventSinks {
+            try await sink.recordMessage(
+                message
+            )
+        }
+    }
+
+    func recordMessages(
+        _ messages: [AgentMessage]
+    ) async throws {
+        for message in messages {
+            try await recordMessage(
+                message
+            )
+        }
+    }
+
+    func recordToolCall(
+        _ toolCall: AgentToolCall
+    ) async throws {
+        for sink in eventSinks {
+            try await sink.recordToolCall(
+                toolCall
+            )
+        }
+    }
+
+    func recordToolResult(
+        _ result: AgentToolResult
+    ) async throws {
+        for sink in eventSinks {
+            try await sink.recordToolResult(
+                result
+            )
+        }
+    }
+
+    func recordRunEvent(
+        _ event: AgentRunEvent
+    ) async throws {
+        for sink in eventSinks {
+            try await sink.recordRunEvent(
+                event
+            )
+        }
     }
 }

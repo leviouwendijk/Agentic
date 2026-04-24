@@ -1,6 +1,6 @@
 import Foundation
 
-public actor FileHistoryStore: AgentHistoryStore {
+public struct FileSessionMetadataStore: AgentSessionMetadataStore {
     public let sessionsdir: URL
 
     public init(
@@ -9,10 +9,10 @@ public actor FileHistoryStore: AgentHistoryStore {
         self.sessionsdir = sessionsdir.standardizedFileURL
     }
 
-    public func loadCheckpoint(
+    public func load(
         sessionID: String
-    ) async throws -> AgentHistoryCheckpoint? {
-        let url = checkpointURL(
+    ) throws -> AgentSessionMetadata? {
+        let url = metadataURL(
             for: sessionID
         )
 
@@ -31,16 +31,16 @@ public actor FileHistoryStore: AgentHistoryStore {
         }
 
         return try JSONDecoder().decode(
-            AgentHistoryCheckpoint.self,
+            AgentSessionMetadata.self,
             from: data
         )
     }
 
-    public func saveCheckpoint(
-        _ checkpoint: AgentHistoryCheckpoint
-    ) async throws {
-        let url = checkpointURL(
-            for: checkpoint.id
+    public func save(
+        _ metadata: AgentSessionMetadata
+    ) throws {
+        let url = metadataURL(
+            for: metadata.sessionID
         )
 
         try FileManager.default.createDirectory(
@@ -50,8 +50,13 @@ public actor FileHistoryStore: AgentHistoryStore {
         )
 
         let encoder = JSONEncoder()
+        encoder.outputFormatting = [
+            .prettyPrinted,
+            .sortedKeys
+        ]
+
         let data = try encoder.encode(
-            checkpoint
+            metadata.touching()
         )
 
         try data.write(
@@ -60,10 +65,10 @@ public actor FileHistoryStore: AgentHistoryStore {
         )
     }
 
-    public func deleteCheckpoint(
+    public func delete(
         sessionID: String
-    ) async throws {
-        let url = checkpointURL(
+    ) throws {
+        let url = metadataURL(
             for: sessionID
         )
 
@@ -79,8 +84,8 @@ public actor FileHistoryStore: AgentHistoryStore {
     }
 }
 
-private extension FileHistoryStore {
-    func checkpointURL(
+private extension FileSessionMetadataStore {
+    func metadataURL(
         for sessionID: String
     ) -> URL {
         sessionsdir
@@ -89,7 +94,7 @@ private extension FileHistoryStore {
                 isDirectory: true
             )
             .appendingPathComponent(
-                "checkpoint.json",
+                "state.json",
                 isDirectory: false
             )
     }

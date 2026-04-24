@@ -10,7 +10,15 @@ public struct CoreSkillProvider: AgentSkillProvider {
                 Self.contextPacking,
                 Self.debuggingLoop,
                 Self.refactoringPlan,
-                Self.handoffSummary
+                Self.handoffSummary,
+                Self.costAwareContexting,
+                Self.toolFirstRetrieval,
+                Self.preparedIntentExecution,
+                Self.approvalSensitiveActions,
+                Self.artifactOutputDiscipline,
+                Self.transcriptSummarization,
+                Self.evidenceCitation,
+                Self.failureTriage
             ]
         )
     }

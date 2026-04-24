@@ -8,6 +8,7 @@ public struct ToolLoopExecutor: Sendable {
     public let workspace: AgentWorkspace?
     public let approvalHandler: (any ToolApprovalHandler)?
     public let historyStore: (any AgentHistoryStore)?
+    public let eventSinks: [any AgentRunEventSink]
 
     public init(
         adapter: any AgentModelAdapter,
@@ -16,7 +17,8 @@ public struct ToolLoopExecutor: Sendable {
         extensions: [any AgentHarnessExtension] = [],
         workspace: AgentWorkspace? = nil,
         approvalHandler: (any ToolApprovalHandler)? = nil,
-        historyStore: (any AgentHistoryStore)? = nil
+        historyStore: (any AgentHistoryStore)? = nil,
+        eventSinks: [any AgentRunEventSink] = []
     ) {
         self.adapter = adapter
         self.configuration = configuration
@@ -25,6 +27,7 @@ public struct ToolLoopExecutor: Sendable {
         self.workspace = workspace
         self.approvalHandler = approvalHandler
         self.historyStore = historyStore
+        self.eventSinks = eventSinks
     }
 
     public func run(
@@ -38,6 +41,10 @@ public struct ToolLoopExecutor: Sendable {
                 iteration: 0,
                 messages: request.messages
             )
+        )
+
+        try await recordMessages(
+            request.messages
         )
 
         try await saveCheckpoint(
