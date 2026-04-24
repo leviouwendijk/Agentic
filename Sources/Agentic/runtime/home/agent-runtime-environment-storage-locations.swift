@@ -6,19 +6,22 @@ public struct AgentRuntimeStorageLocations: Sendable, Codable, Hashable {
     public let approvalsdir: URL?
     public let artifactsdir: URL?
     public let tasksdir: URL?
+    public let preparedintentsdir: URL?
 
     public init(
         sessionsdir: URL? = nil,
         transcriptsdir: URL? = nil,
         approvalsdir: URL? = nil,
         artifactsdir: URL? = nil,
-        tasksdir: URL? = nil
+        tasksdir: URL? = nil,
+        preparedintentsdir: URL? = nil
     ) {
         self.sessionsdir = sessionsdir
         self.transcriptsdir = transcriptsdir
         self.approvalsdir = approvalsdir
         self.artifactsdir = artifactsdir
         self.tasksdir = tasksdir
+        self.preparedintentsdir = preparedintentsdir
     }
 }
 
@@ -33,7 +36,8 @@ public extension AgentRuntimeEnvironment {
             transcriptsdir: layout.transcriptsdir,
             approvalsdir: layout.approvalsdir,
             artifactsdir: layout.artifactsdir,
-            tasksdir: layout.tasksdir
+            tasksdir: layout.tasksdir,
+            preparedintentsdir: layout.preparedintentsdir
         )
     }
 
@@ -55,6 +59,10 @@ public extension AgentRuntimeEnvironment {
 
     func tasksdir() -> URL? {
         storageLocations().tasksdir
+    }
+
+    func preparedintentsdir() -> URL? {
+        storageLocations().preparedintentsdir
     }
 
     func sessiondir(

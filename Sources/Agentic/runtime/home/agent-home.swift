@@ -1,4 +1,5 @@
 import Foundation
+import Path
 
 public struct AgentHome: Sendable, Codable, Hashable {
     public let root: URL
@@ -27,6 +28,14 @@ public struct AgentHome: Sendable, Codable, Hashable {
     ) throws {
         try layout.createSessionDirectories(
             sessionID: sessionID
+        )
+    }
+
+    public var rootPath: StandardPath {
+        StandardPath(
+            fileURL: root,
+            terminalHint: .directory,
+            inferFileType: false
         )
     }
 }

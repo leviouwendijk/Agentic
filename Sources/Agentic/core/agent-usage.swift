@@ -13,3 +13,11 @@ public struct AgentUsage: Sendable, Codable, Hashable {
         self.totalTokens = totalTokens
     }
 }
+
+public extension AgentUsage {
+    var costUsage: AgentCostUsage {
+        .init(
+            providerUsage: self
+        )
+    }
+}

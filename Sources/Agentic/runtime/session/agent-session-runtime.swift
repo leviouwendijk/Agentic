@@ -273,3 +273,33 @@ private extension AgentSessionRuntime {
         return .active
     }
 }
+
+public extension AgentSessionRuntime {
+    func artifactToolSet() throws -> CoreArtifactToolSet {
+        guard let artifactStore = stores.artifactStore else {
+            throw AgentArtifactError.durableStorageRequired
+        }
+
+        return CoreArtifactToolSet(
+            store: artifactStore
+        )
+    }
+}
+
+public extension AgentSessionRuntime {
+    func preparedIntentManager() throws -> PreparedIntentManager {
+        guard let preparedIntentStore = stores.preparedIntentStore else {
+            throw PreparedIntentError.durableStorageRequired
+        }
+
+        return PreparedIntentManager(
+            store: preparedIntentStore
+        )
+    }
+
+    func preparedIntentOperatorToolSet() throws -> PreparedIntentOperatorToolSet {
+        try PreparedIntentOperatorToolSet(
+            manager: preparedIntentManager()
+        )
+    }
+}

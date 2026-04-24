@@ -9,6 +9,7 @@ public extension AgentRunner {
         toolRegistry: ToolRegistry = .init(),
         extensions: [any AgentHarnessExtension] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil,
+        costTracker: AgentCostTracker? = nil,
         enableHistoryPersistence: Bool = true
     ) throws {
         let stores = try AgentRuntimeStoreResolver(
@@ -33,7 +34,8 @@ public extension AgentRunner {
             workspace: environment.workspace,
             approvalHandler: approvalHandler,
             historyStore: stores.historyStore,
-            eventSinks: stores.eventSinks
+            eventSinks: stores.eventSinks,
+            costTracker: costTracker
         )
     }
 }

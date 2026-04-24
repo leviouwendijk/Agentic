@@ -71,7 +71,9 @@ public extension AgentApprovalEvent {
         case .assistant_response,
              .compaction,
              .tool_result,
-             .tool_error:
+             .tool_error,
+             .cost_projected,
+             .cost_actual:
             return nil
         }
 

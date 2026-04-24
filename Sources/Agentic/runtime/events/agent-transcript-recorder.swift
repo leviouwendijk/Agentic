@@ -73,7 +73,9 @@ private extension AgentTranscriptRecorder {
              .tool_preflight,
              .tool_approved,
              .tool_denied,
-             .pending_approval:
+             .pending_approval,
+             .cost_projected,
+             .cost_actual:
             return true
         }
     }

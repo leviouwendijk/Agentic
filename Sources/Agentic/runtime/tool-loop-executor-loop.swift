@@ -30,7 +30,8 @@ extension ToolLoopExecutor {
                         sessionID: checkpoint.id,
                         response: response,
                         state: checkpoint.state,
-                        events: checkpoint.events
+                        events: checkpoint.events,
+                        costRecord: checkpoint.costRecord
                     )
                 }
 
@@ -65,7 +66,8 @@ extension ToolLoopExecutor {
                     response: response,
                     pendingApproval: pendingApproval,
                     state: checkpoint.state,
-                    events: checkpoint.events
+                    events: checkpoint.events,
+                    costRecord: checkpoint.costRecord
                 )
 
             case .completed:
@@ -79,7 +81,8 @@ extension ToolLoopExecutor {
                     sessionID: checkpoint.id,
                     response: response,
                     state: checkpoint.state,
-                    events: checkpoint.events
+                    events: checkpoint.events,
+                    costRecord: checkpoint.costRecord
                 )
             }
         }
@@ -106,6 +109,14 @@ extension ToolLoopExecutor {
             )
         }
 
+        let turnIndex = checkpoint.state.iteration + 1
+
+        try await applyProjectedCost(
+            for: preparedRequest,
+            to: &checkpoint,
+            turnIndex: turnIndex
+        )
+
         let response = try await adapter.complete(
             request: preparedRequest
         )
@@ -129,6 +140,13 @@ extension ToolLoopExecutor {
                 summary: response.stopReason.rawValue
             ),
             to: &checkpoint
+        )
+
+        try await applyActualCost(
+            for: preparedRequest,
+            response: response,
+            to: &checkpoint,
+            turnIndex: turnIndex
         )
 
         for harnessExtension in extensions {
@@ -423,7 +441,8 @@ extension ToolLoopExecutor {
                             response: response,
                             pendingApproval: pendingApproval,
                             state: checkpoint.state,
-                            events: checkpoint.events
+                            events: checkpoint.events,
+                            costRecord: checkpoint.costRecord
                         )
                     )
                 }

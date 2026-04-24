@@ -1,9 +1,9 @@
 import Foundation
 
 public enum AgentHistoryPhase: String, Sendable, Codable, Hashable, CaseIterable {
-    case ready_for_model 
-    case processing_tool_calls 
-    case awaiting_approval 
+    case ready_for_model
+    case processing_tool_calls
+    case awaiting_approval
     case completed
 }
 
@@ -15,6 +15,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
     public var phase: AgentHistoryPhase
     public var lastResponse: AgentResponse?
     public var pendingApproval: PendingApproval?
+    public var costRecord: AgentCostRecord?
     public var updatedAt: Date
 
     public init(
@@ -25,6 +26,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         phase: AgentHistoryPhase = .ready_for_model,
         lastResponse: AgentResponse? = nil,
         pendingApproval: PendingApproval? = nil,
+        costRecord: AgentCostRecord? = nil,
         updatedAt: Date = Date()
     ) {
         self.id = id
@@ -34,6 +36,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         self.phase = phase
         self.lastResponse = lastResponse
         self.pendingApproval = pendingApproval
+        self.costRecord = costRecord
         self.updatedAt = updatedAt
     }
 }

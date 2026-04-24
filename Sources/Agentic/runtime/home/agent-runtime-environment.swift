@@ -136,3 +136,68 @@ private extension AgentRuntimeEnvironment {
         .directory_url
     }
 }
+
+public extension AgentRuntimeEnvironment {
+    func pricingCatalogpath() -> StandardPath? {
+        switch sessionStorageMode {
+        case .ephemeral:
+            return nil
+
+        case .global_home,
+             .project_local,
+             .custom:
+            return home.rootPath.child.directory(
+                "pricing"
+            )
+        }
+    }
+
+    func pricingCatalogdir() -> URL? {
+        pricingCatalogpath()?.directory_url
+    }
+
+    func pricingCatalogfilePath(
+        filename: String = "pricing-catalog.json"
+    ) -> StandardPath? {
+        pricingCatalogpath()?.child.file(
+            filename
+        )
+    }
+
+    func pricingCatalogfile(
+        filename: String = "pricing-catalog.json"
+    ) -> URL? {
+        pricingCatalogfilePath(
+            filename: filename
+        )?.root_url
+    }
+
+    func createPricingCatalogDirectories() throws {
+        guard let pricingCatalogpath = pricingCatalogpath() else {
+            throw ModelPricingCatalogError.durableStorageRequired
+        }
+
+        try PathCreation.directory(
+            pricingCatalogpath
+        )
+    }
+
+    func filePricingCatalog(
+        filename: String = "pricing-catalog.json",
+        createDirectories: Bool = true
+    ) throws -> FileModelPricingCatalog {
+        if createDirectories {
+            try createPricingCatalogDirectories()
+        }
+
+        guard let file = pricingCatalogfilePath(
+            filename: filename
+        ) else {
+            throw ModelPricingCatalogError.durableStorageRequired
+        }
+
+        return FileModelPricingCatalog(
+            catalogfile: file
+        )
+    }
+}

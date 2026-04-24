@@ -6,19 +6,22 @@ public struct AgentSessionSummary: Sendable, Codable, Hashable, Identifiable {
     public let hasTranscript: Bool
     public let hasApprovals: Bool
     public let artifactCount: Int
+    public let preparedIntentCount: Int
 
     public init(
         metadata: AgentSessionMetadata,
         hasCheckpoint: Bool,
         hasTranscript: Bool,
         hasApprovals: Bool,
-        artifactCount: Int
+        artifactCount: Int,
+        preparedIntentCount: Int = 0
     ) {
         self.metadata = metadata
         self.hasCheckpoint = hasCheckpoint
         self.hasTranscript = hasTranscript
         self.hasApprovals = hasApprovals
         self.artifactCount = artifactCount
+        self.preparedIntentCount = preparedIntentCount
     }
 
     public var id: String {
@@ -30,17 +33,23 @@ public struct AgentSessionInspection: Sendable, Codable, Hashable {
     public let summary: AgentSessionSummary
     public let transcriptEventCount: Int
     public let approvalEventCount: Int
+    public let artifactCount: Int
+    public let preparedIntentCount: Int
     public let childBranchCount: Int
 
     public init(
         summary: AgentSessionSummary,
         transcriptEventCount: Int,
         approvalEventCount: Int,
+        artifactCount: Int? = nil,
+        preparedIntentCount: Int? = nil,
         childBranchCount: Int
     ) {
         self.summary = summary
         self.transcriptEventCount = transcriptEventCount
         self.approvalEventCount = approvalEventCount
+        self.artifactCount = artifactCount ?? summary.artifactCount
+        self.preparedIntentCount = preparedIntentCount ?? summary.preparedIntentCount
         self.childBranchCount = childBranchCount
     }
 }
@@ -74,7 +83,7 @@ public struct AgentSessionCatalog: Sendable {
         includeArchived: Bool = false
     ) throws -> [AgentSessionSummary] {
         guard let sessionsdir = environment.sessionsdir() else {
-            return []
+            throw AgentSessionCatalogError.durableStorageRequired
         }
 
         guard FileManager.default.fileExists(
@@ -172,6 +181,13 @@ public struct AgentSessionCatalog: Sendable {
         let approvalEvents = try await loadApprovals(
             sessionID: sessionID
         )
+        let artifacts = try await listArtifacts(
+            sessionID: sessionID
+        )
+        let preparedIntents = try await listPreparedIntents(
+            sessionID: sessionID,
+            includeExpired: true
+        )
         let branches = try listBranches(
             parentSessionID: sessionID
         )
@@ -180,6 +196,8 @@ public struct AgentSessionCatalog: Sendable {
             summary: session,
             transcriptEventCount: transcriptEvents.count,
             approvalEventCount: approvalEvents.count,
+            artifactCount: artifacts.count,
+            preparedIntentCount: preparedIntents.count,
             childBranchCount: branches.count
         )
     }
@@ -262,6 +280,119 @@ public struct AgentSessionCatalog: Sendable {
             fileURL: approvalsfile
         ).loadEvents()
     }
+
+    public func listArtifacts(
+        sessionID: String,
+        kinds: [AgentArtifactKind] = [],
+        latestFirst: Bool = true,
+        limit: Int? = nil
+    ) async throws -> [AgentArtifact] {
+        _ = try loadSession(
+            sessionID: sessionID
+        )
+
+        guard let store = artifactStore(
+            sessionID: sessionID
+        ) else {
+            return []
+        }
+
+        return try await store.list(
+            kinds: kinds,
+            latestFirst: latestFirst,
+            limit: limit
+        )
+    }
+
+    public func loadArtifact(
+        sessionID: String,
+        id: String
+    ) async throws -> AgentArtifactRecord {
+        _ = try loadSession(
+            sessionID: sessionID
+        )
+
+        guard let store = artifactStore(
+            sessionID: sessionID
+        ) else {
+            throw AgentArtifactError.artifactNotFound(
+                id
+            )
+        }
+
+        guard let record = try await store.load(
+            id: id
+        ) else {
+            throw AgentArtifactError.artifactNotFound(
+                id
+            )
+        }
+
+        return record
+    }
+
+    public func listPreparedIntents(
+        sessionID: String,
+        statuses: [PreparedIntentStatus] = [],
+        actionType: String? = nil,
+        includeExpired: Bool = false,
+        limit: Int? = nil
+    ) async throws -> [PreparedIntent] {
+        _ = try loadSession(
+            sessionID: sessionID
+        )
+
+        guard let manager = preparedIntentManager() else {
+            return []
+        }
+
+        let intents = try await manager.list(
+            statuses: statuses,
+            sessionID: sessionID,
+            actionType: actionType,
+            includeExpired: includeExpired
+        )
+
+        guard let limit else {
+            return intents
+        }
+
+        return Array(
+            intents.prefix(
+                max(
+                    0,
+                    limit
+                )
+            )
+        )
+    }
+
+    public func loadPreparedIntent(
+        sessionID: String,
+        id: PreparedIntentIdentifier
+    ) async throws -> PreparedIntent {
+        _ = try loadSession(
+            sessionID: sessionID
+        )
+
+        guard let manager = preparedIntentManager() else {
+            throw PreparedIntentError.intentNotFound(
+                id
+            )
+        }
+
+        let intent = try await manager.get(
+            id
+        )
+
+        guard intent.sessionID == sessionID else {
+            throw PreparedIntentError.intentNotFound(
+                id
+            )
+        }
+
+        return intent
+    }
 }
 
 private extension AgentSessionCatalog {
@@ -307,6 +438,36 @@ private extension AgentSessionCatalog {
             ),
             artifactCount: artifactCount(
                 sessionID: sessionID
+            ),
+            preparedIntentCount: preparedIntentCount(
+                sessionID: sessionID
+            )
+        )
+    }
+
+    func artifactStore(
+        sessionID: String
+    ) -> FileAgentArtifactStore? {
+        guard let artifactdir = environment.artifactdir(
+            sessionID: sessionID
+        ) else {
+            return nil
+        }
+
+        return FileAgentArtifactStore(
+            sessionID: sessionID,
+            artifactdir: artifactdir
+        )
+    }
+
+    func preparedIntentManager() -> PreparedIntentManager? {
+        guard let preparedIntentsdir = environment.preparedintentsdir() else {
+            return nil
+        }
+
+        return PreparedIntentManager(
+            store: FilePreparedIntentStore(
+                preparedIntentsdir: preparedIntentsdir
             )
         )
     }
@@ -322,13 +483,67 @@ private extension AgentSessionCatalog {
               ),
               let urls = try? FileManager.default.contentsOfDirectory(
                 at: url,
-                includingPropertiesForKeys: nil
+                includingPropertiesForKeys: [
+                    .isDirectoryKey
+                ],
+                options: [
+                    .skipsHiddenFiles
+                ]
               )
         else {
             return 0
         }
 
-        return urls.count
+        return urls.filter { url in
+            guard (try? isDirectory(url)) == true else {
+                return false
+            }
+
+            return FileManager.default.fileExists(
+                atPath: url
+                    .appendingPathComponent(
+                        "artifact.json",
+                        isDirectory: false
+                    )
+                    .path
+            )
+        }.count
+    }
+
+    func preparedIntentCount(
+        sessionID: String
+    ) -> Int {
+        guard let url = environment.preparedintentsdir(),
+              FileManager.default.fileExists(
+                atPath: url.path
+              ),
+              let urls = try? FileManager.default.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: nil,
+                options: [
+                    .skipsHiddenFiles
+                ]
+              )
+        else {
+            return 0
+        }
+
+        return urls.filter { url in
+            guard url.pathExtension == "json",
+                  let data = try? Data(
+                    contentsOf: url
+                  ),
+                  !data.isEmpty,
+                  let intent = try? JSONDecoder().decode(
+                    PreparedIntent.self,
+                    from: data
+                  )
+            else {
+                return false
+            }
+
+            return intent.sessionID == sessionID
+        }.count
     }
 
     func exists(

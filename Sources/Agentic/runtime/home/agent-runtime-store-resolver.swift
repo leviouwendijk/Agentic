@@ -39,6 +39,12 @@ public struct AgentRuntimeStoreResolver: Sendable {
             sessionID: sessionID
         )
 
+        let artifactStore = try artifactStore(
+            sessionID: sessionID
+        )
+
+        let preparedIntentStore = try preparedIntentStore()
+
         let eventSinks =
             try transcriptEventSinks(
                 sessionID: sessionID
@@ -52,11 +58,14 @@ public struct AgentRuntimeStoreResolver: Sendable {
             historyStore: historyStore,
             sessionMetadataStore: sessionMetadataStore,
             approvalEventStore: approvalEventStore,
+            artifactStore: artifactStore,
+            preparedIntentStore: preparedIntentStore,
             eventSinks: eventSinks,
             sessionsdir: locations.sessionsdir,
             transcriptsdir: locations.transcriptsdir,
             approvalsdir: locations.approvalsdir,
-            artifactsdir: locations.artifactsdir
+            artifactsdir: locations.artifactsdir,
+            preparedintentsdir: locations.preparedintentsdir
         )
     }
 }
@@ -101,6 +110,39 @@ private extension AgentRuntimeStoreResolver {
 
         return FileApprovalEventStore(
             fileURL: approvalsfile
+        )
+    }
+
+    func artifactStore(
+        sessionID: String
+    ) throws -> (any AgentArtifactStore)? {
+        guard let artifactdir = environment.artifactdir(
+            sessionID: sessionID
+        ) else {
+            return nil
+        }
+
+        try PathCreation.directory(
+            at: artifactdir
+        )
+
+        return FileAgentArtifactStore(
+            sessionID: sessionID,
+            artifactdir: artifactdir
+        )
+    }
+
+    func preparedIntentStore() throws -> (any PreparedIntentStore)? {
+        guard let preparedIntentsdir = environment.preparedintentsdir() else {
+            return nil
+        }
+
+        try PathCreation.directory(
+            at: preparedIntentsdir
+        )
+
+        return FilePreparedIntentStore(
+            preparedIntentsdir: preparedIntentsdir
         )
     }
 

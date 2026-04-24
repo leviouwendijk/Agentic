@@ -9,6 +9,7 @@ public struct ToolLoopExecutor: Sendable {
     public let approvalHandler: (any ToolApprovalHandler)?
     public let historyStore: (any AgentHistoryStore)?
     public let eventSinks: [any AgentRunEventSink]
+    public let costTracker: AgentCostTracker?
 
     public init(
         adapter: any AgentModelAdapter,
@@ -18,7 +19,8 @@ public struct ToolLoopExecutor: Sendable {
         workspace: AgentWorkspace? = nil,
         approvalHandler: (any ToolApprovalHandler)? = nil,
         historyStore: (any AgentHistoryStore)? = nil,
-        eventSinks: [any AgentRunEventSink] = []
+        eventSinks: [any AgentRunEventSink] = [],
+        costTracker: AgentCostTracker? = nil
     ) {
         self.adapter = adapter
         self.configuration = configuration
@@ -28,6 +30,7 @@ public struct ToolLoopExecutor: Sendable {
         self.approvalHandler = approvalHandler
         self.historyStore = historyStore
         self.eventSinks = eventSinks
+        self.costTracker = costTracker
     }
 
     public func run(

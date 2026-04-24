@@ -1,3 +1,5 @@
+public typealias OperatorSessionCatalogToolSet = SessionCatalogToolSet
+
 public struct SessionCatalogToolSet: AgentToolSet {
     public let catalog: AgentSessionCatalog
 
@@ -22,6 +24,18 @@ public struct SessionCatalogToolSet: AgentToolSet {
                     catalog: catalog
                 ),
                 ReadAgentApprovalsTool(
+                    catalog: catalog
+                ),
+                ListAgentArtifactsTool(
+                    catalog: catalog
+                ),
+                ReadAgentArtifactTool(
+                    catalog: catalog
+                ),
+                ListAgentPreparedIntentsTool(
+                    catalog: catalog
+                ),
+                ReadAgentPreparedIntentTool(
                     catalog: catalog
                 )
             ]

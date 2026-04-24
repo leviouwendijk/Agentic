@@ -67,3 +67,49 @@ public extension Agentic {
 
     static let runtime: RuntimeBootstrapAPI = .init()
 }
+
+public extension Agentic.RuntimeBootstrapAPI {
+    func preparedIntentManager(
+        environment: AgentRuntimeEnvironment
+    ) throws -> PreparedIntentManager {
+        try PreparedIntentManager.resolve(
+            environment: environment
+        )
+    }
+}
+
+public extension Agentic.RuntimeBootstrapAPI {
+    func pricingCatalog(
+        environment: AgentRuntimeEnvironment,
+        filename: String = "pricing-catalog.json",
+        createDirectories: Bool = true
+    ) throws -> FileModelPricingCatalog {
+        try environment.filePricingCatalog(
+            filename: filename,
+            createDirectories: createDirectories
+        )
+    }
+
+    func costTracker(
+        environment: AgentRuntimeEnvironment,
+        provider: String,
+        region: String? = nil,
+        defaultModel: String? = nil,
+        reservedOutputTokens: Int = 0,
+        catalog: (any ModelPricingCatalog)? = nil,
+        metadata: [String: String] = [:]
+    ) throws -> AgentCostTracker {
+        let catalog = try catalog ?? pricingCatalog(
+            environment: environment
+        )
+
+        return AgentCostTracker(
+            catalog: catalog,
+            provider: provider,
+            region: region,
+            defaultModel: defaultModel,
+            reservedOutputTokens: reservedOutputTokens,
+            metadata: metadata
+        )
+    }
+}

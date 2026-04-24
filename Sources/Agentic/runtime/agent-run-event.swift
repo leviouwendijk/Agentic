@@ -2,14 +2,16 @@ import Foundation
 
 public struct AgentRunEvent: Sendable, Codable, Hashable, Identifiable {
     public enum Kind: String, Sendable, Codable, Hashable, CaseIterable {
-        case assistant_response 
+        case assistant_response
         case compaction
-        case tool_preflight 
-        case tool_approved 
-        case tool_denied 
-        case pending_approval 
-        case tool_result 
-        case tool_error 
+        case tool_preflight
+        case tool_approved
+        case tool_denied
+        case pending_approval
+        case tool_result
+        case tool_error
+        case cost_projected
+        case cost_actual
     }
 
     public let id: String

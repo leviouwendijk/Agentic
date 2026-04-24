@@ -9,6 +9,7 @@ public actor AgentRunner {
     public let approvalHandler: (any ToolApprovalHandler)?
     public let historyStore: (any AgentHistoryStore)?
     public let eventSinks: [any AgentRunEventSink]
+    public let costTracker: AgentCostTracker?
 
     public init(
         adapter: any AgentModelAdapter,
@@ -18,7 +19,8 @@ public actor AgentRunner {
         workspace: AgentWorkspace? = nil,
         approvalHandler: (any ToolApprovalHandler)? = nil,
         historyStore: (any AgentHistoryStore)? = nil,
-        eventSinks: [any AgentRunEventSink] = []
+        eventSinks: [any AgentRunEventSink] = [],
+        costTracker: AgentCostTracker? = nil
     ) {
         self.adapter = adapter
         self.configuration = configuration
@@ -28,6 +30,7 @@ public actor AgentRunner {
         self.approvalHandler = approvalHandler
         self.historyStore = historyStore
         self.eventSinks = eventSinks
+        self.costTracker = costTracker
     }
 
     public func run(
@@ -42,7 +45,8 @@ public actor AgentRunner {
             workspace: workspace,
             approvalHandler: approvalHandler,
             historyStore: historyStore,
-            eventSinks: eventSinks
+            eventSinks: eventSinks,
+            costTracker: costTracker
         ).run(
             request,
             sessionID: sessionID
@@ -83,7 +87,8 @@ public actor AgentRunner {
                 response: response,
                 pendingApproval: pendingApproval,
                 state: checkpoint.state,
-                events: checkpoint.events
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
             )
 
         case .completed:
@@ -97,7 +102,8 @@ public actor AgentRunner {
                 sessionID: checkpoint.id,
                 response: response,
                 state: checkpoint.state,
-                events: checkpoint.events
+                events: checkpoint.events,
+                costRecord: checkpoint.costRecord
             )
 
         case .ready_for_model, .processing_tool_calls:
@@ -109,7 +115,8 @@ public actor AgentRunner {
                 workspace: workspace,
                 approvalHandler: approvalHandler,
                 historyStore: historyStore,
-                eventSinks: eventSinks
+                eventSinks: eventSinks,
+                costTracker: costTracker
             ).resume(checkpoint)
         }
     }
