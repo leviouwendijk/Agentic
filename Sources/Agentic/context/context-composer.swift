@@ -97,6 +97,8 @@ public struct ContextComposer: Sendable {
 }
 
 private extension ContextComposer {
+    static let toolName = "context_composer"
+
     enum ContextComposerError: Error, LocalizedError {
         case workspaceRequired
 
@@ -115,6 +117,18 @@ private extension ContextComposer {
         guard let workspace else {
             throw ContextComposerError.workspaceRequired
         }
+
+        let root = try workspace.accessController.root(
+            id: source.rootID
+        )
+
+        _ = try workspace.accessController.authorize(
+            rootID: source.rootID,
+            path: ".",
+            capability: .scan,
+            toolName: Self.toolName,
+            type: .directory
+        )
 
         let includes = try normalizedExpressions(
             source.includes
@@ -146,7 +160,7 @@ private extension ContextComposer {
 
         let result = try SelectionScan.scan(
             specification,
-            relativeTo: .directoryURL(workspace.rootURL),
+            relativeTo: .directoryURL(root.rootURL),
             configuration: .init(
                 maxDepth: source.recursive ? nil : 1,
                 includeHidden: source.includeHidden,
@@ -157,13 +171,18 @@ private extension ContextComposer {
         )
 
         let allowedMatches: [(url: URL, contentSelections: [ContentSelection])] = result.matches.compactMap { match in
-            guard let scoped = try? workspace.scope(match.url),
-                  let url = try? workspace.absoluteURL(for: scoped) else {
+            guard let authorized = try? workspace.accessController.authorize(
+                rootID: source.rootID,
+                url: match.url,
+                capability: .read,
+                toolName: Self.toolName,
+                type: .file
+            ) else {
                 return nil
             }
 
             return (
-                url: url,
+                url: authorized.absoluteURL,
                 contentSelections: match.contentSelections
             )
         }

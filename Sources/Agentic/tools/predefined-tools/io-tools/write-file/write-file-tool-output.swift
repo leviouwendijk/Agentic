@@ -1,6 +1,7 @@
 import Position
 
 public struct WriteFileToolOutput: Sendable, Codable, Hashable {
+    public let rootID: String
     public let path: String
     public let bytesWritten: Int
     public let diffSummary: FileDiffSummary
@@ -9,6 +10,7 @@ public struct WriteFileToolOutput: Sendable, Codable, Hashable {
     public let editedChangedLineRanges: [LineRange]
 
     public init(
+        rootID: String,
         path: String,
         bytesWritten: Int,
         diffSummary: FileDiffSummary,
@@ -16,6 +18,7 @@ public struct WriteFileToolOutput: Sendable, Codable, Hashable {
         originalChangedLineRanges: [LineRange],
         editedChangedLineRanges: [LineRange]
     ) {
+        self.rootID = rootID
         self.path = path
         self.bytesWritten = bytesWritten
         self.diffSummary = diffSummary

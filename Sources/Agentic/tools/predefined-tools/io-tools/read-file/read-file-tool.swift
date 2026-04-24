@@ -22,26 +22,41 @@ public struct ReadFileTool: AgentTool {
             maxLines: decoded.maxLines
         )
 
-        let targetPath: String
-        if let workspace {
-            targetPath = try workspace.resolve(
-                decoded.path
-            ).presentingRelative(
-                filetype: true
-            )
-        } else {
-            targetPath = decoded.path
-        }
+        let targetPath = try FileToolAccess.presentationPath(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            type: .file
+        )
+
+        let estimatedReadLines = estimatedLineCount(
+            for: decoded
+        )
 
         return .init(
             toolName: name,
             risk: risk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [targetPath],
+            targetPaths: [
+                targetPath
+            ],
             summary: summary(
                 for: decoded,
                 renderedPath: targetPath
-            )
+            ),
+            rootIDs: [
+                decoded.rootID.rawValue
+            ],
+            capabilitiesRequired: [
+                .read
+            ],
+            estimatedReadLines: estimatedReadLines,
+            estimatedFileReadCount: 1,
+            policyChecks: [
+                "workspace_required",
+                "root_path_resolved",
+                "read_window_validated"
+            ]
         )
     }
 
@@ -65,12 +80,17 @@ public struct ReadFileTool: AgentTool {
             maxLines: decoded.maxLines
         )
 
-        let scopedPath = try workspace.resolve(
-            decoded.path
+        let authorized = try FileToolAccess.authorize(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            capability: .read,
+            toolName: name,
+            type: .file
         )
 
         let read = try workspace.readSlice(
-            scopedPath,
+            authorized.scopedPath,
             startLine: decoded.startLine,
             endLine: decoded.endLine,
             maxLines: decoded.maxLines
@@ -89,7 +109,8 @@ public struct ReadFileTool: AgentTool {
 
         return try JSONToolBridge.encode(
             ReadFileToolOutput(
-                path: read.relativePath,
+                rootID: authorized.rootID.rawValue,
+                path: authorized.presentationPath,
                 content: renderedContent,
                 lineRange: read.selectedLineRange,
                 lineCount: read.lineCount,
@@ -111,19 +132,29 @@ private extension ReadFileTool {
 
         if let startLine = input.startLine,
            let endLine = input.endLine {
-            parts.append("lines \(startLine)-\(endLine)")
+            parts.append(
+                "lines \(startLine)-\(endLine)"
+            )
         } else if let startLine = input.startLine {
-            parts.append("starting at line \(startLine)")
+            parts.append(
+                "starting at line \(startLine)"
+            )
         } else if let endLine = input.endLine {
-            parts.append("through line \(endLine)")
+            parts.append(
+                "through line \(endLine)"
+            )
         }
 
         if let maxLines = input.maxLines {
-            parts.append("max \(maxLines) line(s)")
+            parts.append(
+                "max \(maxLines) line(s)"
+            )
         }
 
         if input.includeLineNumbers {
-            parts.append("with line numbers")
+            parts.append(
+                "with line numbers"
+            )
         }
 
         guard !parts.isEmpty else {
@@ -131,5 +162,23 @@ private extension ReadFileTool {
         }
 
         return "Read file \(renderedPath) (\(parts.joined(separator: ", ")))"
+    }
+
+    func estimatedLineCount(
+        for input: ReadFileToolInput
+    ) -> Int? {
+        if let maxLines = input.maxLines {
+            return maxLines
+        }
+
+        if let startLine = input.startLine,
+           let endLine = input.endLine {
+            return max(
+                0,
+                endLine - startLine + 1
+            )
+        }
+
+        return nil
     }
 }

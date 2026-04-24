@@ -4,7 +4,7 @@ import PathParsing
 
 public struct ScanPathsTool: AgentTool {
     public static let identifier: AgentToolIdentifier = "scan_paths"
-    public static let description = "Scan paths inside the workspace using PathScan."
+    public static let description = "Scan paths inside an authorized workspace root using PathScan."
     public static let risk: ActionRisk = .observe
 
     public init() {}
@@ -18,7 +18,7 @@ public struct ScanPathsTool: AgentTool {
             from: input
         )
 
-        let directory = try resolvedDirectory(
+        let directory = try resolvedDirectoryForPreflight(
             from: decoded,
             workspace: workspace
         )
@@ -31,7 +31,9 @@ public struct ScanPathsTool: AgentTool {
                 )
             ]
         } else {
-            targetPaths = []
+            targetPaths = [
+                "."
+            ]
         }
 
         let summary = summary(
@@ -46,7 +48,22 @@ public struct ScanPathsTool: AgentTool {
             targetPaths: targetPaths,
             summary: decoded.excludes.isEmpty
                 ? summary
-                : "\(summary) with \(decoded.excludes.count) exclude pattern(s)"
+                : "\(summary) with \(decoded.excludes.count) exclude pattern(s)",
+            rootIDs: [
+                decoded.rootID.rawValue
+            ],
+            capabilitiesRequired: [
+                .scan
+            ],
+            estimatedScanEntries: decoded.maxEntries,
+            estimatedScanDepth: decoded.recursive ? nil : 1,
+            includesHiddenPaths: decoded.includeHidden,
+            followsSymlinks: decoded.followSymlinks,
+            policyChecks: [
+                "workspace_required",
+                "root_path_resolved",
+                "scan_configuration_estimated"
+            ]
         )
     }
 
@@ -64,25 +81,24 @@ public struct ScanPathsTool: AgentTool {
             from: input
         )
 
-        let directory = try resolvedDirectory(
+        let directory = try authorizedDirectoryForCall(
             from: decoded,
             workspace: workspace
         )
 
-        let includeRaw: String
-        if let directory {
-            includeRaw = "\(directory.presentingRelative(filetype: true))/**"
-        } else {
-            includeRaw = "**"
-        }
-
         let specification = try ParsedPathScan.specification(
-            includes: [includeRaw],
+            includes: [
+                includePattern(
+                    directory: directory,
+                    recursive: decoded.recursive
+                )
+            ],
             excludes: decoded.excludes
         )
 
         let result = try workspace.scan(
             specification,
+            rootID: decoded.rootID,
             configuration: .init(
                 maxDepth: decoded.recursive ? nil : 1,
                 includeHidden: decoded.includeHidden,
@@ -92,8 +108,11 @@ public struct ScanPathsTool: AgentTool {
             )
         )
 
-        var entries = workspace.scopedEntries(
+        var entries = try workspace.authorizedEntries(
             from: result,
+            rootID: decoded.rootID,
+            capability: .scan,
+            toolName: name,
             excluding: directory
         )
 
@@ -102,7 +121,9 @@ public struct ScanPathsTool: AgentTool {
            maxEntries >= 0,
            entries.count > maxEntries {
             entries = Array(
-                entries.prefix(maxEntries)
+                entries.prefix(
+                    maxEntries
+                )
             )
             truncated = true
         } else {
@@ -111,6 +132,7 @@ public struct ScanPathsTool: AgentTool {
 
         return try JSONToolBridge.encode(
             ScanPathsToolOutput(
+                rootID: decoded.rootID.rawValue,
                 directory: directory?.presentingRelative(
                     filetype: true
                 ),
@@ -127,14 +149,13 @@ public struct ScanPathsTool: AgentTool {
 }
 
 private extension ScanPathsTool {
-    func resolvedDirectory(
+    func resolvedDirectoryForPreflight(
         from input: ScanPathsToolInput,
         workspace: AgentWorkspace?
     ) throws -> ScopedPath? {
-        guard let trimmedPath = input.path?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-              !trimmedPath.isEmpty,
-              trimmedPath != "." else {
+        guard let trimmedPath = normalizedDirectoryPath(
+            input.path
+        ) else {
             return nil
         }
 
@@ -143,7 +164,9 @@ private extension ScanPathsTool {
         }
 
         let scoped = try workspace.resolve(
-            trimmedPath
+            rootID: input.rootID,
+            trimmedPath,
+            type: .directory
         )
 
         if try workspace.existingType(
@@ -157,6 +180,79 @@ private extension ScanPathsTool {
         }
 
         return scoped
+    }
+
+    func authorizedDirectoryForCall(
+        from input: ScanPathsToolInput,
+        workspace: AgentWorkspace
+    ) throws -> ScopedPath? {
+        guard let trimmedPath = normalizedDirectoryPath(
+            input.path
+        ) else {
+            _ = try FileToolAccess.authorize(
+                workspace: workspace,
+                rootID: input.rootID,
+                path: ".",
+                capability: .scan,
+                toolName: name,
+                type: .directory
+            )
+
+            return nil
+        }
+
+        let authorized = try FileToolAccess.authorize(
+            workspace: workspace,
+            rootID: input.rootID,
+            path: trimmedPath,
+            capability: .scan,
+            toolName: name,
+            type: .directory
+        )
+
+        if try workspace.existingType(
+            of: authorized.scopedPath
+        ) == .file {
+            throw PredefinedFileToolError.invalidValue(
+                tool: name,
+                field: "path",
+                reason: "must reference a directory, not a file"
+            )
+        }
+
+        return authorized.scopedPath
+    }
+
+    func normalizedDirectoryPath(
+        _ value: String?
+    ) -> String? {
+        guard let trimmed = value?
+            .trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+              !trimmed.isEmpty,
+              trimmed != "." else {
+            return nil
+        }
+
+        return trimmed
+    }
+
+    func includePattern(
+        directory: ScopedPath?,
+        recursive: Bool
+    ) -> String {
+        guard let directory else {
+            return recursive ? "**" : "*"
+        }
+
+        let rendered = directory.presentingRelative(
+            filetype: true
+        )
+
+        return recursive
+            ? "\(rendered)/**"
+            : "\(rendered)/*"
     }
 
     func summary(

@@ -1,6 +1,7 @@
 import Position
 
 public struct EditFileToolOutput: Sendable, Codable, Hashable {
+    public let rootID: String
     public let path: String
     public let operationCount: Int
     public let changeCount: Int
@@ -9,6 +10,7 @@ public struct EditFileToolOutput: Sendable, Codable, Hashable {
     public let editedChangedLineRanges: [LineRange]
 
     public init(
+        rootID: String,
         path: String,
         operationCount: Int,
         changeCount: Int,
@@ -16,6 +18,7 @@ public struct EditFileToolOutput: Sendable, Codable, Hashable {
         originalChangedLineRanges: [LineRange],
         editedChangedLineRanges: [LineRange]
     ) {
+        self.rootID = rootID
         self.path = path
         self.operationCount = operationCount
         self.changeCount = changeCount

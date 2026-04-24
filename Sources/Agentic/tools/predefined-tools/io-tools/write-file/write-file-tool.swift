@@ -16,26 +16,39 @@ public struct WriteFileTool: AgentTool {
             from: input
         )
 
-        let targetPath: String
-        if let workspace {
-            targetPath = try workspace.resolve(
-                decoded.path
-            ).presentingRelative(
-                filetype: true
-            )
-        } else {
-            targetPath = decoded.path
-        }
+        let targetPath = try FileToolAccess.presentationPath(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            type: .file
+        )
+
+        let byteCount = decoded.content.utf8.count
 
         return .init(
             toolName: name,
             risk: risk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [targetPath],
+            targetPaths: [
+                targetPath
+            ],
             summary: "Replace entire file contents at \(targetPath)",
             estimatedWriteCount: 1,
-            estimatedByteCount: decoded.content.utf8.count,
-            sideEffects: risk.defaultSideEffects
+            estimatedByteCount: byteCount,
+            sideEffects: risk.defaultSideEffects,
+            rootIDs: [
+                decoded.rootID.rawValue
+            ],
+            capabilitiesRequired: [
+                .write
+            ],
+            estimatedWriteBytes: byteCount,
+            isPreview: false,
+            policyChecks: [
+                "workspace_required",
+                "root_path_resolved",
+                "write_budget_estimated"
+            ]
         )
     }
 
@@ -53,24 +66,28 @@ public struct WriteFileTool: AgentTool {
             from: input
         )
 
+        let authorized = try FileToolAccess.authorize(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            capability: .write,
+            toolName: name,
+            type: .file
+        )
+
         let editor = FileEditor(
             workspace: workspace
         )
 
-        let scopedPath = try workspace.resolve(
-            decoded.path
-        )
-
         let result = try editor.write(
             decoded.content,
-            to: scopedPath
+            to: authorized.scopedPath
         )
 
         return try JSONToolBridge.encode(
             WriteFileToolOutput(
-                path: scopedPath.presentingRelative(
-                    filetype: true
-                ),
+                rootID: authorized.rootID.rawValue,
+                path: authorized.presentationPath,
                 bytesWritten: result.writeResult?.bytesWritten ?? 0,
                 diffSummary: .init(
                     insertedLineCount: result.insertions,

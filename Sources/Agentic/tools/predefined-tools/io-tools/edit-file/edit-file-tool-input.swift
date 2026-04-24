@@ -1,5 +1,6 @@
 import Position
 import Writers
+import Path
 
 public struct EditFileLineRange: Sendable, Codable, Hashable {
     public let start: Int
@@ -243,14 +244,50 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
 }
 
 public struct EditFileToolInput: Sendable, Codable, Hashable {
+    public let rootID: PathAccessRootIdentifier
     public let path: String
     public let operations: [EditFileToolOperation]
 
     public init(
+        rootID: PathAccessRootIdentifier = .project,
         path: String,
         operations: [EditFileToolOperation]
     ) {
+        self.rootID = rootID
         self.path = path
         self.operations = operations
+    }
+}
+
+private extension EditFileToolInput {
+    enum CodingKeys: String, CodingKey {
+        case rootID
+        case path
+        case operations
+    }
+}
+
+public extension EditFileToolInput {
+    init(
+        from decoder: any Decoder
+    ) throws {
+        let container = try decoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        self.init(
+            rootID: try container.decodeIfPresent(
+                PathAccessRootIdentifier.self,
+                forKey: .rootID
+            ) ?? .project,
+            path: try container.decode(
+                String.self,
+                forKey: .path
+            ),
+            operations: try container.decode(
+                [EditFileToolOperation].self,
+                forKey: .operations
+            )
+        )
     }
 }

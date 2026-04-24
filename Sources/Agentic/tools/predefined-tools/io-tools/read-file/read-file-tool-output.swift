@@ -1,6 +1,7 @@
 import Position
 
 public struct ReadFileToolOutput: Sendable, Codable, Hashable {
+    public let rootID: String
     public let path: String
     public let content: String
     public let lineRange: LineRange?
@@ -11,6 +12,7 @@ public struct ReadFileToolOutput: Sendable, Codable, Hashable {
     public let encoding: String?
 
     public init(
+        rootID: String,
         path: String,
         content: String,
         lineRange: LineRange?,
@@ -20,6 +22,7 @@ public struct ReadFileToolOutput: Sendable, Codable, Hashable {
         truncated: Bool,
         encoding: String?
     ) {
+        self.rootID = rootID
         self.path = path
         self.content = content
         self.lineRange = lineRange

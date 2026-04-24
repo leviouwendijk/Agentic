@@ -2,9 +2,12 @@ import Foundation
 
 public enum AgentHistoryPhase: String, Sendable, Codable, Hashable, CaseIterable {
     case ready_for_model
+    case receiving_model_response
     case processing_tool_calls
     case suspended
     case awaiting_approval
+    case interrupted
+    case failed
     case completed
 }
 
@@ -15,6 +18,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
     public var events: [AgentRunEvent]
     public var phase: AgentHistoryPhase
     public var lastResponse: AgentResponse?
+    public var partialResponse: AgentPartialResponse?
     public var suspension: AgentSuspension?
     public var pendingApproval: PendingApproval?
     public var costRecord: AgentCostRecord?
@@ -27,6 +31,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         events: [AgentRunEvent] = [],
         phase: AgentHistoryPhase = .ready_for_model,
         lastResponse: AgentResponse? = nil,
+        partialResponse: AgentPartialResponse? = nil,
         suspension: AgentSuspension? = nil,
         pendingApproval: PendingApproval? = nil,
         costRecord: AgentCostRecord? = nil,
@@ -38,6 +43,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         self.events = events
         self.phase = phase
         self.lastResponse = lastResponse
+        self.partialResponse = partialResponse
         self.suspension = suspension
         self.pendingApproval = pendingApproval ?? suspension?.pendingApproval
         self.costRecord = costRecord

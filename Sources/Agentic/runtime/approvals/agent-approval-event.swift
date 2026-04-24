@@ -70,6 +70,12 @@ public extension AgentApprovalEvent {
 
         case .assistant_response,
              .compaction,
+             .model_stream_started,
+             .assistant_delta,
+             .model_stream_tool_call,
+             .model_stream_completed,
+             .model_stream_interrupted,
+             .model_stream_failed,
              .pending_user_input,
              .tool_result,
              .tool_error,

@@ -5,6 +5,8 @@ public struct AgentRunnerConfiguration: Sendable, Codable, Hashable {
     public var executionLimits: ExecutionLimits
     public var historyPersistenceMode: HistoryPersistenceMode
     public var compactionStrategy: CompactionStrategy?
+    public var responseDelivery: AgentModelResponseDelivery
+    public var streamCheckpointPolicy: AgentStreamCheckpointPolicy
 
     public init(
         maximumIterations: Int = 12,
@@ -12,7 +14,9 @@ public struct AgentRunnerConfiguration: Sendable, Codable, Hashable {
         autonomyMode: AutonomyMode = .review_privileged,
         executionLimits: ExecutionLimits = .unlimited,
         historyPersistenceMode: HistoryPersistenceMode = .disabled,
-        compactionStrategy: CompactionStrategy? = nil
+        compactionStrategy: CompactionStrategy? = nil,
+        responseDelivery: AgentModelResponseDelivery = .buffered,
+        streamCheckpointPolicy: AgentStreamCheckpointPolicy = .default
     ) {
         self.maximumIterations = max(1, maximumIterations)
         self.appendToolResultsAsMessages = appendToolResultsAsMessages
@@ -20,6 +24,8 @@ public struct AgentRunnerConfiguration: Sendable, Codable, Hashable {
         self.executionLimits = executionLimits
         self.historyPersistenceMode = historyPersistenceMode
         self.compactionStrategy = compactionStrategy
+        self.responseDelivery = responseDelivery
+        self.streamCheckpointPolicy = streamCheckpointPolicy
     }
 
     public static let `default` = Self()

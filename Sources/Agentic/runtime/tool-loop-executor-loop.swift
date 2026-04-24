@@ -35,6 +35,11 @@ extension ToolLoopExecutor {
                     )
                 }
 
+            case .receiving_model_response:
+                throw AgentStreamingError.receivingModelResponseCheckpoint(
+                    checkpoint.id
+                )
+
             case .processing_tool_calls:
                 let processed = try await processToolCalls(
                     from: checkpoint
@@ -52,6 +57,16 @@ extension ToolLoopExecutor {
                  .awaiting_approval:
                 return try suspendedResult(
                     from: checkpoint
+                )
+
+            case .interrupted:
+                throw AgentStreamingError.interruptedCheckpoint(
+                    checkpoint.id
+                )
+
+            case .failed:
+                throw AgentStreamingError.failedCheckpoint(
+                    checkpoint.id
                 )
 
             case .completed:
@@ -73,6 +88,22 @@ extension ToolLoopExecutor {
     }
 
     func performModelTurn(
+        from checkpoint: AgentHistoryCheckpoint
+    ) async throws -> AgentHistoryCheckpoint {
+        switch configuration.responseDelivery {
+        case .buffered:
+            return try await performBufferedModelTurn(
+                from: checkpoint
+            )
+
+        case .stream:
+            return try await performStreamingModelTurn(
+                from: checkpoint
+            )
+        }
+    }
+
+    func performBufferedModelTurn(
         from checkpoint: AgentHistoryCheckpoint
     ) async throws -> AgentHistoryCheckpoint {
         var checkpoint = checkpoint
@@ -101,7 +132,7 @@ extension ToolLoopExecutor {
             turnIndex: turnIndex
         )
 
-        let response = try await adapter.complete(
+        let response = try await adapter.respond(
             request: preparedRequest
         )
 
@@ -110,6 +141,7 @@ extension ToolLoopExecutor {
             response.message
         )
         checkpoint.lastResponse = response
+        checkpoint.partialResponse = nil
         checkpoint.clearSuspension()
 
         try await recordMessage(
@@ -144,7 +176,7 @@ extension ToolLoopExecutor {
             in: response.message
         )
 
-        if response.stopReason == .tool_use,
+        if response.stopReason == AgentStopReason.tool_use,
            !toolCalls.isEmpty {
             checkpoint.phase = .processing_tool_calls
         } else {
@@ -254,6 +286,17 @@ extension ToolLoopExecutor {
 
             switch requirement {
             case .no_approval_needed:
+                try await appendRunEvent(
+                    .init(
+                        kind: .tool_approved,
+                        iteration: checkpoint.state.iteration,
+                        toolCallID: toolCall.id,
+                        toolName: toolCall.name,
+                        summary: "auto-approved by execution policy"
+                    ),
+                    to: &checkpoint
+                )
+
                 let result = await executeApprovedToolCall(
                     toolCall
                 )

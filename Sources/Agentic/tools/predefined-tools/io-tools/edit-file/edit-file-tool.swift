@@ -17,25 +17,36 @@ public struct EditFileTool: AgentTool {
             from: input
         )
 
-        let targetPath: String
-        if let workspace {
-            targetPath = try workspace.resolve(
-                decoded.path
-            ).presentingRelative(
-                filetype: true
-            )
-        } else {
-            targetPath = decoded.path
-        }
+        let targetPath = try FileToolAccess.presentationPath(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            type: .file
+        )
 
         return .init(
             toolName: name,
             risk: risk,
             workspaceRoot: workspace?.rootURL.path,
-            targetPaths: [targetPath],
+            targetPaths: [
+                targetPath
+            ],
             summary: "Apply \(decoded.operations.count) structured edit operation(s) to \(targetPath)",
             estimatedWriteCount: decoded.operations.isEmpty ? 0 : 1,
-            sideEffects: risk.defaultSideEffects
+            sideEffects: risk.defaultSideEffects,
+            rootIDs: [
+                decoded.rootID.rawValue
+            ],
+            capabilitiesRequired: [
+                .write
+            ],
+            estimatedChangedLineCount: decoded.operations.count,
+            isPreview: false,
+            policyChecks: [
+                "workspace_required",
+                "root_path_resolved",
+                "edit_operations_decoded"
+            ]
         )
     }
 
@@ -53,12 +64,17 @@ public struct EditFileTool: AgentTool {
             from: input
         )
 
-        let editor = FileEditor(
-            workspace: workspace
+        let authorized = try FileToolAccess.authorize(
+            workspace: workspace,
+            rootID: decoded.rootID,
+            path: decoded.path,
+            capability: .write,
+            toolName: name,
+            type: .file
         )
 
-        let scopedPath = try workspace.resolve(
-            decoded.path
+        let editor = FileEditor(
+            workspace: workspace
         )
 
         let operations = try decoded.operations.map { operation in
@@ -67,19 +83,18 @@ public struct EditFileTool: AgentTool {
 
         let preview = try editor.previewEdit(
             operations,
-            at: scopedPath
+            at: authorized.scopedPath
         )
 
         let result = try editor.edit(
             operations,
-            at: scopedPath
+            at: authorized.scopedPath
         )
 
         return try JSONToolBridge.encode(
             EditFileToolOutput(
-                path: scopedPath.presentingRelative(
-                    filetype: true
-                ),
+                rootID: authorized.rootID.rawValue,
+                path: authorized.presentationPath,
                 operationCount: operations.count,
                 changeCount: preview.changeCount,
                 diffSummary: .init(

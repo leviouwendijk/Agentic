@@ -5,167 +5,459 @@ import Readers
 import FileTypes
 import Selection
 
-public struct AgentWorkspace: Sendable, Equatable {
-    public let sandbox: PathSandbox
-    public let accessPolicy: PathAccessPolicy
+public struct AgentWorkspace: Sendable, Codable, Equatable {
+    public let accessController: WorkspaceAccessController
+
+    public init(
+        scope: PathAccessScope,
+        accessController: WorkspaceAccessController? = nil
+    ) {
+        self.accessController = accessController ?? .project(
+            scope: scope
+        )
+    }
 
     public init(
         root: StandardPath,
-        accessPolicy: PathAccessPolicy = .agenticWorkspaceDefault
+        accessPolicy: PathAccessPolicy = .defaults.workspace
     ) throws {
-        self.sandbox = try .init(root: root)
-        self.accessPolicy = accessPolicy
+        let scope = try PathAccessScope(
+            root: root,
+            policy: accessPolicy
+        )
+
+        self.init(
+            scope: scope
+        )
     }
 
     public init(
         root: URL,
-        accessPolicy: PathAccessPolicy = .agenticWorkspaceDefault
+        accessPolicy: PathAccessPolicy = .defaults.workspace
     ) throws {
-        try self.init(
-            root: StandardPath(
-                fileURL: root,
-                terminalHint: .directory,
-                inferFileType: false
-            ),
-            accessPolicy: accessPolicy
+        let scope = try PathAccessScope(
+            root: root,
+            policy: accessPolicy
+        )
+
+        self.init(
+            scope: scope
+        )
+    }
+}
+
+private extension AgentWorkspace {
+    var defaultRoot: PathAccessRoot {
+        do {
+            return try accessController.paths.defaultRoot.root()
+        } catch {
+            preconditionFailure(
+                "AgentWorkspace has no default PathAccessRoot: \(error)"
+            )
+        }
+    }
+}
+
+public extension AgentWorkspace {
+    var scope: PathAccessScope {
+        defaultRoot.scope
+    }
+
+    var sandbox: PathSandbox {
+        scope.sandbox
+    }
+
+    var accessPolicy: PathAccessPolicy {
+        scope.policy
+    }
+
+    var root: StandardPath {
+        defaultRoot.root
+    }
+
+    var rootURL: URL {
+        defaultRoot.rootURL
+    }
+}
+
+public extension AgentWorkspace {
+    func withAccessController(
+        _ accessController: WorkspaceAccessController
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController
         )
     }
 
-    public var root: StandardPath {
-        sandbox.root
+    func withPolicy(
+        _ policy: PathAccessPolicy
+    ) -> Self {
+        withProjectScope(
+            scope.withPolicy(
+                policy
+            )
+        )
     }
 
-    public var rootURL: URL {
-        URL(
-            fileURLWithPath: root.render(
-                as: .root,
-                filetype: false
+    func applying(
+        _ patch: PathAccessPolicyPatch
+    ) -> Self {
+        withProjectScope(
+            scope.applying(
+                patch
+            )
+        )
+    }
+
+    func exceptions(
+        @PathAccessRulePatternBuilder _ patterns: () -> [PathAccessRulePattern]
+    ) -> Self {
+        withProjectScope(
+            scope.exceptions(
+                patterns
+            )
+        )
+    }
+
+    func denials(
+        @PathAccessRulePatternBuilder _ patterns: () -> [PathAccessRulePattern]
+    ) -> Self {
+        withProjectScope(
+            scope.denials(
+                patterns
+            )
+        )
+    }
+
+    func installingRoot(
+        _ root: PathAccessRoot,
+        grant: PathGrant? = nil
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.installing(
+                root: root,
+                grant: grant
+            )
+        )
+    }
+
+    func installingRoot(
+        id: PathAccessRootIdentifier,
+        label: String,
+        root: StandardPath,
+        accessPolicy: PathAccessPolicy = .defaults.workspace,
+        mode: PathGrantMode = .read_only,
+        capabilities: [PathCapability] = [],
+        allowedTools: [String] = [],
+        details: String? = nil,
+        reason: String? = nil,
+        expiresAt: Date? = nil
+    ) throws -> Self {
+        let scope = try PathAccessScope(
+            root: root,
+            policy: accessPolicy
+        )
+
+        return installingRoot(
+            .init(
+                id: id,
+                label: label,
+                scope: scope,
+                details: details,
+                isDefault: false
             ),
-            isDirectory: true
-        ).standardizedFileURL
+            grant: .init(
+                rootID: id,
+                mode: mode,
+                capabilities: capabilities,
+                allowedTools: allowedTools,
+                reason: reason,
+                expiresAt: expiresAt
+            )
+        )
     }
 
-    public func evaluateAccess(
+    func installingRoot(
+        id: PathAccessRootIdentifier,
+        label: String,
+        root: URL,
+        accessPolicy: PathAccessPolicy = .defaults.workspace,
+        mode: PathGrantMode = .read_only,
+        capabilities: [PathCapability] = [],
+        allowedTools: [String] = [],
+        details: String? = nil,
+        reason: String? = nil,
+        expiresAt: Date? = nil
+    ) throws -> Self {
+        let scope = try PathAccessScope(
+            root: root,
+            policy: accessPolicy
+        )
+
+        return installingRoot(
+            .init(
+                id: id,
+                label: label,
+                scope: scope,
+                details: details,
+                isDefault: false
+            ),
+            grant: .init(
+                rootID: id,
+                mode: mode,
+                capabilities: capabilities,
+                allowedTools: allowedTools,
+                reason: reason,
+                expiresAt: expiresAt
+            )
+        )
+    }
+
+    func revokingRoot(
+        id: PathAccessRootIdentifier,
+        removeGrants: Bool = true
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.removingRoot(
+                id: id,
+                removeGrants: removeGrants
+            )
+        )
+    }
+
+    func installingGrant(
+        _ grant: PathGrant
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.installingGrant(
+                grant
+            )
+        )
+    }
+
+    func revokingGrant(
+        id: String
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.removingGrant(
+                id: id
+            )
+        )
+    }
+
+    func expiringGrants(
+        at date: Date = Date()
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.expiringGrants(
+                at: date
+            )
+        )
+    }
+}
+
+private extension AgentWorkspace {
+    func withProjectScope(
+        _ scope: PathAccessScope
+    ) -> Self {
+        .init(
+            scope: scope,
+            accessController: accessController.replacingRootScope(
+                rootID: .project,
+                scope: scope
+            )
+        )
+    }
+}
+
+public extension AgentWorkspace {
+    func evaluateAccess(
         _ path: ScopedPath,
         type: PathSegmentType? = nil
     ) -> PathAccessEvaluation {
-        accessPolicy.evaluate(
+        if let scoped = try? scope(containing: path) {
+            return scoped.evaluate(
+                path,
+                type: type
+            )
+        }
+
+        return scope.evaluate(
             path,
             type: type
         )
     }
 
     @discardableResult
-    public func requireAccessible(
+    func requireAccessible(
         _ path: ScopedPath,
         type: PathSegmentType? = nil
     ) throws -> ScopedPath {
-        guard sandbox.contains(path) else {
-            throw PathSandboxError.pathEscapesSandbox(
-                path: path.absolute,
-                root: root
-            )
-        }
-
-        let evaluation = accessPolicy.evaluate(
+        try scope(
+            containing: path
+        ).requireAccessible(
             path,
             type: type
         )
-
-        guard evaluation.isAllowed else {
-            throw PathAccessError.denied(evaluation)
-        }
-
-        return path
     }
 
-    public func resolve(
-        _ path: StandardPath
+    func resolve(
+        _ path: StandardPath,
+        type: PathSegmentType? = nil
     ) throws -> ScopedPath {
-        try sandbox.sandbox(
+        try accessController.paths.resolve(
             path,
-            policy: accessPolicy,
-            type: inferredType(for: path)
+            rootIdentifier: nil,
+            type: type
         )
     }
 
-    public func resolve(
+    func resolve(
+        rootID: PathAccessRootIdentifier,
+        _ path: StandardPath,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.resolve(
+            path,
+            rootIdentifier: rootID,
+            type: type
+        )
+    }
+
+    func resolve(
+        rawPath: String,
+        filetype: AnyFileType? = nil,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.resolve(
+            rawPath,
+            rootIdentifier: nil,
+            filetype: filetype,
+            type: type
+        )
+    }
+
+    func resolve(
+        rootID: PathAccessRootIdentifier,
+        rawPath: String,
+        filetype: AnyFileType? = nil,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.resolve(
+            rawPath,
+            rootIdentifier: rootID,
+            filetype: filetype,
+            type: type
+        )
+    }
+
+    func resolve(
         _ rawPath: String,
-        filetype: AnyFileType? = nil
+        filetype: AnyFileType? = nil,
+        type: PathSegmentType? = nil
     ) throws -> ScopedPath {
-        let scoped = try sandbox.sandbox(
-            rawPath: rawPath,
-            filetype: filetype
-        )
-
-        return try requireAccessible(
-            scoped,
-            type: hintedType(
-                rawPath: rawPath,
-                filetype: filetype,
-                resolved: scoped
-            )
-        )
-    }
-
-    public func scope(
-        _ url: URL
-    ) throws -> ScopedPath {
-        let existence = PathExistence.check(
-            url: url
-        )
-        let type = existence.1
-        let terminalHint = terminalHint(
-            for: type
-        )
-
-        let path = StandardPath(
-            fileURL: url,
-            terminalHint: terminalHint,
-            inferFileType: type == .file
-        )
-
-        return try sandbox.sandbox(
-            path,
-            policy: accessPolicy,
+        try accessController.paths.resolve(
+            rawPath,
+            rootIdentifier: nil,
+            filetype: filetype,
             type: type
         )
     }
 
-    public func contains(
-        _ path: ScopedPath
-    ) -> Bool {
-        (try? requireAccessible(path)) != nil
-    }
-
-    public func contains(
-        _ path: StandardPath
-    ) -> Bool {
-        (try? resolve(path)) != nil
-    }
-
-    public func absoluteURL(
-        for path: ScopedPath
-    ) throws -> URL {
-        let path = try requireAccessible(path)
-
-        return absoluteURLUnchecked(
-            for: path
+    func resolve(
+        rootID: PathAccessRootIdentifier,
+        _ rawPath: String,
+        filetype: AnyFileType? = nil,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.resolve(
+            rawPath,
+            rootIdentifier: rootID,
+            filetype: filetype,
+            type: type
         )
     }
 
-    public func existingType(
+    func scope(
+        _ url: URL,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.scope(
+            url,
+            rootIdentifier: nil,
+            type: type
+        )
+    }
+
+    func scope(
+        rootID: PathAccessRootIdentifier,
+        _ url: URL,
+        type: PathSegmentType? = nil
+    ) throws -> ScopedPath {
+        try accessController.paths.scope(
+            url,
+            rootIdentifier: rootID,
+            type: type
+        )
+    }
+
+    func absoluteURL(
+        for path: ScopedPath,
+        type: PathSegmentType? = nil
+    ) throws -> URL {
+        let scoped = try requireAccessible(
+            path,
+            type: type
+        )
+
+        return try scope(
+            containing: scoped
+        ).absoluteURL(
+            for: scoped,
+            type: type
+        )
+    }
+
+    func existingType(
         of path: ScopedPath
     ) throws -> PathSegmentType? {
-        let url = try absoluteURL(
-            for: path
+        try scope(
+            containing: path
+        ).existingType(
+            of: path
         )
-        return PathExistence.check(
-            url: url
-        ).1
     }
 
-    public func read(
+    func contains(
+        _ path: ScopedPath,
+        type: PathSegmentType? = nil
+    ) -> Bool {
+        (try? requireAccessible(
+            path,
+            type: type
+        )) != nil
+    }
+
+    func contains(
+        _ path: StandardPath,
+        type: PathSegmentType? = nil
+    ) -> Bool {
+        (try? accessController.paths.authorize(
+            path,
+            rootIdentifier: nil,
+            type: type
+        )) != nil
+    }
+}
+
+public extension AgentWorkspace {
+    func read(
         _ path: ScopedPath,
         encoding: String.Encoding = .utf8
     ) throws -> ScopedWorkspaceRead {
@@ -181,7 +473,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func read(
+    func read(
         _ path: ScopedPath,
         options: TextReadOptions = .init(
             decoding: .commonTextFallbacks,
@@ -194,7 +486,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try TextFileReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).read(
             options: options
         )
@@ -208,7 +503,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readLines(
+    func readLines(
         _ path: ScopedPath,
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceLineRead {
@@ -217,7 +512,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try LineReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).read(
             options: options
         )
@@ -231,7 +529,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readSlice(
+    func readSlice(
         _ path: ScopedPath,
         range: LineRange?,
         maxLines: Int? = nil,
@@ -242,7 +540,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try LineReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).readSlice(
             range: range,
             maxLines: maxLines,
@@ -261,7 +562,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readSlice(
+    func readSlice(
         _ path: ScopedPath,
         startLine: Int? = nil,
         endLine: Int? = nil,
@@ -273,7 +574,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try LineReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).readSlice(
             startLine: startLine,
             endLine: endLine,
@@ -293,7 +597,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readData(
+    func readData(
         _ path: ScopedPath,
         options: DataReadOptions = .default
     ) throws -> ScopedWorkspaceDataRead {
@@ -302,7 +606,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try DataFileReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).read(
             options: options
         )
@@ -315,7 +622,7 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readBase64(
+    func readBase64(
         _ path: ScopedPath,
         options: DataReadOptions = .default
     ) throws -> ScopedWorkspaceBase64Read {
@@ -324,7 +631,10 @@ public struct AgentWorkspace: Sendable, Equatable {
             type: .file
         )
         let result = try DataFileReader(
-            absoluteURLUnchecked(for: path)
+            try absoluteURL(
+                for: path,
+                type: .file
+            )
         ).readBase64(
             options: options
         )
@@ -338,19 +648,21 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func readSelection(
+    func readSelection(
         _ path: ScopedPath,
         _ selection: ContentSelection,
         options: LineReadOptions = .default
     ) throws -> ScopedWorkspaceSelectionRead {
         try readSelections(
             path,
-            [selection],
+            [
+                selection
+            ],
             options: options
         )
     }
 
-    public func readSelections(
+    func readSelections(
         _ path: ScopedPath,
         _ selections: [ContentSelection],
         options: LineReadOptions = .default
@@ -359,8 +671,9 @@ public struct AgentWorkspace: Sendable, Equatable {
             path,
             type: .file
         )
-        let url = absoluteURLUnchecked(
-            for: path
+        let url = try absoluteURL(
+            for: path,
+            type: .file
         )
         let readResult = try LineReader(url).read(
             options: options
@@ -377,50 +690,53 @@ public struct AgentWorkspace: Sendable, Equatable {
         )
     }
 
-    public func scan(
+    func scan(
         _ specification: PathScanSpecification,
+        rootID: PathAccessRootIdentifier? = nil,
         configuration: PathWalkConfiguration = .init()
     ) throws -> PathScanResult {
+        let root = try accessController.paths.root(
+            identifier: rootID
+        )
         let result = try PathScan.scan(
             specification,
-            relativeTo: .directoryURL(rootURL),
+            relativeTo: .directoryURL(root.rootURL),
             configuration: configuration
         )
 
         return .init(
-            matches: filteredMatches(
+            matches: root.scope.filteredMatches(
                 from: result
             ),
             warnings: result.warnings
         )
     }
 
-    public func scopedEntries(
+    func scopedEntries(
         from result: PathScanResult,
-        excluding scannedPath: ScopedPath? = nil
+        excluding scannedPath: ScopedPath? = nil,
+        rootID: PathAccessRootIdentifier? = nil
     ) -> [ScopedWorkspaceScan.Entry] {
-        result.matches.compactMap { match in
-            guard let relative = sandbox.tree.relative(
-                match.path
+        guard let root = try? accessController.paths.root(
+            identifier: rootID
+        ) else {
+            return []
+        }
+
+        return result.matches.compactMap { match in
+            guard let scoped = root.scope.scopedPath(
+                from: match
             ) else {
                 return nil
             }
 
-            guard !relative.segments.isEmpty else {
-                return nil
-            }
-
             if let scannedPath,
-               relative == scannedPath.relative {
+               scoped.root == scannedPath.root,
+               scoped.relative == scannedPath.relative {
                 return nil
             }
 
-            let scoped = ScopedPath(
-                root: root,
-                relative: relative
-            )
-
-            guard (try? requireAccessible(
+            guard (try? root.scope.requireAccessible(
                 scoped,
                 type: match.type
             )) != nil else {
@@ -433,89 +749,77 @@ public struct AgentWorkspace: Sendable, Equatable {
             )
         }
     }
+
+    func authorizedEntries(
+        from result: PathScanResult,
+        rootID: PathAccessRootIdentifier,
+        capability: PathCapability,
+        toolName: String,
+        excluding scannedPath: ScopedPath? = nil
+    ) throws -> [ScopedWorkspaceScan.Entry] {
+        let root = try accessController.root(
+            id: rootID
+        )
+
+        return result.matches.compactMap { match in
+            guard let scoped = root.scope.scopedPath(
+                from: match
+            ) else {
+                return nil
+            }
+
+            if let scannedPath,
+               scoped.root == scannedPath.root,
+               scoped.relative == scannedPath.relative {
+                return nil
+            }
+
+            guard let authorized = try? accessController.authorize(
+                rootID: root.id,
+                scopedPath: scoped,
+                capability: capability,
+                toolName: toolName,
+                type: match.type
+            ) else {
+                return nil
+            }
+
+            return .init(
+                path: authorized.scopedPath,
+                isDirectory: match.type == .directory
+            )
+        }
+    }
 }
 
 private extension AgentWorkspace {
-    func absoluteURLUnchecked(
-        for path: ScopedPath
-    ) -> URL {
-        URL(
-            fileURLWithPath: path.absolute.render(
-                as: .root,
-                filetype: true
-            ),
-            isDirectory: path.relative.filetype == nil
-        ).standardizedFileURL
-    }
+    func root(
+        containing path: ScopedPath
+    ) throws -> PathAccessRoot {
+        let roots = accessController.paths.roots.values.sorted {
+            $0.id.rawValue < $1.id.rawValue
+        }
 
-    func filteredMatches(
-        from result: PathScanResult
-    ) -> [PathScanMatch] {
-        result.matches.filter { match in
-            guard let relative = sandbox.tree.relative(
-                match.path
-            ) else {
-                return false
-            }
-
-            let scoped = ScopedPath(
-                root: root,
-                relative: relative
+        guard let root = roots.first(where: { candidate in
+            candidate.scope.sandbox.contains(
+                path
             )
-
-            return accessPolicy.allows(
-                scoped,
-                type: match.type
+        }) else {
+            throw WorkspaceAccessError.scopedPathRootNotFound(
+                path.presentingRelative(
+                    filetype: true
+                )
             )
         }
+
+        return root
     }
 
-    func inferredType(
-        for path: StandardPath
-    ) -> PathSegmentType? {
-        if path.filetype != nil {
-            return .file
-        }
-
-        return nil
-    }
-
-    func hintedType(
-        rawPath: String,
-        filetype: AnyFileType?,
-        resolved: ScopedPath
-    ) -> PathSegmentType? {
-        if filetype != nil {
-            return .file
-        }
-
-        let trimmed = rawPath.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        if trimmed.hasSuffix("/") {
-            return .directory
-        }
-
-        if resolved.relative.filetype != nil {
-            return .file
-        }
-
-        return nil
-    }
-
-    func terminalHint(
-        for type: PathSegmentType?
-    ) -> PathTerminalHint {
-        switch type {
-        case .file?:
-            return .file
-
-        case .directory?:
-            return .directory
-
-        case nil:
-            return .unspecified
-        }
+    func scope(
+        containing path: ScopedPath
+    ) throws -> PathAccessScope {
+        try root(
+            containing: path
+        ).scope
     }
 }

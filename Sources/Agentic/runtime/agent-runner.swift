@@ -103,6 +103,21 @@ public actor AgentRunner {
                 eventSinks: eventSinks,
                 costTracker: costTracker
             ).resume(checkpoint)
+
+        case .receiving_model_response:
+            throw AgentStreamingError.receivingModelResponseCheckpoint(
+                checkpoint.id
+            )
+
+        case .interrupted:
+            throw AgentStreamingError.interruptedCheckpoint(
+                checkpoint.id
+            )
+
+        case .failed:
+            throw AgentStreamingError.failedCheckpoint(
+                checkpoint.id
+            )
         }
     }
 
