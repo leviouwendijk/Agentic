@@ -95,3 +95,6 @@ public extension AgentToolReference {
         )
     }
 }
+
+extension ListFileMutationsTool: StaticAgentToolMetadata {}
+extension InspectFileMutationTool: StaticAgentToolMetadata {}

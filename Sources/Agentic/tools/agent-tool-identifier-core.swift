@@ -48,4 +48,7 @@ public extension AgentToolIdentifier {
     static let read_agent_artifact: Self = "read_agent_artifact"
     static let list_agent_prepared_intents: Self = "list_agent_prepared_intents"
     static let read_agent_prepared_intent: Self = "read_agent_prepared_intent"
+
+    static let list_file_mutations: Self = "list_file_mutations"
+    static let inspect_file_mutation: Self = "inspect_file_mutation"
 }
