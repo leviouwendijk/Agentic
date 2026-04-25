@@ -5,6 +5,493 @@ import TestFlows
 import Writers
 
 extension AgenticFlowTesting {
+    static func runListFileMutationsTool() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationFlowWorkspace.make(
+            AgenticFlowSuite.ID.list_file_mutations_tool
+        )
+        defer {
+            env.remove()
+        }
+
+        let editor = FileEditor(
+            workspace: env.workspace
+        )
+
+        _ = try env.write(
+            "one\n",
+            to: "history-a.txt"
+        )
+        _ = try env.write(
+            "alpha\nbeta\n",
+            to: "history-b.txt"
+        )
+
+        let first = try await editor.writeRecorded(
+            "two\n",
+            to: "history-a.txt",
+            recorder: env.recorder,
+            options: .init(
+                mutation: .init(
+                    toolCallID: "history-list-tool-call-1",
+                    preparedIntentID: .init("history-list-intent-1"),
+                    metadata: [
+                        "flow": AgenticFlowSuite.ID.list_file_mutations_tool,
+                        "slot": "first"
+                    ]
+                )
+            )
+        )
+
+        let second = try await editor.editRecorded(
+            .replaceUnique(
+                of: "beta",
+                with: "bravo"
+            ),
+            at: "history-b.txt",
+            recorder: env.recorder,
+            options: .init(
+                mutation: .init(
+                    toolCallID: "history-list-tool-call-2",
+                    preparedIntentID: .init("history-list-intent-2"),
+                    metadata: [
+                        "flow": AgenticFlowSuite.ID.list_file_mutations_tool,
+                        "slot": "second"
+                    ]
+                )
+            )
+        )
+
+        let registry = try Agentic.tool.registry {
+            CoreFileMutationHistoryToolSet(
+                store: env.store,
+                artifactStore: env.artifactStore
+            )
+        }
+
+        try Expect.equal(
+            registry.count,
+            2,
+            "mutation history tool set count"
+        )
+
+        _ = try Expect.notNil(
+            registry.tool(
+                named: ListFileMutationsTool.identifier.rawValue
+            ),
+            "history tool set registers list_file_mutations"
+        )
+
+        _ = try Expect.notNil(
+            registry.tool(
+                named: InspectFileMutationTool.identifier.rawValue
+            ),
+            "history tool set registers inspect_file_mutation"
+        )
+
+        let tool = ListFileMutationsTool(
+            store: env.store
+        )
+        let output = try JSONToolBridge.decode(
+            AgentFileMutationHistoryList.self,
+            from: try await tool.call(
+                input: try JSONToolBridge.encode(
+                    ListFileMutationsToolInput(
+                        limit: 1
+                    )
+                ),
+                workspace: env.workspace
+            )
+        )
+
+        try Expect.equal(
+            output.totalCount,
+            2,
+            "list_file_mutations reports total count before limit"
+        )
+
+        try Expect.equal(
+            output.returnedCount,
+            1,
+            "list_file_mutations applies limit"
+        )
+
+        try Expect.true(
+            output.truncated,
+            "list_file_mutations marks limited output as truncated"
+        )
+
+        let summary = try Expect.notNil(
+            output.mutations.first,
+            "list_file_mutations returns a summary"
+        )
+
+        try Expect.true(
+            [
+                first.mutationID,
+                second.mutationID
+            ].contains(
+                summary.id
+            ),
+            "list_file_mutations limited result is one known mutation"
+        )
+
+        let secondOnly = try JSONToolBridge.decode(
+            AgentFileMutationHistoryList.self,
+            from: try await tool.call(
+                input: try JSONToolBridge.encode(
+                    ListFileMutationsToolInput(
+                        preparedIntentID: "history-list-intent-2",
+                        limit: 10
+                    )
+                ),
+                workspace: env.workspace
+            )
+        )
+
+        try Expect.equal(
+            secondOnly.totalCount,
+            1,
+            "list_file_mutations filters by prepared intent id"
+        )
+
+        let secondSummary = try Expect.notNil(
+            secondOnly.mutations.first,
+            "list_file_mutations returns prepared-intent-filtered summary"
+        )
+
+        try Expect.equal(
+            secondSummary.id,
+            second.mutationID,
+            "list_file_mutations prepared-intent filter returns matching mutation"
+        )
+
+        try Expect.equal(
+            secondSummary.preparedIntentID,
+            .init("history-list-intent-2"),
+            "list_file_mutations includes prepared intent id"
+        )
+
+        try Expect.equal(
+            secondSummary.writerRecordID,
+            second.writerRecordID,
+            "list_file_mutations includes writer record id"
+        )
+
+        try Expect.equal(
+            secondSummary.path,
+            "history-b.txt",
+            "list_file_mutations includes relative path"
+        )
+
+        try Expect.equal(
+            secondSummary.operationKind,
+            .edit_operations,
+            "list_file_mutations includes operation kind"
+        )
+
+        try Expect.equal(
+            secondSummary.resource,
+            .update,
+            "list_file_mutations includes resource change"
+        )
+
+        try Expect.equal(
+            secondSummary.delta,
+            .replacement,
+            "list_file_mutations includes delta kind"
+        )
+
+        try Expect.true(
+            secondSummary.rollbackable,
+            "list_file_mutations includes rollbackable flag"
+        )
+
+        let filtered = try JSONToolBridge.decode(
+            AgentFileMutationHistoryList.self,
+            from: try await tool.call(
+                input: try JSONToolBridge.encode(
+                    ListFileMutationsToolInput(
+                        path: "history-a.txt",
+                        limit: 10
+                    )
+                ),
+                workspace: env.workspace
+            )
+        )
+
+        try Expect.equal(
+            filtered.totalCount,
+            1,
+            "list_file_mutations filters by path"
+        )
+
+        try Expect.equal(
+            filtered.mutations.first?.id,
+            first.mutationID,
+            "list_file_mutations path filter returns matching mutation"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("returnedCount", "\(output.returnedCount)"),
+                ("totalCount", "\(output.totalCount)"),
+                ("latestMutationID", summary.id.uuidString.lowercased())
+            ]
+        )
+    }
+
+    static func runInspectFileMutationTool() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationFlowWorkspace.make(
+            AgenticFlowSuite.ID.inspect_file_mutation_tool
+        )
+        defer {
+            env.remove()
+        }
+
+        let editor = FileEditor(
+            workspace: env.workspace
+        )
+
+        _ = try env.write(
+            "old\n",
+            to: "inspect.txt"
+        )
+
+        let result = try await editor.writeRecorded(
+            "new\n",
+            to: "inspect.txt",
+            recorder: env.recorder,
+            options: .init(
+                mutation: .init(
+                    toolCallID: "history-inspect-tool-call",
+                    preparedIntentID: .init("history-inspect-intent"),
+                    metadata: [
+                        "flow": AgenticFlowSuite.ID.inspect_file_mutation_tool
+                    ]
+                )
+            )
+        )
+
+        let tool = InspectFileMutationTool(
+            store: env.store,
+            artifactStore: env.artifactStore
+        )
+        let inspection = try JSONToolBridge.decode(
+            AgentFileMutationInspection.self,
+            from: try await tool.call(
+                input: try JSONToolBridge.encode(
+                    InspectFileMutationToolInput(
+                        id: result.mutationID.uuidString.lowercased(),
+                        loadDiffArtifact: false
+                    )
+                ),
+                workspace: env.workspace
+            )
+        )
+
+        try Expect.equal(
+            inspection.mutation.id,
+            result.mutationID,
+            "inspect_file_mutation returns requested mutation"
+        )
+
+        try Expect.equal(
+            inspection.mutation.writerRecordID,
+            result.writerRecordID,
+            "inspect_file_mutation includes writer record id"
+        )
+
+        try Expect.equal(
+            inspection.mutation.preparedIntentID,
+            .init("history-inspect-intent"),
+            "inspect_file_mutation includes prepared intent id"
+        )
+
+        try Expect.equal(
+            inspection.mutation.path,
+            "inspect.txt",
+            "inspect_file_mutation includes relative path"
+        )
+
+        try Expect.equal(
+            inspection.mutation.operationKind,
+            .write_text,
+            "inspect_file_mutation includes operation kind"
+        )
+
+        try Expect.equal(
+            inspection.mutation.resource,
+            .update,
+            "inspect_file_mutation includes resource kind"
+        )
+
+        try Expect.equal(
+            inspection.mutation.delta,
+            .replacement,
+            "inspect_file_mutation includes delta kind"
+        )
+
+        try Expect.true(
+            inspection.mutation.rollbackable,
+            "inspect_file_mutation includes rollbackable flag"
+        )
+
+        try Expect.equal(
+            inspection.writerRecord.id,
+            result.writerRecordID,
+            "inspect_file_mutation includes writer record summary"
+        )
+
+        _ = try Expect.notNil(
+            inspection.writerMutationRecord,
+            "inspect_file_mutation loads canonical writer mutation record"
+        )
+
+        try Expect.isNil(
+            inspection.diffArtifact,
+            "inspect_file_mutation skips diff artifact when requested"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("mutationID", inspection.mutation.id.uuidString.lowercased()),
+                ("writerRecordID", inspection.writerRecord.id.uuidString.lowercased())
+            ]
+        )
+    }
+
+    static func runInspectFileMutationLoadsDiffArtifact() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationFlowWorkspace.make(
+            AgenticFlowSuite.ID.inspect_file_mutation_loads_diff_artifact
+        )
+        defer {
+            env.remove()
+        }
+
+        let editor = FileEditor(
+            workspace: env.workspace
+        )
+
+        _ = try env.write(
+            "one\ntwo\n",
+            to: "inspect-diff.txt"
+        )
+
+        let result = try await editor.writeRecorded(
+            "one\ntwo changed\n",
+            to: "inspect-diff.txt",
+            recorder: env.recorder,
+            options: .init(
+                mutation: .init(
+                    toolCallID: "history-inspect-diff-tool-call",
+                    preparedIntentID: .init("history-inspect-diff-intent"),
+                    metadata: [
+                        "flow": AgenticFlowSuite.ID.inspect_file_mutation_loads_diff_artifact
+                    ]
+                )
+            )
+        )
+
+        try Expect.false(
+            result.artifacts.isEmpty,
+            "recorded mutation emitted diff artifact before inspection"
+        )
+
+        let tool = InspectFileMutationTool(
+            store: env.store,
+            artifactStore: env.artifactStore
+        )
+        let inspection = try JSONToolBridge.decode(
+            AgentFileMutationInspection.self,
+            from: try await tool.call(
+                input: try JSONToolBridge.encode(
+                    InspectFileMutationToolInput(
+                        id: result.mutationID.uuidString.lowercased(),
+                        loadDiffArtifact: true
+                    )
+                ),
+                workspace: env.workspace
+            )
+        )
+
+        let diffArtifact = try Expect.notNil(
+            inspection.diffArtifact,
+            "inspect_file_mutation loads diff artifact"
+        )
+
+        try Expect.equal(
+            diffArtifact.artifact.kind,
+            .diff,
+            "loaded mutation artifact is a diff"
+        )
+
+        try Expect.contains(
+            diffArtifact.content,
+            "two changed",
+            "loaded mutation diff contains changed text"
+        )
+
+        try Expect.true(
+            inspection.diffArtifactIDs.contains(
+                diffArtifact.artifact.id
+            ),
+            "inspection includes loaded diff artifact id"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("mutationID", inspection.mutation.id.uuidString.lowercased()),
+                ("diffArtifactID", diffArtifact.artifact.id)
+            ]
+        )
+    }
+
+    static func runInspectFileMutationRejectsMissingID() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationFlowWorkspace.make(
+            AgenticFlowSuite.ID.inspect_file_mutation_rejects_missing_id
+        )
+        defer {
+            env.remove()
+        }
+
+        let tool = InspectFileMutationTool(
+            store: env.store,
+            artifactStore: env.artifactStore
+        )
+
+        try await Expect.throwsError(
+            "inspect_file_mutation rejects malformed id"
+        ) {
+            _ = try await tool.call(
+                input: try JSONToolBridge.encode(
+                    InspectFileMutationToolInput(
+                        id: "not-a-uuid"
+                    )
+                ),
+                workspace: env.workspace
+            )
+        }
+
+        try await Expect.throwsError(
+            "inspect_file_mutation rejects missing id"
+        ) {
+            _ = try await tool.call(
+                input: try JSONToolBridge.encode(
+                    InspectFileMutationToolInput(
+                        id: UUID().uuidString.lowercased()
+                    )
+                ),
+                workspace: env.workspace
+            )
+        }
+
+        return mutationPreflightDiagnostics(
+            [
+                ("malformedID", "rejected"),
+                ("missingID", "rejected")
+            ]
+        )
+    }
     static func runFileMutationStore() async throws -> [TestFlowDiagnostic] {
         let env = try MutationFlowWorkspace.make(
             AgenticFlowSuite.ID.file_mutation_store
@@ -677,7 +1164,7 @@ private struct MutationFlowWorkspace {
     }
 }
 
-private func mutationDiagnostics(
+internal func mutationDiagnostics(
     _ pairs: [(String, String)]
 ) -> [TestFlowDiagnostic] {
     pairs.map { key, value in

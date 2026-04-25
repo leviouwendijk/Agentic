@@ -192,6 +192,34 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runExecutePreparedFileMutationRejectsUnknownAction()
         },
+
+        TestFlow(
+            ID.list_file_mutations_tool,
+            tags: ["agentic", "mutation", "history", "tool", "list"]
+        ) {
+            try await AgenticFlowTesting.runListFileMutationsTool()
+        },
+
+        TestFlow(
+            ID.inspect_file_mutation_tool,
+            tags: ["agentic", "mutation", "history", "tool", "inspect"]
+        ) {
+            try await AgenticFlowTesting.runInspectFileMutationTool()
+        },
+
+        TestFlow(
+            ID.inspect_file_mutation_loads_diff_artifact,
+            tags: ["agentic", "mutation", "history", "artifact", "diff"]
+        ) {
+            try await AgenticFlowTesting.runInspectFileMutationLoadsDiffArtifact()
+        },
+
+        TestFlow(
+            ID.inspect_file_mutation_rejects_missing_id,
+            tags: ["agentic", "mutation", "history", "error"]
+        ) {
+            try await AgenticFlowTesting.runInspectFileMutationRejectsMissingID()
+        },
     ]
 
     enum ID {
@@ -227,5 +255,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let execute_prepared_file_mutation_edit = "execute-prepared-file-mutation-edit"
         static let execute_prepared_file_mutation_requires_approved = "execute-prepared-file-mutation-requires-approved"
         static let execute_prepared_file_mutation_rejects_unknown_action = "execute-prepared-file-mutation-rejects-unknown-action"
+
+        static let list_file_mutations_tool = "list-file-mutations-tool"
+        static let inspect_file_mutation_tool = "inspect-file-mutation-tool"
+        static let inspect_file_mutation_loads_diff_artifact = "inspect-file-mutation-loads-diff-artifact"
+        static let inspect_file_mutation_rejects_missing_id = "inspect-file-mutation-rejects-missing-id"
     }
 }

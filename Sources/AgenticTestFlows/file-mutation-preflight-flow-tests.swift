@@ -857,7 +857,7 @@ private struct MutationPreflightFlowWorkspace {
     }
 }
 
-private func mutationPreflightDiagnostics(
+internal func mutationPreflightDiagnostics(
     _ pairs: [(String, String)]
 ) -> [TestFlowDiagnostic] {
     pairs.map { key, value in
