@@ -6,6 +6,7 @@ import Writers
 public enum FileMutationIntentAction: String, Sendable, Codable, Hashable, CaseIterable {
     case write
     case edit
+    case rollback
 }
 
 public extension FileMutationIntentAction {
@@ -36,6 +37,9 @@ public extension FileMutationIntentAction {
 
         case .edit:
             return EditFileTool.identifier.rawValue
+
+        case .rollback:
+            return "rollback_file_mutation"
         }
     }
 
@@ -46,6 +50,9 @@ public extension FileMutationIntentAction {
 
         case .edit:
             return "Edit file"
+
+        case .rollback:
+            return "Rollback file mutation"
         }
     }
 }

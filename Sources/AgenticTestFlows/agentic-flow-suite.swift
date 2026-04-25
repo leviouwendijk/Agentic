@@ -220,6 +220,41 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runInspectFileMutationRejectsMissingID()
         },
+
+        TestFlow(
+            ID.file_mutation_rollback_preflight,
+            tags: ["agentic", "mutation", "rollback", "preflight"]
+        ) {
+            try await AgenticFlowTesting.runFileMutationRollbackPreflight()
+        },
+
+        TestFlow(
+            ID.file_mutation_rollback_preflight_rejects_missing_id,
+            tags: ["agentic", "mutation", "rollback", "preflight", "error"]
+        ) {
+            try await AgenticFlowTesting.runFileMutationRollbackPreflightRejectsMissingID()
+        },
+
+        TestFlow(
+            ID.prepared_file_mutation_rollback,
+            tags: ["agentic", "mutation", "rollback", "prepared-intent"]
+        ) {
+            try await AgenticFlowTesting.runPreparedFileMutationRollback()
+        },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_rollback,
+            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationRollback()
+        },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_rollback_records_mutation,
+            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute", "record"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationRollbackRecordsMutation()
+        },
     ]
 
     enum ID {
@@ -260,5 +295,11 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let inspect_file_mutation_tool = "inspect-file-mutation-tool"
         static let inspect_file_mutation_loads_diff_artifact = "inspect-file-mutation-loads-diff-artifact"
         static let inspect_file_mutation_rejects_missing_id = "inspect-file-mutation-rejects-missing-id"
+
+        static let file_mutation_rollback_preflight = "file-mutation-rollback-preflight"
+        static let file_mutation_rollback_preflight_rejects_missing_id = "file-mutation-rollback-preflight-rejects-missing-id"
+        static let prepared_file_mutation_rollback = "prepared-file-mutation-rollback"
+        static let execute_prepared_file_mutation_rollback = "execute-prepared-file-mutation-rollback"
+        static let execute_prepared_file_mutation_rollback_records_mutation = "execute-prepared-file-mutation-rollback-records-mutation"
     }
 }

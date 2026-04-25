@@ -1,5 +1,7 @@
 import Foundation
 import Primitives
+import Difference
+import Writers
 
 public enum FileMutationIntentExecutionError: Error, Sendable, LocalizedError {
     case unsupportedActionType(String)
@@ -158,7 +160,86 @@ private extension FileMutationIntentExecutor {
                 ),
                 workspace: workspace
             )
+
+        case .rollback:
+            let decoded = try JSONToolBridge.decode(
+                AgentFileMutationRollbackInput.self,
+                from: exactInputs
+            )
+
+            return try await executeRollback(
+                decoded,
+                intentID: intentID,
+                action: action
+            )
         }
+    }
+
+    func executeRollback(
+        _ input: AgentFileMutationRollbackInput,
+        intentID: PreparedIntentIdentifier,
+        action: FileMutationIntentAction
+    ) async throws -> JSONValue {
+        let sourceID = try input.normalizedMutationUUID()
+        let sourceIDString = sourceID.uuidString.lowercased()
+
+        guard let source = try await recorder.store.load(
+            id: sourceID
+        ) else {
+            throw AgentFileMutationRollbackError.mutationNotFound(
+                sourceIDString
+            )
+        }
+
+        guard source.rollbackable else {
+            throw AgentFileMutationRollbackError.mutationNotRollbackable(
+                sourceIDString
+            )
+        }
+
+        guard let writerRecord = try await recorder.store.loadWriterRecord(
+            for: source
+        ) else {
+            throw AgentFileMutationRollbackError.missingWriterRecord(
+                sourceIDString
+            )
+        }
+
+        let rollback = try StandardWriter(
+            source.target
+        ).rollback(
+            writerRecord,
+            options: try recorder.writeOptions(),
+            checkTarget: input.checkTarget
+        )
+
+        let recorded = try await recorder.record(
+            writerRecord: rollbackRecordingRecord(
+                rollback
+            ),
+            writeResult: rollback.writeResult,
+            rootID: source.rootID,
+            scopedPath: source.scopedPath,
+            context: mutationContext(
+                intentID: intentID,
+                action: action
+            ).withRollbackMetadata(
+                sourceMutationID: source.id,
+                sourceWriterRecordID: source.writerRecordID,
+                strategy: rollback.preview.strategy
+            )
+        )
+
+        return try JSONToolBridge.encode(
+            AgentFileMutationRollbackOutput(
+                sourceMutationID: source.id,
+                rollbackMutationID: recorded.mutation.id,
+                writerRecordID: recorded.writerRecord.id,
+                targetPath: recorded.mutation.target.standardizedFileURL.path,
+                rollbackStrategy: rollback.preview.strategy,
+                artifactIDs: recorded.mutation.artifactIDs
+            )
+        )
     }
 
     func mutationContext(
@@ -215,5 +296,60 @@ private extension FileMutationIntentExecutor {
         )
 
         throw error
+    }
+
+    func rollbackRecordingRecord(
+        _ rollback: WriteMutationRollbackResult
+    ) -> WriteMutationRecord {
+        let before = rollback.preview.current.content ?? ""
+        let after = rollback.preview.rollbackContent
+        let difference = TextDiffer.diff(
+            old: before,
+            new: after,
+            oldName: "current/\(rollback.preview.target.lastPathComponent)",
+            newName: "rollback/\(rollback.preview.target.lastPathComponent)"
+        )
+
+        return .init(
+            id: rollback.rollbackRecord.id,
+            target: rollback.rollbackRecord.target,
+            createdAt: rollback.rollbackRecord.createdAt,
+            operationKind: rollback.rollbackRecord.operationKind,
+            before: .init(
+                content: before,
+                storeContent: true
+            ),
+            after: .init(
+                content: after,
+                storeContent: true
+            ),
+            difference: .init(
+                insertions: difference.insertions,
+                deletions: difference.deletions,
+                changeCount: difference.changeCount,
+                hasChanges: difference.hasChanges
+            ),
+            backupRecord: rollback.rollbackRecord.backupRecord,
+            writeResult: rollback.rollbackRecord.writeResult,
+            rollbackOperations: rollback.rollbackRecord.rollbackOperations,
+            rollbackGuard: rollback.rollbackRecord.rollbackGuard,
+            metadata: rollback.rollbackRecord.metadata
+        )
+    }
+}
+
+internal extension AgentFileMutationContext {
+    func withRollbackMetadata(
+        sourceMutationID: UUID,
+        sourceWriterRecordID: UUID,
+        strategy: WriteMutationRollbackStrategy
+    ) -> Self {
+        var copy = self
+
+        copy.metadata["rollback_of"] = sourceMutationID.uuidString.lowercased()
+        copy.metadata["rollback_source_writer_record_id"] = sourceWriterRecordID.uuidString.lowercased()
+        copy.metadata["rollback_strategy"] = strategy.rawValue
+
+        return copy
     }
 }
