@@ -3,20 +3,30 @@ import Path
 import Primitives
 import Writers
 
-public enum AgentFileMutationPreflightOperationKind: String, Sendable, Codable, Hashable, CaseIterable {
+public enum FileMutationIntentAction: String, Sendable, Codable, Hashable, CaseIterable {
     case write
     case edit
 }
 
-public extension AgentFileMutationPreflightOperationKind {
+public extension FileMutationIntentAction {
     var actionType: String {
-        switch self {
-        case .write:
-            return "file_mutation.write"
+        "file_mutation.\(rawValue)"
+    }
 
-        case .edit:
-            return "file_mutation.edit"
+    init?(
+        actionType: String
+    ) {
+        let prefix = "file_mutation."
+
+        guard actionType.hasPrefix(prefix) else {
+            return nil
         }
+
+        self.init(
+            rawValue: String(
+                actionType.dropFirst(prefix.count)
+            )
+        )
     }
 
     var toolName: String {
@@ -29,7 +39,7 @@ public extension AgentFileMutationPreflightOperationKind {
         }
     }
 
-    var titleVerb: String {
+    var title: String {
         switch self {
         case .write:
             return "Write file"
@@ -41,7 +51,7 @@ public extension AgentFileMutationPreflightOperationKind {
 }
 
 public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
-    public let operationKind: AgentFileMutationPreflightOperationKind
+    public let action: FileMutationIntentAction
     public let rootID: PathAccessRootIdentifier
     public let path: String
     public let targetPath: String
@@ -62,7 +72,7 @@ public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
     public let toolPreflight: ToolPreflight
 
     public init(
-        operationKind: AgentFileMutationPreflightOperationKind,
+        action: FileMutationIntentAction,
         rootID: PathAccessRootIdentifier,
         path: String,
         targetPath: String,
@@ -82,7 +92,7 @@ public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
         exactReplayInput: JSONValue,
         toolPreflight: ToolPreflight
     ) {
-        self.operationKind = operationKind
+        self.action = action
         self.rootID = rootID
         self.path = path
         self.targetPath = targetPath
@@ -130,7 +140,7 @@ public extension AgentFileMutationPreflight {
         )
 
         return Self(
-            operationKind: .write,
+            action: .write,
             rootID: input.rootID,
             path: input.path,
             exactInput: exactInput,
@@ -156,7 +166,7 @@ public extension AgentFileMutationPreflight {
         )
 
         return Self(
-            operationKind: .edit,
+            action: .edit,
             rootID: input.rootID,
             path: input.path,
             exactInput: exactInput,
@@ -168,7 +178,7 @@ public extension AgentFileMutationPreflight {
 
 private extension AgentFileMutationPreflight {
     init(
-        operationKind: AgentFileMutationPreflightOperationKind,
+        action: FileMutationIntentAction,
         rootID: PathAccessRootIdentifier,
         path: String,
         exactInput: JSONValue,
@@ -184,7 +194,7 @@ private extension AgentFileMutationPreflight {
         let targetPath = toolPreflight.targetPaths.first ?? path
 
         self.init(
-            operationKind: operationKind,
+            action: action,
             rootID: rootID,
             path: path,
             targetPath: targetPath,

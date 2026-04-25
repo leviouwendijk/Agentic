@@ -164,6 +164,34 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runPreparedFileMutationEdit()
         },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_write,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "write"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationWrite()
+        },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_edit,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "edit"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationEdit()
+        },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_requires_approved,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "approval"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationRequiresApproved()
+        },
+
+        TestFlow(
+            ID.execute_prepared_file_mutation_rejects_unknown_action,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "error"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedFileMutationRejectsUnknownAction()
+        },
     ]
 
     enum ID {
@@ -194,5 +222,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let file_mutation_preflight_no_side_effects = "file-mutation-preflight-no-side-effects"
         static let prepared_file_mutation_write = "prepared-file-mutation-write"
         static let prepared_file_mutation_edit = "prepared-file-mutation-edit"
+
+        static let execute_prepared_file_mutation_write = "execute-prepared-file-mutation-write"
+        static let execute_prepared_file_mutation_edit = "execute-prepared-file-mutation-edit"
+        static let execute_prepared_file_mutation_requires_approved = "execute-prepared-file-mutation-requires-approved"
+        static let execute_prepared_file_mutation_rejects_unknown_action = "execute-prepared-file-mutation-rejects-unknown-action"
     }
 }

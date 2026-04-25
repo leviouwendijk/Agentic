@@ -1,7 +1,7 @@
 import Foundation
 import Primitives
 
-public struct AgentFileMutationPreparedIntentBuilder: Sendable {
+public struct FileMutationIntentBuilder: Sendable {
     public var sessionID: String?
     public var expiresAt: Date?
 
@@ -16,12 +16,13 @@ public struct AgentFileMutationPreparedIntentBuilder: Sendable {
     public func draft(
         for preflight: AgentFileMutationPreflight
     ) throws -> PreparedIntentDraft {
+        let actionType = preflight.action.actionType
         let payload = PreparedIntentReviewPayload(
-            title: "\(preflight.operationKind.titleVerb): \(preflight.targetPath)",
+            title: "\(preflight.action.title): \(preflight.targetPath)",
             summary: summary(
                 for: preflight
             ),
-            actionType: preflight.operationKind.actionType,
+            actionType: actionType,
             risk: preflight.risk,
             target: preflight.targetPath,
             exactInputs: preflight.exactReplayInput,
@@ -36,7 +37,7 @@ public struct AgentFileMutationPreparedIntentBuilder: Sendable {
 
         return PreparedIntentDraft(
             sessionID: sessionID,
-            actionType: preflight.operationKind.actionType,
+            actionType: actionType,
             reviewPayload: payload,
             executionToolName: nil,
             idempotencyKey: nil,
@@ -58,12 +59,12 @@ public struct AgentFileMutationPreparedIntentBuilder: Sendable {
     }
 }
 
-private extension AgentFileMutationPreparedIntentBuilder {
+private extension FileMutationIntentBuilder {
     func summary(
         for preflight: AgentFileMutationPreflight
     ) -> String {
         var lines: [String] = [
-            "Stage a \(preflight.operationKind.rawValue) mutation for '\(preflight.targetPath)'.",
+            "Stage a file mutation \(preflight.action.rawValue) intent for '\(preflight.targetPath)'.",
             "",
             "This prepared intent is review-only. It does not execute the file mutation."
         ]
@@ -119,8 +120,9 @@ private extension AgentFileMutationPreparedIntentBuilder {
         for preflight: AgentFileMutationPreflight
     ) -> [String: String] {
         [
-            "operationKind": preflight.operationKind.rawValue,
-            "toolName": preflight.operationKind.toolName,
+            "action": preflight.action.rawValue,
+            "actionType": preflight.action.actionType,
+            "toolName": preflight.action.toolName,
             "rootID": preflight.rootID.rawValue,
             "path": preflight.path,
             "targetPath": preflight.targetPath,
@@ -137,7 +139,8 @@ private extension AgentFileMutationPreparedIntentBuilder {
     ) -> [String: String] {
         [
             "kind": "file_mutation",
-            "operationKind": preflight.operationKind.rawValue,
+            "action": preflight.action.rawValue,
+            "actionType": preflight.action.actionType,
             "rootID": preflight.rootID.rawValue,
             "path": preflight.path,
             "targetPath": preflight.targetPath

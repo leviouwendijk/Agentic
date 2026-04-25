@@ -9,11 +9,14 @@ public struct WriteFileTool: AgentTool {
     public static let risk: ActionRisk = .boundedmutate
 
     public let recorder: AgentFileMutationRecorder?
+    public let context: AgentFileMutationContext
 
     public init(
-        recorder: AgentFileMutationRecorder? = nil
+        recorder: AgentFileMutationRecorder? = nil,
+        context: AgentFileMutationContext = .empty
     ) {
         self.recorder = recorder
+        self.context = context
     }
 
     public func preflight(
@@ -105,8 +108,11 @@ public struct WriteFileTool: AgentTool {
 
         let mutationContext = AgentFileMutationContext(
             rootID: authorized.rootID,
+            toolCallID: context.toolCallID,
+            preparedIntentID: context.preparedIntentID,
             metadata: mutationMetadata(
-                authorized: authorized
+                authorized: authorized,
+                context: context
             )
         )
 
@@ -226,13 +232,20 @@ private extension WriteFileTool {
     }
 
     func mutationMetadata(
-        authorized: AgenticAuthorizedPath
+        authorized: AgenticAuthorizedPath,
+        context: AgentFileMutationContext
     ) -> [String: String] {
-        [
+        var metadata = [
             "tool_name": name,
             "root_id": authorized.rootID.rawValue,
             "path": authorized.presentationPath
         ]
+
+        for (key, value) in context.metadata {
+            metadata[key] = value
+        }
+
+        return metadata
     }
 
     func editResult(

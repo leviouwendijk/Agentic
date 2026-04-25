@@ -4,6 +4,377 @@ import Primitives
 import TestFlows
 
 extension AgenticFlowTesting {
+    static func runExecutePreparedFileMutationWrite() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_file_mutation_write
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "old\n",
+            to: "execute-write.txt"
+        )
+
+        let preflight = try await AgentFileMutationPreflight.write(
+            .init(
+                path: "execute-write.txt",
+                content: "new\n"
+            ),
+            workspace: env.workspace,
+            recorder: env.recorder
+        )
+
+        let intent = try await FileMutationIntentBuilder(
+            sessionID: env.sessionID
+        ).create(
+            preflight,
+            using: env.intentManager
+        )
+
+        _ = try await env.intentManager.review(
+            id: intent.id,
+            decision: .approve
+        )
+
+        let executed = try await FileMutationIntentExecutor(
+            manager: env.intentManager,
+            workspace: env.workspace,
+            recorder: env.recorder
+        ).execute(
+            intent.id
+        )
+
+        try Expect.equal(
+            executed.status,
+            .executed,
+            "prepared write intent executed"
+        )
+
+        _ = try Expect.notNil(
+            executed.executionRecord,
+            "prepared write intent has execution record"
+        )
+
+        _ = try Expect.notNil(
+            executed.executionRecord?.result,
+            "prepared write intent has execution result"
+        )
+
+        try Expect.equal(
+            try env.read("execute-write.txt"),
+            "new\n",
+            "prepared write execution mutates target file"
+        )
+
+        let mutations = try await env.store.list(
+            .all
+        )
+
+        try Expect.equal(
+            mutations.count,
+            1,
+            "prepared write execution records one mutation"
+        )
+
+        let mutation = try Expect.notNil(
+            mutations.first,
+            "prepared write execution mutation record"
+        )
+
+        try Expect.equal(
+            mutation.preparedIntentID,
+            intent.id,
+            "prepared write mutation links prepared intent id"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("intent", executed.id.rawValue),
+                ("status", executed.status.rawValue),
+                ("file", "mutated"),
+                ("mutations", "\(mutations.count)")
+            ]
+        )
+    }
+
+    static func runExecutePreparedFileMutationEdit() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_file_mutation_edit
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "alpha\nbeta\n",
+            to: "execute-edit.txt"
+        )
+
+        let preflight = try await AgentFileMutationPreflight.edit(
+            .init(
+                path: "execute-edit.txt",
+                operations: [
+                    .init(
+                        kind: .replaceFirst,
+                        target: "beta",
+                        replacement: "gamma"
+                    )
+                ]
+            ),
+            workspace: env.workspace,
+            recorder: env.recorder
+        )
+
+        let intent = try await FileMutationIntentBuilder(
+            sessionID: env.sessionID
+        ).create(
+            preflight,
+            using: env.intentManager
+        )
+
+        _ = try await env.intentManager.review(
+            id: intent.id,
+            decision: .approve
+        )
+
+        let executed = try await FileMutationIntentExecutor(
+            manager: env.intentManager,
+            workspace: env.workspace,
+            recorder: env.recorder
+        ).execute(
+            intent.id
+        )
+
+        try Expect.equal(
+            executed.status,
+            .executed,
+            "prepared edit intent executed"
+        )
+
+        _ = try Expect.notNil(
+            executed.executionRecord,
+            "prepared edit intent has execution record"
+        )
+
+        _ = try Expect.notNil(
+            executed.executionRecord?.result,
+            "prepared edit intent has execution result"
+        )
+
+        try Expect.equal(
+            try env.read("execute-edit.txt"),
+            "alpha\ngamma\n",
+            "prepared edit execution mutates target file"
+        )
+
+        let mutations = try await env.store.list(
+            .all
+        )
+
+        try Expect.equal(
+            mutations.count,
+            1,
+            "prepared edit execution records one mutation"
+        )
+
+        let mutation = try Expect.notNil(
+            mutations.first,
+            "prepared edit execution mutation record"
+        )
+
+        try Expect.equal(
+            mutation.preparedIntentID,
+            intent.id,
+            "prepared edit mutation links prepared intent id"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("intent", executed.id.rawValue),
+                ("status", executed.status.rawValue),
+                ("file", "mutated"),
+                ("mutations", "\(mutations.count)")
+            ]
+        )
+    }
+
+    static func runExecutePreparedFileMutationRequiresApproved() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_file_mutation_requires_approved
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "old\n",
+            to: "requires-approved.txt"
+        )
+
+        let preflight = try await AgentFileMutationPreflight.write(
+            .init(
+                path: "requires-approved.txt",
+                content: "new\n"
+            ),
+            workspace: env.workspace,
+            recorder: env.recorder
+        )
+
+        let intent = try await FileMutationIntentBuilder(
+            sessionID: env.sessionID
+        ).create(
+            preflight,
+            using: env.intentManager
+        )
+
+        do {
+            _ = try await FileMutationIntentExecutor(
+                manager: env.intentManager,
+                workspace: env.workspace,
+                recorder: env.recorder
+            ).execute(
+                intent.id
+            )
+
+            throw FlowTestError.unexpectedResult(
+                "pending prepared file mutation intent unexpectedly executed"
+            )
+        } catch PreparedIntentError.notApproved(let id, let status) {
+            try Expect.equal(
+                id,
+                intent.id,
+                "notApproved id"
+            )
+
+            try Expect.equal(
+                status,
+                .pending_review,
+                "notApproved status"
+            )
+
+            try Expect.equal(
+                try env.read("requires-approved.txt"),
+                "old\n",
+                "unapproved prepared intent does not mutate target file"
+            )
+
+            let persisted = try await env.intentManager.get(
+                intent.id
+            )
+
+            try Expect.equal(
+                persisted.status,
+                .pending_review,
+                "unapproved prepared intent remains pending"
+            )
+
+            return mutationPreflightDiagnostics(
+                [
+                    ("intent", intent.id.rawValue),
+                    ("status", persisted.status.rawValue),
+                    ("error", "notApproved")
+                ]
+            )
+        }
+    }
+
+    static func runExecutePreparedFileMutationRejectsUnknownAction() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_file_mutation_rejects_unknown_action
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "old\n",
+            to: "unknown-action.txt"
+        )
+
+        let exactInputs = try JSONToolBridge.encode(
+            WriteFileToolInput(
+                path: "unknown-action.txt",
+                content: "new\n"
+            )
+        )
+
+        let intent = try await env.intentManager.create(
+            .init(
+                sessionID: env.sessionID,
+                actionType: "file_mutation.unknown",
+                reviewPayload: .init(
+                    title: "Unknown file mutation action",
+                    summary: "Prepared intent with unsupported file mutation action.",
+                    actionType: "file_mutation.unknown",
+                    risk: .boundedmutate,
+                    target: "unknown-action.txt",
+                    exactInputs: exactInputs,
+                    expectedSideEffects: [
+                        "unsupported test action"
+                    ],
+                    policyChecks: [
+                        "test_fixture"
+                    ]
+                )
+            )
+        )
+
+        _ = try await env.intentManager.review(
+            id: intent.id,
+            decision: .approve
+        )
+
+        do {
+            _ = try await FileMutationIntentExecutor(
+                manager: env.intentManager,
+                workspace: env.workspace,
+                recorder: env.recorder
+            ).execute(
+                intent.id
+            )
+
+            throw FlowTestError.unexpectedResult(
+                "unknown prepared file mutation action unexpectedly executed"
+            )
+        } catch FileMutationIntentExecutionError.unsupportedActionType(let actionType) {
+            try Expect.equal(
+                actionType,
+                "file_mutation.unknown",
+                "unknown action type"
+            )
+
+            try Expect.equal(
+                try env.read("unknown-action.txt"),
+                "old\n",
+                "unknown prepared intent action does not mutate target file"
+            )
+
+            let failed = try await env.intentManager.get(
+                intent.id
+            )
+
+            try Expect.equal(
+                failed.status,
+                .execution_failed,
+                "unknown prepared intent action marks execution failed"
+            )
+
+            _ = try Expect.notNil(
+                failed.executionRecord,
+                "unknown prepared intent action has failure execution record"
+            )
+
+            return mutationPreflightDiagnostics(
+                [
+                    ("intent", intent.id.rawValue),
+                    ("status", failed.status.rawValue),
+                    ("error", actionType)
+                ]
+            )
+        }
+    }
     static func runFileMutationPreflightWrite() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
             AgenticFlowSuite.ID.file_mutation_preflight_write
@@ -27,7 +398,7 @@ extension AgenticFlowTesting {
         )
 
         try Expect.equal(
-            preflight.operationKind,
+            preflight.action,
             .write,
             "write preflight operation kind"
         )
@@ -57,7 +428,7 @@ extension AgenticFlowTesting {
 
         return mutationPreflightDiagnostics(
             [
-                ("operation", preflight.operationKind.rawValue),
+                ("action", preflight.action.rawValue),
                 ("target", preflight.targetPath),
                 ("preview", "ok")
             ]
@@ -93,7 +464,7 @@ extension AgenticFlowTesting {
         )
 
         try Expect.equal(
-            preflight.operationKind,
+            preflight.action,
             .edit,
             "edit preflight operation kind"
         )
@@ -117,7 +488,7 @@ extension AgenticFlowTesting {
 
         return mutationPreflightDiagnostics(
             [
-                ("operation", preflight.operationKind.rawValue),
+                ("action", preflight.action.rawValue),
                 ("target", preflight.targetPath),
                 ("preview", "ok")
             ]
@@ -208,7 +579,7 @@ extension AgenticFlowTesting {
             recorder: env.recorder
         )
 
-        let intent = try await AgentFileMutationPreparedIntentBuilder(
+        let intent = try await FileMutationIntentBuilder(
             sessionID: env.sessionID
         ).create(
             preflight,
@@ -291,7 +662,7 @@ extension AgenticFlowTesting {
             recorder: env.recorder
         )
 
-        let intent = try await AgentFileMutationPreparedIntentBuilder(
+        let intent = try await FileMutationIntentBuilder(
             sessionID: env.sessionID
         ).create(
             preflight,
