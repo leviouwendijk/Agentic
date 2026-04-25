@@ -142,7 +142,7 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "67969389bcee783f45c7fc1df75a63cacc7eaf17"
+        "revision" : "8dbb4c35c168f75bac7d029286c1c587c728f3ff"
       }
     },
     {
@@ -205,7 +205,7 @@
       "location" : "https://github.com/leviouwendijk/TestFlows.git",
       "state" : {
         "branch" : "master",
-        "revision" : "07ccde049e0233af49c291e5b377b3a844d9e3dc"
+        "revision" : "3e594973407c1592a3244e4618af3432e6667139"
       }
     },
     {
@@ -241,7 +241,7 @@
       "location" : "https://github.com/leviouwendijk/Writers.git",
       "state" : {
         "branch" : "master",
-        "revision" : "34bb38bf945468880f9375035f7487ec591a43c0"
+        "revision" : "e5f829b15c8d55004595a4c60240ae314533fc0e"
       }
     }
   ],

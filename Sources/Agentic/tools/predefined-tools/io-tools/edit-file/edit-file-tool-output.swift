@@ -8,6 +8,7 @@ public struct EditFileToolOutput: Sendable, Codable, Hashable {
     public let diffSummary: FileDiffSummary
     public let originalChangedLineRanges: [LineRange]
     public let editedChangedLineRanges: [LineRange]
+    public let mutation: AgentFileMutationToolSummary?
 
     public init(
         rootID: String,
@@ -16,7 +17,8 @@ public struct EditFileToolOutput: Sendable, Codable, Hashable {
         changeCount: Int,
         diffSummary: FileDiffSummary,
         originalChangedLineRanges: [LineRange],
-        editedChangedLineRanges: [LineRange]
+        editedChangedLineRanges: [LineRange],
+        mutation: AgentFileMutationToolSummary? = nil
     ) {
         self.rootID = rootID
         self.path = path
@@ -25,5 +27,6 @@ public struct EditFileToolOutput: Sendable, Codable, Hashable {
         self.diffSummary = diffSummary
         self.originalChangedLineRanges = originalChangedLineRanges
         self.editedChangedLineRanges = editedChangedLineRanges
+        self.mutation = mutation
     }
 }

@@ -1,13 +1,20 @@
 import Difference
 import Foundation
 import Primitives
+import Writers
 
 public struct WriteFileTool: AgentTool {
     public static let identifier: AgentToolIdentifier = "write_file"
     public static let description = "Replace the entire contents of a file in the workspace."
     public static let risk: ActionRisk = .boundedmutate
 
-    public init() {}
+    public let recorder: AgentFileMutationRecorder?
+
+    public init(
+        recorder: AgentFileMutationRecorder? = nil
+    ) {
+        self.recorder = recorder
+    }
 
     public func preflight(
         input: JSONValue,
@@ -96,23 +103,57 @@ public struct WriteFileTool: AgentTool {
             workspace: workspace
         )
 
-        let result = try editor.write(
-            decoded.content,
-            to: authorized.scopedPath
+        let mutationContext = AgentFileMutationContext(
+            rootID: authorized.rootID,
+            metadata: mutationMetadata(
+                authorized: authorized
+            )
         )
+
+        let write: (result: StandardEditResult, mutation: AgentFileMutationToolSummary?)
+
+        if let recorder {
+            let recorded = try await editor.writeRecorded(
+                decoded.content,
+                to: authorized.scopedPath,
+                recorder: recorder,
+                options: .init(
+                    mutation: mutationContext
+                )
+            )
+
+            write = (
+                try editResult(
+                    from: recorded
+                ),
+                .init(
+                    result: recorded,
+                    policy: recorder.policy
+                )
+            )
+        } else {
+            write = (
+                try editor.write(
+                    decoded.content,
+                    to: authorized.scopedPath
+                ),
+                nil
+            )
+        }
 
         return try JSONToolBridge.encode(
             WriteFileToolOutput(
                 rootID: authorized.rootID.rawValue,
                 path: authorized.presentationPath,
-                bytesWritten: result.writeResult?.bytesWritten ?? 0,
+                bytesWritten: write.result.writeResult?.bytesWritten ?? 0,
                 diffSummary: .init(
-                    insertedLineCount: result.insertions,
-                    deletedLineCount: result.deletions
+                    insertedLineCount: write.result.insertions,
+                    deletedLineCount: write.result.deletions
                 ),
-                changeCount: result.changeCount,
-                originalChangedLineRanges: result.originalChangedLineRanges,
-                editedChangedLineRanges: result.editedChangedLineRanges
+                changeCount: write.result.changeCount,
+                originalChangedLineRanges: write.result.originalChangedLineRanges,
+                editedChangedLineRanges: write.result.editedChangedLineRanges,
+                mutation: write.mutation
             )
         )
     }
@@ -182,5 +223,29 @@ private extension WriteFileTool {
                 encoding: .utf8
             )
         ) ?? ""
+    }
+
+    func mutationMetadata(
+        authorized: AgenticAuthorizedPath
+    ) -> [String: String] {
+        [
+            "tool_name": name,
+            "root_id": authorized.rootID.rawValue,
+            "path": authorized.presentationPath
+        ]
+    }
+
+    func editResult(
+        from result: AgentFileMutationResult
+    ) throws -> StandardEditResult {
+        guard let editResult = result.editResult else {
+            throw PredefinedFileToolError.invalidValue(
+                tool: name,
+                field: "recorder",
+                reason: "recorded mutation result did not include an edit result"
+            )
+        }
+
+        return editResult
     }
 }

@@ -1,10 +1,10 @@
 import Primitives
 
 public protocol AgentTool: Sendable {
-    static var identifier: AgentToolIdentifier { get }
-    static var description: String { get }
-    static var inputSchema: JSONValue? { get }
-    static var risk: ActionRisk { get }
+    var identifier: AgentToolIdentifier { get }
+    var description: String { get }
+    var inputSchema: JSONValue? { get }
+    var risk: ActionRisk { get }
 
     func preflight(
         input: JSONValue,
@@ -18,24 +18,8 @@ public protocol AgentTool: Sendable {
 }
 
 public extension AgentTool {
-    static var inputSchema: JSONValue? {
-        nil
-    }
-
-    var identifier: AgentToolIdentifier {
-        Self.identifier
-    }
-
-    var description: String {
-        Self.description
-    }
-
     var inputSchema: JSONValue? {
-        Self.inputSchema
-    }
-
-    var risk: ActionRisk {
-        Self.risk
+        nil
     }
 
     var name: String {

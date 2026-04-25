@@ -15,8 +15,8 @@ let package = Package(
         ),
 
         .executable(
-            name: "flowtest",
-            targets: ["AgenticFlowTesting"]
+            name: "agtest",
+            targets: ["AgenticTestFlows"]
         ),
     ],
     dependencies: [
@@ -67,11 +67,12 @@ let package = Package(
             ],
         ),
         .executableTarget(
-            name: "AgenticFlowTesting",
+            name: "AgenticTestFlows",
             dependencies: [
                 "Agentic",
                 .product(name: "TestFlows", package: "TestFlows"),
                 .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Writers", package: "Writers"),
                 // .product(name: "ANSI", package: "ANSI"),
                 // .product(name: "Terminal", package: "Terminal"),
             ]

@@ -10,16 +10,16 @@ public struct CoreContextToolSet: AgentToolSet {
     public func register(
         into registry: inout ToolRegistry
     ) throws {
-        try registry.register(
-            [
-                ComposeContextTool(
-                    composer: composer
-                ),
-                InspectContextSourcesTool(),
-                EstimateContextSizeTool(
-                    composer: composer
-                )
-            ]
-        )
+        try registry.register {
+            ComposeContextTool(
+                composer: composer
+            )
+
+            InspectContextSourcesTool()
+
+            EstimateContextSizeTool(
+                composer: composer
+            )
+        }
     }
 }

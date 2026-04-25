@@ -1,0 +1,279 @@
+{
+  "failed" : 0,
+  "failed_names" : [
+
+  ],
+  "generated_at" : "2026-04-25T16:56:10Z",
+  "passed" : 23,
+  "results" : [
+    {
+      "display_name" : "buffered",
+      "duration_seconds" : 0.007012009620666504,
+      "name" : "buffered",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "buffered"
+      ]
+    },
+    {
+      "display_name" : "stream",
+      "duration_seconds" : 0.0025080442428588867,
+      "name" : "stream",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "stream"
+      ]
+    },
+    {
+      "display_name" : "stream-error",
+      "duration_seconds" : 0.0020068883895874023,
+      "name" : "stream-error",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "error",
+        "stream"
+      ]
+    },
+    {
+      "display_name" : "stream-cancel",
+      "duration_seconds" : 0.12334299087524414,
+      "name" : "stream-cancel",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "cancel",
+        "stream"
+      ]
+    },
+    {
+      "display_name" : "stream-tool-use",
+      "duration_seconds" : 0.015396952629089355,
+      "name" : "stream-tool-use",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "stream",
+        "tool-use"
+      ]
+    },
+    {
+      "display_name" : "file-mutation-store",
+      "duration_seconds" : 0.027521967887878418,
+      "name" : "file-mutation-store",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "mutation",
+        "store"
+      ]
+    },
+    {
+      "display_name" : "file-editor-recorded-write",
+      "duration_seconds" : 0.009035944938659668,
+      "name" : "file-editor-recorded-write",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "editor",
+        "mutation",
+        "write"
+      ]
+    },
+    {
+      "display_name" : "file-editor-recorded-edit",
+      "duration_seconds" : 0.008383989334106445,
+      "name" : "file-editor-recorded-edit",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "edit",
+        "editor",
+        "mutation"
+      ]
+    },
+    {
+      "display_name" : "file-tool-recorded-write",
+      "duration_seconds" : 0.0092240571975708,
+      "name" : "file-tool-recorded-write",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "mutation",
+        "tool",
+        "write"
+      ]
+    },
+    {
+      "display_name" : "file-tool-recorded-edit",
+      "duration_seconds" : 0.008659005165100098,
+      "name" : "file-tool-recorded-edit",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "edit",
+        "mutation",
+        "tool"
+      ]
+    },
+    {
+      "display_name" : "no-local-backup-default",
+      "duration_seconds" : 0.006573915481567383,
+      "name" : "no-local-backup-default",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "backup",
+        "mutation"
+      ]
+    },
+    {
+      "display_name" : "file-mutation-diff-artifact",
+      "duration_seconds" : 0.008738040924072266,
+      "name" : "file-mutation-diff-artifact",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "artifact",
+        "diff",
+        "mutation"
+      ]
+    },
+    {
+      "display_name" : "dsl-typed-call",
+      "duration_seconds" : 0.000102996826171875,
+      "name" : "dsl-typed-call",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "call",
+        "dsl",
+        "tool"
+      ]
+    },
+    {
+      "display_name" : "dsl-contextual-typed-call",
+      "duration_seconds" : 3.2067298889160156e-05,
+      "name" : "dsl-contextual-typed-call",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "context",
+        "dsl",
+        "tool"
+      ]
+    },
+    {
+      "display_name" : "dsl-effect-call",
+      "duration_seconds" : 7.808208465576172e-05,
+      "name" : "dsl-effect-call",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "dsl",
+        "effect",
+        "tool"
+      ]
+    },
+    {
+      "display_name" : "dsl-missing-call",
+      "duration_seconds" : 4.0531158447265625e-06,
+      "name" : "dsl-missing-call",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "dsl",
+        "error",
+        "tool"
+      ]
+    },
+    {
+      "display_name" : "dsl-registry-mixed-inputs",
+      "duration_seconds" : 5.3048133850097656e-05,
+      "name" : "dsl-registry-mixed-inputs",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "dsl",
+        "registry"
+      ]
+    },
+    {
+      "display_name" : "core-tool-set-builder-registration",
+      "duration_seconds" : 0.00014793872833251953,
+      "name" : "core-tool-set-builder-registration",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "core-tools",
+        "dsl",
+        "registry"
+      ]
+    },
+    {
+      "display_name" : "file-mutation-preflight-write",
+      "duration_seconds" : 0.0015969276428222656,
+      "name" : "file-mutation-preflight-write",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "mutation",
+        "preflight",
+        "write"
+      ]
+    },
+    {
+      "display_name" : "file-mutation-preflight-edit",
+      "duration_seconds" : 0.0018440485000610352,
+      "name" : "file-mutation-preflight-edit",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "edit",
+        "mutation",
+        "preflight"
+      ]
+    },
+    {
+      "display_name" : "file-mutation-preflight-no-side-effects",
+      "duration_seconds" : 0.0019069910049438477,
+      "name" : "file-mutation-preflight-no-side-effects",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "mutation",
+        "preflight",
+        "side-effects"
+      ]
+    },
+    {
+      "display_name" : "prepared-file-mutation-write",
+      "duration_seconds" : 0.0023649930953979492,
+      "name" : "prepared-file-mutation-write",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "mutation",
+        "prepared-intent",
+        "write"
+      ]
+    },
+    {
+      "display_name" : "prepared-file-mutation-edit",
+      "duration_seconds" : 0.0024870634078979492,
+      "name" : "prepared-file-mutation-edit",
+      "status" : "passed",
+      "tags" : [
+        "agentic",
+        "edit",
+        "mutation",
+        "prepared-intent"
+      ]
+    }
+  ],
+  "skipped" : 0,
+  "title" : "Agentic flow tests",
+  "total" : 23
+}

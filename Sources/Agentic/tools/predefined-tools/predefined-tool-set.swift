@@ -1,17 +1,25 @@
 public struct CoreFileToolSet: AgentToolSet {
-    public init() {}
+    public let fileMutationRecorder: AgentFileMutationRecorder?
+
+    public init(
+        fileMutationRecorder: AgentFileMutationRecorder? = nil
+    ) {
+        self.fileMutationRecorder = fileMutationRecorder
+    }
 
     public func register(
         into registry: inout ToolRegistry
     ) throws {
-        try registry.register(
-            [
-                ReadFileTool(),
-                WriteFileTool(),
-                EditFileTool(),
-                ScanPathsTool()
-            ]
-        )
+        try registry.register {
+            ReadFileTool()
+            WriteFileTool(
+                recorder: fileMutationRecorder
+            )
+            EditFileTool(
+                recorder: fileMutationRecorder
+            )
+            ScanPathsTool()
+        }
     }
 }
 
@@ -21,42 +29,42 @@ public struct CoreInteractionToolSet: AgentToolSet {
     public func register(
         into registry: inout ToolRegistry
     ) throws {
-        try registry.register(
-            [
-                ClarifyWithUserTool()
-            ]
-        )
+        try registry.register {
+            ClarifyWithUserTool()
+        }
     }
 }
 
 public struct CoreToolSet: AgentToolSet {
     public let contextComposer: ContextComposer
     public let includeInteractionTools: Bool
+    public let fileMutationRecorder: AgentFileMutationRecorder?
 
     public init(
         contextComposer: ContextComposer = .init(),
-        includeInteractionTools: Bool = false
+        includeInteractionTools: Bool = false,
+        fileMutationRecorder: AgentFileMutationRecorder? = nil
     ) {
         self.contextComposer = contextComposer
         self.includeInteractionTools = includeInteractionTools
+        self.fileMutationRecorder = fileMutationRecorder
     }
 
     public func register(
         into registry: inout ToolRegistry
     ) throws {
-        try registry.register(
-            CoreFileToolSet()
-        )
-        try registry.register(
+        try registry.register {
+            CoreFileToolSet(
+                fileMutationRecorder: fileMutationRecorder
+            )
+
             CoreContextToolSet(
                 composer: contextComposer
             )
-        )
 
-        if includeInteractionTools {
-            try registry.register(
+            if includeInteractionTools {
                 CoreInteractionToolSet()
-            )
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 import Agentic
 import Primitives
 
-struct EchoTool: AgentTool {
+struct EchoTool: AgentTool, StaticAgentToolMetadata {
     static let identifier: AgentToolIdentifier = .init(
         "echo_tool"
     )

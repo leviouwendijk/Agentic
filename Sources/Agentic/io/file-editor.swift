@@ -13,6 +13,183 @@ public struct FileEditor: Sendable {
     }
 
     @discardableResult
+    public func writeRecorded(
+        _ text: String,
+        to path: ScopedPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        let editResult = try StandardWriter(
+            workspace.absoluteURL(
+                for: path
+            )
+        ).editor.edit(
+            .replaceEntireFile(
+                with: text
+            ),
+            encoding: options.encoding,
+            options: try options.write ?? recorder.writeOptions()
+        )
+
+        return try await recorder.record(
+            editResult: editResult,
+            operationKind: .write_text,
+            scopedPath: path,
+            context: options.mutation
+        )
+    }
+
+    @discardableResult
+    public func writeRecorded(
+        _ text: String,
+        to path: StandardPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await writeRecorded(
+            text,
+            to: workspace.resolve(
+                path
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func writeRecorded(
+        _ text: String,
+        to rawPath: String,
+        filetype: AnyFileType? = nil,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await writeRecorded(
+            text,
+            to: workspace.resolve(
+                rawPath,
+                filetype: filetype
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operation: StandardEditOperation,
+        at path: ScopedPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await editRecorded(
+            [
+                operation
+            ],
+            at: path,
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operation: StandardEditOperation,
+        at path: StandardPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await editRecorded(
+            operation,
+            at: workspace.resolve(
+                path
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operation: StandardEditOperation,
+        at rawPath: String,
+        filetype: AnyFileType? = nil,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await editRecorded(
+            operation,
+            at: workspace.resolve(
+                rawPath,
+                filetype: filetype
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operations: [StandardEditOperation],
+        at path: ScopedPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        let editResult = try StandardWriter(
+            workspace.absoluteURL(
+                for: path
+            )
+        ).editor.edit(
+            operations,
+            encoding: options.encoding,
+            options: try options.write ?? recorder.writeOptions()
+        )
+
+        return try await recorder.record(
+            editResult: editResult,
+            operationKind: .edit_operations,
+            scopedPath: path,
+            context: options.mutation
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operations: [StandardEditOperation],
+        at path: StandardPath,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await editRecorded(
+            operations,
+            at: workspace.resolve(
+                path
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
+    public func editRecorded(
+        _ operations: [StandardEditOperation],
+        at rawPath: String,
+        filetype: AnyFileType? = nil,
+        recorder: AgentFileMutationRecorder,
+        options: AgentFileEditOptions = .default
+    ) async throws -> AgentFileMutationResult {
+        try await editRecorded(
+            operations,
+            at: workspace.resolve(
+                rawPath,
+                filetype: filetype
+            ),
+            recorder: recorder,
+            options: options
+        )
+    }
+
+    @discardableResult
     public func write(
         _ text: String,
         to path: ScopedPath,

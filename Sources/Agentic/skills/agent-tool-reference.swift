@@ -16,12 +16,22 @@ public extension AgentToolReference {
         identifier.rawValue
     }
 
-    static func tool<T>(
-        _ type: T.Type,
+    static func tool(
+        _ identifier: AgentToolIdentifier,
         owner: String? = nil
-    ) -> Self where T: AgentTool {
+    ) -> Self {
         .init(
-            identifier: T.identifier,
+            identifier: identifier,
+            owner: owner
+        )
+    }
+
+    static func tool(
+        _ name: String,
+        owner: String? = nil
+    ) -> Self {
+        .init(
+            identifier: .init(name),
             owner: owner
         )
     }
