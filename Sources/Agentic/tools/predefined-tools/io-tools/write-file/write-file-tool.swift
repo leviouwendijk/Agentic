@@ -141,9 +141,14 @@ private extension WriteFileTool {
             contextLineCount: contextLineCount
         )
 
+        let layout = DifferenceRenderer.layout(
+            difference,
+            options: options
+        )
+
         let rendered = difference.hasChanges
             ? DifferenceRenderer.render(
-                difference,
+                layout,
                 options: options
             )
             : """
@@ -156,6 +161,7 @@ private extension WriteFileTool {
             title: "Preview diff for \(authorized.presentationPath)",
             contextLineCount: contextLineCount,
             text: rendered,
+            layout: layout,
             insertedLineCount: difference.insertions,
             deletedLineCount: difference.deletions
         )
