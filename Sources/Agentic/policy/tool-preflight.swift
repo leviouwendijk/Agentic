@@ -33,6 +33,7 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
     public let policyChecks: [String]
     public let warnings: [String]
     public let limitProfile: String?
+    public let diffPreview: ToolPreflightDiffPreview?
 
     public init(
         toolName: String,
@@ -65,7 +66,8 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
         isPreview: Bool = false,
         policyChecks: [String] = [],
         warnings: [String] = [],
-        limitProfile: String? = nil
+        limitProfile: String? = nil,
+        diffPreview: ToolPreflightDiffPreview? = nil
     ) {
         self.toolName = toolName
         self.risk = risk
@@ -166,6 +168,7 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
         self.policyChecks = policyChecks
         self.warnings = warnings
         self.limitProfile = limitProfile
+        self.diffPreview = diffPreview
     }
 
     public var description: String {
@@ -244,6 +247,12 @@ public struct ToolPreflight: Sendable, Codable, Hashable, CustomStringConvertibl
         if followsSymlinks {
             lines.append(
                 "follows symlinks"
+            )
+        }
+
+        if let diffPreview {
+            lines.append(
+                "diff preview: \(diffPreview.insertedLineCount) insertions, \(diffPreview.deletedLineCount) deletions"
             )
         }
 

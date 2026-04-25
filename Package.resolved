@@ -1,5 +1,5 @@
 {
-  "originHash" : "5ee2ce35d7a76b9691a1442cc0df7f0b572ddadcf4cd45837056e7f0e8e4181f",
+  "originHash" : "41b5ebe63135bfa388896ccdf605d6ca7185983eaa4e36fc5786eca5d52d95bc",
   "pins" : [
     {
       "identity" : "ansi",
@@ -196,7 +196,7 @@
       "location" : "https://github.com/leviouwendijk/Terminal.git",
       "state" : {
         "branch" : "master",
-        "revision" : "d4a3338604127da3c6e8c42ff62d8468cbfe9f4a"
+        "revision" : "d1d40273bdf557d99e5c4a767789ee662475cfd7"
       }
     },
     {

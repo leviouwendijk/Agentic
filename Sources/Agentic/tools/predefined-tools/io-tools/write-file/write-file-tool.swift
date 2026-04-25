@@ -1,3 +1,5 @@
+import Difference
+import Foundation
 import Primitives
 
 public struct WriteFileTool: AgentTool {
@@ -11,28 +13,40 @@ public struct WriteFileTool: AgentTool {
         input: JSONValue,
         workspace: AgentWorkspace?
     ) async throws -> ToolPreflight {
+        let workspace = try FileToolSupport.requireWorkspace(
+            workspace,
+            toolName: name
+        )
+
         let decoded = try JSONToolBridge.decode(
             WriteFileToolInput.self,
             from: input
         )
 
-        let targetPath = try FileToolAccess.presentationPath(
+        let authorized = try FileToolAccess.authorize(
             workspace: workspace,
             rootID: decoded.rootID,
             path: decoded.path,
+            capability: .write,
+            toolName: name,
             type: .file
         )
 
         let byteCount = decoded.content.utf8.count
+        let diffPreview = makeDiffPreview(
+            authorized: authorized,
+            replacement: decoded.content,
+            contextLineCount: 3
+        )
 
         return .init(
             toolName: name,
             risk: risk,
-            workspaceRoot: workspace?.rootURL.path,
+            workspaceRoot: workspace.rootURL.path,
             targetPaths: [
-                targetPath
+                authorized.presentationPath
             ],
-            summary: "Replace entire file contents at \(targetPath)",
+            summary: "Replace entire file contents at \(authorized.presentationPath)",
             estimatedWriteCount: 1,
             estimatedByteCount: byteCount,
             sideEffects: risk.defaultSideEffects,
@@ -43,12 +57,15 @@ public struct WriteFileTool: AgentTool {
                 .write
             ],
             estimatedWriteBytes: byteCount,
-            isPreview: false,
+            estimatedChangedLineCount: diffPreview.changedLineCount,
+            isPreview: true,
             policyChecks: [
                 "workspace_required",
-                "root_path_resolved",
-                "write_budget_estimated"
-            ]
+                "root_path_authorized",
+                "write_budget_estimated",
+                "difference_preview_generated"
+            ],
+            diffPreview: diffPreview
         )
     }
 
@@ -98,5 +115,66 @@ public struct WriteFileTool: AgentTool {
                 editedChangedLineRanges: result.editedChangedLineRanges
             )
         )
+    }
+}
+
+private extension WriteFileTool {
+    func makeDiffPreview(
+        authorized: AgenticAuthorizedPath,
+        replacement: String,
+        contextLineCount: Int
+    ) -> ToolPreflightDiffPreview {
+        let original = readExistingText(
+            at: authorized.absoluteURL
+        )
+
+        let difference = TextDiffer.diff(
+            old: original,
+            new: replacement,
+            oldName: "a/\(authorized.presentationPath)",
+            newName: "b/\(authorized.presentationPath)"
+        )
+
+        let options = DifferenceRenderOptions(
+            showHeader: true,
+            showUnchangedLines: false,
+            contextLineCount: contextLineCount
+        )
+
+        let rendered = difference.hasChanges
+            ? DifferenceRenderer.render(
+                difference,
+                options: options
+            )
+            : """
+            --- a/\(authorized.presentationPath)
+            +++ b/\(authorized.presentationPath)
+            # no textual changes
+            """
+
+        return .init(
+            title: "Preview diff for \(authorized.presentationPath)",
+            contextLineCount: contextLineCount,
+            text: rendered,
+            insertedLineCount: difference.insertions,
+            deletedLineCount: difference.deletions
+        )
+    }
+
+    func readExistingText(
+        at url: URL
+    ) -> String {
+        guard FileManager.default.fileExists(
+            atPath: url.path
+        ) else {
+            return ""
+        }
+
+        return (
+            try? String(
+                contentsOf: url,
+                encoding: .utf8
+            )
+        ) ?? ""
     }
 }
