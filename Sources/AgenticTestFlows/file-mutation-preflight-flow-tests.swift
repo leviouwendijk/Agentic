@@ -120,10 +120,11 @@ extension AgenticFlowTesting {
             .init(
                 path: "execute-edit.txt",
                 operations: [
-                    .init(
-                        kind: .replaceFirst,
-                        target: "beta",
-                        replacement: "gamma"
+                    .replace_first(
+                        .init(
+                            target: "beta",
+                            replacement: "gamma"
+                        )
                     )
                 ]
             ),
@@ -500,10 +501,11 @@ extension AgenticFlowTesting {
             .init(
                 path: "edit.txt",
                 operations: [
-                    .init(
-                        kind: .replaceFirst,
-                        target: "beta",
-                        replacement: "gamma"
+                    .replace_first(
+                        .init(
+                            target: "beta",
+                            replacement: "gamma"
+                        )
                     )
                 ]
             ),
@@ -700,10 +702,11 @@ extension AgenticFlowTesting {
             .init(
                 path: "prepared-edit.txt",
                 operations: [
-                    .init(
-                        kind: .replaceFirst,
-                        target: "beta",
-                        replacement: "gamma"
+                    .replace_first(
+                        .init(
+                            target: "beta",
+                            replacement: "gamma"
+                        )
                     )
                 ]
             ),

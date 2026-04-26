@@ -41,6 +41,22 @@ extension AgenticFlowTesting {
             "core file tool set scan_paths"
         )
 
+        let editFileSchema = String(
+            describing: EditFileTool.inputSchema
+        )
+
+        try Expect.contains(
+            editFileSchema,
+            "replace_line requires line, expected, and content",
+            "edit_file schema explains guarded replace_line contract"
+        )
+
+        try Expect.contains(
+            editFileSchema,
+            "expectedLines",
+            "edit_file schema exposes expectedLines guard"
+        )
+
         let contextRegistry = try Agentic.tool.registry {
             CoreContextToolSet()
         }

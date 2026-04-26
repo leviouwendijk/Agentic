@@ -851,10 +851,11 @@ extension AgenticFlowTesting {
                 EditFileToolInput(
                     path: "tool-edit.txt",
                     operations: [
-                        .init(
-                            kind: .replaceFirst,
-                            target: "beta",
-                            replacement: "BETA"
+                        .replace_first(
+                            .init(
+                                target: "beta",
+                                replacement: "BETA"
+                            )
                         )
                     ]
                 )

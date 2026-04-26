@@ -1,6 +1,7 @@
-import Position
-import Writers
 import Path
+import Position
+import Primitives
+import Writers
 
 public struct EditFileLineRange: Sendable, Codable, Hashable {
     public let start: Int
@@ -23,251 +24,481 @@ public struct EditFileLineRange: Sendable, Codable, Hashable {
 }
 
 public enum EditFileToolOperationKind: String, Sendable, Codable, Hashable, CaseIterable {
-    case replaceEntireFile = "replace_entire_file"
+    case replace_entire_file
     case append
     case prepend
-    case replaceFirst = "replace_first"
-    case replaceAll = "replace_all"
-    case replaceUnique = "replace_unique"
-    case replaceLine = "replace_line"
-    case insertLines = "insert_lines"
-    case replaceLines = "replace_lines"
-    case deleteLines = "delete_lines"
+    case replace_first
+    case replace_all
+    case replace_unique
+    case replace_line
+    case insert_lines
+    case replace_lines
+    case delete_lines
 }
 
-public struct EditFileToolOperation: Sendable, Codable, Hashable {
-    public let kind: EditFileToolOperationKind
-    public let content: String?
-    public let target: String?
-    public let replacement: String?
-    public let line: Int?
-    public let lines: [String]?
-    public let expected: String?
-    public let expectedLines: [String]?
-    public let atLine: Int?
-    public let range: EditFileLineRange?
-    public let separator: String?
+public enum EditFileToolOperation: Sendable, Hashable {
+    case replace_entire_file(ReplaceEntireFile)
+    case append(Append)
+    case prepend(Prepend)
+    case replace_first(ReplaceFirst)
+    case replace_all(ReplaceAll)
+    case replace_unique(ReplaceUnique)
+    case replace_line(ReplaceLine)
+    case insert_lines(InsertLines)
+    case replace_lines(ReplaceLines)
+    case delete_lines(DeleteLines)
 
-    public init(
-        kind: EditFileToolOperationKind,
-        content: String? = nil,
-        target: String? = nil,
-        replacement: String? = nil,
-        line: Int? = nil,
-        lines: [String]? = nil,
-        expected: String? = nil,
-        expectedLines: [String]? = nil,
-        atLine: Int? = nil,
-        range: EditFileLineRange? = nil,
-        separator: String? = nil
-    ) {
-        self.kind = kind
-        self.content = content
-        self.target = target
-        self.replacement = replacement
-        self.line = line
-        self.lines = lines
-        self.expected = expected
-        self.expectedLines = expectedLines
-        self.atLine = atLine
-        self.range = range
-        self.separator = separator
+    public var kind: EditFileToolOperationKind {
+        switch self {
+        case .replace_entire_file:
+            return .replace_entire_file
+
+        case .append:
+            return .append
+
+        case .prepend:
+            return .prepend
+
+        case .replace_first:
+            return .replace_first
+
+        case .replace_all:
+            return .replace_all
+
+        case .replace_unique:
+            return .replace_unique
+
+        case .replace_line:
+            return .replace_line
+
+        case .insert_lines:
+            return .insert_lines
+
+        case .replace_lines:
+            return .replace_lines
+
+        case .delete_lines:
+            return .delete_lines
+        }
     }
 
     public func standardOperation() throws -> StandardEditOperation {
-        switch kind {
-        case .replaceEntireFile:
-            guard let content else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "content"
-                )
-            }
-
+        switch self {
+        case .replace_entire_file(let operation):
             return .replaceEntireFile(
-                with: content
+                with: operation.content
+            )
+
+        case .append(let operation):
+            return .append(
+                operation.content,
+                separator: operation.separator
+            )
+
+        case .prepend(let operation):
+            return .prepend(
+                operation.content,
+                separator: operation.separator
+            )
+
+        case .replace_first(let operation):
+            return .replaceFirst(
+                of: operation.target,
+                with: operation.replacement
+            )
+
+        case .replace_all(let operation):
+            return .replaceAll(
+                of: operation.target,
+                with: operation.replacement
+            )
+
+        case .replace_unique(let operation):
+            return .replaceUnique(
+                of: operation.target,
+                with: operation.replacement
+            )
+
+        case .replace_line(let operation):
+            return StandardEditOperation.line.replace(
+                operation.line,
+                expected: operation.expected,
+                with: operation.content
+            )
+
+        case .insert_lines(let operation):
+            return StandardEditOperation.lines.insert(
+                operation.lines,
+                at: operation.atLine
+            )
+
+        case .replace_lines(let operation):
+            return StandardEditOperation.lines.replace(
+                try operation.range.lineRange(),
+                expected: operation.expectedLines,
+                with: operation.lines
+            )
+
+        case .delete_lines(let operation):
+            return StandardEditOperation.lines.delete(
+                try operation.range.lineRange(),
+                expected: operation.expectedLines
+            )
+        }
+    }
+}
+
+public extension EditFileToolOperation {
+    struct ReplaceEntireFile: Sendable, Codable, Hashable {
+        public let content: String
+
+        public init(
+            content: String
+        ) {
+            self.content = content
+        }
+    }
+
+    struct Append: Sendable, Codable, Hashable {
+        public let content: String
+        public let separator: String?
+
+        public init(
+            content: String,
+            separator: String? = nil
+        ) {
+            self.content = content
+            self.separator = separator
+        }
+    }
+
+    struct Prepend: Sendable, Codable, Hashable {
+        public let content: String
+        public let separator: String?
+
+        public init(
+            content: String,
+            separator: String? = nil
+        ) {
+            self.content = content
+            self.separator = separator
+        }
+    }
+
+    struct ReplaceFirst: Sendable, Codable, Hashable {
+        public let target: String
+        public let replacement: String
+
+        public init(
+            target: String,
+            replacement: String
+        ) {
+            self.target = target
+            self.replacement = replacement
+        }
+    }
+
+    struct ReplaceAll: Sendable, Codable, Hashable {
+        public let target: String
+        public let replacement: String
+
+        public init(
+            target: String,
+            replacement: String
+        ) {
+            self.target = target
+            self.replacement = replacement
+        }
+    }
+
+    struct ReplaceUnique: Sendable, Codable, Hashable {
+        public let target: String
+        public let replacement: String
+
+        public init(
+            target: String,
+            replacement: String
+        ) {
+            self.target = target
+            self.replacement = replacement
+        }
+    }
+
+    struct ReplaceLine: Sendable, Codable, Hashable {
+        public let line: Int
+        public let expected: String
+        public let content: String
+
+        public init(
+            line: Int,
+            expected: String,
+            content: String
+        ) {
+            self.line = line
+            self.expected = expected
+            self.content = content
+        }
+    }
+
+    struct InsertLines: Sendable, Codable, Hashable {
+        public let atLine: Int
+        public let lines: [String]
+
+        public init(
+            atLine: Int,
+            lines: [String]
+        ) {
+            self.atLine = atLine
+            self.lines = lines
+        }
+    }
+
+    struct ReplaceLines: Sendable, Codable, Hashable {
+        public let range: EditFileLineRange
+        public let expectedLines: [String]
+        public let lines: [String]
+
+        public init(
+            range: EditFileLineRange,
+            expectedLines: [String],
+            lines: [String]
+        ) {
+            self.range = range
+            self.expectedLines = expectedLines
+            self.lines = lines
+        }
+    }
+
+    struct DeleteLines: Sendable, Codable, Hashable {
+        public let range: EditFileLineRange
+        public let expectedLines: [String]
+
+        public init(
+            range: EditFileLineRange,
+            expectedLines: [String]
+        ) {
+            self.range = range
+            self.expectedLines = expectedLines
+        }
+    }
+}
+
+private extension EditFileToolOperation {
+    enum CodingKeys: String, CodingKey {
+        case kind
+        case content
+        case target
+        case replacement
+        case line
+        case lines
+        case expected
+        case expectedLines
+        case atLine
+        case range
+        case separator
+    }
+}
+
+extension EditFileToolOperation: Codable {
+    public init(
+        from decoder: any Decoder
+    ) throws {
+        let container = try decoder.container(
+            keyedBy: CodingKeys.self
+        )
+        let kind = try container.decode(
+            EditFileToolOperationKind.self,
+            forKey: .kind
+        )
+
+        switch kind {
+        case .replace_entire_file:
+            self = .replace_entire_file(
+                try ReplaceEntireFile(
+                    from: decoder
+                )
             )
 
         case .append:
-            guard let content else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "content"
+            self = .append(
+                try Append(
+                    from: decoder
                 )
-            }
-
-            return .append(
-                content,
-                separator: separator
             )
 
         case .prepend:
-            guard let content else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "content"
+            self = .prepend(
+                try Prepend(
+                    from: decoder
                 )
-            }
-
-            return .prepend(
-                content,
-                separator: separator
             )
 
-        case .replaceFirst:
-            guard let target else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "target"
+        case .replace_first:
+            self = .replace_first(
+                try ReplaceFirst(
+                    from: decoder
                 )
-            }
-
-            guard let replacement else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "replacement"
-                )
-            }
-
-            return .replaceFirst(
-                of: target,
-                with: replacement
             )
 
-        case .replaceAll:
-            guard let target else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "target"
+        case .replace_all:
+            self = .replace_all(
+                try ReplaceAll(
+                    from: decoder
                 )
-            }
-
-            guard let replacement else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "replacement"
-                )
-            }
-
-            return .replaceAll(
-                of: target,
-                with: replacement
             )
 
-        case .replaceUnique:
-            guard let target else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "target"
+        case .replace_unique:
+            self = .replace_unique(
+                try ReplaceUnique(
+                    from: decoder
                 )
-            }
-
-            guard let replacement else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "replacement"
-                )
-            }
-
-            return .replaceUnique(
-                of: target,
-                with: replacement
             )
 
-        case .replaceLine:
-            guard let line else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "line"
+        case .replace_line:
+            self = .replace_line(
+                try ReplaceLine(
+                    from: decoder
                 )
-            }
-
-            guard let expected else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "expected"
-                )
-            }
-
-            guard let content else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "content"
-                )
-            }
-
-            return StandardEditOperation.line.replace(
-                line,
-                expected: expected,
-                with: content
             )
 
-        case .insertLines:
-            guard let lines else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "lines"
+        case .insert_lines:
+            self = .insert_lines(
+                try InsertLines(
+                    from: decoder
                 )
-            }
-
-            guard let atLine else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "atLine"
-                )
-            }
-
-            return StandardEditOperation.lines.insert(
-                lines,
-                at: atLine
             )
 
-        case .replaceLines:
-            guard let lines else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "lines"
+        case .replace_lines:
+            self = .replace_lines(
+                try ReplaceLines(
+                    from: decoder
                 )
-            }
-
-            guard let expectedLines else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "expectedLines"
-                )
-            }
-
-            guard let range else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "range"
-                )
-            }
-
-            return StandardEditOperation.lines.replace(
-                try range.lineRange(),
-                expected: expectedLines,
-                with: lines
             )
 
-        case .deleteLines:
-            guard let expectedLines else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "expectedLines"
+        case .delete_lines:
+            self = .delete_lines(
+                try DeleteLines(
+                    from: decoder
                 )
-            }
+            )
+        }
+    }
 
-            guard let range else {
-                throw PredefinedFileToolError.missingField(
-                    tool: "edit_file",
-                    field: "range"
-                )
-            }
+    public func encode(
+        to encoder: any Encoder
+    ) throws {
+        var container = encoder.container(
+            keyedBy: CodingKeys.self
+        )
 
-            return StandardEditOperation.lines.delete(
-                try range.lineRange(),
-                expected: expectedLines
+        try container.encode(
+            kind,
+            forKey: .kind
+        )
+
+        switch self {
+        case .replace_entire_file(let operation):
+            try container.encode(
+                operation.content,
+                forKey: .content
+            )
+
+        case .append(let operation):
+            try container.encode(
+                operation.content,
+                forKey: .content
+            )
+            try container.encodeIfPresent(
+                operation.separator,
+                forKey: .separator
+            )
+
+        case .prepend(let operation):
+            try container.encode(
+                operation.content,
+                forKey: .content
+            )
+            try container.encodeIfPresent(
+                operation.separator,
+                forKey: .separator
+            )
+
+        case .replace_first(let operation):
+            try container.encode(
+                operation.target,
+                forKey: .target
+            )
+            try container.encode(
+                operation.replacement,
+                forKey: .replacement
+            )
+
+        case .replace_all(let operation):
+            try container.encode(
+                operation.target,
+                forKey: .target
+            )
+            try container.encode(
+                operation.replacement,
+                forKey: .replacement
+            )
+
+        case .replace_unique(let operation):
+            try container.encode(
+                operation.target,
+                forKey: .target
+            )
+            try container.encode(
+                operation.replacement,
+                forKey: .replacement
+            )
+
+        case .replace_line(let operation):
+            try container.encode(
+                operation.line,
+                forKey: .line
+            )
+            try container.encode(
+                operation.expected,
+                forKey: .expected
+            )
+            try container.encode(
+                operation.content,
+                forKey: .content
+            )
+
+        case .insert_lines(let operation):
+            try container.encode(
+                operation.atLine,
+                forKey: .atLine
+            )
+            try container.encode(
+                operation.lines,
+                forKey: .lines
+            )
+
+        case .replace_lines(let operation):
+            try container.encode(
+                operation.range,
+                forKey: .range
+            )
+            try container.encode(
+                operation.expectedLines,
+                forKey: .expectedLines
+            )
+            try container.encode(
+                operation.lines,
+                forKey: .lines
+            )
+
+        case .delete_lines(let operation):
+            try container.encode(
+                operation.range,
+                forKey: .range
+            )
+            try container.encode(
+                operation.expectedLines,
+                forKey: .expectedLines
             )
         }
     }
@@ -319,5 +550,113 @@ public extension EditFileToolInput {
                 forKey: .operations
             )
         )
+    }
+}
+
+public extension EditFileLineRange {
+    static var schema: JSONValue {
+        JSONSchema.object {
+            JSONSchema.integer(
+                "start",
+                required: true,
+                description: "1-based first line in the inclusive line range."
+            )
+            JSONSchema.integer(
+                "end",
+                required: true,
+                description: "1-based final line in the inclusive line range."
+            )
+        }
+    }
+}
+
+public extension EditFileToolOperation {
+    static var schema: JSONValue {
+        JSONSchema.object(
+            description: """
+            One edit operation. The required fields depend on kind:
+            replace_entire_file requires content.
+            append requires content and optional separator.
+            prepend requires content and optional separator.
+            replace_first requires target and replacement.
+            replace_all requires target and replacement.
+            replace_unique requires target and replacement.
+            replace_line requires line, expected, and content.
+            insert_lines requires atLine and lines.
+            replace_lines requires range, expectedLines, and lines.
+            delete_lines requires range and expectedLines.
+            """
+        ) {
+            JSONSchema.string(
+                "kind",
+                required: true,
+                description: "Edit operation kind.",
+                cases: EditFileToolOperationKind.allCases.map(\.rawValue)
+            )
+            JSONSchema.string(
+                "content",
+                description: "Content for replace_entire_file, append, prepend, or replace_line. For replace_line, this is the replacement line content."
+            )
+            JSONSchema.string(
+                "target",
+                description: "Existing text to replace for replace_first, replace_all, or replace_unique."
+            )
+            JSONSchema.string(
+                "replacement",
+                description: "Replacement text for replace_first, replace_all, or replace_unique."
+            )
+            JSONSchema.integer(
+                "line",
+                description: "1-based line number for replace_line."
+            )
+            JSONSchema.string(
+                "expected",
+                description: "Exact existing line content required for replace_line. Must match the current file line before the edit is applied."
+            )
+            JSONSchema.array(
+                "lines",
+                description: "Lines for insert_lines, or replacement lines for replace_lines.",
+                items: JSONSchema.Value.string()
+            )
+            JSONSchema.array(
+                "expectedLines",
+                description: "Exact existing line contents required for replace_lines or delete_lines. Must match the current file range before the edit is applied.",
+                items: JSONSchema.Value.string()
+            )
+            JSONSchema.integer(
+                "atLine",
+                description: "1-based insertion line for insert_lines."
+            )
+            JSONSchema.Property(
+                name: "range",
+                schema: EditFileLineRange.schema
+            )
+            JSONSchema.string(
+                "separator",
+                description: "Optional separator for append/prepend."
+            )
+        }
+    }
+}
+
+public extension EditFileToolInput {
+    static var schema: JSONValue {
+        JSONSchema.object {
+            JSONSchema.string(
+                "rootID",
+                description: "Workspace root identifier. Usually use 'project'."
+            )
+            JSONSchema.string(
+                "path",
+                required: true,
+                description: "Path to the file relative to the workspace root."
+            )
+            JSONSchema.array(
+                "operations",
+                required: true,
+                description: "Ordered edit operations to apply.",
+                items: EditFileToolOperation.schema
+            )
+        }
     }
 }
