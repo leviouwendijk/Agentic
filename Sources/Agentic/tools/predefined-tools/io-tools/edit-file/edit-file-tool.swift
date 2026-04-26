@@ -1,6 +1,9 @@
 import Position
 import Primitives
 import Writers
+import Difference
+import Readers
+import Foundation
 
 public struct EditFileTool: AgentTool {
     public static let identifier: AgentToolIdentifier = "edit_file"
@@ -258,30 +261,68 @@ public struct EditFileTool: AgentTool {
 }
 
 private extension EditFileTool {
+    func previewOriginalText(
+        at url: URL
+    ) -> String {
+        (
+            try? TextFileReader(
+                url
+            ).read(
+                options: .init(
+                    decoding: .commonTextFallbacks,
+                    missingFilePolicy: .returnEmpty,
+                    newlineNormalization: .unix
+                )
+            ).text
+        ) ?? ""
+    }
     func makeDiffPreview(
         authorized: AgenticAuthorizedPath,
         preview: StandardEditResult,
         operationCount: Int
     ) -> ToolPreflightDiffPreview {
-        let text = """
-        --- a/\(authorized.presentationPath)
-        +++ b/\(authorized.presentationPath)
-        # structured edit preview
-        # operations: \(operationCount)
-        # changes: \(preview.changeCount)
-        # insertions: \(preview.insertions)
-        # deletions: \(preview.deletions)
-        # original changed line ranges: \(renderLineRanges(preview.originalChangedLineRanges))
-        # edited changed line ranges: \(renderLineRanges(preview.editedChangedLineRanges))
-        """
+        let contextLineCount = 3
+        let original = previewOriginalText(
+            at: authorized.absoluteURL
+        )
+        let edited = preview.editedContent
+
+        let difference = TextDiffer.diff(
+            old: original,
+            new: edited,
+            oldName: "a/\(authorized.presentationPath)",
+            newName: "b/\(authorized.presentationPath)"
+        )
+
+        let options = DifferenceRenderOptions(
+            showHeader: true,
+            showUnchangedLines: false,
+            contextLineCount: contextLineCount
+        )
+
+        let layout = DifferenceRenderer.layout(
+            difference,
+            options: options
+        )
+
+        let rendered = difference.hasChanges
+            ? DifferenceRenderer.render(
+                layout,
+                options: options
+            )
+            : """
+            --- a/\(authorized.presentationPath)
+            +++ b/\(authorized.presentationPath)
+            # no textual changes
+            """
 
         return .init(
             title: "Preview diff for \(authorized.presentationPath)",
-            contextLineCount: 3,
-            text: text,
-            layout: nil,
-            insertedLineCount: preview.insertions,
-            deletedLineCount: preview.deletions
+            contextLineCount: contextLineCount,
+            text: rendered,
+            layout: layout,
+            insertedLineCount: difference.insertions,
+            deletedLineCount: difference.deletions
         )
     }
 
