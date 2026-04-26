@@ -47,6 +47,7 @@ public struct EditFileTool: AgentTool {
         let operations = try decoded.operations.map { operation in
             try operation.standardOperation()
         }
+        let editMode = decoded.resolvedEditMode
 
         let editor = FileEditor(
             workspace: workspace
@@ -54,7 +55,8 @@ public struct EditFileTool: AgentTool {
 
         let preview = try editor.previewEdit(
             operations,
-            at: authorized.scopedPath
+            at: authorized.scopedPath,
+            mode: editMode
         )
 
         let diffPreview = makeDiffPreview(
@@ -121,10 +123,12 @@ public struct EditFileTool: AgentTool {
         let operations = try decoded.operations.map { operation in
             try operation.standardOperation()
         }
+        let editMode = decoded.resolvedEditMode
 
         let preview = try editor.previewEdit(
             operations,
-            at: authorized.scopedPath
+            at: authorized.scopedPath,
+            mode: editMode
         )
 
         let mutationContext = AgentFileMutationContext(
@@ -145,6 +149,7 @@ public struct EditFileTool: AgentTool {
                 at: authorized.scopedPath,
                 recorder: recorder,
                 options: .init(
+                    mode: editMode,
                     mutation: mutationContext
                 )
             )
@@ -162,7 +167,8 @@ public struct EditFileTool: AgentTool {
             edit = (
                 try editor.edit(
                     operations,
-                    at: authorized.scopedPath
+                    at: authorized.scopedPath,
+                    mode: editMode
                 ),
                 nil
             )

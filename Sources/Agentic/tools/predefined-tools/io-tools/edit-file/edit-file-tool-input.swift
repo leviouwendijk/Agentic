@@ -148,6 +148,38 @@ public enum EditFileToolOperation: Sendable, Hashable {
     }
 }
 
+extension EditFileToolOperation {
+    var isSnapshotCompatible: Bool {
+        switch kind {
+        case .replace_line,
+             .insert_lines,
+             .replace_lines,
+             .delete_lines:
+            return true
+
+        case .replace_entire_file,
+             .append,
+             .prepend,
+             .replace_first,
+             .replace_all,
+             .replace_unique:
+            return false
+        }
+    }
+}
+
+extension EditFileToolInput {
+    var resolvedEditMode: StandardEditMode {
+        guard !operations.isEmpty else {
+            return .sequential
+        }
+
+        return operations.allSatisfy(\.isSnapshotCompatible)
+            ? .snapshot
+            : .sequential
+    }
+}
+
 public extension EditFileToolOperation {
     struct ReplaceEntireFile: Sendable, Codable, Hashable {
         public let content: String

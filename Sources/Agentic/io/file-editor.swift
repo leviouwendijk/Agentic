@@ -141,6 +141,7 @@ public struct FileEditor: Sendable {
             )
         ).editor.edit(
             operations,
+            mode: options.mode,
             encoding: options.encoding,
             options: try options.write ?? recorder.writeOptions()
         )
@@ -284,6 +285,7 @@ public struct FileEditor: Sendable {
     public func edit(
         _ operation: StandardEditOperation,
         at path: ScopedPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
@@ -291,6 +293,7 @@ public struct FileEditor: Sendable {
             workspace.absoluteURL(for: path)
         ).editor.edit(
             operation,
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -300,12 +303,14 @@ public struct FileEditor: Sendable {
     public func edit(
         _ operation: StandardEditOperation,
         at path: StandardPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
         try edit(
             operation,
             at: workspace.resolve(path),
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -316,6 +321,7 @@ public struct FileEditor: Sendable {
         _ operation: StandardEditOperation,
         at rawPath: String,
         filetype: AnyFileType? = nil,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
@@ -325,6 +331,7 @@ public struct FileEditor: Sendable {
                 rawPath,
                 filetype: filetype
             ),
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -334,6 +341,7 @@ public struct FileEditor: Sendable {
     public func edit(
         _ operations: [StandardEditOperation],
         at path: ScopedPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
@@ -341,6 +349,7 @@ public struct FileEditor: Sendable {
             workspace.absoluteURL(for: path)
         ).editor.edit(
             operations,
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -350,12 +359,14 @@ public struct FileEditor: Sendable {
     public func edit(
         _ operations: [StandardEditOperation],
         at path: StandardPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
         try edit(
             operations,
             at: workspace.resolve(path),
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -366,6 +377,7 @@ public struct FileEditor: Sendable {
         _ operations: [StandardEditOperation],
         at rawPath: String,
         filetype: AnyFileType? = nil,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8,
         options: SafeWriteOptions = .overwrite
     ) throws -> StandardEditResult {
@@ -375,6 +387,7 @@ public struct FileEditor: Sendable {
                 rawPath,
                 filetype: filetype
             ),
+            mode: mode,
             encoding: encoding,
             options: options
         )
@@ -383,12 +396,14 @@ public struct FileEditor: Sendable {
     public func previewEdit(
         _ operation: StandardEditOperation,
         at path: ScopedPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try StandardWriter(
             workspace.absoluteURL(for: path)
         ).editor.preview(
             operation,
+            mode: mode,
             encoding: encoding
         )
     }
@@ -396,11 +411,13 @@ public struct FileEditor: Sendable {
     public func previewEdit(
         _ operation: StandardEditOperation,
         at path: StandardPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try previewEdit(
             operation,
             at: workspace.resolve(path),
+            mode: mode,
             encoding: encoding
         )
     }
@@ -409,6 +426,7 @@ public struct FileEditor: Sendable {
         _ operation: StandardEditOperation,
         at rawPath: String,
         filetype: AnyFileType? = nil,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try previewEdit(
@@ -417,6 +435,7 @@ public struct FileEditor: Sendable {
                 rawPath,
                 filetype: filetype
             ),
+            mode: mode,
             encoding: encoding
         )
     }
@@ -424,12 +443,14 @@ public struct FileEditor: Sendable {
     public func previewEdit(
         _ operations: [StandardEditOperation],
         at path: ScopedPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try StandardWriter(
             workspace.absoluteURL(for: path)
         ).editor.preview(
             operations,
+            mode: mode,
             encoding: encoding
         )
     }
@@ -437,11 +458,13 @@ public struct FileEditor: Sendable {
     public func previewEdit(
         _ operations: [StandardEditOperation],
         at path: StandardPath,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try previewEdit(
             operations,
             at: workspace.resolve(path),
+            mode: mode,
             encoding: encoding
         )
     }
@@ -450,6 +473,7 @@ public struct FileEditor: Sendable {
         _ operations: [StandardEditOperation],
         at rawPath: String,
         filetype: AnyFileType? = nil,
+        mode: StandardEditMode = .sequential,
         encoding: String.Encoding = .utf8
     ) throws -> StandardEditResult {
         try previewEdit(
@@ -458,6 +482,7 @@ public struct FileEditor: Sendable {
                 rawPath,
                 filetype: filetype
             ),
+            mode: mode,
             encoding: encoding
         )
     }

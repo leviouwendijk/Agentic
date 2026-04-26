@@ -26,15 +26,18 @@ public struct AgentFileMutationContext: Sendable, Codable, Hashable {
 public struct AgentFileEditOptions: Sendable {
     public var encoding: String.Encoding
     public var write: SafeWriteOptions?
+    public var mode: StandardEditMode
     public var mutation: AgentFileMutationContext
 
     public init(
         encoding: String.Encoding = .utf8,
         write: SafeWriteOptions? = nil,
+        mode: StandardEditMode = .sequential,
         mutation: AgentFileMutationContext = .empty
     ) {
         self.encoding = encoding
         self.write = write
+        self.mode = mode
         self.mutation = mutation
     }
 
