@@ -166,31 +166,87 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_write,
-            tags: ["agentic", "mutation", "prepared-intent", "execute", "write"]
+            ID.core_tool_set_builder_registration,
+            tags: ["agentic", "dsl", "registry", "core-tools"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationWrite()
+            try await AgenticFlowTesting.runCoreToolSetBuilderRegistration()
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_edit,
-            tags: ["agentic", "mutation", "prepared-intent", "execute", "edit"]
+            ID.tool_registry_executes_with_context,
+            tags: ["agentic", "tool-registry", "context"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationEdit()
+            try await AgenticFlowTesting.runToolRegistryExecutesWithContext()
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_requires_approved,
-            tags: ["agentic", "mutation", "prepared-intent", "execute", "approval"]
+            ID.file_mutation_preflight_write,
+            tags: ["agentic", "mutation", "preflight", "write"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationRequiresApproved()
+            try await AgenticFlowTesting.runFileMutationPreflightWrite()
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_rejects_unknown_action,
-            tags: ["agentic", "mutation", "prepared-intent", "execute", "error"]
+            ID.file_mutation_preflight_edit,
+            tags: ["agentic", "mutation", "preflight", "edit"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationRejectsUnknownAction()
+            try await AgenticFlowTesting.runFileMutationPreflightEdit()
+        },
+
+        TestFlow(
+            ID.file_mutation_preflight_no_side_effects,
+            tags: ["agentic", "mutation", "preflight", "side-effects"]
+        ) {
+            try await AgenticFlowTesting.runFileMutationPreflightNoSideEffects()
+        },
+
+        TestFlow(
+            ID.prepared_file_mutation_write,
+            tags: ["agentic", "mutation", "prepared-intent", "write"]
+        ) {
+            try await AgenticFlowTesting.runPreparedFileMutationWrite()
+        },
+
+        TestFlow(
+            ID.prepared_file_mutation_edit,
+            tags: ["agentic", "mutation", "prepared-intent", "edit"]
+        ) {
+            try await AgenticFlowTesting.runPreparedFileMutationEdit()
+        },
+
+        TestFlow(
+            ID.execute_prepared_intent_replays_file_mutation_write,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "write", "registry"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentReplaysFileMutationWrite()
+        },
+
+        TestFlow(
+            ID.execute_prepared_intent_replays_file_mutation_edit,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "edit", "registry"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentReplaysFileMutationEdit()
+        },
+
+        TestFlow(
+            ID.execute_prepared_intent_requires_approved,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "approval", "registry"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentRequiresApproved()
+        },
+
+        TestFlow(
+            ID.execute_prepared_intent_rejects_missing_execution_tool,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "error", "registry"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentRejectsMissingExecutionTool()
+        },
+
+        TestFlow(
+            ID.prepared_intent_operator_tool_set_registers_execute_when_execution_registry_provided,
+            tags: ["agentic", "prepared-intent", "tool-set", "registry"]
+        ) {
+            try await AgenticFlowTesting.runPreparedIntentOperatorToolSetRegistersExecuteWhenExecutionRegistryProvided()
         },
 
         TestFlow(
@@ -243,17 +299,17 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_rollback,
-            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute"]
+            ID.execute_prepared_intent_replays_file_mutation_rollback,
+            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute", "registry"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationRollback()
+            try await AgenticFlowTesting.runExecutePreparedIntentReplaysFileMutationRollback()
         },
 
         TestFlow(
-            ID.execute_prepared_file_mutation_rollback_records_mutation,
-            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute", "record"]
+            ID.execute_prepared_intent_rollback_records_mutation,
+            tags: ["agentic", "mutation", "rollback", "prepared-intent", "execute", "record", "registry"]
         ) {
-            try await AgenticFlowTesting.runExecutePreparedFileMutationRollbackRecordsMutation()
+            try await AgenticFlowTesting.runExecutePreparedIntentRollbackRecordsMutation()
         },
     ]
 
@@ -279,6 +335,7 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let dsl_registry_mixed_inputs = "dsl-registry-mixed-inputs"
 
         static let core_tool_set_builder_registration = "core-tool-set-builder-registration"
+        static let tool_registry_executes_with_context = "tool-registry-executes-with-context"
 
         static let file_mutation_preflight_write = "file-mutation-preflight-write"
         static let file_mutation_preflight_edit = "file-mutation-preflight-edit"
@@ -286,10 +343,11 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let prepared_file_mutation_write = "prepared-file-mutation-write"
         static let prepared_file_mutation_edit = "prepared-file-mutation-edit"
 
-        static let execute_prepared_file_mutation_write = "execute-prepared-file-mutation-write"
-        static let execute_prepared_file_mutation_edit = "execute-prepared-file-mutation-edit"
-        static let execute_prepared_file_mutation_requires_approved = "execute-prepared-file-mutation-requires-approved"
-        static let execute_prepared_file_mutation_rejects_unknown_action = "execute-prepared-file-mutation-rejects-unknown-action"
+        static let execute_prepared_intent_replays_file_mutation_write = "execute-prepared-intent-replays-file-mutation-write"
+        static let execute_prepared_intent_replays_file_mutation_edit = "execute-prepared-intent-replays-file-mutation-edit"
+        static let execute_prepared_intent_requires_approved = "execute-prepared-intent-requires-approved"
+        static let execute_prepared_intent_rejects_missing_execution_tool = "execute-prepared-intent-rejects-missing-execution-tool"
+        static let prepared_intent_operator_tool_set_registers_execute_when_execution_registry_provided = "prepared-intent-operator-tool-set-registers-execute-when-execution-registry-provided"
 
         static let list_file_mutations_tool = "list-file-mutations-tool"
         static let inspect_file_mutation_tool = "inspect-file-mutation-tool"
@@ -299,7 +357,7 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let file_mutation_rollback_preflight = "file-mutation-rollback-preflight"
         static let file_mutation_rollback_preflight_rejects_missing_id = "file-mutation-rollback-preflight-rejects-missing-id"
         static let prepared_file_mutation_rollback = "prepared-file-mutation-rollback"
-        static let execute_prepared_file_mutation_rollback = "execute-prepared-file-mutation-rollback"
-        static let execute_prepared_file_mutation_rollback_records_mutation = "execute-prepared-file-mutation-rollback-records-mutation"
+        static let execute_prepared_intent_replays_file_mutation_rollback = "execute-prepared-intent-replays-file-mutation-rollback"
+        static let execute_prepared_intent_rollback_records_mutation = "execute-prepared-intent-rollback-records-mutation"
     }
 }

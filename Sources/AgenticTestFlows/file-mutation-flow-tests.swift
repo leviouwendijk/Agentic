@@ -64,13 +64,14 @@ extension AgenticFlowTesting {
         let registry = try Agentic.tool.registry {
             CoreFileMutationHistoryToolSet(
                 store: env.store,
+                recorder: env.recorder,
                 artifactStore: env.artifactStore
             )
         }
 
         try Expect.equal(
             registry.count,
-            2,
+            3,
             "mutation history tool set count"
         )
 
@@ -86,6 +87,13 @@ extension AgenticFlowTesting {
                 named: InspectFileMutationTool.identifier.rawValue
             ),
             "history tool set registers inspect_file_mutation"
+        )
+
+        _ = try Expect.notNil(
+            registry.tool(
+                named: AgentToolIdentifier.rollback_file_mutation.rawValue
+            ),
+            "history tool set registers rollback_file_mutation"
         )
 
         let tool = ListFileMutationsTool(

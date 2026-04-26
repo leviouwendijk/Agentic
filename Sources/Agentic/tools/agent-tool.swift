@@ -15,6 +15,11 @@ public protocol AgentTool: Sendable {
         input: JSONValue,
         workspace: AgentWorkspace?
     ) async throws -> JSONValue
+
+    func call(
+        input: JSONValue,
+        context: AgentToolExecutionContext
+    ) async throws -> JSONValue
 }
 
 public extension AgentTool {
@@ -44,6 +49,16 @@ public extension AgentTool {
             workspaceRoot: workspace?.rootURL.path,
             summary: description,
             sideEffects: risk.defaultSideEffects
+        )
+    }
+
+    func call(
+        input: JSONValue,
+        context: AgentToolExecutionContext
+    ) async throws -> JSONValue {
+        try await call(
+            input: input,
+            workspace: context.workspace
         )
     }
 }

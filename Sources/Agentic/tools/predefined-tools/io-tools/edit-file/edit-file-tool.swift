@@ -181,6 +181,80 @@ public struct EditFileTool: AgentTool {
             )
         )
     }
+
+    public func call(
+        input: JSONValue,
+        context: AgentToolExecutionContext
+    ) async throws -> JSONValue {
+        let decoded = try JSONToolBridge.decode(
+            EditFileToolInput.self,
+            from: input
+        )
+
+        return try await call(
+            decoded,
+            context: context
+        )
+    }
+
+    public func call(
+        _ input: EditFileToolInput,
+        context: AgentToolExecutionContext
+    ) async throws -> JSONValue {
+        let tool = Self(
+            recorder: recorder,
+            context: mergedMutationContext(
+                toolContext: context,
+                action: "edit"
+            )
+        )
+
+        return try await tool.call(
+            input: try JSONToolBridge.encode(
+                input
+            ),
+            workspace: context.workspace
+        )
+    }
+
+    private func mergedMutationContext(
+        toolContext: AgentToolExecutionContext,
+        action: String
+    ) -> AgentFileMutationContext {
+        if self.context == .empty {
+            return .init(
+                toolContext: toolContext,
+                additionalMetadata: [
+                    "toolName": Self.identifier.rawValue,
+                    "intent_action": action,
+                    "intent_action_type": FileMutationIntentAction.edit.actionType
+                ]
+            )
+        }
+
+        var mutationContext = self.context
+
+        if mutationContext.toolCallID == nil {
+            mutationContext.toolCallID = toolContext.toolCallID
+        }
+
+        if mutationContext.preparedIntentID == nil {
+            mutationContext.preparedIntentID = toolContext.preparedIntentID
+        }
+
+        mutationContext.metadata.merge(
+            toolContext.metadata
+        ) { old, _ in
+            old
+        }
+
+        mutationContext.metadata["toolName"] = Self.identifier.rawValue
+        mutationContext.metadata["intent_action"] = action
+        mutationContext.metadata["intent_action_type"] = FileMutationIntentAction.edit.actionType
+        mutationContext.metadata["execution_mode"] = toolContext.executionMode.rawValue
+
+        return mutationContext
+    }
 }
 
 private extension EditFileTool {

@@ -196,9 +196,9 @@ extension AgenticFlowTesting {
         )
     }
 
-    static func runExecutePreparedFileMutationRollback() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentReplaysFileMutationRollback() async throws -> [TestFlowDiagnostic] {
         let env = try RollbackMutationFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_rollback
+            AgenticFlowSuite.ID.execute_prepared_intent_replays_file_mutation_rollback
         )
         defer {
             env.remove()
@@ -231,34 +231,31 @@ extension AgenticFlowTesting {
             decision: .approve
         )
 
-        let executed = try await FileMutationIntentExecutor(
+        let replay = try await executePreparedIntentThroughRegistry(
+            intent,
             manager: env.intentManager,
             workspace: env.workspace,
-            recorder: env.recorder
-        ).execute(
-            intent.id
+            recorder: env.recorder,
+            store: env.store,
+            sessionID: env.sessionID
         )
 
-        try Expect.equal(
-            executed.status,
-            .executed,
-            "prepared rollback intent executed"
+        try assertPreparedReplayResult(
+            replay,
+            intentID: intent.id,
+            expectedToolName: AgentToolIdentifier.rollback_file_mutation.rawValue,
+            label: "prepared rollback replay"
         )
 
         try Expect.equal(
             try env.read("execute-rollback.txt"),
             "old\n",
-            "prepared rollback restores previous content"
-        )
-
-        let output = try Expect.notNil(
-            executed.executionRecord?.result,
-            "prepared rollback has execution result"
+            "prepared rollback replay restores previous content"
         )
 
         let decoded = try JSONToolBridge.decode(
             AgentFileMutationRollbackOutput.self,
-            from: output
+            from: replay.toolResult.output
         )
 
         try Expect.equal(
@@ -269,16 +266,17 @@ extension AgenticFlowTesting {
 
         return rollbackDiagnostics(
             [
-                ("intent", executed.id.rawValue),
-                ("status", executed.status.rawValue),
+                ("intent", replay.intent.id.rawValue),
+                ("status", replay.intent.status.rawValue),
+                ("tool", replay.toolCall.name),
                 ("file", "rolled-back")
             ]
         )
     }
 
-    static func runExecutePreparedFileMutationRollbackRecordsMutation() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentRollbackRecordsMutation() async throws -> [TestFlowDiagnostic] {
         let env = try RollbackMutationFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_rollback_records_mutation
+            AgenticFlowSuite.ID.execute_prepared_intent_rollback_records_mutation
         )
         defer {
             env.remove()
@@ -311,12 +309,13 @@ extension AgenticFlowTesting {
             decision: .approve
         )
 
-        let executed = try await FileMutationIntentExecutor(
+        let replay = try await executePreparedIntentThroughRegistry(
+            intent,
             manager: env.intentManager,
             workspace: env.workspace,
-            recorder: env.recorder
-        ).execute(
-            intent.id
+            recorder: env.recorder,
+            store: env.store,
+            sessionID: env.sessionID
         )
 
         let mutations = try await env.store.list(
@@ -326,20 +325,32 @@ extension AgenticFlowTesting {
         try Expect.equal(
             mutations.count,
             2,
-            "rollback execution records source mutation and rollback mutation"
+            "rollback replay records source mutation and rollback mutation"
         )
 
         let rollback = try Expect.notNil(
             mutations.first {
                 $0.operationKind == .rollback
             },
-            "rollback execution stores rollback mutation"
+            "rollback replay stores rollback mutation"
         )
 
         try Expect.equal(
             rollback.preparedIntentID,
             intent.id,
             "rollback mutation links prepared intent"
+        )
+
+        try Expect.equal(
+            rollback.metadata["prepared_intent_id"],
+            intent.id.rawValue,
+            "rollback mutation metadata links prepared intent"
+        )
+
+        try Expect.equal(
+            rollback.metadata["execution_mode"],
+            AgentToolExecutionMode.prepared_intent_replay.rawValue,
+            "rollback mutation records replay execution mode"
         )
 
         try Expect.equal(
@@ -350,17 +361,12 @@ extension AgenticFlowTesting {
 
         try Expect.true(
             rollback.artifactIDs.isEmpty == false,
-            "rollback mutation emits diff artifact"
-        )
-
-        let output = try Expect.notNil(
-            executed.executionRecord?.result,
-            "prepared rollback has execution result"
+            "rollback replay emits diff artifact"
         )
 
         let decoded = try JSONToolBridge.decode(
             AgentFileMutationRollbackOutput.self,
-            from: output
+            from: replay.toolResult.output
         )
 
         try Expect.equal(
@@ -371,7 +377,7 @@ extension AgenticFlowTesting {
 
         return rollbackDiagnostics(
             [
-                ("intent", executed.id.rawValue),
+                ("intent", replay.intent.id.rawValue),
                 ("mutations", "\(mutations.count)"),
                 ("rollbackMutationID", rollback.id.uuidString.lowercased())
             ]

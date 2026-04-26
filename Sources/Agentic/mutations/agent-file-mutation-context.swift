@@ -40,3 +40,38 @@ public struct AgentFileEditOptions: Sendable {
 
     public static let `default` = Self()
 }
+
+public extension AgentFileMutationContext {
+    init(
+        toolContext: AgentToolExecutionContext,
+        additionalMetadata: [String: String] = [:]
+    ) {
+        var metadata = toolContext.metadata
+
+        if let sessionID = toolContext.sessionID {
+            metadata["session_id"] = sessionID
+        }
+
+        if let toolCallID = toolContext.toolCallID {
+            metadata["tool_call_id"] = toolCallID
+        }
+
+        if let preparedIntentID = toolContext.preparedIntentID {
+            metadata["prepared_intent_id"] = preparedIntentID.rawValue
+        }
+
+        metadata["execution_mode"] = toolContext.executionMode.rawValue
+
+        metadata.merge(
+            additionalMetadata
+        ) { _, new in
+            new
+        }
+
+        self.init(
+            toolCallID: toolContext.toolCallID,
+            preparedIntentID: toolContext.preparedIntentID,
+            metadata: metadata
+        )
+    }
+}

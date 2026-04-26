@@ -4,9 +4,9 @@ import Primitives
 import TestFlows
 
 extension AgenticFlowTesting {
-    static func runExecutePreparedFileMutationWrite() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentReplaysFileMutationWrite() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_write
+            AgenticFlowSuite.ID.execute_prepared_intent_replays_file_mutation_write
         )
         defer {
             env.remove()
@@ -38,34 +38,26 @@ extension AgenticFlowTesting {
             decision: .approve
         )
 
-        let executed = try await FileMutationIntentExecutor(
+        let replay = try await executePreparedIntentThroughRegistry(
+            intent,
             manager: env.intentManager,
             workspace: env.workspace,
-            recorder: env.recorder
-        ).execute(
-            intent.id
+            recorder: env.recorder,
+            store: env.store,
+            sessionID: env.sessionID
         )
 
-        try Expect.equal(
-            executed.status,
-            .executed,
-            "prepared write intent executed"
-        )
-
-        _ = try Expect.notNil(
-            executed.executionRecord,
-            "prepared write intent has execution record"
-        )
-
-        _ = try Expect.notNil(
-            executed.executionRecord?.result,
-            "prepared write intent has execution result"
+        try assertPreparedReplayResult(
+            replay,
+            intentID: intent.id,
+            expectedToolName: WriteFileTool.identifier.rawValue,
+            label: "prepared write replay"
         )
 
         try Expect.equal(
             try env.read("execute-write.txt"),
             "new\n",
-            "prepared write execution mutates target file"
+            "prepared write replay mutates target file"
         )
 
         let mutations = try await env.store.list(
@@ -75,12 +67,12 @@ extension AgenticFlowTesting {
         try Expect.equal(
             mutations.count,
             1,
-            "prepared write execution records one mutation"
+            "prepared write replay records one mutation"
         )
 
         let mutation = try Expect.notNil(
             mutations.first,
-            "prepared write execution mutation record"
+            "prepared write replay mutation record"
         )
 
         try Expect.equal(
@@ -89,19 +81,31 @@ extension AgenticFlowTesting {
             "prepared write mutation links prepared intent id"
         )
 
+        try Expect.equal(
+            mutation.metadata["prepared_intent_id"],
+            intent.id.rawValue,
+            "prepared write mutation metadata links prepared intent id"
+        )
+
+        try Expect.equal(
+            mutation.metadata["execution_mode"],
+            AgentToolExecutionMode.prepared_intent_replay.rawValue,
+            "prepared write mutation records replay execution mode"
+        )
+
         return mutationPreflightDiagnostics(
             [
-                ("intent", executed.id.rawValue),
-                ("status", executed.status.rawValue),
-                ("file", "mutated"),
+                ("intent", replay.intent.id.rawValue),
+                ("status", replay.intent.status.rawValue),
+                ("tool", replay.toolCall.name),
                 ("mutations", "\(mutations.count)")
             ]
         )
     }
 
-    static func runExecutePreparedFileMutationEdit() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentReplaysFileMutationEdit() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_edit
+            AgenticFlowSuite.ID.execute_prepared_intent_replays_file_mutation_edit
         )
         defer {
             env.remove()
@@ -139,34 +143,26 @@ extension AgenticFlowTesting {
             decision: .approve
         )
 
-        let executed = try await FileMutationIntentExecutor(
+        let replay = try await executePreparedIntentThroughRegistry(
+            intent,
             manager: env.intentManager,
             workspace: env.workspace,
-            recorder: env.recorder
-        ).execute(
-            intent.id
+            recorder: env.recorder,
+            store: env.store,
+            sessionID: env.sessionID
         )
 
-        try Expect.equal(
-            executed.status,
-            .executed,
-            "prepared edit intent executed"
-        )
-
-        _ = try Expect.notNil(
-            executed.executionRecord,
-            "prepared edit intent has execution record"
-        )
-
-        _ = try Expect.notNil(
-            executed.executionRecord?.result,
-            "prepared edit intent has execution result"
+        try assertPreparedReplayResult(
+            replay,
+            intentID: intent.id,
+            expectedToolName: EditFileTool.identifier.rawValue,
+            label: "prepared edit replay"
         )
 
         try Expect.equal(
             try env.read("execute-edit.txt"),
             "alpha\ngamma\n",
-            "prepared edit execution mutates target file"
+            "prepared edit replay mutates target file"
         )
 
         let mutations = try await env.store.list(
@@ -176,12 +172,12 @@ extension AgenticFlowTesting {
         try Expect.equal(
             mutations.count,
             1,
-            "prepared edit execution records one mutation"
+            "prepared edit replay records one mutation"
         )
 
         let mutation = try Expect.notNil(
             mutations.first,
-            "prepared edit execution mutation record"
+            "prepared edit replay mutation record"
         )
 
         try Expect.equal(
@@ -190,19 +186,31 @@ extension AgenticFlowTesting {
             "prepared edit mutation links prepared intent id"
         )
 
+        try Expect.equal(
+            mutation.metadata["prepared_intent_id"],
+            intent.id.rawValue,
+            "prepared edit mutation metadata links prepared intent id"
+        )
+
+        try Expect.equal(
+            mutation.metadata["execution_mode"],
+            AgentToolExecutionMode.prepared_intent_replay.rawValue,
+            "prepared edit mutation records replay execution mode"
+        )
+
         return mutationPreflightDiagnostics(
             [
-                ("intent", executed.id.rawValue),
-                ("status", executed.status.rawValue),
-                ("file", "mutated"),
+                ("intent", replay.intent.id.rawValue),
+                ("status", replay.intent.status.rawValue),
+                ("tool", replay.toolCall.name),
                 ("mutations", "\(mutations.count)")
             ]
         )
     }
 
-    static func runExecutePreparedFileMutationRequiresApproved() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentRequiresApproved() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_requires_approved
+            AgenticFlowSuite.ID.execute_prepared_intent_requires_approved
         )
         defer {
             env.remove()
@@ -230,16 +238,17 @@ extension AgenticFlowTesting {
         )
 
         do {
-            _ = try await FileMutationIntentExecutor(
+            _ = try await executePreparedIntentThroughRegistry(
+                intent,
                 manager: env.intentManager,
                 workspace: env.workspace,
-                recorder: env.recorder
-            ).execute(
-                intent.id
+                recorder: env.recorder,
+                store: env.store,
+                sessionID: env.sessionID
             )
 
             throw FlowTestError.unexpectedResult(
-                "pending prepared file mutation intent unexpectedly executed"
+                "pending prepared intent unexpectedly executed"
             )
         } catch PreparedIntentError.notApproved(let id, let status) {
             try Expect.equal(
@@ -280,9 +289,9 @@ extension AgenticFlowTesting {
         }
     }
 
-    static func runExecutePreparedFileMutationRejectsUnknownAction() async throws -> [TestFlowDiagnostic] {
+    static func runExecutePreparedIntentRejectsMissingExecutionTool() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
-            AgenticFlowSuite.ID.execute_prepared_file_mutation_rejects_unknown_action
+            AgenticFlowSuite.ID.execute_prepared_intent_rejects_missing_execution_tool
         )
         defer {
             env.remove()
@@ -290,12 +299,12 @@ extension AgenticFlowTesting {
 
         try env.write(
             "old\n",
-            to: "unknown-action.txt"
+            to: "missing-execution-tool.txt"
         )
 
         let exactInputs = try JSONToolBridge.encode(
             WriteFileToolInput(
-                path: "unknown-action.txt",
+                path: "missing-execution-tool.txt",
                 content: "new\n"
             )
         )
@@ -303,21 +312,22 @@ extension AgenticFlowTesting {
         let intent = try await env.intentManager.create(
             .init(
                 sessionID: env.sessionID,
-                actionType: "file_mutation.unknown",
+                actionType: FileMutationIntentAction.write.actionType,
                 reviewPayload: .init(
-                    title: "Unknown file mutation action",
-                    summary: "Prepared intent with unsupported file mutation action.",
-                    actionType: "file_mutation.unknown",
+                    title: "Missing execution tool name",
+                    summary: "Prepared intent without a concrete replay tool.",
+                    actionType: FileMutationIntentAction.write.actionType,
                     risk: .boundedmutate,
-                    target: "unknown-action.txt",
+                    target: "missing-execution-tool.txt",
                     exactInputs: exactInputs,
                     expectedSideEffects: [
-                        "unsupported test action"
+                        "test fixture should not execute"
                     ],
                     policyChecks: [
                         "test_fixture"
                     ]
-                )
+                ),
+                executionToolName: nil
             )
         )
 
@@ -327,28 +337,29 @@ extension AgenticFlowTesting {
         )
 
         do {
-            _ = try await FileMutationIntentExecutor(
+            _ = try await executePreparedIntentThroughRegistry(
+                intent,
                 manager: env.intentManager,
                 workspace: env.workspace,
-                recorder: env.recorder
-            ).execute(
-                intent.id
+                recorder: env.recorder,
+                store: env.store,
+                sessionID: env.sessionID
             )
 
             throw FlowTestError.unexpectedResult(
-                "unknown prepared file mutation action unexpectedly executed"
+                "prepared intent without executionToolName unexpectedly executed"
             )
-        } catch FileMutationIntentExecutionError.unsupportedActionType(let actionType) {
+        } catch ExecutePreparedIntentToolError.missingExecutionToolName(let id) {
             try Expect.equal(
-                actionType,
-                "file_mutation.unknown",
-                "unknown action type"
+                id,
+                intent.id,
+                "missing execution tool name id"
             )
 
             try Expect.equal(
-                try env.read("unknown-action.txt"),
+                try env.read("missing-execution-tool.txt"),
                 "old\n",
-                "unknown prepared intent action does not mutate target file"
+                "missing execution tool name does not mutate target file"
             )
 
             let failed = try await env.intentManager.get(
@@ -358,22 +369,59 @@ extension AgenticFlowTesting {
             try Expect.equal(
                 failed.status,
                 .execution_failed,
-                "unknown prepared intent action marks execution failed"
+                "missing execution tool name marks execution failed"
             )
 
             _ = try Expect.notNil(
                 failed.executionRecord,
-                "unknown prepared intent action has failure execution record"
+                "missing execution tool name has failure record"
             )
 
             return mutationPreflightDiagnostics(
                 [
                     ("intent", intent.id.rawValue),
                     ("status", failed.status.rawValue),
-                    ("error", actionType)
+                    ("error", "missingExecutionToolName")
                 ]
             )
         }
+    }
+
+    static func runPreparedIntentOperatorToolSetRegistersExecuteWhenExecutionRegistryProvided() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.prepared_intent_operator_tool_set_registers_execute_when_execution_registry_provided
+        )
+        defer {
+            env.remove()
+        }
+
+        let executionRegistry = try preparedIntentReplayRegistry(
+            recorder: env.recorder,
+            store: env.store
+        )
+        var registry = ToolRegistry()
+
+        try registry.register(
+            PreparedIntentOperatorToolSet(
+                manager: env.intentManager,
+                executionRegistry: executionRegistry,
+                sessionID: env.sessionID
+            )
+        )
+
+        _ = try Expect.notNil(
+            registry.tool(
+                named: AgentToolIdentifier.execute_prepared_intent.rawValue
+            ),
+            "operator tool set registers execute_prepared_intent"
+        )
+
+        return mutationPreflightDiagnostics(
+            [
+                ("registered", AgentToolIdentifier.execute_prepared_intent.rawValue),
+                ("tools", "\(registry.count)")
+            ]
+        )
     }
     static func runFileMutationPreflightWrite() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
@@ -592,9 +640,10 @@ extension AgenticFlowTesting {
             "prepared write intent starts pending review"
         )
 
-        try Expect.isNil(
+        try Expect.equal(
             intent.executionToolName,
-            "prepared write intent does not declare an executor yet"
+            WriteFileTool.identifier.rawValue,
+            "prepared write intent declares write replay tool"
         )
 
         let exactInputs = try Expect.notNil(
@@ -675,9 +724,10 @@ extension AgenticFlowTesting {
             "prepared edit intent starts pending review"
         )
 
-        try Expect.isNil(
+        try Expect.equal(
             intent.executionToolName,
-            "prepared edit intent does not declare an executor yet"
+            EditFileTool.identifier.rawValue,
+            "prepared edit intent declares edit replay tool"
         )
 
         let exactInputs = try Expect.notNil(

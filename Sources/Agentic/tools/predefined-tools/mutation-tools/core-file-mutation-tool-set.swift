@@ -1,12 +1,15 @@
 public struct CoreFileMutationHistoryToolSet: AgentToolSet {
     public let store: any AgentFileMutationStore
+    public let recorder: AgentFileMutationRecorder
     public let artifactStore: (any AgentArtifactStore)?
 
     public init(
         store: any AgentFileMutationStore,
+        recorder: AgentFileMutationRecorder,
         artifactStore: (any AgentArtifactStore)? = nil
     ) {
         self.store = store
+        self.recorder = recorder
         self.artifactStore = artifactStore
     }
 
@@ -21,6 +24,11 @@ public struct CoreFileMutationHistoryToolSet: AgentToolSet {
             InspectFileMutationTool(
                 store: store,
                 artifactStore: artifactStore
+            )
+
+            RollbackFileMutationTool(
+                store: store,
+                recorder: recorder
             )
         }
     }

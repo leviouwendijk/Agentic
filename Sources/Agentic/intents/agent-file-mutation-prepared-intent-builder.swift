@@ -39,7 +39,7 @@ public struct FileMutationIntentBuilder: Sendable {
             sessionID: sessionID,
             actionType: actionType,
             reviewPayload: payload,
-            executionToolName: nil,
+            executionToolName: preflight.action.toolName,
             idempotencyKey: nil,
             metadata: draftMetadata(
                 for: preflight

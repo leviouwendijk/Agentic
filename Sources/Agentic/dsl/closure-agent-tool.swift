@@ -49,11 +49,21 @@ public struct ClosureAgentTool: AgentTool {
         input: JSONValue,
         workspace: AgentWorkspace?
     ) async throws -> JSONValue {
-        try await callHandler(
-            input,
-            .init(
+        try await call(
+            input: input,
+            context: .init(
                 workspace: workspace
             )
+        )
+    }
+
+    public func call(
+        input: JSONValue,
+        context: AgentToolExecutionContext
+    ) async throws -> JSONValue {
+        try await callHandler(
+            input,
+            context
         )
     }
 }
