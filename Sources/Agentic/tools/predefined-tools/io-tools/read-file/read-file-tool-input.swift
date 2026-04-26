@@ -100,7 +100,7 @@ public extension ReadFileToolInput {
             )
             JSONSchema.boolean(
                 "includeLineNumbers",
-                description: "Whether to include line numbers in returned content."
+                description: "Whether to include numbered display text in the returned display field. The content field always remains raw source text."
             )
         }
     }

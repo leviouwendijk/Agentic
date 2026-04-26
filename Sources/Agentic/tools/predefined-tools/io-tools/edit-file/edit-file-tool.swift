@@ -35,34 +35,29 @@ public struct EditFileTool: AgentTool {
             from: input
         )
 
-        let authorized = try FileToolAccess.authorize(
-            workspace: workspace,
-            rootID: decoded.rootID,
-            path: decoded.path,
-            capability: .write,
-            toolName: name,
-            type: .file
+        let plan = try EditFileIntentResolver(
+            toolName: name
+        ).resolve(
+            decoded,
+            workspace: workspace
         )
 
-        let operations = try decoded.operations.map { operation in
-            try operation.standardOperation()
-        }
-        let editMode = decoded.resolvedEditMode
+        try plan.requireCurrentSnapshot()
 
         let editor = FileEditor(
             workspace: workspace
         )
 
         let preview = try editor.previewEdit(
-            operations,
-            at: authorized.scopedPath,
-            mode: editMode
+            plan.operations,
+            at: plan.authorized.scopedPath,
+            mode: plan.editMode
         )
 
         let diffPreview = makeDiffPreview(
-            authorized: authorized,
+            authorized: plan.authorized,
             preview: preview,
-            operationCount: operations.count
+            operationCount: plan.operationCount
         )
 
         return .init(
@@ -70,10 +65,10 @@ public struct EditFileTool: AgentTool {
             risk: risk,
             workspaceRoot: workspace.rootURL.path,
             targetPaths: [
-                authorized.presentationPath
+                plan.authorized.presentationPath
             ],
-            summary: "Apply \(decoded.operations.count) structured edit operation(s) to \(authorized.presentationPath)",
-            estimatedWriteCount: decoded.operations.isEmpty ? 0 : 1,
+            summary: "Apply \(plan.operationCount) structured edit operation(s) to \(plan.authorized.presentationPath)",
+            estimatedWriteCount: plan.operationCount == 0 ? 0 : 1,
             sideEffects: risk.defaultSideEffects,
             rootIDs: [
                 decoded.rootID.rawValue
@@ -86,7 +81,9 @@ public struct EditFileTool: AgentTool {
             policyChecks: [
                 "workspace_required",
                 "root_path_authorized",
-                "edit_operations_decoded",
+                "edit_intent_decoded",
+                "runtime_guards_resolved",
+                "snapshot_fingerprint_captured",
                 "difference_preview_generated"
             ],
             diffPreview: diffPreview
@@ -107,36 +104,33 @@ public struct EditFileTool: AgentTool {
             from: input
         )
 
-        let authorized = try FileToolAccess.authorize(
-            workspace: workspace,
-            rootID: decoded.rootID,
-            path: decoded.path,
-            capability: .write,
-            toolName: name,
-            type: .file
+        let plan = try EditFileIntentResolver(
+            toolName: name
+        ).resolve(
+            decoded,
+            workspace: workspace
         )
 
         let editor = FileEditor(
             workspace: workspace
         )
 
-        let operations = try decoded.operations.map { operation in
-            try operation.standardOperation()
-        }
-        let editMode = decoded.resolvedEditMode
+        try plan.requireCurrentSnapshot()
 
         let preview = try editor.previewEdit(
-            operations,
-            at: authorized.scopedPath,
-            mode: editMode
+            plan.operations,
+            at: plan.authorized.scopedPath,
+            mode: plan.editMode
         )
 
+        try plan.requireCurrentSnapshot()
+
         let mutationContext = AgentFileMutationContext(
-            rootID: authorized.rootID,
+            rootID: plan.authorized.rootID,
             toolCallID: context.toolCallID,
             preparedIntentID: context.preparedIntentID,
             metadata: mutationMetadata(
-                authorized: authorized,
+                authorized: plan.authorized,
                 context: context
             )
         )
@@ -145,11 +139,11 @@ public struct EditFileTool: AgentTool {
 
         if let recorder {
             let recorded = try await editor.editRecorded(
-                operations,
-                at: authorized.scopedPath,
+                plan.operations,
+                at: plan.authorized.scopedPath,
                 recorder: recorder,
                 options: .init(
-                    mode: editMode,
+                    mode: plan.editMode,
                     mutation: mutationContext
                 )
             )
@@ -166,9 +160,9 @@ public struct EditFileTool: AgentTool {
         } else {
             edit = (
                 try editor.edit(
-                    operations,
-                    at: authorized.scopedPath,
-                    mode: editMode
+                    plan.operations,
+                    at: plan.authorized.scopedPath,
+                    mode: plan.editMode
                 ),
                 nil
             )
@@ -176,9 +170,9 @@ public struct EditFileTool: AgentTool {
 
         return try JSONToolBridge.encode(
             EditFileToolOutput(
-                rootID: authorized.rootID.rawValue,
-                path: authorized.presentationPath,
-                operationCount: operations.count,
+                rootID: plan.authorized.rootID.rawValue,
+                path: plan.authorized.presentationPath,
+                operationCount: plan.operationCount,
                 changeCount: preview.changeCount,
                 diffSummary: .init(
                     insertedLineCount: edit.result.insertions,
@@ -282,6 +276,7 @@ private extension EditFileTool {
             ).text
         ) ?? ""
     }
+
     func makeDiffPreview(
         authorized: AgenticAuthorizedPath,
         preview: StandardEditResult,

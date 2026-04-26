@@ -96,22 +96,42 @@ public struct ReadFileTool: AgentTool {
             maxLines: decoded.maxLines
         )
 
-        let renderedContent: String
+        let rawContent: String
+        let displayContent: String?
+        let structuredLines: [ReadFileLine]
+
         if let range = read.selectedLineRange {
-            renderedContent = FileToolSupport.renderLines(
+            rawContent = FileToolSupport.renderLines(
                 read.selectedLines,
                 startingAt: range.start,
-                includeLineNumbers: decoded.includeLineNumbers
+                includeLineNumbers: false
             )
+            displayContent = decoded.includeLineNumbers
+                ? FileToolSupport.renderLines(
+                    read.selectedLines,
+                    startingAt: range.start,
+                    includeLineNumbers: true
+                )
+                : nil
+            structuredLines = read.selectedLines.enumerated().map { offset, text in
+                ReadFileLine(
+                    number: range.start + offset,
+                    text: text
+                )
+            }
         } else {
-            renderedContent = ""
+            rawContent = ""
+            displayContent = nil
+            structuredLines = []
         }
 
         return try JSONToolBridge.encode(
             ReadFileToolOutput(
                 rootID: authorized.rootID.rawValue,
                 path: authorized.presentationPath,
-                content: renderedContent,
+                content: rawContent,
+                display: displayContent,
+                lines: structuredLines,
                 lineRange: read.selectedLineRange,
                 lineCount: read.lineCount,
                 totalLineCount: read.totalLineCount,
@@ -153,7 +173,7 @@ private extension ReadFileTool {
 
         if input.includeLineNumbers {
             parts.append(
-                "with line numbers"
+                "with line-number display"
             )
         }
 

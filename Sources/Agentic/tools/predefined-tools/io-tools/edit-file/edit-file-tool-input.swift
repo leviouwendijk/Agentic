@@ -81,71 +81,6 @@ public enum EditFileToolOperation: Sendable, Hashable {
             return .delete_lines
         }
     }
-
-    public func standardOperation() throws -> StandardEditOperation {
-        switch self {
-        case .replace_entire_file(let operation):
-            return .replaceEntireFile(
-                with: operation.content
-            )
-
-        case .append(let operation):
-            return .append(
-                operation.content,
-                separator: operation.separator
-            )
-
-        case .prepend(let operation):
-            return .prepend(
-                operation.content,
-                separator: operation.separator
-            )
-
-        case .replace_first(let operation):
-            return .replaceFirst(
-                of: operation.target,
-                with: operation.replacement
-            )
-
-        case .replace_all(let operation):
-            return .replaceAll(
-                of: operation.target,
-                with: operation.replacement
-            )
-
-        case .replace_unique(let operation):
-            return .replaceUnique(
-                of: operation.target,
-                with: operation.replacement
-            )
-
-        case .replace_line(let operation):
-            return StandardEditOperation.line.replace(
-                operation.line,
-                expected: operation.expected,
-                with: operation.content
-            )
-
-        case .insert_lines(let operation):
-            return StandardEditOperation.lines.insert(
-                operation.lines,
-                at: operation.atLine
-            )
-
-        case .replace_lines(let operation):
-            return StandardEditOperation.lines.replace(
-                try operation.range.lineRange(),
-                expected: operation.expectedLines,
-                with: operation.lines
-            )
-
-        case .delete_lines(let operation):
-            return StandardEditOperation.lines.delete(
-                try operation.range.lineRange(),
-                expected: operation.expectedLines
-            )
-        }
-    }
 }
 
 extension EditFileToolOperation {
@@ -258,22 +193,18 @@ public extension EditFileToolOperation {
 
     struct ReplaceLine: Sendable, Codable, Hashable {
         public let line: Int
-        public let expected: String
         public let content: String
 
         public init(
             line: Int,
-            expected: String,
             content: String
         ) {
             self.line = line
-            self.expected = expected
             self.content = content
         }
 
         private enum CodingKeys: String, CodingKey {
             case line
-            case expected
             case content
             case replacement
         }
@@ -289,10 +220,6 @@ public extension EditFileToolOperation {
                 line: try container.decode(
                     Int.self,
                     forKey: .line
-                ),
-                expected: try container.decode(
-                    String.self,
-                    forKey: .expected
                 ),
                 content: try container.decodeIfPresent(
                     String.self,
@@ -316,71 +243,45 @@ public extension EditFileToolOperation {
                 forKey: .line
             )
             try container.encode(
-                expected,
-                forKey: .expected
-            )
-            try container.encode(
                 content,
                 forKey: .content
             )
         }
     }
 
-    // struct ReplaceLine: Sendable, Codable, Hashable {
-    //     public let line: Int
-    //     public let expected: String
-    //     public let content: String
-
-    //     public init(
-    //         line: Int,
-    //         expected: String,
-    //         content: String
-    //     ) {
-    //         self.line = line
-    //         self.expected = expected
-    //         self.content = content
-    //     }
-    // }
-
     struct InsertLines: Sendable, Codable, Hashable {
-        public let atLine: Int
+        public let position: Int
         public let lines: [String]
 
         public init(
-            atLine: Int,
+            position: Int,
             lines: [String]
         ) {
-            self.atLine = atLine
+            self.position = position
             self.lines = lines
         }
     }
 
     struct ReplaceLines: Sendable, Codable, Hashable {
         public let range: EditFileLineRange
-        public let expectedLines: [String]
         public let lines: [String]
 
         public init(
             range: EditFileLineRange,
-            expectedLines: [String],
             lines: [String]
         ) {
             self.range = range
-            self.expectedLines = expectedLines
             self.lines = lines
         }
     }
 
     struct DeleteLines: Sendable, Codable, Hashable {
         public let range: EditFileLineRange
-        public let expectedLines: [String]
 
         public init(
-            range: EditFileLineRange,
-            expectedLines: [String]
+            range: EditFileLineRange
         ) {
             self.range = range
-            self.expectedLines = expectedLines
         }
     }
 }
@@ -393,9 +294,7 @@ private extension EditFileToolOperation {
         case replacement
         case line
         case lines
-        case expected
-        case expectedLines
-        case atLine
+        case position
         case range
         case separator
     }
@@ -561,18 +460,14 @@ extension EditFileToolOperation: Codable {
                 forKey: .line
             )
             try container.encode(
-                operation.expected,
-                forKey: .expected
-            )
-            try container.encode(
                 operation.content,
                 forKey: .content
             )
 
         case .insert_lines(let operation):
             try container.encode(
-                operation.atLine,
-                forKey: .atLine
+                operation.position,
+                forKey: .position
             )
             try container.encode(
                 operation.lines,
@@ -585,10 +480,6 @@ extension EditFileToolOperation: Codable {
                 forKey: .range
             )
             try container.encode(
-                operation.expectedLines,
-                forKey: .expectedLines
-            )
-            try container.encode(
                 operation.lines,
                 forKey: .lines
             )
@@ -597,10 +488,6 @@ extension EditFileToolOperation: Codable {
             try container.encode(
                 operation.range,
                 forKey: .range
-            )
-            try container.encode(
-                operation.expectedLines,
-                forKey: .expectedLines
             )
         }
     }
@@ -683,10 +570,11 @@ public extension EditFileToolOperation {
             replace_first requires target and replacement.
             replace_all requires target and replacement.
             replace_unique requires target and replacement.
-            replace_line requires line, expected, and content.
-            insert_lines requires atLine and lines.
-            replace_lines requires range, expectedLines, and lines.
-            delete_lines requires range and expectedLines.
+            replace_line requires line and content.
+            insert_lines requires position and lines.
+            replace_lines requires range and lines.
+            delete_lines requires range.
+            The runtime derives all exact guard content from the current raw file state.
             """
         ) {
             JSONSchema.string(
@@ -697,7 +585,7 @@ public extension EditFileToolOperation {
             )
             JSONSchema.string(
                 "content",
-                description: "Content for replace_entire_file, append, prepend, or replace_line. For replace_line, this is the replacement line content. Must be a single logical line for replace_line."
+                description: "Content for replace_entire_file, append, prepend, or replace_line. For replace_line, this is the replacement line content and must be one logical line."
             )
             JSONSchema.string(
                 "target",
@@ -711,23 +599,14 @@ public extension EditFileToolOperation {
                 "line",
                 description: "1-based line number for replace_line."
             )
-            JSONSchema.string(
-                "expected",
-                description: "Exact existing line content required for replace_line. Must match the current file line before the edit is applied."
-            )
             JSONSchema.array(
                 "lines",
-                description: "Lines for insert_lines, or replacement lines for replace_lines.",
-                items: JSONSchema.Value.string()
-            )
-            JSONSchema.array(
-                "expectedLines",
-                description: "Exact existing line contents required for replace_lines or delete_lines. Must match the current file range before the edit is applied.",
+                description: "Lines for insert_lines, or replacement lines for replace_lines. Each entry must be one logical line with no newline characters.",
                 items: JSONSchema.Value.string()
             )
             JSONSchema.integer(
-                "atLine",
-                description: "1-based insertion line for insert_lines."
+                "position",
+                description: "1-based insertion position for insert_lines."
             )
             JSONSchema.Property(
                 name: "range",
@@ -756,7 +635,7 @@ public extension EditFileToolInput {
             JSONSchema.array(
                 "operations",
                 required: true,
-                description: "Ordered edit operations to apply.",
+                description: "Ordered edit intent operations to apply. Guard material is derived by the runtime, not supplied by the model.",
                 items: EditFileToolOperation.schema
             )
         }
