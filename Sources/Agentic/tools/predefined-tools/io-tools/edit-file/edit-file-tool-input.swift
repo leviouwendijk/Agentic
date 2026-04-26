@@ -42,6 +42,8 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
     public let replacement: String?
     public let line: Int?
     public let lines: [String]?
+    public let expected: String?
+    public let expectedLines: [String]?
     public let atLine: Int?
     public let range: EditFileLineRange?
     public let separator: String?
@@ -53,6 +55,8 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
         replacement: String? = nil,
         line: Int? = nil,
         lines: [String]? = nil,
+        expected: String? = nil,
+        expectedLines: [String]? = nil,
         atLine: Int? = nil,
         range: EditFileLineRange? = nil,
         separator: String? = nil
@@ -63,6 +67,8 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
         self.replacement = replacement
         self.line = line
         self.lines = lines
+        self.expected = expected
+        self.expectedLines = expectedLines
         self.atLine = atLine
         self.range = range
         self.separator = separator
@@ -176,6 +182,13 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
+            guard let expected else {
+                throw PredefinedFileToolError.missingField(
+                    tool: "edit_file",
+                    field: "expected"
+                )
+            }
+
             guard let content else {
                 throw PredefinedFileToolError.missingField(
                     tool: "edit_file",
@@ -183,8 +196,9 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
-            return .replaceLine(
+            return StandardEditOperation.line.replace(
                 line,
+                expected: expected,
                 with: content
             )
 
@@ -203,9 +217,9 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
-            return .insertLines(
+            return StandardEditOperation.lines.insert(
                 lines,
-                atLine: atLine
+                at: atLine
             )
 
         case .replaceLines:
@@ -216,6 +230,13 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
+            guard let expectedLines else {
+                throw PredefinedFileToolError.missingField(
+                    tool: "edit_file",
+                    field: "expectedLines"
+                )
+            }
+
             guard let range else {
                 throw PredefinedFileToolError.missingField(
                     tool: "edit_file",
@@ -223,12 +244,20 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
-            return .replaceLines(
+            return StandardEditOperation.lines.replace(
                 try range.lineRange(),
+                expected: expectedLines,
                 with: lines
             )
 
         case .deleteLines:
+            guard let expectedLines else {
+                throw PredefinedFileToolError.missingField(
+                    tool: "edit_file",
+                    field: "expectedLines"
+                )
+            }
+
             guard let range else {
                 throw PredefinedFileToolError.missingField(
                     tool: "edit_file",
@@ -236,8 +265,9 @@ public struct EditFileToolOperation: Sendable, Codable, Hashable {
                 )
             }
 
-            return .deleteLines(
-                try range.lineRange()
+            return StandardEditOperation.lines.delete(
+                try range.lineRange(),
+                expected: expectedLines
             )
         }
     }
