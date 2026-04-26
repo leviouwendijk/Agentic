@@ -238,7 +238,77 @@ public extension EditFileToolOperation {
             self.expected = expected
             self.content = content
         }
+
+        private enum CodingKeys: String, CodingKey {
+            case line
+            case expected
+            case content
+            case replacement
+        }
+
+        public init(
+            from decoder: any Decoder
+        ) throws {
+            let container = try decoder.container(
+                keyedBy: CodingKeys.self
+            )
+
+            self.init(
+                line: try container.decode(
+                    Int.self,
+                    forKey: .line
+                ),
+                expected: try container.decode(
+                    String.self,
+                    forKey: .expected
+                ),
+                content: try container.decodeIfPresent(
+                    String.self,
+                    forKey: .content
+                ) ?? container.decode(
+                    String.self,
+                    forKey: .replacement
+                )
+            )
+        }
+
+        public func encode(
+            to encoder: any Encoder
+        ) throws {
+            var container = encoder.container(
+                keyedBy: CodingKeys.self
+            )
+
+            try container.encode(
+                line,
+                forKey: .line
+            )
+            try container.encode(
+                expected,
+                forKey: .expected
+            )
+            try container.encode(
+                content,
+                forKey: .content
+            )
+        }
     }
+
+    // struct ReplaceLine: Sendable, Codable, Hashable {
+    //     public let line: Int
+    //     public let expected: String
+    //     public let content: String
+
+    //     public init(
+    //         line: Int,
+    //         expected: String,
+    //         content: String
+    //     ) {
+    //         self.line = line
+    //         self.expected = expected
+    //         self.content = content
+    //     }
+    // }
 
     struct InsertLines: Sendable, Codable, Hashable {
         public let atLine: Int
@@ -595,7 +665,7 @@ public extension EditFileToolOperation {
             )
             JSONSchema.string(
                 "content",
-                description: "Content for replace_entire_file, append, prepend, or replace_line. For replace_line, this is the replacement line content."
+                description: "Content for replace_entire_file, append, prepend, or replace_line. For replace_line, this is the replacement line content. Must be a single logical line for replace_line."
             )
             JSONSchema.string(
                 "target",
@@ -603,7 +673,7 @@ public extension EditFileToolOperation {
             )
             JSONSchema.string(
                 "replacement",
-                description: "Replacement text for replace_first, replace_all, or replace_unique."
+                description: "Replacement text for replace_first, replace_all, or replace_unique. replace_line also accepts this as a compatibility alias, but content is preferred."
             )
             JSONSchema.integer(
                 "line",
