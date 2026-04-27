@@ -99,16 +99,20 @@ public extension AgentToolReference {
 extension ListFileMutationsTool: StaticAgentToolMetadata {}
 extension InspectFileMutationTool: StaticAgentToolMetadata {}
 
-extension EditFileTool {
-    public static var inputSchema: JSONValue? {
-        EditFileToolInput.schema
-    }
-}
+// extension EditFileTool {
+//     public static var inputSchema: JSONValue? {
+//         EditFileToolInput.schema
+//     }
+// }
 
-extension ReadFileTool {
-    public static var inputSchema: JSONValue? {
-        ReadFileToolInput.schema
-    }
-}
+// extension ReadFileTool {
+//     public static var inputSchema: JSONValue? {
+//         ReadFileToolInput.schema
+//     }
+// }
 
-// extension MutateFilesTool: StaticAgentToolMetadata {}
+// extension MutateFilesTool: StaticAgentToolMetadata {
+//     public static var inputSchema: JSONValue? {
+//         MutateFilesToolInput.schema
+//     }
+// }

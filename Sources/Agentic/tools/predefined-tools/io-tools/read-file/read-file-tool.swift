@@ -7,6 +7,10 @@ public struct ReadFileTool: AgentTool {
 
     public init() {}
 
+    public static var inputSchema: JSONValue? {
+        ReadFileToolInput.schema
+    }
+
     public func preflight(
         input: JSONValue,
         workspace: AgentWorkspace?

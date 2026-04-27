@@ -204,11 +204,10 @@ public struct MutateFilesToolOutput: Sendable, Codable, Hashable {
     }
 }
 
-public struct MutateFilesTool: AgentTool {
-    public let identifier: AgentToolIdentifier = .mutate_files
-    public let description = "Apply one coherent pass of file mutations in the workspace."
-    public let inputSchema: JSONValue? = MutateFilesToolInput.schema
-    public let risk: ActionRisk = .boundedmutate
+public struct MutateFilesTool: AgentTool, StaticAgentToolMetadata {
+    public static let identifier: AgentToolIdentifier = .mutate_files
+    public static let description = "Apply one coherent pass of file mutations in the workspace."
+    public static let risk: ActionRisk = .boundedmutate
 
     public let context: AgentFileMutationContext
 
@@ -595,7 +594,7 @@ private extension MutateFilesTool {
             return .init(
                 toolContext: toolContext,
                 additionalMetadata: [
-                    "toolName": identifier.rawValue,
+                    "toolName": Self.identifier.rawValue,
                     "intent_action": "mutate",
                     "intent_action_type": "file_mutation_pass"
                 ]
@@ -618,7 +617,7 @@ private extension MutateFilesTool {
             old
         }
 
-        mutationContext.metadata["toolName"] = identifier.rawValue
+        mutationContext.metadata["toolName"] = Self.identifier.rawValue
         mutationContext.metadata["intent_action"] = "mutate"
         mutationContext.metadata["intent_action_type"] = "file_mutation_pass"
         mutationContext.metadata["execution_mode"] = toolContext.executionMode.rawValue

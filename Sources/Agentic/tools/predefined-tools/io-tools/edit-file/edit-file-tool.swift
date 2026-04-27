@@ -24,6 +24,10 @@ public struct EditFileTool: AgentTool {
         self.policy = policy
     }
 
+    public static var inputSchema: JSONValue? {
+        EditFileToolInput.schema
+    }
+
     public func preflight(
         input: JSONValue,
         workspace: AgentWorkspace?
