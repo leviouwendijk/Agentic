@@ -18,6 +18,7 @@ public struct CoreFileToolSet: AgentToolSet {
             EditFileTool(
                 recorder: fileMutationRecorder
             )
+            MutateFilesTool()
             ScanPathsTool()
         }
     }

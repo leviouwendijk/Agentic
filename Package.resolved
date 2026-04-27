@@ -115,7 +115,7 @@
       "location" : "https://github.com/leviouwendijk/Path.git",
       "state" : {
         "branch" : "master",
-        "revision" : "6bc4b37b70944d2607b54c0c479ba607c1c4dcf3"
+        "revision" : "8693f15d32ed07a62eb1a8ff800a1e89b3a72199"
       }
     },
     {
@@ -241,7 +241,7 @@
       "location" : "https://github.com/leviouwendijk/Writers.git",
       "state" : {
         "branch" : "master",
-        "revision" : "238cfd80083c449d7a6e58a9e061f9fc36930c12"
+        "revision" : "91c2ec20120c5538ecf4690549a2e732523517a1"
       }
     }
   ],

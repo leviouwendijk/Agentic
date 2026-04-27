@@ -110,3 +110,5 @@ extension ReadFileTool {
         ReadFileToolInput.schema
     }
 }
+
+// extension MutateFilesTool: StaticAgentToolMetadata {}

@@ -9,7 +9,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             fileRegistry.count,
-            4,
+            5,
             "core file tool set count"
         )
 
@@ -32,6 +32,13 @@ extension AgenticFlowTesting {
                 named: "edit_file"
             ),
             "core file tool set edit_file"
+        )
+
+        _ = try Expect.notNil(
+            fileRegistry.tool(
+                named: "mutate_files"
+            ),
+            "core file tool set mutate_files"
         )
 
         _ = try Expect.notNil(
@@ -104,7 +111,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             coreRegistry.count,
-            8,
+            9,
             "core tool set count"
         )
 
