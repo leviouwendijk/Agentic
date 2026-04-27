@@ -134,7 +134,7 @@ public struct EditFileTool: AgentTool {
             operations: plan.operations
         )
 
-        let preview = try editor.previewEdit(
+        _ = try editor.previewEdit(
             plan.operations,
             at: plan.authorized.scopedPath,
             mode: plan.editMode,
@@ -193,13 +193,7 @@ public struct EditFileTool: AgentTool {
                 rootID: plan.authorized.rootID.rawValue,
                 path: plan.authorized.presentationPath,
                 operationCount: plan.operationCount,
-                changeCount: preview.changeCount,
-                diffSummary: .init(
-                    insertedLineCount: edit.result.insertions,
-                    deletedLineCount: edit.result.deletions
-                ),
-                originalChangedLineRanges: preview.originalChangedLineRanges,
-                editedChangedLineRanges: preview.editedChangedLineRanges,
+                result: edit.result,
                 mutation: edit.mutation
             )
         )

@@ -873,6 +873,21 @@ extension AgenticFlowTesting {
             "edit_file output includes mutation summary"
         )
 
+        let diffArtifactID = try Expect.notNil(
+            output.appliedDiffArtifactID,
+            "edit_file output includes applied diff artifact id"
+        )
+
+        let appliedDiff = try Expect.notNil(
+            output.appliedDiff,
+            "edit_file output includes applied diff"
+        )
+
+        let editedSlice = try Expect.notNil(
+            output.editedChangedSlices.first,
+            "edit_file output includes edited changed slice"
+        )
+
         try Expect.equal(
             try env.read("tool-edit.txt"),
             "alpha\nBETA\ngamma\n",
@@ -886,6 +901,47 @@ extension AgenticFlowTesting {
         )
 
         try Expect.equal(
+            output.changeCount,
+            2,
+            "edit_file output reports actual changed line count"
+        )
+
+        try Expect.false(
+            output.appliedDiffTruncated,
+            "small edit_file applied diff is not truncated"
+        )
+
+        try Expect.equal(
+            output.appliedDiffArtifactID,
+            mutation.artifactIDs.first,
+            "edit_file output surfaces first recorded diff artifact id"
+        )
+
+        try Expect.notNil(
+            output.originalFingerprint,
+            "edit_file output includes original fingerprint"
+        )
+
+        try Expect.notNil(
+            output.editedFingerprint,
+            "edit_file output includes edited fingerprint"
+        )
+
+        try Expect.contains(
+            appliedDiff,
+            "BETA",
+            "edit_file applied diff includes replacement text"
+        )
+
+        try Expect.contains(
+            editedSlice.lines.joined(
+                separator: "\n"
+            ),
+            "BETA",
+            "edit_file edited changed slice includes replacement text"
+        )
+
+        try Expect.equal(
             try await env.store.list(.all).count,
             1,
             "edit_file with recorder stores one mutation"
@@ -894,7 +950,8 @@ extension AgenticFlowTesting {
         return mutationDiagnostics(
             [
                 ("target", output.path),
-                ("writerRecordID", mutation.writerRecordID.uuidString)
+                ("writerRecordID", mutation.writerRecordID.uuidString),
+                ("diffArtifactID", diffArtifactID)
             ]
         )
     }
