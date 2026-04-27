@@ -12,13 +12,16 @@ public struct EditFileTool: AgentTool {
 
     public let recorder: AgentFileMutationRecorder?
     public let context: AgentFileMutationContext
+    public let policy: EditFilePolicy
 
     public init(
         recorder: AgentFileMutationRecorder? = nil,
-        context: AgentFileMutationContext = .empty
+        context: AgentFileMutationContext = .empty,
+        policy: EditFilePolicy = .unrestricted
     ) {
         self.recorder = recorder
         self.context = context
+        self.policy = policy
     }
 
     public func preflight(
@@ -48,10 +51,17 @@ public struct EditFileTool: AgentTool {
             workspace: workspace
         )
 
+        let constraint = try policy.constraint(
+            for: decoded,
+            authorized: plan.authorized,
+            operations: plan.operations
+        )
+
         let preview = try editor.previewEdit(
             plan.operations,
             at: plan.authorized.scopedPath,
-            mode: plan.editMode
+            mode: plan.editMode,
+            constraint: constraint
         )
 
         let diffPreview = makeDiffPreview(
@@ -84,6 +94,7 @@ public struct EditFileTool: AgentTool {
                 "edit_intent_decoded",
                 "runtime_guards_resolved",
                 "snapshot_fingerprint_captured",
+                "edit_policy_constraint_validated",
                 "difference_preview_generated"
             ],
             diffPreview: diffPreview
@@ -117,10 +128,17 @@ public struct EditFileTool: AgentTool {
 
         try plan.requireCurrentSnapshot()
 
+        let constraint = try policy.constraint(
+            for: decoded,
+            authorized: plan.authorized,
+            operations: plan.operations
+        )
+
         let preview = try editor.previewEdit(
             plan.operations,
             at: plan.authorized.scopedPath,
-            mode: plan.editMode
+            mode: plan.editMode,
+            constraint: constraint
         )
 
         try plan.requireCurrentSnapshot()
@@ -141,6 +159,7 @@ public struct EditFileTool: AgentTool {
             let recorded = try await editor.editRecorded(
                 plan.operations,
                 at: plan.authorized.scopedPath,
+                constraint: constraint,
                 recorder: recorder,
                 options: .init(
                     mode: plan.editMode,
@@ -162,7 +181,8 @@ public struct EditFileTool: AgentTool {
                 try editor.edit(
                     plan.operations,
                     at: plan.authorized.scopedPath,
-                    mode: plan.editMode
+                    mode: plan.editMode,
+                    constraint: constraint
                 ),
                 nil
             )
@@ -209,7 +229,8 @@ public struct EditFileTool: AgentTool {
             context: mergedMutationContext(
                 toolContext: context,
                 action: "edit"
-            )
+            ),
+            policy: policy
         )
 
         return try await tool.call(
