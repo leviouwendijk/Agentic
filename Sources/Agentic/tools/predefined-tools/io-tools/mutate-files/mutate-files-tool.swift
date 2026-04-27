@@ -207,6 +207,7 @@ public struct MutateFilesToolOutput: Sendable, Codable, Hashable {
 public struct MutateFilesTool: AgentTool {
     public let identifier: AgentToolIdentifier = .mutate_files
     public let description = "Apply one coherent pass of file mutations in the workspace."
+    public let inputSchema: JSONValue? = MutateFilesToolInput.schema
     public let risk: ActionRisk = .boundedmutate
 
     public let context: AgentFileMutationContext
