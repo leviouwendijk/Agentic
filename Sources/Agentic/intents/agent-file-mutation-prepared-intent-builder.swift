@@ -119,31 +119,54 @@ private extension FileMutationIntentBuilder {
     func reviewMetadata(
         for preflight: AgentFileMutationPreflight
     ) -> [String: String] {
-        [
-            "action": preflight.action.rawValue,
-            "actionType": preflight.action.actionType,
-            "toolName": preflight.action.toolName,
-            "rootID": preflight.rootID.rawValue,
+        var metadata = [
+            "kind": "file_mutation_prepared_intent",
+            "root_id": preflight.rootID.rawValue,
             "path": preflight.path,
-            "targetPath": preflight.targetPath,
-            "backupPolicy": preflight.backupPolicy.rawValue,
-            "payloadPolicy": preflight.payloadPolicy.rawValue,
-            "willRecordSessionMutation": String(preflight.willRecordSessionMutation),
-            "willStoreBackupPayload": String(preflight.willStoreBackupPayload),
-            "willEmitDiffArtifact": String(preflight.willEmitDiffArtifact)
+            "target_path": preflight.targetPath,
+            "backup_policy": preflight.backupPolicy.rawValue,
+            "payload_policy": preflight.payloadPolicy.rawValue,
+            "will_record_session_mutation": String(
+                preflight.willRecordSessionMutation
+            ),
+            "will_store_backup_payload": String(
+                preflight.willStoreBackupPayload
+            ),
+            "will_emit_diff_artifact": String(
+                preflight.willEmitDiffArtifact
+            )
         ]
+
+        if let approval = preflight.approval {
+            metadata.merge(
+                approval.metadata
+            ) { _, newValue in
+                newValue
+            }
+        }
+
+        return metadata
     }
 
     func draftMetadata(
         for preflight: AgentFileMutationPreflight
     ) -> [String: String] {
-        [
-            "kind": "file_mutation",
-            "action": preflight.action.rawValue,
-            "actionType": preflight.action.actionType,
-            "rootID": preflight.rootID.rawValue,
+        var metadata = [
+            "kind": "file_mutation_prepared_intent",
+            "root_id": preflight.rootID.rawValue,
             "path": preflight.path,
-            "targetPath": preflight.targetPath
+            "target_path": preflight.targetPath,
+            "action": preflight.action.rawValue
         ]
+
+        if let approval = preflight.approval {
+            metadata.merge(
+                approval.metadata
+            ) { _, newValue in
+                newValue
+            }
+        }
+
+        return metadata
     }
 }

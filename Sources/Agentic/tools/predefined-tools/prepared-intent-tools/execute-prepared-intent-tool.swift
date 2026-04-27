@@ -5,6 +5,7 @@ public enum ExecutePreparedIntentToolError: Error, Sendable, LocalizedError {
     case missingExecutionToolName(PreparedIntentIdentifier)
     case missingExactInputs(PreparedIntentIdentifier)
     case recursiveReplay(PreparedIntentIdentifier)
+    case workspaceRequiredForFileMutation(PreparedIntentIdentifier)
 
     public var errorDescription: String? {
         switch self {
@@ -16,6 +17,9 @@ public enum ExecutePreparedIntentToolError: Error, Sendable, LocalizedError {
 
         case .recursiveReplay(let id):
             return "Prepared intent '\(id.rawValue)' cannot replay through execute_prepared_intent."
+
+        case .workspaceRequiredForFileMutation(let id):
+            return "Prepared file mutation intent '\(id.rawValue)' requires a workspace for approval-time drift checks."
         }
     }
 }
@@ -125,6 +129,13 @@ public struct ExecutePreparedIntentTool: AgentTool {
             let exactInputs = try exactInputs(
                 for: executableIntent
             )
+
+            try requirePreparedFileMutationApproval(
+                executableIntent,
+                toolName: toolName,
+                workspace: workspace
+            )
+
             let metadata = executionMetadata(
                 for: executableIntent,
                 toolName: toolName
@@ -194,6 +205,38 @@ public struct ExecutePreparedIntentTool: AgentTool {
 }
 
 private extension ExecutePreparedIntentTool {
+    func requirePreparedFileMutationApproval(
+        _ intent: PreparedIntent,
+        toolName: String,
+        workspace: AgentWorkspace?
+    ) throws {
+        guard let action = FileMutationIntentAction(
+            actionType: intent.actionType
+        ) else {
+            return
+        }
+
+        guard action != .rollback else {
+            return
+        }
+
+        guard let workspace else {
+            throw ExecutePreparedIntentToolError.workspaceRequiredForFileMutation(
+                intent.id
+            )
+        }
+
+        let approval = try AgentFileMutationApproval.approval(
+            for: intent,
+            action: action
+        )
+
+        try approval?.requireCurrentFile(
+            in: workspace,
+            toolName: toolName
+        )
+    }
+
     func executionToolName(
         for intent: PreparedIntent
     ) throws -> String {

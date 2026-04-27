@@ -4,6 +4,250 @@ import Primitives
 import TestFlows
 
 extension AgenticFlowTesting {
+    static func runExecutePreparedIntentRejectsStaleFileMutationWrite() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_intent_rejects_stale_file_mutation_write
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "old\n",
+            to: "stale-write.txt"
+        )
+
+        let preflight = try await AgentFileMutationPreflight.write(
+            .init(
+                path: "stale-write.txt",
+                content: "new\n"
+            ),
+            workspace: env.workspace,
+            recorder: env.recorder
+        )
+
+        let intent = try await FileMutationIntentBuilder(
+            sessionID: env.sessionID
+        ).create(
+            preflight,
+            using: env.intentManager
+        )
+
+        _ = try await env.intentManager.review(
+            id: intent.id,
+            decision: .approve
+        )
+
+        try env.write(
+            "drifted\n",
+            to: "stale-write.txt"
+        )
+
+        do {
+            _ = try await executePreparedIntentThroughRegistry(
+                intent,
+                manager: env.intentManager,
+                workspace: env.workspace,
+                recorder: env.recorder,
+                store: env.store,
+                sessionID: env.sessionID
+            )
+
+            throw FlowTestError.unexpectedResult(
+                "stale prepared write unexpectedly executed"
+            )
+        } catch AgentFileMutationApprovalError.stale_file(let path, _, _) {
+            try Expect.contains(
+                path,
+                "stale-write.txt",
+                "stale write error names target file"
+            )
+
+            try Expect.equal(
+                try env.read("stale-write.txt"),
+                "drifted\n",
+                "stale prepared write does not mutate drifted target"
+            )
+
+            let mutations = try await env.store.list(
+                .all
+            )
+
+            try Expect.equal(
+                mutations.count,
+                0,
+                "stale prepared write records no file mutation"
+            )
+
+            let persisted = try await env.intentManager.get(
+                intent.id
+            )
+
+            try Expect.equal(
+                persisted.status,
+                .execution_failed,
+                "stale prepared write marks intent execution failed"
+            )
+
+            let executionRecord = try Expect.notNil(
+                persisted.executionRecord,
+                "stale prepared write stores execution record"
+            )
+
+            try Expect.equal(
+                executionRecord.status,
+                .failed,
+                "stale prepared write execution record failed"
+            )
+
+            try Expect.equal(
+                executionRecord.executionToolName,
+                WriteFileTool.identifier.rawValue,
+                "stale prepared write records execution tool name"
+            )
+
+            try Expect.contains(
+                executionRecord.errorMessage ?? "",
+                "stale_file",
+                "stale prepared write records stale file error"
+            )
+
+            return mutationPreflightDiagnostics(
+                [
+                    ("intent", persisted.id.rawValue),
+                    ("status", persisted.status.rawValue),
+                    ("error", "stale_file"),
+                    ("mutations", "\(mutations.count)")
+                ]
+            )
+        }
+    }
+
+    static func runExecutePreparedIntentRejectsStaleFileMutationEdit() async throws -> [TestFlowDiagnostic] {
+        let env = try MutationPreflightFlowWorkspace.make(
+            AgenticFlowSuite.ID.execute_prepared_intent_rejects_stale_file_mutation_edit
+        )
+        defer {
+            env.remove()
+        }
+
+        try env.write(
+            "alpha\nbeta\n",
+            to: "stale-edit.txt"
+        )
+
+        let preflight = try await AgentFileMutationPreflight.edit(
+            .init(
+                path: "stale-edit.txt",
+                operations: [
+                    .replace_first(
+                        .init(
+                            target: "beta",
+                            replacement: "gamma"
+                        )
+                    )
+                ]
+            ),
+            workspace: env.workspace,
+            recorder: env.recorder
+        )
+
+        let intent = try await FileMutationIntentBuilder(
+            sessionID: env.sessionID
+        ).create(
+            preflight,
+            using: env.intentManager
+        )
+
+        _ = try await env.intentManager.review(
+            id: intent.id,
+            decision: .approve
+        )
+
+        try env.write(
+            "alpha\ndrifted\n",
+            to: "stale-edit.txt"
+        )
+
+        do {
+            _ = try await executePreparedIntentThroughRegistry(
+                intent,
+                manager: env.intentManager,
+                workspace: env.workspace,
+                recorder: env.recorder,
+                store: env.store,
+                sessionID: env.sessionID
+            )
+
+            throw FlowTestError.unexpectedResult(
+                "stale prepared edit unexpectedly executed"
+            )
+        } catch AgentFileMutationApprovalError.stale_file(let path, _, _) {
+            try Expect.contains(
+                path,
+                "stale-edit.txt",
+                "stale edit error names target file"
+            )
+
+            try Expect.equal(
+                try env.read("stale-edit.txt"),
+                "alpha\ndrifted\n",
+                "stale prepared edit does not mutate drifted target"
+            )
+
+            let mutations = try await env.store.list(
+                .all
+            )
+
+            try Expect.equal(
+                mutations.count,
+                0,
+                "stale prepared edit records no file mutation"
+            )
+
+            let persisted = try await env.intentManager.get(
+                intent.id
+            )
+
+            try Expect.equal(
+                persisted.status,
+                .execution_failed,
+                "stale prepared edit marks intent execution failed"
+            )
+
+            let executionRecord = try Expect.notNil(
+                persisted.executionRecord,
+                "stale prepared edit stores execution record"
+            )
+
+            try Expect.equal(
+                executionRecord.status,
+                .failed,
+                "stale prepared edit execution record failed"
+            )
+
+            try Expect.equal(
+                executionRecord.executionToolName,
+                EditFileTool.identifier.rawValue,
+                "stale prepared edit records execution tool name"
+            )
+
+            try Expect.contains(
+                executionRecord.errorMessage ?? "",
+                "stale_file",
+                "stale prepared edit records stale file error"
+            )
+
+            return mutationPreflightDiagnostics(
+                [
+                    ("intent", persisted.id.rawValue),
+                    ("status", persisted.status.rawValue),
+                    ("error", "stale_file"),
+                    ("mutations", "\(mutations.count)")
+                ]
+            )
+        }
+    }
     static func runExecutePreparedIntentReplaysFileMutationWrite() async throws -> [TestFlowDiagnostic] {
         let env = try MutationPreflightFlowWorkspace.make(
             AgenticFlowSuite.ID.execute_prepared_intent_replays_file_mutation_write

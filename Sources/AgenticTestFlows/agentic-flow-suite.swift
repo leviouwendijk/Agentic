@@ -165,54 +165,54 @@ enum AgenticFlowSuite: TestFlowRegistry {
             try await AgenticFlowTesting.runPreparedFileMutationEdit()
         },
 
-        TestFlow(
-            ID.core_tool_set_builder_registration,
-            tags: ["agentic", "dsl", "registry", "core-tools"]
-        ) {
-            try await AgenticFlowTesting.runCoreToolSetBuilderRegistration()
-        },
+        // TestFlow(
+        //     ID.core_tool_set_builder_registration,
+        //     tags: ["agentic", "dsl", "registry", "core-tools"]
+        // ) {
+        //     try await AgenticFlowTesting.runCoreToolSetBuilderRegistration()
+        // },
 
-        TestFlow(
-            ID.tool_registry_executes_with_context,
-            tags: ["agentic", "tool-registry", "context"]
-        ) {
-            try await AgenticFlowTesting.runToolRegistryExecutesWithContext()
-        },
+        // TestFlow(
+        //     ID.tool_registry_executes_with_context,
+        //     tags: ["agentic", "tool-registry", "context"]
+        // ) {
+        //     try await AgenticFlowTesting.runToolRegistryExecutesWithContext()
+        // },
 
-        TestFlow(
-            ID.file_mutation_preflight_write,
-            tags: ["agentic", "mutation", "preflight", "write"]
-        ) {
-            try await AgenticFlowTesting.runFileMutationPreflightWrite()
-        },
+        // TestFlow(
+        //     ID.file_mutation_preflight_write,
+        //     tags: ["agentic", "mutation", "preflight", "write"]
+        // ) {
+        //     try await AgenticFlowTesting.runFileMutationPreflightWrite()
+        // },
 
-        TestFlow(
-            ID.file_mutation_preflight_edit,
-            tags: ["agentic", "mutation", "preflight", "edit"]
-        ) {
-            try await AgenticFlowTesting.runFileMutationPreflightEdit()
-        },
+        // TestFlow(
+        //     ID.file_mutation_preflight_edit,
+        //     tags: ["agentic", "mutation", "preflight", "edit"]
+        // ) {
+        //     try await AgenticFlowTesting.runFileMutationPreflightEdit()
+        // },
 
-        TestFlow(
-            ID.file_mutation_preflight_no_side_effects,
-            tags: ["agentic", "mutation", "preflight", "side-effects"]
-        ) {
-            try await AgenticFlowTesting.runFileMutationPreflightNoSideEffects()
-        },
+        // TestFlow(
+        //     ID.file_mutation_preflight_no_side_effects,
+        //     tags: ["agentic", "mutation", "preflight", "side-effects"]
+        // ) {
+        //     try await AgenticFlowTesting.runFileMutationPreflightNoSideEffects()
+        // },
 
-        TestFlow(
-            ID.prepared_file_mutation_write,
-            tags: ["agentic", "mutation", "prepared-intent", "write"]
-        ) {
-            try await AgenticFlowTesting.runPreparedFileMutationWrite()
-        },
+        // TestFlow(
+        //     ID.prepared_file_mutation_write,
+        //     tags: ["agentic", "mutation", "prepared-intent", "write"]
+        // ) {
+        //     try await AgenticFlowTesting.runPreparedFileMutationWrite()
+        // },
 
-        TestFlow(
-            ID.prepared_file_mutation_edit,
-            tags: ["agentic", "mutation", "prepared-intent", "edit"]
-        ) {
-            try await AgenticFlowTesting.runPreparedFileMutationEdit()
-        },
+        // TestFlow(
+        //     ID.prepared_file_mutation_edit,
+        //     tags: ["agentic", "mutation", "prepared-intent", "edit"]
+        // ) {
+        //     try await AgenticFlowTesting.runPreparedFileMutationEdit()
+        // },
 
         TestFlow(
             ID.execute_prepared_intent_replays_file_mutation_write,
@@ -311,6 +311,20 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runExecutePreparedIntentRollbackRecordsMutation()
         },
+
+        TestFlow(
+            ID.execute_prepared_intent_rejects_stale_file_mutation_write,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "drift", "write"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentRejectsStaleFileMutationWrite()
+        },
+
+        TestFlow(
+            ID.execute_prepared_intent_rejects_stale_file_mutation_edit,
+            tags: ["agentic", "mutation", "prepared-intent", "execute", "drift", "edit"]
+        ) {
+            try await AgenticFlowTesting.runExecutePreparedIntentRejectsStaleFileMutationEdit()
+        },
     ]
 
     enum ID {
@@ -357,7 +371,11 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let file_mutation_rollback_preflight = "file-mutation-rollback-preflight"
         static let file_mutation_rollback_preflight_rejects_missing_id = "file-mutation-rollback-preflight-rejects-missing-id"
         static let prepared_file_mutation_rollback = "prepared-file-mutation-rollback"
+
         static let execute_prepared_intent_replays_file_mutation_rollback = "execute-prepared-intent-replays-file-mutation-rollback"
         static let execute_prepared_intent_rollback_records_mutation = "execute-prepared-intent-rollback-records-mutation"
+
+        static let execute_prepared_intent_rejects_stale_file_mutation_write = "execute-prepared-intent-rejects-stale-file-mutation-write"
+        static let execute_prepared_intent_rejects_stale_file_mutation_edit = "execute-prepared-intent-rejects-stale-file-mutation-edit"
     }
 }

@@ -78,6 +78,16 @@ public struct FileMutationIntentExecutor: Sendable {
         }
 
         do {
+            let approval = try AgentFileMutationApproval.approval(
+                for: intent,
+                action: action
+            )
+
+            try approval?.requireCurrentFile(
+                in: workspace,
+                toolName: action.toolName
+            )
+
             let result = try await execute(
                 action,
                 intentID: intent.id,

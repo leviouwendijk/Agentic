@@ -76,6 +76,8 @@ public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
     public let policyChecks: [String]
     public let warnings: [String]
     public let exactReplayInput: JSONValue
+    public let originalFingerprint: StandardContentFingerprint?
+    public let editedFingerprint: StandardContentFingerprint?
     public let toolPreflight: ToolPreflight
 
     public init(
@@ -97,6 +99,8 @@ public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
         policyChecks: [String],
         warnings: [String],
         exactReplayInput: JSONValue,
+        originalFingerprint: StandardContentFingerprint? = nil,
+        editedFingerprint: StandardContentFingerprint? = nil,
         toolPreflight: ToolPreflight
     ) {
         self.action = action
@@ -125,6 +129,8 @@ public struct AgentFileMutationPreflight: Sendable, Codable, Hashable {
         self.policyChecks = policyChecks
         self.warnings = warnings
         self.exactReplayInput = exactReplayInput
+        self.originalFingerprint = originalFingerprint
+        self.editedFingerprint = editedFingerprint
         self.toolPreflight = toolPreflight
     }
 }
@@ -145,6 +151,10 @@ public extension AgentFileMutationPreflight {
             input: exactInput,
             workspace: workspace
         )
+        let preview = try Self.preview(
+            input,
+            workspace: workspace
+        )
 
         return Self(
             action: .write,
@@ -152,7 +162,8 @@ public extension AgentFileMutationPreflight {
             path: input.path,
             exactInput: exactInput,
             toolPreflight: toolPreflight,
-            recorder: recorder
+            recorder: recorder,
+            preview: preview
         )
     }
 
@@ -171,6 +182,10 @@ public extension AgentFileMutationPreflight {
             input: exactInput,
             workspace: workspace
         )
+        let preview = try Self.preview(
+            input,
+            workspace: workspace
+        )
 
         return Self(
             action: .edit,
@@ -178,7 +193,23 @@ public extension AgentFileMutationPreflight {
             path: input.path,
             exactInput: exactInput,
             toolPreflight: toolPreflight,
-            recorder: recorder
+            recorder: recorder,
+            preview: preview
+        )
+    }
+
+    var approval: AgentFileMutationApproval? {
+        guard let originalFingerprint else {
+            return nil
+        }
+
+        return AgentFileMutationApproval(
+            action: action,
+            rootID: rootID,
+            path: path,
+            targetPath: targetPath,
+            originalFingerprint: originalFingerprint,
+            editedFingerprint: editedFingerprint
         )
     }
 }
@@ -190,7 +221,8 @@ private extension AgentFileMutationPreflight {
         path: String,
         exactInput: JSONValue,
         toolPreflight: ToolPreflight,
-        recorder: AgentFileMutationRecorder?
+        recorder: AgentFileMutationRecorder?,
+        preview: StandardEditResult? = nil
     ) {
         let policy = recorder?.policy
         let backupPolicy = policy?.backupPolicy ?? .none
@@ -199,6 +231,19 @@ private extension AgentFileMutationPreflight {
         let willStoreBackupPayload = backupPolicy == .session_store || backupPolicy == .both
         let willEmitDiffArtifact = policy?.emitDiffArtifact ?? false
         let targetPath = toolPreflight.targetPaths.first ?? path
+
+        var policyChecks = Self.policyChecks(
+            from: toolPreflight,
+            willRecordSessionMutation: willRecordSessionMutation,
+            willStoreBackupPayload: willStoreBackupPayload,
+            willEmitDiffArtifact: willEmitDiffArtifact
+        )
+
+        if preview?.originalFingerprint != nil {
+            policyChecks.append(
+                "approval_fingerprint_guard_captured"
+            )
+        }
 
         self.init(
             action: action,
@@ -221,18 +266,71 @@ private extension AgentFileMutationPreflight {
                 willStoreBackupPayload: willStoreBackupPayload,
                 willEmitDiffArtifact: willEmitDiffArtifact
             ),
-            policyChecks: Self.policyChecks(
-                from: toolPreflight,
-                willRecordSessionMutation: willRecordSessionMutation,
-                willStoreBackupPayload: willStoreBackupPayload,
-                willEmitDiffArtifact: willEmitDiffArtifact
-            ),
+            policyChecks: policyChecks,
             warnings: Self.warnings(
                 from: toolPreflight,
                 recorder: recorder
             ),
             exactReplayInput: exactInput,
+            originalFingerprint: preview?.originalFingerprint,
+            editedFingerprint: preview?.editedFingerprint,
             toolPreflight: toolPreflight
+        )
+    }
+
+    static func preview(
+        _ input: WriteFileToolInput,
+        workspace: AgentWorkspace?
+    ) throws -> StandardEditResult? {
+        guard let workspace else {
+            return nil
+        }
+
+        let authorized = try FileToolAccess.authorize(
+            workspace: workspace,
+            rootID: input.rootID,
+            path: input.path,
+            capability: .write,
+            toolName: WriteFileTool.identifier.rawValue,
+            type: .file
+        )
+
+        return try StandardWriter(
+            authorized.absoluteURL
+        )
+        .editor
+        .preview(
+            .replaceEntireFile(
+                with: input.content
+            ),
+            encoding: .utf8
+        )
+    }
+
+    static func preview(
+        _ input: EditFileToolInput,
+        workspace: AgentWorkspace?
+    ) throws -> StandardEditResult? {
+        guard let workspace else {
+            return nil
+        }
+
+        let plan = try EditFileIntentResolver(
+            toolName: EditFileTool.identifier.rawValue
+        )
+        .resolve(
+            input,
+            workspace: workspace
+        )
+
+        return try StandardWriter(
+            plan.authorized.absoluteURL
+        )
+        .editor
+        .preview(
+            plan.operations,
+            mode: plan.editMode,
+            encoding: .utf8
         )
     }
 

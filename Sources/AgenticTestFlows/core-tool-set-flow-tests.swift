@@ -47,14 +47,22 @@ extension AgenticFlowTesting {
 
         try Expect.contains(
             editFileSchema,
-            "replace_line requires line, expected, and content",
-            "edit_file schema explains guarded replace_line contract"
+            "replace_line requires line and content",
+            "edit_file schema explains replace_line contract"
         )
 
         try Expect.contains(
             editFileSchema,
-            "expectedLines",
-            "edit_file schema exposes expectedLines guard"
+            "The runtime derives all exact guard content from the current raw file state.",
+            "edit_file schema explains runtime-derived guards"
+        )
+
+        try Expect.equal(
+            editFileSchema.contains(
+                "expectedLines"
+            ),
+            false,
+            "edit_file schema does not expose model-supplied expectedLines guard"
         )
 
         let contextRegistry = try Agentic.tool.registry {
