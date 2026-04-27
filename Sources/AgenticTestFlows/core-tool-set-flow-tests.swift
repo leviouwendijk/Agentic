@@ -9,7 +9,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             fileRegistry.count,
-            5,
+            3,
             "core file tool set count"
         )
 
@@ -18,20 +18,6 @@ extension AgenticFlowTesting {
                 named: "read_file"
             ),
             "core file tool set read_file"
-        )
-
-        _ = try Expect.notNil(
-            fileRegistry.tool(
-                named: "write_file"
-            ),
-            "core file tool set write_file"
-        )
-
-        _ = try Expect.notNil(
-            fileRegistry.tool(
-                named: "edit_file"
-            ),
-            "core file tool set edit_file"
         )
 
         _ = try Expect.notNil(
@@ -48,28 +34,46 @@ extension AgenticFlowTesting {
             "core file tool set scan_paths"
         )
 
-        let editFileSchema = String(
-            describing: EditFileTool.inputSchema
-        )
-
-        try Expect.contains(
-            editFileSchema,
-            "replace_line requires line and content",
-            "edit_file schema explains replace_line contract"
-        )
-
-        try Expect.contains(
-            editFileSchema,
-            "The runtime derives all exact guard content from the current raw file state.",
-            "edit_file schema explains runtime-derived guards"
-        )
-
-        try Expect.equal(
-            editFileSchema.contains(
-                "expectedLines"
+        try Expect.isNil(
+            fileRegistry.tool(
+                named: "write_file"
             ),
-            false,
-            "edit_file schema does not expose model-supplied expectedLines guard"
+            "core file tool set does not expose write_file by default"
+        )
+
+        try Expect.isNil(
+            fileRegistry.tool(
+                named: "edit_file"
+            ),
+            "core file tool set does not expose edit_file by default"
+        )
+
+        let mutateFilesSchema = String(
+            describing: MutateFilesTool.inputSchema
+        )
+
+        try Expect.contains(
+            mutateFilesSchema,
+            "create_text",
+            "mutate_files schema exposes create_text"
+        )
+
+        try Expect.contains(
+            mutateFilesSchema,
+            "replace_text",
+            "mutate_files schema exposes replace_text"
+        )
+
+        try Expect.contains(
+            mutateFilesSchema,
+            "edit_text",
+            "mutate_files schema exposes edit_text"
+        )
+
+        try Expect.contains(
+            mutateFilesSchema,
+            "delete",
+            "mutate_files schema exposes delete"
         )
 
         let contextRegistry = try Agentic.tool.registry {
@@ -111,7 +115,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             coreRegistry.count,
-            9,
+            7,
             "core tool set count"
         )
 
