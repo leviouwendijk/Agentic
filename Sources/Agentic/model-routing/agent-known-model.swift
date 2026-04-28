@@ -73,7 +73,9 @@ public extension KnownModel {
             provider: "amazon",
             name: "nova-micro"
         )
+    }
 
+    enum apple {
         public static let foundation_models = AgentModelID(
             provider: "apple",
             name: "foundation-models"
