@@ -325,6 +325,97 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runModelRoutePurposeCodableRoundTrip()
         },
+
+        TestFlow(
+            ID.model_id_known_models_codable_roundtrip,
+            tags: ["agentic", "model-routing", "model-id"]
+        ) {
+            try await AgenticFlowTesting.runModelIDKnownModelsCodableRoundTrip()
+        },
+
+        TestFlow(
+            ID.model_route_preferred_model_id,
+            tags: ["agentic", "model-routing", "model-id"]
+        ) {
+            try await AgenticFlowTesting.runModelRoutePreferredModelID()
+        },
+
+        TestFlow(
+            ID.mode_catalog_registers_default_modes,
+            tags: ["agentic", "mode", "catalog"]
+        ) {
+            try await AgenticFlowTesting.runModeCatalogRegistersDefaultModes()
+        },
+
+        TestFlow(
+            ID.mode_planning_selects_planner_purpose,
+            tags: ["agentic", "mode", "routing"]
+        ) {
+            try await AgenticFlowTesting.runModePlanningSelectsPlannerPurpose()
+        },
+
+        TestFlow(
+            ID.mode_research_selects_researcher_purpose,
+            tags: ["agentic", "mode", "routing"]
+        ) {
+            try await AgenticFlowTesting.runModeResearchSelectsResearcherPurpose()
+        },
+
+        TestFlow(
+            ID.mode_coder_exposes_file_mutation_tools,
+            tags: ["agentic", "mode", "tools"]
+        ) {
+            try await AgenticFlowTesting.runModeCoderExposesFileMutationTools()
+        },
+
+        TestFlow(
+            ID.mode_review_hides_mutation_tools,
+            tags: ["agentic", "mode", "tools"]
+        ) {
+            try await AgenticFlowTesting.runModeReviewHidesMutationTools()
+        },
+
+        TestFlow(
+            ID.mode_private_requires_local_private_policy,
+            tags: ["agentic", "mode", "privacy"]
+        ) {
+            try await AgenticFlowTesting.runModePrivateRequiresLocalPrivatePolicy()
+        },
+
+        TestFlow(
+            ID.mode_selection_codable_roundtrip,
+            tags: ["agentic", "mode", "codable"]
+        ) {
+            try await AgenticFlowTesting.runModeSelectionCodableRoundTrip()
+        },
+
+        TestFlow(
+            ID.mode_application_filters_coder_tools,
+            tags: ["agentic", "mode", "application"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationFiltersCoderTools()
+        },
+
+        TestFlow(
+            ID.mode_application_rejects_missing_tool,
+            tags: ["agentic", "mode", "application"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationRejectsMissingTool()
+        },
+
+        TestFlow(
+            ID.mode_application_reports_missing_skills,
+            tags: ["agentic", "mode", "application"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationReportsMissingSkills()
+        },
+
+        TestFlow(
+            ID.mode_application_loads_available_skills,
+            tags: ["agentic", "mode", "application"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationLoadsAvailableSkills()
+        },
     ]
 
     enum ID {
@@ -386,5 +477,21 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"
         static let model_route_researcher_selects_nova_pro_candidate = "model-route-researcher-selects-nova-pro-candidate"
         static let model_route_purpose_codable_roundtrip = "model-route-purpose-codable-roundtrip"
+
+        static let model_id_known_models_codable_roundtrip = "model-id-known-models-codable-roundtrip"
+        static let model_route_preferred_model_id = "model-route-preferred-model-id"
+
+        static let mode_catalog_registers_default_modes = "mode-catalog-registers-default-modes"
+        static let mode_planning_selects_planner_purpose = "mode-planning-selects-planner-purpose"
+        static let mode_research_selects_researcher_purpose = "mode-research-selects-researcher-purpose"
+        static let mode_coder_exposes_file_mutation_tools = "mode-coder-exposes-file-mutation-tools"
+        static let mode_review_hides_mutation_tools = "mode-review-hides-mutation-tools"
+        static let mode_private_requires_local_private_policy = "mode-private-requires-local-private-policy"
+        static let mode_selection_codable_roundtrip = "mode-selection-codable-roundtrip"
+
+        static let mode_application_filters_coder_tools = "mode-application-filters-coder-tools"
+        static let mode_application_rejects_missing_tool = "mode-application-rejects-missing-tool"
+        static let mode_application_reports_missing_skills = "mode-application-reports-missing-skills"
+        static let mode_application_loads_available_skills = "mode-application-loads-available-skills"
     }
 }

@@ -209,3 +209,53 @@ private extension AgentRunner {
         }
     }
 }
+
+public extension AgentRunner {
+    init(
+        modelBroker: AgentModelBroker,
+        modeApplication: ModeRuntimeApplication,
+        extensions: [any AgentHarnessExtension] = [],
+        workspace: AgentWorkspace? = nil,
+        approvalHandler: (any ToolApprovalHandler)? = nil,
+        historyStore: (any AgentHistoryStore)? = nil,
+        eventSinks: [any AgentRunEventSink] = [],
+        costTracker: AgentCostTracker? = nil
+    ) {
+        self.init(
+            modelBroker: modelBroker,
+            routePolicy: modeApplication.routePolicy,
+            configuration: modeApplication.configuration,
+            toolRegistry: modeApplication.toolRegistry,
+            extensions: extensions,
+            workspace: workspace,
+            approvalHandler: approvalHandler,
+            historyStore: historyStore,
+            eventSinks: eventSinks,
+            costTracker: costTracker
+        )
+    }
+
+    init(
+        modelBroker: AgentModelBroker,
+        environment: AgentRuntimeEnvironment,
+        sessionID: String,
+        modeApplication: ModeRuntimeApplication,
+        extensions: [any AgentHarnessExtension] = [],
+        approvalHandler: (any ToolApprovalHandler)? = nil,
+        costTracker: AgentCostTracker? = nil,
+        enableHistoryPersistence: Bool = true
+    ) throws {
+        try self.init(
+            modelBroker: modelBroker,
+            environment: environment,
+            sessionID: sessionID,
+            routePolicy: modeApplication.routePolicy,
+            configuration: modeApplication.configuration,
+            toolRegistry: modeApplication.toolRegistry,
+            extensions: extensions,
+            approvalHandler: approvalHandler,
+            costTracker: costTracker,
+            enableHistoryPersistence: enableHistoryPersistence
+        )
+    }
+}

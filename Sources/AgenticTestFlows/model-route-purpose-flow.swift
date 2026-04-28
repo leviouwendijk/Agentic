@@ -3,6 +3,101 @@ import Foundation
 import TestFlows
 
 extension AgenticFlowTesting {
+    static func runModelIDKnownModelsCodableRoundTrip() async throws -> [TestFlowDiagnostic] {
+        let values: [AgentModelID] = [
+            KnownModel.anthropic.`claude_opus_4.7`,
+            KnownModel.anthropic.`claude_sonnet_4.6`,
+            KnownModel.amazon.nova_pro,
+            KnownModel.qwen.qwen3_coder_next,
+        ]
+        let data = try JSONEncoder().encode(
+            values
+        )
+        let decoded = try JSONDecoder().decode(
+            [AgentModelID].self,
+            from: data
+        )
+
+        try Expect.equal(
+            decoded,
+            values,
+            "known model IDs codable round trip"
+        )
+
+        return [
+            .field(
+                "models",
+                decoded.map(\.rawValue).joined(separator: ",")
+            ),
+        ]
+    }
+
+    static func runModelRoutePreferredModelID() async throws -> [TestFlowDiagnostic] {
+        let sonnetID = AgentModelProfileIdentifier(
+            "test:researcher:sonnet"
+        )
+        let novaID = AgentModelProfileIdentifier(
+            "test:researcher:nova-pro"
+        )
+        let catalog = try AgentModelProfileCatalog(
+            profiles: [
+                researcherProfile(
+                    sonnetID
+                ),
+                researchDelegateProfile(
+                    novaID
+                ),
+            ]
+        )
+        let router = StaticAgentModelRouter()
+        let policy = AgentModelUsePolicy(
+            purpose: .researcher,
+            capabilities: [
+                .text,
+                .reasoning,
+                .structured_output,
+            ],
+            preferredModelID: KnownModel.amazon.nova_pro
+        )
+        let result = try router.route(
+            .init(
+                request: routeRequest(),
+                policy: policy
+            ),
+            catalog: catalog
+        )
+
+        try Expect.equal(
+            result.route.profile.identifier,
+            novaID,
+            "preferred model profile"
+        )
+        try Expect.equal(
+            result.route.profile.modelID,
+            KnownModel.amazon.nova_pro,
+            "preferred model id"
+        )
+        try Expect.equal(
+            result.reasons.joined(separator: ","),
+            "preferred_model",
+            "route reason"
+        )
+
+        return [
+            .field(
+                "profile",
+                result.route.profile.identifier.rawValue
+            ),
+            .field(
+                "modelID",
+                result.route.profile.modelID?.rawValue ?? "<nil>"
+            ),
+            .field(
+                "reason",
+                result.reasons.joined(separator: ",")
+            ),
+        ]
+    }
     static func runModelRoutePlannerPrefersDefault() async throws -> [TestFlowDiagnostic] {
         let plannerID = AgentModelProfileIdentifier(
             "test:planner:opus"
@@ -230,6 +325,7 @@ private extension AgenticFlowTesting {
                 "test"
             ),
             model: "claude-opus-planner",
+            modelID: KnownModel.anthropic.`claude_opus_4.7`,
             title: "Planner",
             purposes: [
                 .planner,
@@ -253,6 +349,7 @@ private extension AgenticFlowTesting {
                 "test"
             ),
             model: "claude-sonnet-researcher",
+            modelID: KnownModel.anthropic.`claude_sonnet_4.6`,
             title: "Researcher",
             purposes: [
                 .researcher,
@@ -277,6 +374,7 @@ private extension AgenticFlowTesting {
                 "test"
             ),
             model: "nova-pro-research-delegate",
+            modelID: KnownModel.amazon.nova_pro,
             title: "Research Delegate",
             purposes: [
                 .researcher,
