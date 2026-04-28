@@ -416,6 +416,41 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runModeApplicationLoadsAvailableSkills()
         },
+
+        TestFlow(
+            ID.mode_application_compose_loaded_skill_context,
+            tags: ["agentic", "mode", "context"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationComposeLoadedSkillContext()
+        },
+
+        TestFlow(
+            ID.mode_application_context_omits_missing_skills,
+            tags: ["agentic", "mode", "context"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationContextOmitsMissingSkills()
+        },
+
+        TestFlow(
+            ID.mode_coder_context_includes_safe_file_editing_skill,
+            tags: ["agentic", "mode", "context"]
+        ) {
+            try await AgenticFlowTesting.runModeCoderContextIncludesSafeFileEditingSkill()
+        },
+
+        TestFlow(
+            ID.mode_context_metadata_includes_mode_id_budget_approval,
+            tags: ["agentic", "mode", "context"]
+        ) {
+            try await AgenticFlowTesting.runModeContextMetadataIncludesModeIDBudgetApproval()
+        },
+
+        TestFlow(
+            ID.mode_application_request_includes_mode_context_message,
+            tags: ["agentic", "mode", "request"]
+        ) {
+            try await AgenticFlowTesting.runModeApplicationRequestIncludesModeContextMessage()
+        },
     ]
 
     enum ID {
@@ -493,5 +528,11 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let mode_application_rejects_missing_tool = "mode-application-rejects-missing-tool"
         static let mode_application_reports_missing_skills = "mode-application-reports-missing-skills"
         static let mode_application_loads_available_skills = "mode-application-loads-available-skills"
+
+        static let mode_application_compose_loaded_skill_context = "mode-application-compose-loaded-skill-context"
+        static let mode_application_context_omits_missing_skills = "mode-application-context-omits-missing-skills"
+        static let mode_coder_context_includes_safe_file_editing_skill = "mode-coder-context-includes-safe-file-editing-skill"
+        static let mode_context_metadata_includes_mode_id_budget_approval = "mode-context-metadata-includes-mode-id-budget-approval"
+        static let mode_application_request_includes_mode_context_message = "mode-application-request-includes-mode-context-message"
     }
 }
