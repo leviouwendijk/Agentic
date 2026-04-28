@@ -165,55 +165,6 @@ enum AgenticFlowSuite: TestFlowRegistry {
             try await AgenticFlowTesting.runPreparedFileMutationEdit()
         },
 
-        // TestFlow(
-        //     ID.core_tool_set_builder_registration,
-        //     tags: ["agentic", "dsl", "registry", "core-tools"]
-        // ) {
-        //     try await AgenticFlowTesting.runCoreToolSetBuilderRegistration()
-        // },
-
-        // TestFlow(
-        //     ID.tool_registry_executes_with_context,
-        //     tags: ["agentic", "tool-registry", "context"]
-        // ) {
-        //     try await AgenticFlowTesting.runToolRegistryExecutesWithContext()
-        // },
-
-        // TestFlow(
-        //     ID.file_mutation_preflight_write,
-        //     tags: ["agentic", "mutation", "preflight", "write"]
-        // ) {
-        //     try await AgenticFlowTesting.runFileMutationPreflightWrite()
-        // },
-
-        // TestFlow(
-        //     ID.file_mutation_preflight_edit,
-        //     tags: ["agentic", "mutation", "preflight", "edit"]
-        // ) {
-        //     try await AgenticFlowTesting.runFileMutationPreflightEdit()
-        // },
-
-        // TestFlow(
-        //     ID.file_mutation_preflight_no_side_effects,
-        //     tags: ["agentic", "mutation", "preflight", "side-effects"]
-        // ) {
-        //     try await AgenticFlowTesting.runFileMutationPreflightNoSideEffects()
-        // },
-
-        // TestFlow(
-        //     ID.prepared_file_mutation_write,
-        //     tags: ["agentic", "mutation", "prepared-intent", "write"]
-        // ) {
-        //     try await AgenticFlowTesting.runPreparedFileMutationWrite()
-        // },
-
-        // TestFlow(
-        //     ID.prepared_file_mutation_edit,
-        //     tags: ["agentic", "mutation", "prepared-intent", "edit"]
-        // ) {
-        //     try await AgenticFlowTesting.runPreparedFileMutationEdit()
-        // },
-
         TestFlow(
             ID.execute_prepared_intent_replays_file_mutation_write,
             tags: ["agentic", "mutation", "prepared-intent", "execute", "write", "registry"]
@@ -346,6 +297,34 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runToolUseBatchDenialSkip()
         },
+
+        TestFlow(
+            ID.model_route_planner_prefers_default,
+            tags: ["agentic", "model-routing"]
+        ) {
+            try await AgenticFlowTesting.runModelRoutePlannerPrefersDefault()
+        },
+
+        TestFlow(
+            ID.model_route_researcher_prefers_default,
+            tags: ["agentic", "model-routing"]
+        ) {
+            try await AgenticFlowTesting.runModelRouteResearcherPrefersDefault()
+        },
+
+        TestFlow(
+            ID.model_route_researcher_selects_nova_pro_candidate,
+            tags: ["agentic", "model-routing"]
+        ) {
+            try await AgenticFlowTesting.runModelRouteResearcherSelectsNovaProCandidate()
+        },
+
+        TestFlow(
+            ID.model_route_purpose_codable_roundtrip,
+            tags: ["agentic", "model-routing"]
+        ) {
+            try await AgenticFlowTesting.runModelRoutePurposeCodableRoundTrip()
+        },
     ]
 
     enum ID {
@@ -402,5 +381,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let tool_use_batch_observe = "tool-use-batch-observe"
         static let tool_use_batch_approval_skip = "tool-use-batch-approval-skip"
         static let tool_use_batch_denial_skip = "tool-use-batch-denial-skip"
+
+        static let model_route_planner_prefers_default = "model-route-planner-prefers-default"
+        static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"
+        static let model_route_researcher_selects_nova_pro_candidate = "model-route-researcher-selects-nova-pro-candidate"
+        static let model_route_purpose_codable_roundtrip = "model-route-purpose-codable-roundtrip"
     }
 }

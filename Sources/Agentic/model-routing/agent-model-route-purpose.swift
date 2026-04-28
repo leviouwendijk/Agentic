@@ -1,5 +1,7 @@
 public enum AgentModelRoutePurpose: String, Sendable, Codable, Hashable, CaseIterable {
     case executor
+    case planner
+    case researcher
     case advisor
     case reviewer
     case summarizer

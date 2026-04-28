@@ -43,6 +43,29 @@ public extension AgentModelUsePolicy {
         purpose: .executor
     )
 
+    static let planner = Self(
+        purpose: .planner,
+        capabilities: [
+            .text,
+            .reasoning
+        ],
+        metadata: [
+            "route_role": "planner"
+        ]
+    )
+
+    static let researcher = Self(
+        purpose: .researcher,
+        capabilities: [
+            .text,
+            .reasoning,
+            .structured_output
+        ],
+        metadata: [
+            "route_role": "researcher"
+        ]
+    )
+
     static let advisor = Self(
         purpose: .advisor,
         capabilities: [
