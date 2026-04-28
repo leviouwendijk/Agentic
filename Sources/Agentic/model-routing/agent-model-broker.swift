@@ -1,4 +1,4 @@
-public struct AgentModelBroker: Sendable {
+public struct AgentModelBroker: Sendable, AgentAdvisorModelProviding {
     public let profiles: AgentModelProfileCatalog
     public let adapters: AgentModelAdapterCatalog
     public let router: any AgentModelRouter
