@@ -470,13 +470,16 @@ private extension MutateFilesTool {
         let path = authorized?.presentationPath
             ?? entry.target.lastPathComponent
 
-        guard let before = entry.before.textContent,
-              let after = entry.after.textContent
-        else {
+        guard let before = textualPreviewContent(
+            for: entry.before
+        ),
+              let after = textualPreviewContent(
+                for: entry.after
+              ) else {
             return """
             --- a/\(path)
             +++ b/\(path)
-            # non-text or missing textual preview
+            # non-text textual preview unavailable
             resource: \(entry.resource.rawValue)
             delta: \(entry.delta.rawValue)
             """
@@ -510,6 +513,21 @@ private extension MutateFilesTool {
             layout,
             options: options
         )
+    }
+
+    func textualPreviewContent(
+        for state: StandardResourceState
+    ) -> String? {
+        switch state {
+        case .missing:
+            return ""
+
+        case .text(let value):
+            return value.content
+
+        case .data:
+            return nil
+        }
     }
 
     func output(
