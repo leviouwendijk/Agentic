@@ -7,6 +7,7 @@ public struct AgentModelUsePolicy: Sendable, Codable, Hashable {
     public var maxOutputTokens: Int?
     public var maxEstimatedUsd: Double?
     public var preferredProfileIdentifier: AgentModelProfileIdentifier?
+    public var preferredModelID: AgentModelID?
     public var metadata: [String: String]
 
     public init(
@@ -18,6 +19,7 @@ public struct AgentModelUsePolicy: Sendable, Codable, Hashable {
         maxOutputTokens: Int? = nil,
         maxEstimatedUsd: Double? = nil,
         preferredProfileIdentifier: AgentModelProfileIdentifier? = nil,
+        preferredModelID: AgentModelID? = nil,
         metadata: [String: String] = [:]
     ) {
         self.purpose = purpose
@@ -34,6 +36,7 @@ public struct AgentModelUsePolicy: Sendable, Codable, Hashable {
             max(0, $0)
         }
         self.preferredProfileIdentifier = preferredProfileIdentifier
+        self.preferredModelID = preferredModelID
         self.metadata = metadata
     }
 }

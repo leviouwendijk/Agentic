@@ -37,6 +37,29 @@ public struct StaticAgentModelRouter: AgentModelRouter {
             )
         }
 
+        if let preferredModelID = request.policy.preferredModelID {
+            if let profile = catalog.profiles(
+                for: preferredModelID
+            ).first(where: {
+                $0.supports(
+                    request.policy
+                )
+            }) {
+                return .init(
+                    route: .init(
+                        purpose: request.policy.purpose,
+                        profile: profile,
+                        metadata: routeMetadata(
+                            request
+                        )
+                    ),
+                    reasons: [
+                        "preferred_model"
+                    ]
+                )
+            }
+        }
+
         if let defaultIdentifier = defaults[request.policy.purpose] {
             return try route(
                 defaultIdentifier,
@@ -46,19 +69,17 @@ public struct StaticAgentModelRouter: AgentModelRouter {
             )
         }
 
-        if let matched = catalog.profiles(
+        if let profile = catalog.profiles(
             for: request.policy.purpose
-        ).first(
-            where: {
-                $0.supports(
-                    request.policy
-                )
-            }
-        ) {
+        ).first(where: {
+            $0.supports(
+                request.policy
+            )
+        }) {
             return .init(
                 route: .init(
                     purpose: request.policy.purpose,
-                    profile: matched,
+                    profile: profile,
                     metadata: routeMetadata(
                         request
                     )
@@ -70,32 +91,23 @@ public struct StaticAgentModelRouter: AgentModelRouter {
         }
 
         for purpose in fallback {
-            var fallbackPolicy = request.policy
-            fallbackPolicy.purpose = purpose
-
-            if let matched = catalog.profiles(
+            if let profile = catalog.profiles(
                 for: purpose
-            ).first(
-                where: {
-                    $0.supports(
-                        fallbackPolicy
-                    )
-                }
-            ) {
+            ).first(where: {
+                $0.supports(
+                    request.policy
+                )
+            }) {
                 return .init(
                     route: .init(
                         purpose: request.policy.purpose,
-                        profile: matched,
+                        profile: profile,
                         metadata: routeMetadata(
                             request
                         )
                     ),
                     reasons: [
-                        "fallback",
-                        purpose.rawValue
-                    ],
-                    warnings: [
-                        "No direct profile matched \(request.policy.purpose.rawValue); using fallback purpose \(purpose.rawValue)."
+                        "fallback:\(purpose.rawValue)"
                     ]
                 )
             }

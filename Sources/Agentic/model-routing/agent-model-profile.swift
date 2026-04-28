@@ -2,6 +2,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public let identifier: AgentModelProfileIdentifier
     public var adapterIdentifier: AgentModelAdapterIdentifier
     public var model: String
+    public var modelID: AgentModelID?
     public var title: String?
     public var purposes: Set<AgentModelRoutePurpose>
     public var capabilities: Set<AgentModelCapability>
@@ -15,6 +16,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         identifier: AgentModelProfileIdentifier,
         adapterIdentifier: AgentModelAdapterIdentifier,
         model: String,
+        modelID: AgentModelID? = nil,
         title: String? = nil,
         purposes: Set<AgentModelRoutePurpose> = [.executor],
         capabilities: Set<AgentModelCapability> = [.text],
@@ -27,6 +29,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         self.identifier = identifier
         self.adapterIdentifier = adapterIdentifier
         self.model = model
+        self.modelID = modelID
         self.title = title
         self.purposes = purposes
         self.capabilities = capabilities
@@ -41,6 +44,10 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         identifier
     }
 
+    public var providerModelIdentifier: String {
+        model
+    }
+
     public func supports(
         _ policy: AgentModelUsePolicy
     ) -> Bool {
@@ -53,6 +60,11 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         guard capabilities.isSuperset(
             of: policy.capabilities
         ) else {
+            return false
+        }
+
+        if let preferredModelID = policy.preferredModelID,
+           modelID != preferredModelID {
             return false
         }
 

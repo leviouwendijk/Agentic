@@ -74,6 +74,12 @@ public extension AgentModelRoute {
         metadata["model_latency"] = profile.latency.rawValue
         metadata["model_privacy"] = profile.privacy.rawValue
 
+        if let modelID = profile.modelID {
+            metadata["model_id"] = modelID.rawValue
+            metadata["model_provider"] = modelID.provider.rawValue
+            metadata["model_name"] = modelID.name
+        }
+
         if !reasons.isEmpty {
             metadata["model_route_reasons"] = reasons.joined(
                 separator: ","

@@ -78,6 +78,18 @@ public struct AgentModelProfileCatalog: Sendable {
                 by: AgentModelProfileOrdering.preferred
             )
     }
+
+    public func profiles(
+        for modelID: AgentModelID
+    ) -> [AgentModelProfile] {
+        profilesByIdentifier.values
+            .filter {
+                $0.modelID == modelID
+            }
+            .sorted(
+                by: AgentModelProfileOrdering.preferred
+            )
+    }
 }
 
 private enum AgentModelProfileOrdering {
