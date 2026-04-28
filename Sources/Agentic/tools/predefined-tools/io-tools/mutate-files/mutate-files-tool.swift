@@ -437,97 +437,37 @@ private extension MutateFilesTool {
         plan: StandardMutationPlan,
         authorized: [AgenticAuthorizedPath]
     ) -> ToolPreflightDiffPreview {
-        let contextLineCount = 3
-        let sections = plan.entries.enumerated().map { offset, entry in
-            renderedDiffSection(
-                entry,
-                authorized: authorized[safe: offset],
-                contextLineCount: contextLineCount
-            )
-        }
-        let text = sections.joined(
-            separator: "\n\n"
-        )
+        let presentationPathsByEntryID: [UUID: String] = Dictionary(
+            uniqueKeysWithValues: plan.entries.enumerated().compactMap { pair in
+                guard authorized.indices.contains(
+                    pair.offset
+                ) else {
+                    return nil
+                }
 
-        return .init(
-            title: "Preview diff for \(plan.entries.count) file mutation(s)",
-            contextLineCount: contextLineCount,
-            text: text,
-            insertedLineCount: plan.entries.reduce(0) {
-                $0 + ($1.diff?.insertions ?? 0)
-            },
-            deletedLineCount: plan.entries.reduce(0) {
-                $0 + ($1.diff?.deletions ?? 0)
+                return (
+                    pair.element.id,
+                    authorized[pair.offset].presentationPath
+                )
             }
         )
-    }
 
-    func renderedDiffSection(
-        _ entry: StandardPlannedMutation,
-        authorized: AgenticAuthorizedPath?,
-        contextLineCount: Int
-    ) -> String {
-        let path = authorized?.presentationPath
-            ?? entry.target.lastPathComponent
-
-        guard let before = textualPreviewContent(
-            for: entry.before
-        ),
-              let after = textualPreviewContent(
-                for: entry.after
-              ) else {
-            return """
-            --- a/\(path)
-            +++ b/\(path)
-            # non-text textual preview unavailable
-            resource: \(entry.resource.rawValue)
-            delta: \(entry.delta.rawValue)
-            """
+        let preview = plan.diffPreview(
+            contextLineCount: 3
+        ) { entry in
+            presentationPathsByEntryID[
+                entry.id
+            ] ?? entry.target.lastPathComponent
         }
 
-        let difference = TextDiffer.diff(
-            old: before,
-            new: after,
-            oldName: "a/\(path)",
-            newName: "b/\(path)"
+        return .init(
+            title: preview.title,
+            contextLineCount: preview.contextLineCount,
+            text: preview.text,
+            layout: preview.layout,
+            insertedLineCount: preview.insertedLineCount,
+            deletedLineCount: preview.deletedLineCount
         )
-        let options = DifferenceRenderOptions(
-            showHeader: true,
-            showUnchangedLines: false,
-            contextLineCount: contextLineCount
-        )
-        let layout = DifferenceRenderer.layout(
-            difference,
-            options: options
-        )
-
-        guard difference.hasChanges else {
-            return """
-            --- a/\(path)
-            +++ b/\(path)
-            # no textual changes
-            """
-        }
-
-        return DifferenceRenderer.render(
-            layout,
-            options: options
-        )
-    }
-
-    func textualPreviewContent(
-        for state: StandardResourceState
-    ) -> String? {
-        switch state {
-        case .missing:
-            return ""
-
-        case .text(let value):
-            return value.content
-
-        case .data:
-            return nil
-        }
     }
 
     func output(
