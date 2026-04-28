@@ -100,3 +100,36 @@ private enum AgentModelProfileOrdering {
         return lhs.identifier.rawValue < rhs.identifier.rawValue
     }
 }
+
+// providers
+public extension AgentModelProfileCatalog {
+    init(
+        modelProviders: [any AgentModelProvider]
+    ) throws {
+        let providers = modelProviders.compactMap(\.profileProvider)
+
+        try self.init(
+            providers: providers
+        )
+    }
+
+    static func discovered(
+        from discoveries: [any AgentModelProfileDiscovery],
+        request: AgentModelProfileDiscoveryRequest = .manual
+    ) async throws -> AgentModelProfileCatalog {
+        var snapshots: [AgentModelProfileSnapshot] = []
+
+        for discovery in discoveries {
+            snapshots.append(
+                try await discovery.snapshot(
+                    request: request
+                )
+            )
+        }
+
+        return try .init(
+            snapshots: snapshots
+        )
+    }
+}
+
