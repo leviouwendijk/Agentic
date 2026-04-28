@@ -19,6 +19,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
     public var phase: AgentHistoryPhase
     public var lastResponse: AgentResponse?
     public var partialResponse: AgentPartialResponse?
+    public var toolBatch: AgentToolUseBatch?
     public var suspension: AgentSuspension?
     public var pendingApproval: PendingApproval?
     public var costRecord: AgentCostRecord?
@@ -32,6 +33,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         phase: AgentHistoryPhase = .ready_for_model,
         lastResponse: AgentResponse? = nil,
         partialResponse: AgentPartialResponse? = nil,
+        toolBatch: AgentToolUseBatch? = nil,
         suspension: AgentSuspension? = nil,
         pendingApproval: PendingApproval? = nil,
         costRecord: AgentCostRecord? = nil,
@@ -44,6 +46,7 @@ public struct AgentHistoryCheckpoint: Sendable, Codable, Hashable, Identifiable 
         self.phase = phase
         self.lastResponse = lastResponse
         self.partialResponse = partialResponse
+        self.toolBatch = toolBatch
         self.suspension = suspension
         self.pendingApproval = pendingApproval ?? suspension?.pendingApproval
         self.costRecord = costRecord
@@ -92,6 +95,11 @@ public extension AgentHistoryCheckpoint {
         if phase == .suspended || phase == .awaiting_approval {
             phase = .ready_for_model
         }
+    }
+
+    mutating func clearToolBatch() {
+        toolBatch = nil
+        touch()
     }
 
     mutating func touch(

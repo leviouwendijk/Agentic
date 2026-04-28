@@ -325,6 +325,27 @@ enum AgenticFlowSuite: TestFlowRegistry {
         ) {
             try await AgenticFlowTesting.runExecutePreparedIntentRejectsStaleFileMutationEdit()
         },
+
+        TestFlow(
+            ID.tool_use_batch_observe,
+            tags: ["agentic", "tool-use", "batch"]
+        ) {
+            try await AgenticFlowTesting.runToolUseBatchObserve()
+        },
+
+        TestFlow(
+            ID.tool_use_batch_approval_skip,
+            tags: ["agentic", "tool-use", "batch", "approval"]
+        ) {
+            try await AgenticFlowTesting.runToolUseBatchApprovalSkip()
+        },
+
+        TestFlow(
+            ID.tool_use_batch_denial_skip,
+            tags: ["agentic", "tool-use", "batch", "approval", "denial"]
+        ) {
+            try await AgenticFlowTesting.runToolUseBatchDenialSkip()
+        },
     ]
 
     enum ID {
@@ -377,5 +398,9 @@ enum AgenticFlowSuite: TestFlowRegistry {
 
         static let execute_prepared_intent_rejects_stale_file_mutation_write = "execute-prepared-intent-rejects-stale-file-mutation-write"
         static let execute_prepared_intent_rejects_stale_file_mutation_edit = "execute-prepared-intent-rejects-stale-file-mutation-edit"
+
+        static let tool_use_batch_observe = "tool-use-batch-observe"
+        static let tool_use_batch_approval_skip = "tool-use-batch-approval-skip"
+        static let tool_use_batch_denial_skip = "tool-use-batch-denial-skip"
     }
 }

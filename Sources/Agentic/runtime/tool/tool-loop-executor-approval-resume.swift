@@ -29,31 +29,32 @@ public extension ToolLoopExecutor {
                 pendingApproval.toolCall
             )
 
-            appendToolResultBlock(
-                .tool_result(result),
-                to: &checkpoint.state
-            )
-
-            try await recordToolResult(
-                result
-            )
-
-            try await appendRunEvent(
-                .init(
-                    kind: result.isError ? .tool_error : .tool_result,
-                    iteration: checkpoint.state.iteration,
-                    toolCallID: pendingApproval.toolCall.id,
-                    toolName: pendingApproval.toolCall.name,
-                    summary: result.isError
-                        ? "tool execution failed after suspended approval"
-                        : "tool executed after suspended approval"
-                ),
-                to: &checkpoint
+            try await appendToolResult(
+                result,
+                for: pendingApproval.toolCall,
+                disposition: result.isError ? .failed_execution : .executed,
+                to: &checkpoint,
+                summary: result.isError
+                    ? "tool execution failed after suspended approval"
+                    : "tool executed after suspended approval"
             )
 
             checkpoint.clearSuspension()
-            checkpoint.phase = .ready_for_model
-            checkpoint.lastResponse = nil
+
+            if pendingApproval.preflight.risk.isMutating {
+                try await appendSkippedSiblings(
+                    after: pendingApproval.toolCall.id,
+                    to: &checkpoint,
+                    disposition: .skipped_after_mutation,
+                    reason: staleMutationSiblingReason
+                )
+
+                finishToolBatch(
+                    on: &checkpoint
+                )
+            } else {
+                checkpoint.phase = .processing_tool_calls
+            }
 
             try await saveCheckpoint(
                 &checkpoint
@@ -70,13 +71,12 @@ public extension ToolLoopExecutor {
                 requirement: pendingApproval.requirement
             )
 
-            appendToolResultBlock(
-                .tool_result(result),
-                to: &checkpoint.state
-            )
-
-            try await recordToolResult(
-                result
+            try await appendToolResult(
+                result,
+                for: pendingApproval.toolCall,
+                disposition: .skipped_after_denial,
+                to: &checkpoint,
+                summary: metadata["summary"] ?? "denied after suspended review"
             )
 
             try await appendRunEvent(
@@ -90,9 +90,16 @@ public extension ToolLoopExecutor {
                 to: &checkpoint
             )
 
-            checkpoint.clearSuspension()
-            checkpoint.phase = .ready_for_model
-            checkpoint.lastResponse = nil
+            try await appendSkippedSiblings(
+                after: pendingApproval.toolCall.id,
+                to: &checkpoint,
+                disposition: .skipped_after_denial,
+                reason: deniedSiblingReason
+            )
+
+            finishToolBatch(
+                on: &checkpoint
+            )
 
             try await saveCheckpoint(
                 &checkpoint
