@@ -131,6 +131,48 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.tool_invoker_review_does_not_execute,
+            tags: ["agentic", "tool", "invocation", "review"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerReviewDoesNotExecute()
+        },
+
+        TestFlow(
+            ID.tool_invoker_auto_observe_executes,
+            tags: ["agentic", "tool", "invocation", "host-call"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerAutoObserveExecutes()
+        },
+
+        TestFlow(
+            ID.tool_invoker_review_without_handler_does_not_execute,
+            tags: ["agentic", "tool", "invocation", "approval"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerReviewWithoutHandlerDoesNotExecute()
+        },
+
+        TestFlow(
+            ID.tool_invoker_approved_host_call_executes,
+            tags: ["agentic", "tool", "invocation", "approval", "host-call"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerApprovedHostCallExecutes()
+        },
+
+        TestFlow(
+            ID.tool_invoker_denied_host_call_does_not_execute,
+            tags: ["agentic", "tool", "invocation", "approval", "denial"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerDeniedHostCallDoesNotExecute()
+        },
+
+        TestFlow(
+            ID.tool_invoker_forbidden_never_executes,
+            tags: ["agentic", "tool", "invocation", "policy", "forbidden"]
+        ) {
+            try await AgenticFlowTesting.runToolInvokerForbiddenNeverExecutes()
+        },
+
+        TestFlow(
             ID.file_mutation_preflight_write,
             tags: ["agentic", "mutation", "preflight", "write"]
         ) {
@@ -476,6 +518,13 @@ enum AgenticFlowSuite: TestFlowRegistry {
 
         static let core_tool_set_builder_registration = "core-tool-set-builder-registration"
         static let tool_registry_executes_with_context = "tool-registry-executes-with-context"
+
+        static let tool_invoker_review_does_not_execute = "tool-invoker-review-does-not-execute"
+        static let tool_invoker_auto_observe_executes = "tool-invoker-auto-observe-executes"
+        static let tool_invoker_review_without_handler_does_not_execute = "tool-invoker-review-without-handler-does-not-execute"
+        static let tool_invoker_approved_host_call_executes = "tool-invoker-approved-host-call-executes"
+        static let tool_invoker_denied_host_call_does_not_execute = "tool-invoker-denied-host-call-does-not-execute"
+        static let tool_invoker_forbidden_never_executes = "tool-invoker-forbidden-never-executes"
 
         static let file_mutation_preflight_write = "file-mutation-preflight-write"
         static let file_mutation_preflight_edit = "file-mutation-preflight-edit"
