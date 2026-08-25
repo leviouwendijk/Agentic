@@ -4,15 +4,18 @@ public struct AgentToolDefinition: Sendable, Codable, Hashable, Identifiable {
     public let identifier: AgentToolIdentifier
     public let description: String
     public let inputSchema: JSONValue?
+    public let risk: ActionRisk
 
     public init(
         identifier: AgentToolIdentifier,
         description: String,
-        inputSchema: JSONValue? = nil
+        inputSchema: JSONValue? = nil,
+        risk: ActionRisk = .observe
     ) {
         self.identifier = identifier
         self.description = description
         self.inputSchema = inputSchema
+        self.risk = risk
     }
 }
 
@@ -28,12 +31,14 @@ public extension AgentToolDefinition {
     init(
         name: String,
         description: String,
-        inputSchema: JSONValue? = nil
+        inputSchema: JSONValue? = nil,
+        risk: ActionRisk = .observe
     ) {
         self.init(
             identifier: .init(name),
             description: description,
-            inputSchema: inputSchema
+            inputSchema: inputSchema,
+            risk: risk
         )
     }
 }

@@ -35,7 +35,8 @@ public extension AgentTool {
         .init(
             identifier: identifier,
             description: description,
-            inputSchema: inputSchema
+            inputSchema: inputSchema,
+            risk: risk
         )
     }
 
