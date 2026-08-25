@@ -598,7 +598,8 @@ private extension MutateFilesToolEntry {
                 rootIdentifier: rootID,
                 content: try requiredContent(
                     toolName: toolName
-                )
+                ),
+                options: .overwriteWithoutBackup
             )
 
         case .replace_text:
@@ -608,7 +609,8 @@ private extension MutateFilesToolEntry {
                 content: try requiredContent(
                     toolName: toolName
                 ),
-                policy: replacePolicy ?? .upsert
+                policy: replacePolicy ?? .upsert,
+                options: .overwriteWithoutBackup
             )
 
         case .edit_text:
@@ -626,7 +628,10 @@ private extension MutateFilesToolEntry {
                     rootID: rootID,
                     path: path,
                     operations: operations
-                ).resolvedEditMode
+                ).resolvedEditMode,
+                options: .init(
+                    write: .overwriteWithoutBackup
+                )
             )
 
         case .delete:
