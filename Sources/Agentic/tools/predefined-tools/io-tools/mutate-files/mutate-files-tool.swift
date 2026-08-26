@@ -365,16 +365,16 @@ public struct MutateFilesTool: AgentTool, StaticAgentTool {
         )
     }
 
-    public func receipt(
+    public func processResult(
         input _: JSONValue,
         output: JSONValue,
         workspace: AgentWorkspace?
-    ) -> AgentToolReceipt? {
+    ) -> AgentToolResultProcessing {
         guard let result = try? JSONToolBridge.decode(
             MutateFilesToolOutput.self,
             from: output
         ) else {
-            return nil
+            return .none
         }
 
         let changedEntries = result.entries.filter {
@@ -477,27 +477,29 @@ public struct MutateFilesTool: AgentTool, StaticAgentTool {
             )
         }
 
-        return AgentToolReceipt(
-            status:
-                changedEntries.isEmpty
-                    ? "no changes"
-                    : result.status,
-            summary:
-                counts.isEmpty
-                    ? "No files changed."
-                    : counts.joined(
-                        separator: " · "
-                    ),
-            items: changedEntries.map { entry in
-                .init(
-                    label: displayPath(
-                        entry.path
-                    ),
-                    value: detail(
-                        entry
+        return .init(
+            projection: .init(
+                status:
+                    changedEntries.isEmpty
+                        ? "no changes"
+                        : result.status,
+                summary:
+                    counts.isEmpty
+                        ? "No files changed."
+                        : counts.joined(
+                            separator: " · "
+                        ),
+                facts: changedEntries.map { entry in
+                    .init(
+                        label: displayPath(
+                            entry.path
+                        ),
+                        value: detail(
+                            entry
+                        )
                     )
-                )
-            }
+                }
+            )
         )
     }
 }

@@ -104,15 +104,20 @@ public struct ToolRegistry: Sendable {
             workspace: workspace
         )
 
+        let processing = tool.processResult(
+            input: toolCall.input,
+            output: output,
+            workspace: workspace
+        )
+
         return AgentToolResult(
             toolCallID: toolCall.id,
             name: tool.identifier.rawValue,
             output: output,
-            receipt: tool.receipt(
-                input: toolCall.input,
-                output: output,
-                workspace: workspace
-            )
+            processing:
+                processing.isEmpty
+                    ? nil
+                    : processing
         )
     }
 }

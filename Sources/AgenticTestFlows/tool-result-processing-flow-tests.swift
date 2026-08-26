@@ -17,11 +17,10 @@ extension AgenticFlowTesting {
 
         guard
             let processing = execution.result.processing,
-            let projection = processing.projection,
-            let receipt = execution.result.receipt
+            let projection = processing.projection
         else {
             throw FlowTestError.unexpectedResult(
-                "Expected new-style processing projection and compatibility receipt."
+                "Expected new-style processing projection."
             )
         }
 
@@ -71,106 +70,12 @@ extension AgenticFlowTesting {
             "new-style observations retain raw evidence"
         )
 
-        try Expect.equal(
-            receipt.status,
-            projection.status,
-            "compatibility receipt derives semantic status from projection"
-        )
-
-        try Expect.equal(
-            receipt.items.map(\.label),
-            [
-                "value"
-            ],
-            "compatibility receipt contains projection facts only"
-        )
-
-        try Expect.equal(
-            receipt.items.map(\.value),
-            [
-                "authoritative"
-            ],
-            "compatibility receipt derives projection fact values"
-        )
-
         try Expect.true(
-            !receipt.items.contains { item in
-                item.value.contains("raw stdout")
-                    || item.value.contains("raw stderr")
+            !projection.facts.contains { fact in
+                fact.value.contains("raw stdout")
+                    || fact.value.contains("raw stderr")
             },
-            "raw observations do not leak into compatibility receipt"
-        )
-
-        return [
-            .field(
-                "projection",
-                projection.status
-            ),
-            .field(
-                "observations",
-                "\(processing.observations.count)"
-            ),
-            .field(
-                "receiptFacts",
-                "\(receipt.items.count)"
-            ),
-        ]
-    }
-
-    static func runToolResultProcessingLegacyReceipt() async throws -> [TestFlowDiagnostic] {
-        let execution = try await resultProcessingExecution(
-            tool: LegacyResultReceiptTool(),
-            callID: "result-processing-legacy-receipt"
-        )
-
-        try Expect.equal(
-            execution.result.output,
-            execution.input,
-            "legacy result preserves authoritative output"
-        )
-
-        guard
-            let processing = execution.result.processing,
-            let projection = processing.projection,
-            let receipt = execution.result.receipt
-        else {
-            throw FlowTestError.unexpectedResult(
-                "Expected legacy receipt to bridge into processing projection."
-            )
-        }
-
-        try Expect.equal(
-            projection.status,
-            "legacy",
-            "legacy receipt status bridges into projection"
-        )
-
-        try Expect.equal(
-            projection.facts.map(\.label),
-            [
-                "legacy"
-            ],
-            "legacy receipt item bridges into projection fact"
-        )
-
-        try Expect.equal(
-            projection.facts.map(\.value),
-            [
-                "fact"
-            ],
-            "legacy receipt value bridges into projection fact"
-        )
-
-        try Expect.equal(
-            processing.observations,
-            [],
-            "legacy receipt bridge manufactures no observations"
-        )
-
-        try Expect.equal(
-            receipt.status,
-            "legacy",
-            "legacy receipt remains available during compatibility window"
+            "raw observations do not leak into semantic projection"
         )
 
         return [
@@ -184,6 +89,7 @@ extension AgenticFlowTesting {
             ),
         ]
     }
+
 
     static func runToolResultProcessingPlain() async throws -> [TestFlowDiagnostic] {
         let execution = try await resultProcessingExecution(
@@ -202,21 +108,10 @@ extension AgenticFlowTesting {
             "plain tool does not manufacture result processing"
         )
 
-        try Expect.true(
-            execution.result.receipt == nil,
-            "plain tool does not manufacture compatibility receipt"
-        )
-
         return [
             .field(
                 "processing",
                 execution.result.processing == nil
-                    ? "none"
-                    : "unexpected"
-            ),
-            .field(
-                "receipt",
-                execution.result.receipt == nil
                     ? "none"
                     : "unexpected"
             ),
@@ -283,42 +178,6 @@ private struct ResultProcessingTool:
     }
 }
 
-private struct LegacyResultReceiptTool:
-    AgentTool
-{
-    let identifier: AgentToolIdentifier =
-        "result_processing_legacy_receipt"
-
-    let description =
-        "Proves legacy receipt compatibility bridging."
-
-    let risk: ActionRisk =
-        .observe
-
-    func call(
-        input: JSONValue,
-        workspace _: AgentWorkspace?
-    ) async throws -> JSONValue {
-        input
-    }
-
-    func receipt(
-        input _: JSONValue,
-        output _: JSONValue,
-        workspace _: AgentWorkspace?
-    ) -> AgentToolReceipt? {
-        .init(
-            status: "legacy",
-            summary: "Legacy receipt.",
-            items: [
-                .init(
-                    label: "legacy",
-                    value: "fact"
-                )
-            ]
-        )
-    }
-}
 
 private struct PlainResultTool:
     AgentTool

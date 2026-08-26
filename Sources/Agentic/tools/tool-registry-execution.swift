@@ -38,39 +38,14 @@ public extension ToolRegistry {
             workspace: context.workspace
         )
 
-        let resolvedProcessing: AgentToolResultProcessing?
-        let receipt: AgentToolReceipt?
-
-        if processing.isEmpty {
-            receipt = tool.receipt(
-                input: call.input,
-                output: output,
-                workspace: context.workspace
-            )
-
-            resolvedProcessing = receipt.map { receipt in
-                .init(
-                    projection: .init(
-                        receipt
-                    )
-                )
-            }
-        } else {
-            resolvedProcessing = processing
-
-            receipt = processing.projection.map { projection in
-                AgentToolReceipt(
-                    projection
-                )
-            }
-        }
-
         return .init(
             toolCallID: call.id,
             name: call.name,
             output: output,
-            processing: resolvedProcessing,
-            receipt: receipt
+            processing:
+                processing.isEmpty
+                    ? nil
+                    : processing
         )
     }
 }

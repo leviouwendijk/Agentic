@@ -12,12 +12,6 @@ public protocol AgentTool: Sendable {
         workspace: AgentWorkspace?
     ) -> AgentToolResultProcessing
 
-    func receipt(
-        input: JSONValue,
-        output: JSONValue,
-        workspace: AgentWorkspace?
-    ) -> AgentToolReceipt?
-
     func preflight(
         input: JSONValue,
         workspace: AgentWorkspace?
@@ -45,14 +39,6 @@ public extension AgentTool {
         workspace _: AgentWorkspace?
     ) -> AgentToolResultProcessing {
         .none
-    }
-
-    func receipt(
-        input _: JSONValue,
-        output _: JSONValue,
-        workspace _: AgentWorkspace?
-    ) -> AgentToolReceipt? {
-        nil
     }
 
     var name: String {
