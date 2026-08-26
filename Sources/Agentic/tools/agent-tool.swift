@@ -6,6 +6,12 @@ public protocol AgentTool: Sendable {
     var inputSchema: JSONValue? { get }
     var risk: ActionRisk { get }
 
+    func receipt(
+        input: JSONValue,
+        output: JSONValue,
+        workspace: AgentWorkspace?
+    ) -> AgentToolReceipt?
+
     func preflight(
         input: JSONValue,
         workspace: AgentWorkspace?
@@ -24,6 +30,14 @@ public protocol AgentTool: Sendable {
 
 public extension AgentTool {
     var inputSchema: JSONValue? {
+        nil
+    }
+
+    func receipt(
+        input _: JSONValue,
+        output _: JSONValue,
+        workspace _: AgentWorkspace?
+    ) -> AgentToolReceipt? {
         nil
     }
 

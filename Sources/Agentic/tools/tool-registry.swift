@@ -107,7 +107,12 @@ public struct ToolRegistry: Sendable {
         return AgentToolResult(
             toolCallID: toolCall.id,
             name: tool.identifier.rawValue,
-            output: output
+            output: output,
+            receipt: tool.receipt(
+                input: toolCall.input,
+                output: output,
+                workspace: workspace
+            )
         )
     }
 }

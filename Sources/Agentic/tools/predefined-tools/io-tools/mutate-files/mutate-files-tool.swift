@@ -364,6 +364,142 @@ public struct MutateFilesTool: AgentTool, StaticAgentTool {
             workspace: context.workspace
         )
     }
+
+    public func receipt(
+        input _: JSONValue,
+        output: JSONValue,
+        workspace: AgentWorkspace?
+    ) -> AgentToolReceipt? {
+        guard let result = try? JSONToolBridge.decode(
+            MutateFilesToolOutput.self,
+            from: output
+        ) else {
+            return nil
+        }
+
+        let changedEntries = result.entries.filter {
+            $0.changeCount > 0
+                || $0.resource != "unchanged"
+        }
+
+        let rootPath =
+            workspace?
+                .rootURL
+                .standardizedFileURL
+                .path
+
+        func displayPath(
+            _ path: String
+        ) -> String {
+            guard path.hasPrefix("/"),
+                  let rootPath
+            else {
+                return path
+            }
+
+            let target =
+                URL(
+                    fileURLWithPath: path
+                )
+                .standardizedFileURL
+                .path
+
+            let prefix =
+                rootPath.hasSuffix("/")
+                    ? rootPath
+                    : rootPath + "/"
+
+            guard target.hasPrefix(prefix) else {
+                return path
+            }
+
+            return String(
+                target.dropFirst(
+                    prefix.count
+                )
+            )
+        }
+
+        func detail(
+            _ entry: MutateFilesToolEntryOutput
+        ) -> String {
+            var parts = [
+                entry.resource
+            ]
+
+            if entry.insertions > 0 {
+                parts.append(
+                    "+\(entry.insertions)"
+                )
+            }
+
+            if entry.deletions > 0 {
+                parts.append(
+                    "-\(entry.deletions)"
+                )
+            }
+
+            if parts.count == 1,
+               entry.changeCount > 0 {
+                parts.append(
+                    "\(entry.changeCount) changes"
+                )
+            }
+
+            return parts.joined(
+                separator: " · "
+            )
+        }
+
+        var counts: [String] = []
+
+        if result.creates > 0 {
+            counts.append(
+                "\(result.creates) created"
+            )
+        }
+
+        if result.updates > 0 {
+            counts.append(
+                "\(result.updates) updated"
+            )
+        }
+
+        if result.deletes > 0 {
+            counts.append(
+                "\(result.deletes) deleted"
+            )
+        }
+
+        if result.unchanged > 0 {
+            counts.append(
+                "\(result.unchanged) unchanged"
+            )
+        }
+
+        return AgentToolReceipt(
+            status:
+                changedEntries.isEmpty
+                    ? "no changes"
+                    : result.status,
+            summary:
+                counts.isEmpty
+                    ? "No files changed."
+                    : counts.joined(
+                        separator: " · "
+                    ),
+            items: changedEntries.map { entry in
+                .init(
+                    label: displayPath(
+                        entry.path
+                    ),
+                    value: detail(
+                        entry
+                    )
+                )
+            }
+        )
+    }
 }
 
 private extension MutateFilesTool {

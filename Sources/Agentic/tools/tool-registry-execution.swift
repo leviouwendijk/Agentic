@@ -35,7 +35,12 @@ public extension ToolRegistry {
         return .init(
             toolCallID: call.id,
             name: call.name,
-            output: output
+            output: output,
+            receipt: tool.receipt(
+                input: call.input,
+                output: output,
+                workspace: context.workspace
+            )
         )
     }
 }
