@@ -341,6 +341,27 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.tool_plan_sequence_stops_after_failure,
+            tags: ["agentic", "tool-plan", "sequence", "failure"]
+        ) {
+            try await AgenticFlowTesting.runToolPlanSequenceStopsAfterFailure()
+        },
+
+        TestFlow(
+            ID.tool_plan_nested_success_recursion,
+            tags: ["agentic", "tool-plan", "recursion", "success"]
+        ) {
+            try await AgenticFlowTesting.runToolPlanNestedSuccessRecursion()
+        },
+
+        TestFlow(
+            ID.tool_plan_batch_continues_independent_siblings,
+            tags: ["agentic", "tool-plan", "batch", "failure"]
+        ) {
+            try await AgenticFlowTesting.runToolPlanBatchContinuesIndependentSiblings()
+        },
+
+        TestFlow(
             ID.model_route_planner_prefers_default,
             tags: ["agentic", "model-routing"]
         ) {
@@ -556,6 +577,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let tool_use_batch_observe = "tool-use-batch-observe"
         static let tool_use_batch_approval_skip = "tool-use-batch-approval-skip"
         static let tool_use_batch_denial_skip = "tool-use-batch-denial-skip"
+
+        static let tool_plan_sequence_stops_after_failure = "tool-plan-sequence-stops-after-failure"
+        static let tool_plan_nested_success_recursion = "tool-plan-nested-success-recursion"
+        static let tool_plan_batch_continues_independent_siblings = "tool-plan-batch-continues-independent-siblings"
 
         static let model_route_planner_prefers_default = "model-route-planner-prefers-default"
         static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"

@@ -81,4 +81,18 @@ public struct ToolInvoker: Sendable {
             toolResult: toolResult
         )
     }
+
+    public func invoke(
+        _ plan: AgentToolPlan,
+        context: AgentToolExecutionContext = .init(),
+        approvalHandler: (any ToolApprovalHandler)? = nil
+    ) async throws -> AgentToolPlanResult {
+        try await AgentToolPlanExecutor(
+            invoker: self
+        ).execute(
+            plan,
+            context: context,
+            approvalHandler: approvalHandler
+        )
+    }
 }
