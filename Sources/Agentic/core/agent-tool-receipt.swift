@@ -34,3 +34,37 @@ public struct AgentToolReceipt:
         }
     }
 }
+
+public extension AgentToolReceipt {
+    init(
+        _ projection: AgentToolResultProjection
+    ) {
+        self.init(
+            status: projection.status,
+            summary: projection.summary,
+            items: projection.facts.map { fact in
+                .init(
+                    label: fact.label,
+                    value: fact.value
+                )
+            }
+        )
+    }
+}
+
+public extension AgentToolResultProjection {
+    init(
+        _ receipt: AgentToolReceipt
+    ) {
+        self.init(
+            status: receipt.status,
+            summary: receipt.summary,
+            facts: receipt.items.map { item in
+                .init(
+                    label: item.label,
+                    value: item.value
+                )
+            }
+        )
+    }
+}

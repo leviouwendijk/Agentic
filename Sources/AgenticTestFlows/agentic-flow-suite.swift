@@ -362,6 +362,27 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.tool_result_processing_new_style,
+            tags: ["agentic", "tool-result", "processing"]
+        ) {
+            try await AgenticFlowTesting.runToolResultProcessingNewStyle()
+        },
+
+        TestFlow(
+            ID.tool_result_processing_legacy_receipt,
+            tags: ["agentic", "tool-result", "processing", "compatibility"]
+        ) {
+            try await AgenticFlowTesting.runToolResultProcessingLegacyReceipt()
+        },
+
+        TestFlow(
+            ID.tool_result_processing_plain,
+            tags: ["agentic", "tool-result", "processing", "plain"]
+        ) {
+            try await AgenticFlowTesting.runToolResultProcessingPlain()
+        },
+
+        TestFlow(
             ID.guideline_relation_identity,
             tags: ["agentic", "guidelines", "identity"]
         ) {
@@ -609,6 +630,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let tool_plan_sequence_stops_after_failure = "tool-plan-sequence-stops-after-failure"
         static let tool_plan_nested_success_recursion = "tool-plan-nested-success-recursion"
         static let tool_plan_batch_continues_independent_siblings = "tool-plan-batch-continues-independent-siblings"
+
+        static let tool_result_processing_new_style = "tool-result-processing-new-style"
+        static let tool_result_processing_legacy_receipt = "tool-result-processing-legacy-receipt"
+        static let tool_result_processing_plain = "tool-result-processing-plain"
 
         static let guideline_relation_identity = "guideline-relation-identity"
         static let guideline_relation_codable_defaults = "guideline-relation-codable-defaults"

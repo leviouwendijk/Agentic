@@ -6,6 +6,12 @@ public protocol AgentTool: Sendable {
     var inputSchema: JSONValue? { get }
     var risk: ActionRisk { get }
 
+    func processResult(
+        input: JSONValue,
+        output: JSONValue,
+        workspace: AgentWorkspace?
+    ) -> AgentToolResultProcessing
+
     func receipt(
         input: JSONValue,
         output: JSONValue,
@@ -31,6 +37,14 @@ public protocol AgentTool: Sendable {
 public extension AgentTool {
     var inputSchema: JSONValue? {
         nil
+    }
+
+    func processResult(
+        input _: JSONValue,
+        output _: JSONValue,
+        workspace _: AgentWorkspace?
+    ) -> AgentToolResultProcessing {
+        .none
     }
 
     func receipt(
