@@ -362,6 +362,34 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.guideline_relation_identity,
+            tags: ["agentic", "guidelines", "identity"]
+        ) {
+            try await AgenticFlowTesting.runGuidelineRelationIdentity()
+        },
+
+        TestFlow(
+            ID.guideline_relation_codable_defaults,
+            tags: ["agentic", "guidelines", "codable"]
+        ) {
+            try await AgenticFlowTesting.runGuidelineRelationCodableDefaults()
+        },
+
+        TestFlow(
+            ID.guideline_relation_plan_propagation,
+            tags: ["agentic", "guidelines", "tool-plan", "review"]
+        ) {
+            try await AgenticFlowTesting.runGuidelineRelationPlanPropagation()
+        },
+
+        TestFlow(
+            ID.guideline_relation_approval_review_boundary,
+            tags: ["agentic", "guidelines", "approval", "review"]
+        ) {
+            try await AgenticFlowTesting.runGuidelineRelationApprovalReviewBoundary()
+        },
+
+        TestFlow(
             ID.model_route_planner_prefers_default,
             tags: ["agentic", "model-routing"]
         ) {
@@ -581,6 +609,11 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let tool_plan_sequence_stops_after_failure = "tool-plan-sequence-stops-after-failure"
         static let tool_plan_nested_success_recursion = "tool-plan-nested-success-recursion"
         static let tool_plan_batch_continues_independent_siblings = "tool-plan-batch-continues-independent-siblings"
+
+        static let guideline_relation_identity = "guideline-relation-identity"
+        static let guideline_relation_codable_defaults = "guideline-relation-codable-defaults"
+        static let guideline_relation_plan_propagation = "guideline-relation-plan-propagation"
+        static let guideline_relation_approval_review_boundary = "guideline-relation-approval-review-boundary"
 
         static let model_route_planner_prefers_default = "model-route-planner-prefers-default"
         static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"

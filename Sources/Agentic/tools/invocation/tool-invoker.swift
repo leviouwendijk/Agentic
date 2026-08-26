@@ -24,7 +24,8 @@ public struct ToolInvoker: Sendable {
             preflight: preflight,
             requirement: policy.evaluate(
                 preflight
-            )
+            ),
+            guidelineRelations: context.guidelineRelations
         )
     }
 
@@ -54,8 +55,7 @@ public struct ToolInvoker: Sendable {
             }
 
             decision = try await approvalHandler.decide(
-                on: review.preflight,
-                requirement: review.requirement
+                on: review
             )
 
         case .denied_forbidden:

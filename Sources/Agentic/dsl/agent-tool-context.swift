@@ -10,6 +10,7 @@ public struct AgentToolExecutionContext: Sendable {
     public let toolCallID: String?
     public let preparedIntentID: PreparedIntentIdentifier?
     public let executionMode: AgentToolExecutionMode
+    public let guidelineRelations: [AgentGuidelineRelation]
     public let metadata: [String: String]
 
     public init(
@@ -18,6 +19,7 @@ public struct AgentToolExecutionContext: Sendable {
         toolCallID: String? = nil,
         preparedIntentID: PreparedIntentIdentifier? = nil,
         executionMode: AgentToolExecutionMode = .host_call,
+        guidelineRelations: [AgentGuidelineRelation] = [],
         metadata: [String: String] = [:]
     ) {
         self.workspace = workspace
@@ -25,6 +27,7 @@ public struct AgentToolExecutionContext: Sendable {
         self.toolCallID = toolCallID
         self.preparedIntentID = preparedIntentID
         self.executionMode = executionMode
+        self.guidelineRelations = guidelineRelations
         self.metadata = metadata
     }
 
@@ -37,6 +40,7 @@ public struct AgentToolExecutionContext: Sendable {
             toolCallID: toolCallID,
             preparedIntentID: preparedIntentID,
             executionMode: executionMode,
+            guidelineRelations: guidelineRelations,
             metadata: metadata
         )
     }
@@ -50,6 +54,7 @@ public struct AgentToolExecutionContext: Sendable {
             toolCallID: toolCallID,
             preparedIntentID: preparedIntentID,
             executionMode: executionMode,
+            guidelineRelations: guidelineRelations,
             metadata: metadata
         )
     }
@@ -63,6 +68,31 @@ public struct AgentToolExecutionContext: Sendable {
             toolCallID: toolCallID,
             preparedIntentID: preparedIntentID,
             executionMode: executionMode,
+            guidelineRelations: guidelineRelations,
+            metadata: metadata
+        )
+    }
+
+    public func appendingGuidelineRelations(
+        _ additionalRelations: [AgentGuidelineRelation]
+    ) -> Self {
+        var guidelineRelations = guidelineRelations
+
+        for relation in additionalRelations
+        where !guidelineRelations.contains(relation)
+        {
+            guidelineRelations.append(
+                relation
+            )
+        }
+
+        return .init(
+            workspace: workspace,
+            sessionID: sessionID,
+            toolCallID: toolCallID,
+            preparedIntentID: preparedIntentID,
+            executionMode: executionMode,
+            guidelineRelations: guidelineRelations,
             metadata: metadata
         )
     }
@@ -76,6 +106,7 @@ public struct AgentToolExecutionContext: Sendable {
             toolCallID: toolCallID,
             preparedIntentID: preparedIntentID,
             executionMode: executionMode,
+            guidelineRelations: guidelineRelations,
             metadata: metadata.merging(
                 additionalMetadata
             ) { _, new in

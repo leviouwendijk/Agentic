@@ -20,6 +20,7 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/leviouwendijk/Guidelines.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Primitives.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/IO.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Writers.git", branch: "master"),
@@ -48,6 +49,7 @@ let package = Package(
             name: "Agentic",
             dependencies: [
                 .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Guidelines", package: "Guidelines"),
                 .product(name: "IO", package: "IO"),
                 .product(name: "Writers", package: "Writers"),
                 .product(name: "Readers", package: "Readers"),
@@ -72,6 +74,7 @@ let package = Package(
             name: "AgenticTestFlows",
             dependencies: [
                 "Agentic",
+                .product(name: "Guidelines", package: "Guidelines"),
                 .product(name: "TestFlows", package: "TestFlows"),
                 .product(name: "Primitives", package: "Primitives"),
                 .product(name: "IO", package: "IO"),

@@ -5,15 +5,86 @@ public extension ToolInvocation {
         public let call: AgentToolCall
         public let preflight: ToolPreflight
         public let requirement: ApprovalRequirement
+        public let guidelineRelations: [AgentGuidelineRelation]
 
         public init(
             call: AgentToolCall,
             preflight: ToolPreflight,
-            requirement: ApprovalRequirement
+            requirement: ApprovalRequirement,
+            guidelineRelations: [AgentGuidelineRelation] = []
         ) {
             self.call = call
             self.preflight = preflight
             self.requirement = requirement
+            self.guidelineRelations = guidelineRelations
+        }
+
+        private enum CodingKeys:
+            String,
+            CodingKey
+        {
+            case call
+            case preflight
+            case requirement
+            case guidelineRelations
+        }
+
+        public init(
+            from decoder: any Decoder
+        ) throws {
+            let container = try decoder.container(
+                keyedBy: CodingKeys.self
+            )
+
+            self.call = try container.decode(
+                AgentToolCall.self,
+                forKey: .call
+            )
+
+            self.preflight = try container.decode(
+                ToolPreflight.self,
+                forKey: .preflight
+            )
+
+            self.requirement = try container.decode(
+                ApprovalRequirement.self,
+                forKey: .requirement
+            )
+
+            self.guidelineRelations =
+                try container.decodeIfPresent(
+                    [AgentGuidelineRelation].self,
+                    forKey: .guidelineRelations
+                )
+                ?? []
+        }
+
+        public func encode(
+            to encoder: any Encoder
+        ) throws {
+            var container = encoder.container(
+                keyedBy: CodingKeys.self
+            )
+
+            try container.encode(
+                call,
+                forKey: .call
+            )
+
+            try container.encode(
+                preflight,
+                forKey: .preflight
+            )
+
+            try container.encode(
+                requirement,
+                forKey: .requirement
+            )
+
+            try container.encode(
+                guidelineRelations,
+                forKey: .guidelineRelations
+            )
         }
     }
 

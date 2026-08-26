@@ -18,6 +18,10 @@ public struct AgentToolPlanExecutor:
     ) async throws -> AgentToolPlanResult {
         try plan.validate()
 
+        let context = context.appendingGuidelineRelations(
+            plan.guidelineRelations
+        )
+
         let execution = await execute(
             plan.root,
             path: "root",

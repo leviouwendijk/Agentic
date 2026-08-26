@@ -20,13 +20,73 @@ public struct AgentToolPlan:
 {
     public let id: String
     public let root: AgentToolPlanNode
+    public let guidelineRelations: [AgentGuidelineRelation]
 
     public init(
         id: String = UUID().uuidString,
-        root: AgentToolPlanNode
+        root: AgentToolPlanNode,
+        guidelineRelations: [AgentGuidelineRelation] = []
     ) {
         self.id = id
         self.root = root
+        self.guidelineRelations = guidelineRelations
+    }
+
+    private enum CodingKeys:
+        String,
+        CodingKey
+    {
+        case id
+        case root
+        case guidelineRelations
+    }
+
+    public init(
+        from decoder: any Decoder
+    ) throws {
+        let container = try decoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        self.id = try container.decode(
+            String.self,
+            forKey: .id
+        )
+
+        self.root = try container.decode(
+            AgentToolPlanNode.self,
+            forKey: .root
+        )
+
+        self.guidelineRelations =
+            try container.decodeIfPresent(
+                [AgentGuidelineRelation].self,
+                forKey: .guidelineRelations
+            )
+            ?? []
+    }
+
+    public func encode(
+        to encoder: any Encoder
+    ) throws {
+        var container = encoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        try container.encode(
+            id,
+            forKey: .id
+        )
+
+        try container.encode(
+            root,
+            forKey: .root
+        )
+
+        try container.encode(
+            guidelineRelations,
+            forKey: .guidelineRelations
+        )
     }
 
     public func validate() throws {
