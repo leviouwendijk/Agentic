@@ -405,6 +405,13 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.application_composition,
+            tags: ["agentic", "application", "composition"]
+        ) {
+            try await AgenticFlowTesting.runApplicationComposition()
+        },
+
+        TestFlow(
             ID.model_route_planner_prefers_default,
             tags: ["agentic", "model-routing"]
         ) {
@@ -632,6 +639,8 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let guideline_relation_codable_defaults = "guideline-relation-codable-defaults"
         static let guideline_relation_plan_propagation = "guideline-relation-plan-propagation"
         static let guideline_relation_approval_review_boundary = "guideline-relation-approval-review-boundary"
+
+        static let application_composition = "application-composition"
 
         static let model_route_planner_prefers_default = "model-route-planner-prefers-default"
         static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"
