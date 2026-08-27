@@ -9,20 +9,6 @@ public actor AgentTaskManager {
         self.store = store
     }
 
-    public static func resolve(
-        environment: AgentRuntimeEnvironment
-    ) throws -> Self {
-        guard let tasksdir = environment.tasksdir() else {
-            throw AgentTaskError.durableStorageRequired
-        }
-
-        return .init(
-            store: FileAgentTaskStore(
-                tasksdir: tasksdir
-            )
-        )
-    }
-
     public func create(
         subject: String,
         description: String = "",

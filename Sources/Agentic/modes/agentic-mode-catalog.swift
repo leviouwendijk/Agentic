@@ -62,55 +62,14 @@ public struct ModeCatalog: Sendable, Codable, Hashable {
 
     public func selection(
         _ id: AgenticModeIdentifier,
-        baseConfiguration: AgentRunnerConfiguration = .default,
         overlay: ModeOverlay = .init()
     ) throws -> ModeSelection {
         try .init(
             mode: mode(
                 id
             ),
-            baseConfiguration: baseConfiguration,
             overlay: overlay
         )
     }
 
-    public static var standard: Self {
-        get throws {
-            try .init(
-                modes: [
-                    .planning,
-                    .research,
-                    .coder,
-                    .review,
-                    .debugging,
-                    .cheap_utility,
-                    .private
-                ]
-            )
-        }
-    }
-}
-
-public extension Agentic {
-    struct ModeAPI: Sendable {
-        public init() {}
-
-        public func catalog() throws -> ModeCatalog {
-            try .standard
-        }
-
-        public func selection(
-            _ id: AgenticModeIdentifier,
-            baseConfiguration: AgentRunnerConfiguration = .default,
-            overlay: ModeOverlay = .init()
-        ) throws -> ModeSelection {
-            try catalog().selection(
-                id,
-                baseConfiguration: baseConfiguration,
-                overlay: overlay
-            )
-        }
-    }
-
-    static let mode: ModeAPI = .init()
 }
