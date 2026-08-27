@@ -412,6 +412,42 @@ enum AgenticFlowSuite: TestFlowRegistry {
         },
 
         TestFlow(
+            ID.mutate_files_move,
+            tags: [
+                "agentic",
+                "mutation",
+                "move",
+                "workspace",
+            ]
+        ) {
+            try await AgenticFlowTesting.runMutateFilesMove()
+        },
+
+        TestFlow(
+            ID.remove_empty_directories,
+            tags: [
+                "agentic",
+                "filesystem",
+                "directory",
+                "mutation",
+            ]
+        ) {
+            try await AgenticFlowTesting.runRemoveEmptyDirectories()
+        },
+
+        TestFlow(
+            ID.remove_empty_directories_rejects_nonempty,
+            tags: [
+                "agentic",
+                "filesystem",
+                "directory",
+                "safety",
+            ]
+        ) {
+            try await AgenticFlowTesting.runRemoveEmptyDirectoriesRejectsNonEmpty()
+        },
+
+        TestFlow(
             ID.model_route_planner_prefers_default,
             tags: ["agentic", "model-routing"]
         ) {
@@ -641,6 +677,10 @@ enum AgenticFlowSuite: TestFlowRegistry {
         static let guideline_relation_approval_review_boundary = "guideline-relation-approval-review-boundary"
 
         static let application_composition = "application-composition"
+
+        static let mutate_files_move = "mutate-files-move"
+        static let remove_empty_directories = "remove-empty-directories"
+        static let remove_empty_directories_rejects_nonempty = "remove-empty-directories-rejects-nonempty"
 
         static let model_route_planner_prefers_default = "model-route-planner-prefers-default"
         static let model_route_researcher_prefers_default = "model-route-researcher-prefers-default"

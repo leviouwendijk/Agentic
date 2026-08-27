@@ -8,6 +8,7 @@ public enum MutateFilesToolEntryKind: String, Sendable, Codable, Hashable, CaseI
     case create_text
     case replace_text
     case edit_text
+    case move
     case delete
 }
 
@@ -19,6 +20,8 @@ public struct MutateFilesToolEntry: Sendable, Codable, Hashable {
     public let replacePolicy: StandardReplacePolicy?
     public let deletePolicy: StandardDeletePolicy?
     public let operations: [EditFileToolOperation]?
+    public let destination: String?
+    public let createParentDirectories: Bool?
 
     public init(
         kind: MutateFilesToolEntryKind,
@@ -27,7 +30,9 @@ public struct MutateFilesToolEntry: Sendable, Codable, Hashable {
         content: String? = nil,
         replacePolicy: StandardReplacePolicy? = nil,
         deletePolicy: StandardDeletePolicy? = nil,
-        operations: [EditFileToolOperation]? = nil
+        operations: [EditFileToolOperation]? = nil,
+        destination: String? = nil,
+        createParentDirectories: Bool? = nil
     ) {
         self.kind = kind
         self.rootID = rootID
@@ -36,6 +41,8 @@ public struct MutateFilesToolEntry: Sendable, Codable, Hashable {
         self.replacePolicy = replacePolicy
         self.deletePolicy = deletePolicy
         self.operations = operations
+        self.destination = destination
+        self.createParentDirectories = createParentDirectories
     }
 }
 
@@ -253,7 +260,9 @@ public struct MutateFilesTool: AgentTool, StaticAgentTool {
             toolName: name,
             risk: risk,
             workspaceRoot: workspace.rootURL.path,
-            targetPaths: authorized.map(\.presentationPath),
+            targetPaths: authorized
+                .flatMap { $0 }
+                .map(\.presentationPath),
             summary: preflightSummary(
                 input: decoded,
                 plan: plan
@@ -265,9 +274,11 @@ public struct MutateFilesTool: AgentTool, StaticAgentTool {
             sideEffects: risk.defaultSideEffects,
             rootIDs: Array(
                 Set(
-                    authorized.map {
-                        $0.rootID.rawValue
-                    }
+                    authorized
+                        .flatMap { $0 }
+                        .map {
+                            $0.rootID.rawValue
+                        }
                 )
             ).sorted(),
             capabilitiesRequired: [
@@ -516,16 +527,39 @@ private extension MutateFilesTool {
     func authorizeEntries(
         _ input: MutateFilesToolInput,
         workspace: AgentWorkspace
-    ) throws -> [AgenticAuthorizedPath] {
+    ) throws -> [[AgenticAuthorizedPath]] {
         try input.entries.map { entry in
-            try FileToolAccess.authorize(
+            let rootID = entry.rootID ?? input.rootID
+            let source = try FileToolAccess.authorize(
                 workspace: workspace,
-                rootID: entry.rootID ?? input.rootID,
+                rootID: rootID,
                 path: entry.path,
                 capability: .write,
                 toolName: name,
                 type: .file
             )
+
+            guard entry.kind == .move else {
+                return [
+                    source,
+                ]
+            }
+
+            let destination = try FileToolAccess.authorize(
+                workspace: workspace,
+                rootID: rootID,
+                path: try entry.requiredDestination(
+                    toolName: name
+                ),
+                capability: .write,
+                toolName: name,
+                type: .file
+            )
+
+            return [
+                source,
+                destination,
+            ]
         }
     }
 
@@ -573,7 +607,7 @@ private extension MutateFilesTool {
 
     func makeDiffPreview(
         plan: StandardMutationPlan,
-        authorized: [AgenticAuthorizedPath]
+        authorized: [[AgenticAuthorizedPath]]
     ) -> ToolPreflightDiffPreview {
         let presentationPathsByEntryID: [UUID: String] = Dictionary(
             uniqueKeysWithValues: plan.entries.enumerated().compactMap { pair in
@@ -585,7 +619,8 @@ private extension MutateFilesTool {
 
                 return (
                     pair.element.id,
-                    authorized[pair.offset].presentationPath
+                    authorized[pair.offset].first?.presentationPath
+                        ?? pair.element.target.lastPathComponent
                 )
             }
         )
@@ -772,6 +807,17 @@ private extension MutateFilesToolEntry {
                 )
             )
 
+        case .move:
+            return .move(
+                from: path,
+                to: try requiredDestination(
+                    toolName: toolName
+                ),
+                rootIdentifier: rootID,
+                createParentDirectories:
+                    createParentDirectories ?? true
+            )
+
         case .delete:
             return .delete(
                 at: path,
@@ -780,6 +826,23 @@ private extension MutateFilesToolEntry {
                 type: .file
             )
         }
+    }
+
+    func requiredDestination(
+        toolName: String
+    ) throws -> String {
+        guard let destination,
+              !destination.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+              ).isEmpty
+        else {
+            throw PredefinedFileToolError.missingField(
+                tool: toolName,
+                field: "destination"
+            )
+        }
+
+        return destination
     }
 
     func requiredContent(
@@ -889,6 +952,7 @@ public extension MutateFilesToolEntry {
             create_text requires path and content and fails if the file exists.
             replace_text requires path and content and defaults replacePolicy to upsert.
             edit_text requires path and operations using the same operation schema as edit_file.
+            move requires path as the source and destination as the destination path.
             delete requires path and defaults deletePolicy to existing.
             """
         ) {
@@ -920,6 +984,14 @@ public extension MutateFilesToolEntry {
                 "deletePolicy",
                 description: "Policy for delete.",
                 cases: StandardDeletePolicy.allCases.map(\.rawValue)
+            )
+            JSONSchema.string(
+                "destination",
+                description: "Destination path for move."
+            )
+            JSONSchema.boolean(
+                "createParentDirectories",
+                description: "For move, create missing destination parent directories. Defaults to true."
             )
             JSONSchema.array(
                 "operations",

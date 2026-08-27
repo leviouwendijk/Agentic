@@ -21,6 +21,7 @@ public struct CoreFileToolSet: AgentToolSet {
             //     recorder: fileMutationRecorder
             // )
             MutateFilesTool()
+            RemoveEmptyDirectoriesTool()
             ScanPathsTool()
         }
     }

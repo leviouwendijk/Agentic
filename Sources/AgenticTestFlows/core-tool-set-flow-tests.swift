@@ -9,7 +9,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             fileRegistry.count,
-            3,
+            4,
             "core file tool set count"
         )
 
@@ -25,6 +25,13 @@ extension AgenticFlowTesting {
                 named: "mutate_files"
             ),
             "core file tool set mutate_files"
+        )
+
+        _ = try Expect.notNil(
+            fileRegistry.tool(
+                named: "remove_empty_directories"
+            ),
+            "core file tool set remove_empty_directories"
         )
 
         _ = try Expect.notNil(
@@ -72,6 +79,12 @@ extension AgenticFlowTesting {
 
         try Expect.contains(
             mutateFilesSchema,
+            "move",
+            "mutate_files schema exposes move"
+        )
+
+        try Expect.contains(
+            mutateFilesSchema,
             "delete",
             "mutate_files schema exposes delete"
         )
@@ -115,7 +128,7 @@ extension AgenticFlowTesting {
 
         try Expect.equal(
             coreRegistry.count,
-            7,
+            8,
             "core tool set count"
         )
 
