@@ -1,11 +1,13 @@
 public enum AgentContentBlock: Sendable, Codable, Hashable {
     case text(String)
+    case resource(AgentResource)
     case tool_call(AgentToolCall)
     case tool_result(AgentToolResult)
 
     private enum CodingKeys: String, CodingKey {
         case kind
         case text
+        case resource
         case tool_call
         case tool_result
     }
@@ -17,6 +19,7 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
 
     private enum Kind: String, Codable {
         case text
+        case resource
         case tool_call
         case tool_result
 
@@ -27,6 +30,9 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
             switch rawValue {
             case "text":
                 self = .text
+
+            case "resource":
+                self = .resource
 
             case "tool_call", "toolCall":
                 self = .tool_call
@@ -61,6 +67,14 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
                 try container.decode(
                     String.self,
                     forKey: .text
+                )
+            )
+
+        case .resource:
+            self = .resource(
+                try container.decode(
+                    AgentResource.self,
+                    forKey: .resource
                 )
             )
 
@@ -112,6 +126,16 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
             try container.encode(
                 value,
                 forKey: .text
+            )
+
+        case .resource(let value):
+            try container.encode(
+                Kind.resource,
+                forKey: .kind
+            )
+            try container.encode(
+                value,
+                forKey: .resource
             )
 
         case .tool_call(let value):

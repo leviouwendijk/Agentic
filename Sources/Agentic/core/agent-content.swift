@@ -15,6 +15,12 @@ public extension AgentContent {
         self.init(blocks: [.text(text)])
     }
 
+    init(
+        resource: AgentResource
+    ) {
+        self.init(blocks: [.resource(resource)])
+    }
+
     var text: String {
         blocks.compactMap { block in
             guard case .text(let value) = block else {
@@ -23,5 +29,15 @@ public extension AgentContent {
 
             return value
         }.joined()
+    }
+
+    var resources: [AgentResource] {
+        blocks.compactMap { block in
+            guard case .resource(let value) = block else {
+                return nil
+            }
+
+            return value
+        }
     }
 }
