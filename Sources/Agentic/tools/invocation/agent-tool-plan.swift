@@ -1,4 +1,5 @@
 import Foundation
+import Primitives
 
 public enum AgentToolPlanNodeKind:
     String,
@@ -106,6 +107,7 @@ public struct AgentToolPlanNode:
 {
     public let kind: AgentToolPlanNodeKind
     public let call: AgentToolCall?
+    public let execution: JSONValue?
     public let children: [AgentToolPlanNode]
     public let onSuccess: [AgentToolPlanNode]
     public let onFailure: [AgentToolPlanNode]
@@ -114,6 +116,7 @@ public struct AgentToolPlanNode:
     public init(
         kind: AgentToolPlanNodeKind,
         call: AgentToolCall? = nil,
+        execution: JSONValue? = nil,
         children: [AgentToolPlanNode] = [],
         onSuccess: [AgentToolPlanNode] = [],
         onFailure: [AgentToolPlanNode] = [],
@@ -121,6 +124,7 @@ public struct AgentToolPlanNode:
     ) {
         self.kind = kind
         self.call = call
+        self.execution = execution
         self.children = children
         self.onSuccess = onSuccess
         self.onFailure = onFailure
@@ -129,6 +133,7 @@ public struct AgentToolPlanNode:
 
     public static func call(
         _ call: AgentToolCall,
+        execution: JSONValue? = nil,
         onSuccess: [Self] = [],
         onFailure: [Self] = [],
         onDenied: [Self] = []
@@ -136,6 +141,7 @@ public struct AgentToolPlanNode:
         .init(
             kind: .call,
             call: call,
+            execution: execution,
             onSuccess: onSuccess,
             onFailure: onFailure,
             onDenied: onDenied
@@ -244,10 +250,12 @@ private extension AgentToolPlanNode {
 
         case .sequence,
              .batch:
-            guard call == nil else {
+            guard call == nil,
+                  execution == nil
+            else {
                 throw AgentToolPlanError.invalidNode(
                     path: path,
-                    reason: "\(kind.rawValue) nodes cannot contain a direct AgentToolCall."
+                    reason: "\(kind.rawValue) nodes cannot contain a direct AgentToolCall or execution directive."
                 )
             }
 
