@@ -24,26 +24,6 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Primitives.git",
             branch: "master"
         ),
-        // .package(
-        //     url: "https://github.com/leviouwendijk/Path.git",
-        //     branch: "master"
-        // ),
-        // .package(
-        //     url: "https://github.com/leviouwendijk/Tokens.git",
-        //     branch: "master"
-        // ),
-        // .package(
-        //     url: "https://github.com/leviouwendijk/Matching.git",
-        //     branch: "master"
-        // ),
-        // .package(
-        //     url: "https://github.com/leviouwendijk/Ranking.git",
-        //     branch: "master"
-        // ),
-        // .package(
-        //     url: "https://github.com/leviouwendijk/Fuzzy.git",
-        //     branch: "master"
-        // ),
     ],
     targets: [
         .target(
@@ -57,26 +37,6 @@ let package = Package(
                     name: "Primitives",
                     package: "Primitives"
                 ),
-                // .product(
-                //     name: "Path",
-                //     package: "Path"
-                // ),
-                // .product(
-                //     name: "Tokens",
-                //     package: "Tokens"
-                // ),
-                // .product(
-                //     name: "Matching",
-                //     package: "Matching"
-                // ),
-                // .product(
-                //     name: "Ranking",
-                //     package: "Ranking"
-                // ),
-                // .product(
-                //     name: "Fuzzy",
-                //     package: "Fuzzy"
-                // ),
             ]
         ),
     ]

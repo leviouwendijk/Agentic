@@ -1,5 +1,3 @@
-import Tokens
-
 public struct AgentCostUsage: Sendable, Codable, Hashable {
     public var inputTokens: Int
     public var outputTokens: Int
@@ -53,20 +51,6 @@ public struct AgentCostUsage: Sendable, Codable, Hashable {
         self.init(
             inputTokens: providerUsage.inputTokens ?? 0,
             outputTokens: providerUsage.outputTokens ?? 0,
-            requestCount: requestCount,
-            metadata: metadata
-        )
-    }
-
-    public init(
-        inputEstimate: TokenEstimate,
-        reservedOutputTokens: Int = 0,
-        requestCount: Int = 1,
-        metadata: [String: String] = [:]
-    ) {
-        self.init(
-            inputTokens: inputEstimate.estimatedTokens,
-            outputTokens: reservedOutputTokens,
             requestCount: requestCount,
             metadata: metadata
         )

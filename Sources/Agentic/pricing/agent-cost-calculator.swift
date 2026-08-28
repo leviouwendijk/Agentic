@@ -1,25 +1,4 @@
-import Tokens
-
 public enum AgentCostCalculator {
-    public static func project(
-        inputEstimate: TokenEstimate,
-        reservedOutputTokens: Int = 0,
-        pricing: ModelPricingSnapshot,
-        metadata: [String: String] = [:]
-    ) -> AgentCostProjection {
-        calculate(
-            usage: .init(
-                inputEstimate: inputEstimate,
-                reservedOutputTokens: reservedOutputTokens,
-                metadata: metadata
-            ),
-            pricing: pricing,
-            tokenEstimate: inputEstimate,
-            confidence: .estimated,
-            metadata: metadata
-        )
-    }
-
     public static func project(
         usage: AgentCostUsage,
         pricing: ModelPricingSnapshot,
@@ -28,7 +7,6 @@ public enum AgentCostCalculator {
         calculate(
             usage: usage,
             pricing: pricing,
-            tokenEstimate: nil,
             confidence: .estimated,
             metadata: metadata
         )
@@ -45,7 +23,6 @@ public enum AgentCostCalculator {
                 metadata: metadata
             ),
             pricing: pricing,
-            tokenEstimate: nil,
             confidence: .providerReported,
             metadata: metadata
         )
@@ -75,7 +52,6 @@ private extension AgentCostCalculator {
     static func calculate(
         usage: AgentCostUsage,
         pricing: ModelPricingSnapshot,
-        tokenEstimate: TokenEstimate?,
         confidence: AgentCostProjectionConfidence,
         metadata: [String: String]
     ) -> AgentCostProjection {
@@ -157,7 +133,6 @@ private extension AgentCostCalculator {
             confidence: confidence,
             pricing: pricing,
             usage: usage,
-            tokenEstimate: tokenEstimate,
             amount: amount,
             lineItems: lineItems,
             issues: issues,
