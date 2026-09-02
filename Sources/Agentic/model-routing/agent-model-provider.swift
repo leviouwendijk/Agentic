@@ -41,9 +41,11 @@ public struct AgentModelProviderDescriptor: Sendable, Codable, Hashable, Identif
 ///     AgenticOllama:
 ///         adapter + local discovery from installed models
 ///
-/// For now, use this mainly as host-facing metadata and documentation glue.
+/// Providers are the installable composition boundary for model backends.
 public protocol AgentModelProvider: Sendable {
     var descriptor: AgentModelProviderDescriptor { get }
+
+    var adapter: AgentModelAdapterFactory? { get }
 
     var profileProvider: (any AgentModelProfileProvider)? { get }
 
@@ -51,6 +53,10 @@ public protocol AgentModelProvider: Sendable {
 }
 
 public extension AgentModelProvider {
+    var adapter: AgentModelAdapterFactory? {
+        nil
+    }
+
     var profileProvider: (any AgentModelProfileProvider)? {
         nil
     }
