@@ -29,13 +29,26 @@ For a summary overview, see [AI summary](extra/ai-summary.md).
 
 * [Path](https://github.com/leviouwendijk/Path) — Paths, scoped paths, sandboxing, access rules, and scanning.
 * [IO](https://github.com/leviouwendijk/IO) — Filesystem and resource IO primitives.
+* [Readers](https://github.com/leviouwendijk/Readers) — Typed source and resource reading primitives.
 * [Writers](https://github.com/leviouwendijk/Writers) — Safe mutation planning, application, diffs, constraints, records, and rollback.
-* [Search](https://github.com/leviouwendijk/Search) — Deterministic source search, ranking, retrieval frontiers, and structural verification.
+* [FileTypes](https://github.com/leviouwendijk/FileTypes) — File and resource type classification used across workspace and multimodal handling.
+* [Position](https://github.com/leviouwendijk/Position) — Canonical source positions, ranges, and line-aware coordinates.
 * [Selection](https://github.com/leviouwendijk/Selection) — Source selections and ranges shared between search, reading, and context materialization.
 * [Concatenation](https://github.com/leviouwendijk/Concatenation) — Source composition, selection, provenance, caching, and context materialization.
+* [Search](https://github.com/leviouwendijk/Search) — Deterministic source search, ranking, retrieval frontiers, and structural verification.
+* [Parsing](https://github.com/leviouwendijk/Parsing) — General parsing, lexing, grammar, and structural verification primitives.
+* [Parsers](https://github.com/leviouwendijk/Parsers) — Reusable parser implementations and higher-level parsing components.
+* [Tokens](https://github.com/leviouwendijk/Tokens) — Tokenization and token-aware source analysis primitives.
+* [Matching](https://github.com/leviouwendijk/Matching) — Structured candidate matching and weighted match fields.
+* [Ranking](https://github.com/leviouwendijk/Ranking) — Deterministic scoring, ordering, thresholding, and result selection.
+* [Fuzzy](https://github.com/leviouwendijk/Fuzzy) — Fuzzy identifier and text matching used by discovery and retrieval.
 * [Primitives](https://github.com/leviouwendijk/Primitives) — Shared primitives including `JSONValue`.
 * [Schema](https://github.com/leviouwendijk/Schema) — Schema types and `@JSONSchema` synthesis.
 * [Difference](https://github.com/leviouwendijk/Difference) — Structured differences and diff representation.
+* [Arguments](https://github.com/leviouwendijk/Arguments) — Declarative command specifications, typed arguments, routing, parsing, and help rendering.
+* [TestFlows](https://github.com/leviouwendijk/TestFlows) — Executable flow-based testing, assertions, diagnostics, snapshots, filtering, and test-run reporting.
+* [Guidelines](https://github.com/leviouwendijk/Guidelines) — Structured guidelines and rationale metadata used to relate plans and actions to governing guidance.
+* [Milieu](https://github.com/leviouwendijk/Milieu) — Environment and runtime configuration primitives.
 * [Terminal](https://github.com/leviouwendijk/Terminal) — Reusable terminal interaction and TUI primitives.
 * [ANSI](https://github.com/leviouwendijk/ANSI) — ANSI styling and terminal representation.
 * [AWSConnector](https://github.com/leviouwendijk/AWSConnector) — Lightweight Swift AWS connectivity used by the Bedrock adapter.
