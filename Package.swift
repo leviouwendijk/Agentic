@@ -24,6 +24,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Primitives.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/Schema.git",
+            branch: "master"
+        ),
     ],
     targets: [
         .target(
@@ -36,6 +40,10 @@ let package = Package(
                 .product(
                     name: "Primitives",
                     package: "Primitives"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
                 ),
             ]
         ),

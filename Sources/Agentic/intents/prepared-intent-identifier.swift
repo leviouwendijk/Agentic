@@ -1,4 +1,14 @@
-public struct PreparedIntentIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomStringConvertible {
+import Schema
+
+public struct PreparedIntentIdentifier:
+    Sendable,
+    Codable,
+    Hashable,
+    RawRepresentable,
+    ExpressibleByStringLiteral,
+    CustomStringConvertible,
+    JSONSchemaProviding
+{
     public let rawValue: String
 
     public init(
@@ -21,5 +31,9 @@ public struct PreparedIntentIdentifier: Sendable, Codable, Hashable, RawRepresen
 
     public var description: String {
         rawValue
+    }
+
+    public static var jsonschema: JSONSchema {
+        .string()
     }
 }

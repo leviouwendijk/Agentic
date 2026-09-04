@@ -1,5 +1,5 @@
 {
-  "originHash" : "209ceaaeb32d4c4325b30c2ea4be915fdd0cf40025cb4517776cbbdb147317a8",
+  "originHash" : "6324e49163323630df84711c0e4219426f9620b83e68f568ec2bf2aa31d95944",
   "pins" : [
     {
       "identity" : "dsl",
@@ -25,7 +25,16 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "7b53326bba4229c0b8c62529dfe0934f6ddedf6c"
+        "revision" : "3b9e65785ecb8aa493c55893f61619b6967ce10d"
+      }
+    },
+    {
+      "identity" : "schema",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Schema.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "f23bd9c256f0d7b428c30db68bcd097a3a19c63a"
       }
     }
   ],
