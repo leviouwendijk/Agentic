@@ -6,8 +6,6 @@ public extension AgentToolIdentifier {
     static let estimate_context_size: Self = "estimate_context_size"
 
     static let read_file: Self = "read_file"
-    static let write_file: Self = "write_file"
-    static let edit_file: Self = "edit_file"
     static let mutate_files: Self = "mutate_files"
     static let scan_paths: Self = "scan_paths"
     static let read_selection: Self = "read_selection"
