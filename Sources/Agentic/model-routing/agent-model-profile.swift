@@ -48,45 +48,77 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         model
     }
 
+    /// Evaluate the profile facts that are available before an invocation is
+    /// priced. A maximum estimated cost is enforced later by the model control
+    /// plane once an invocation-specific estimate exists.
     public func supports(
-        _ policy: AgentModelUsePolicy
+        _ selection: AgentModelSelection
     ) -> Bool {
         guard purposes.contains(
-            policy.purpose
+            selection.purpose
         ) else {
             return false
         }
+
+        let requirements = selection.requirements
+        let constraints = selection.constraints
 
         guard capabilities.isSuperset(
-            of: policy.capabilities
+            of: requirements.capabilities
         ) else {
             return false
         }
 
-        if let preferredModelID = policy.preferredModelID,
-           modelID != preferredModelID {
+        if let allowedProfileIdentifiers = constraints.allowedProfileIdentifiers,
+           !allowedProfileIdentifiers.contains(identifier) {
             return false
         }
 
-        if !policy.external,
+        if let allowedAdapterIdentifiers = constraints.allowedAdapterIdentifiers,
+           !allowedAdapterIdentifiers.contains(adapterIdentifier) {
+            return false
+        }
+
+        if let allowedModelIDs = constraints.allowedModelIDs {
+            guard let modelID,
+                  allowedModelIDs.contains(modelID)
+            else {
+                return false
+            }
+        }
+
+        if let allowedProviderIDs = constraints.allowedProviderIDs {
+            guard let modelID,
+                  allowedProviderIDs.contains(modelID.provider)
+            else {
+                return false
+            }
+        }
+
+        if !constraints.allowsExternal,
            privacy.isExternal {
             return false
         }
 
-        if privacy.rank < policy.privacy.rank {
+        if let minimumPrivacy = constraints.minimumPrivacy,
+           privacy.rank < minimumPrivacy.rank {
             return false
         }
 
-        if let maxInputTokens = policy.maxInputTokens,
-           let inputTokens = limits.inputTokens,
-           inputTokens < maxInputTokens {
-            return false
+        if let minimumInputCapacity = requirements.minimumInputCapacity {
+            guard let inputTokens = limits.inputTokens,
+                  inputTokens >= minimumInputCapacity
+            else {
+                return false
+            }
         }
 
-        if let maxOutputTokens = policy.maxOutputTokens,
-           let outputTokens = limits.outputTokens,
-           outputTokens < maxOutputTokens {
-            return false
+        if let minimumOutputCapacity = requirements.minimumOutputCapacity {
+            guard let outputTokens = limits.outputTokens,
+                  outputTokens >= minimumOutputCapacity
+            else {
+                return false
+            }
         }
 
         return true

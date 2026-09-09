@@ -9,8 +9,7 @@ public protocol AgentModelRouteLedger: Sendable {
 public struct AgentModelRouteRecord: Sendable, Codable, Hashable, Identifiable {
     public let id: String
     public let route: AgentModelRoute
-    public let reasons: [String]
-    public let warnings: [String]
+    public let diagnostics: [AgentModelSelectionDiagnostic]
     public let requestMetadata: [String: String]
     public let responseMetadata: [String: String]
     public let usage: AgentUsage?
@@ -19,8 +18,7 @@ public struct AgentModelRouteRecord: Sendable, Codable, Hashable, Identifiable {
     public init(
         id: String = UUID().uuidString,
         route: AgentModelRoute,
-        reasons: [String] = [],
-        warnings: [String] = [],
+        diagnostics: [AgentModelSelectionDiagnostic] = [],
         requestMetadata: [String: String] = [:],
         responseMetadata: [String: String] = [:],
         usage: AgentUsage? = nil,
@@ -28,12 +26,10 @@ public struct AgentModelRouteRecord: Sendable, Codable, Hashable, Identifiable {
     ) {
         self.id = id
         self.route = route
-        self.reasons = reasons
-        self.warnings = warnings
+        self.diagnostics = diagnostics
         self.requestMetadata = requestMetadata
         self.responseMetadata = responseMetadata
         self.usage = usage
         self.createdAt = createdAt
     }
 }
-

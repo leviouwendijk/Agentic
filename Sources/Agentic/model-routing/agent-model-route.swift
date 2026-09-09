@@ -20,33 +20,27 @@ public struct AgentModelRoute: Sendable, Codable, Hashable {
 }
 
 public struct AgentModelRouteRequest: Sendable, Codable, Hashable {
-    public var request: AgentRequest
-    public var policy: AgentModelUsePolicy
+    public var selection: AgentModelSelection
     public var metadata: [String: String]
 
     public init(
-        request: AgentRequest,
-        policy: AgentModelUsePolicy,
+        selection: AgentModelSelection,
         metadata: [String: String] = [:]
     ) {
-        self.request = request
-        self.policy = policy
+        self.selection = selection
         self.metadata = metadata
     }
 }
 
 public struct AgentModelRouteResult: Sendable, Codable, Hashable {
     public var route: AgentModelRoute
-    public var reasons: [String]
-    public var warnings: [String]
+    public var diagnostics: [AgentModelSelectionDiagnostic]
 
     public init(
         route: AgentModelRoute,
-        reasons: [String] = [],
-        warnings: [String] = []
+        diagnostics: [AgentModelSelectionDiagnostic] = []
     ) {
         self.route = route
-        self.reasons = reasons
-        self.warnings = warnings
+        self.diagnostics = diagnostics
     }
 }

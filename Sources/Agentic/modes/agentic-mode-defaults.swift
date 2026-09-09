@@ -1,26 +1,26 @@
 public struct ModeRouteDefaults: Sendable, Codable, Hashable {
     public var primaryPurpose: AgentModelRoutePurpose
-    public var policies: [AgentModelRoutePurpose: AgentModelUsePolicy]
+    public var selections: [AgentModelRoutePurpose: AgentModelSelection]
 
     public init(
         primaryPurpose: AgentModelRoutePurpose,
-        policies: [AgentModelRoutePurpose: AgentModelUsePolicy] = [:]
+        selections: [AgentModelRoutePurpose: AgentModelSelection] = [:]
     ) {
         self.primaryPurpose = primaryPurpose
-        self.policies = policies
+        self.selections = selections
     }
 
-    public var primaryPolicy: AgentModelUsePolicy {
-        policy(
+    public var primarySelection: AgentModelSelection {
+        selection(
             for: primaryPurpose
         )
     }
 
-    public func policy(
+    public func selection(
         for purpose: AgentModelRoutePurpose
-    ) -> AgentModelUsePolicy {
-        if let policy = policies[purpose] {
-            return policy
+    ) -> AgentModelSelection {
+        if let selection = selections[purpose] {
+            return selection
         }
 
         return .init(

@@ -84,8 +84,8 @@ public struct ModeSelection: Sendable, Codable, Hashable {
         mode.routeDefaults
     }
 
-    public var routePolicy: AgentModelUsePolicy {
-        mode.routeDefaults.primaryPolicy
+    public var modelSelection: AgentModelSelection {
+        mode.routeDefaults.primarySelection
     }
 
     public var exposedToolIdentifiers: [AgentToolIdentifier] {
@@ -108,10 +108,10 @@ public struct ModeSelection: Sendable, Codable, Hashable {
         mode.metadata
     }
 
-    public func routePolicy(
+    public func modelSelection(
         for purpose: AgentModelRoutePurpose
-    ) -> AgentModelUsePolicy {
-        mode.routeDefaults.policy(
+    ) -> AgentModelSelection {
+        mode.routeDefaults.selection(
             for: purpose
         )
     }
