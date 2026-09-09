@@ -4,100 +4,50 @@ public protocol AgentModelAdapter: Sendable {
 
 public protocol AgentModelResponseProviding: Sendable {
     func buffered(
-        request: AgentRequest
-    ) async throws -> AgentResponse
-
-    func buffered(
         request: AgentRequest,
+        route: AgentModelRoute,
         context: AgentModelInvocationContext
     ) async throws -> AgentResponse
 
     func stream(
-        request: AgentRequest
-    ) -> AsyncThrowingStream<AgentStreamEvent, Error>
-
-    func stream(
         request: AgentRequest,
+        route: AgentModelRoute,
         context: AgentModelInvocationContext
     ) -> AsyncThrowingStream<AgentStreamEvent, Error>
 }
 
-extension AgentModelAdapter {
-    public func respond(
-        request: AgentRequest
-    ) async throws -> AgentResponse {
-        try await respond(
-            request: request,
-            context: .default
-        )
-    }
-
-    public func respond(
+public extension AgentModelAdapter {
+    func respond(
         request: AgentRequest,
-        context: AgentModelInvocationContext
+        route: AgentModelRoute,
+        context: AgentModelInvocationContext = .default
     ) async throws -> AgentResponse {
         try await response.buffered(
             request: request,
+            route: route,
             context: context
         )
     }
 
-    public func respond(
+    func respond(
         request: AgentRequest,
-        delivery: AgentModelResponseDelivery
-    ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
-        respond(
-            request: request,
-            delivery: delivery,
-            context: .default
-        )
-    }
-
-    public func respond(
-        request: AgentRequest,
+        route: AgentModelRoute,
         delivery: AgentModelResponseDelivery,
-        context: AgentModelInvocationContext
+        context: AgentModelInvocationContext = .default
     ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
         response.respond(
             request: request,
+            route: route,
             delivery: delivery,
             context: context
         )
     }
 }
 
-extension AgentModelResponseProviding {
-    public func buffered(
+public extension AgentModelResponseProviding {
+    func respond(
         request: AgentRequest,
-        context _: AgentModelInvocationContext
-    ) async throws -> AgentResponse {
-        try await buffered(
-            request: request
-        )
-    }
-
-    public func stream(
-        request: AgentRequest,
-        context _: AgentModelInvocationContext
-    ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
-        stream(
-            request: request
-        )
-    }
-
-    public func respond(
-        request: AgentRequest,
-        delivery: AgentModelResponseDelivery
-    ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
-        respond(
-            request: request,
-            delivery: delivery,
-            context: .default
-        )
-    }
-
-    public func respond(
-        request: AgentRequest,
+        route: AgentModelRoute,
         delivery: AgentModelResponseDelivery,
         context: AgentModelInvocationContext
     ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
@@ -105,12 +55,14 @@ extension AgentModelResponseProviding {
         case .buffered:
             bufferedStream(
                 request: request,
+                route: route,
                 context: context
             )
 
         case .stream:
             stream(
                 request: request,
+                route: route,
                 context: context
             )
         }
@@ -118,6 +70,7 @@ extension AgentModelResponseProviding {
 
     private func bufferedStream(
         request: AgentRequest,
+        route: AgentModelRoute,
         context: AgentModelInvocationContext
     ) -> AsyncThrowingStream<AgentStreamEvent, Error> {
         AsyncThrowingStream { continuation in
@@ -125,6 +78,7 @@ extension AgentModelResponseProviding {
                 do {
                     let response = try await buffered(
                         request: request,
+                        route: route,
                         context: context
                     )
                     continuation.yield(
