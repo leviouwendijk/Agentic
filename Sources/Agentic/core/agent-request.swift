@@ -1,4 +1,4 @@
-public struct AgentRequest: Sendable, Hashable {
+public struct AgentRequest: Sendable, Codable, Hashable {
     public var messages: [AgentMessage]
     public var tools: [AgentToolDefinition]
     public var generationConfiguration: AgentGenerationConfiguration

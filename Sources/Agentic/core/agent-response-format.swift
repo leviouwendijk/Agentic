@@ -1,6 +1,6 @@
 import Schema
 
-public enum AgentResponseFormat: Sendable, Hashable {
+public enum AgentResponseFormat: Sendable, Codable, Hashable {
     case text
     case jsonschema(JSONSchema)
 
