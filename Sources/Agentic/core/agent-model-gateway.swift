@@ -1,4 +1,5 @@
 public protocol AgentModelGateway: Sendable {
+    var identifier: AgentModelGatewayIdentifier { get }
     var response: AgentModelResponseProviding { get }
 }
 
