@@ -1,6 +1,6 @@
 public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public let identifier: AgentModelProfileIdentifier
-    public var adapterIdentifier: AgentModelAdapterIdentifier
+    public var gatewayIdentifier: AgentModelGatewayIdentifier
     public var model: String
     public var modelID: AgentModelID?
     public var title: String?
@@ -14,7 +14,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
 
     public init(
         identifier: AgentModelProfileIdentifier,
-        adapterIdentifier: AgentModelAdapterIdentifier,
+        gatewayIdentifier: AgentModelGatewayIdentifier,
         model: String,
         modelID: AgentModelID? = nil,
         title: String? = nil,
@@ -27,7 +27,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         metadata: [String: String] = [:]
     ) {
         self.identifier = identifier
-        self.adapterIdentifier = adapterIdentifier
+        self.gatewayIdentifier = gatewayIdentifier
         self.model = model
         self.modelID = modelID
         self.title = title
@@ -74,8 +74,8 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
             return false
         }
 
-        if let allowedAdapterIdentifiers = constraints.allowedAdapterIdentifiers,
-           !allowedAdapterIdentifiers.contains(adapterIdentifier) {
+        if let allowedGatewayIdentifiers = constraints.allowedGatewayIdentifiers,
+           !allowedGatewayIdentifiers.contains(gatewayIdentifier) {
             return false
         }
 

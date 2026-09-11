@@ -79,7 +79,7 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
 
 public struct AgentModelConstraints: Sendable, Codable, Hashable {
     public var allowedProviderIDs: Set<AgentModelProviderID>?
-    public var allowedAdapterIdentifiers: Set<AgentModelAdapterIdentifier>?
+    public var allowedGatewayIdentifiers: Set<AgentModelGatewayIdentifier>?
     public var allowedModelIDs: Set<AgentModelID>?
     public var allowedProfileIdentifiers: Set<AgentModelProfileIdentifier>?
     public var allowsExternal: Bool
@@ -88,7 +88,7 @@ public struct AgentModelConstraints: Sendable, Codable, Hashable {
 
     public init(
         allowedProviderIDs: Set<AgentModelProviderID>? = nil,
-        allowedAdapterIdentifiers: Set<AgentModelAdapterIdentifier>? = nil,
+        allowedGatewayIdentifiers: Set<AgentModelGatewayIdentifier>? = nil,
         allowedModelIDs: Set<AgentModelID>? = nil,
         allowedProfileIdentifiers: Set<AgentModelProfileIdentifier>? = nil,
         allowsExternal: Bool = true,
@@ -96,7 +96,7 @@ public struct AgentModelConstraints: Sendable, Codable, Hashable {
         maximumEstimatedUsd: Double? = nil
     ) {
         self.allowedProviderIDs = allowedProviderIDs
-        self.allowedAdapterIdentifiers = allowedAdapterIdentifiers
+        self.allowedGatewayIdentifiers = allowedGatewayIdentifiers
         self.allowedModelIDs = allowedModelIDs
         self.allowedProfileIdentifiers = allowedProfileIdentifiers
         self.allowsExternal = allowsExternal
@@ -114,9 +114,9 @@ public struct AgentModelConstraints: Sendable, Codable, Hashable {
                 allowedProviderIDs,
                 other.allowedProviderIDs
             ),
-            allowedAdapterIdentifiers: intersection(
-                allowedAdapterIdentifiers,
-                other.allowedAdapterIdentifiers
+            allowedGatewayIdentifiers: intersection(
+                allowedGatewayIdentifiers,
+                other.allowedGatewayIdentifiers
             ),
             allowedModelIDs: intersection(
                 allowedModelIDs,

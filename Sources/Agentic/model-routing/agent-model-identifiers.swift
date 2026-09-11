@@ -24,7 +24,7 @@ public struct AgentModelProfileIdentifier: Sendable, Codable, Hashable, RawRepre
     }
 }
 
-public struct AgentModelAdapterIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+public struct AgentModelGatewayIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
     public let rawValue: String
 
     public init(

@@ -4,7 +4,7 @@ public enum AgentModelRoutingError: Error, Sendable, LocalizedError {
     case emptyIdentifier(String)
     case emptyModel(AgentModelProfileIdentifier)
     case profileNotFound(AgentModelProfileIdentifier)
-    case adapterNotFound(AgentModelAdapterIdentifier)
+    case gatewayNotFound(AgentModelGatewayIdentifier)
     case noRoute(AgentModelRoutePurpose)
     case profileRejected(
         profile: AgentModelProfileIdentifier,
@@ -22,8 +22,8 @@ public enum AgentModelRoutingError: Error, Sendable, LocalizedError {
         case .profileNotFound(let profileIdentifier):
             return "No agent model profile exists for '\(profileIdentifier.rawValue)'."
 
-        case .adapterNotFound(let adapterIdentifier):
-            return "No agent model adapter exists for '\(adapterIdentifier.rawValue)'."
+        case .gatewayNotFound(let gatewayIdentifier):
+            return "No agent model gateway exists for '\(gatewayIdentifier.rawValue)'."
 
         case .noRoute(let purpose):
             return "No agent model route could be selected for purpose '\(purpose.rawValue)'."

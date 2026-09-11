@@ -1,18 +1,18 @@
-public struct AgentModelAdapterFactory:
+public struct AgentModelGatewayFactory:
     Sendable
 {
     private let makeHandler:
-        @Sendable () async throws -> any AgentModelAdapter
+        @Sendable () async throws -> any AgentModelGateway
 
     public init(
         make: @escaping @Sendable () async throws
-            -> any AgentModelAdapter
+            -> any AgentModelGateway
     ) {
         self.makeHandler = make
     }
 
     public func make() async throws
-        -> any AgentModelAdapter
+        -> any AgentModelGateway
     {
         try await makeHandler()
     }

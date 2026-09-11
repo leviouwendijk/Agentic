@@ -1,4 +1,4 @@
-public protocol AgentModelAdapter: Sendable {
+public protocol AgentModelGateway: Sendable {
     var response: AgentModelResponseProviding { get }
 }
 
@@ -16,7 +16,7 @@ public protocol AgentModelResponseProviding: Sendable {
     ) -> AsyncThrowingStream<AgentStreamEvent, Error>
 }
 
-public extension AgentModelAdapter {
+public extension AgentModelGateway {
     func respond(
         request: AgentRequest,
         route: AgentModelRoute,
