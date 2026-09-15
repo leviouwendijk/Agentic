@@ -4,6 +4,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
     public struct Raw: Sendable, Codable, Hashable {
         public var prompt: String
         public var reason: String?
+        public var requirement: UserInputRequirement?
         public var input: UserInputSpec
         public var presentation: UserInputPresentation?
         public var metadata: [String: String]
@@ -11,6 +12,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
         public init(
             prompt: String,
             reason: String? = nil,
+            requirement: UserInputRequirement? = nil,
             input: UserInputSpec = .text(
                 .init()
             ),
@@ -19,6 +21,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
         ) {
             self.prompt = prompt
             self.reason = reason
+            self.requirement = requirement
             self.input = input
             self.presentation = presentation
             self.metadata = metadata
@@ -27,6 +30,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
 
     public let prompt: String
     public let reason: String?
+    public let requirement: UserInputRequirement
     public let input: UserInputSpec
     public let presentation: UserInputPresentation?
     public let metadata: [String: String]
@@ -40,6 +44,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
 
         prompt = raw.prompt
         reason = raw.reason
+        requirement = raw.requirement ?? .required
         input = raw.input
         presentation = raw.presentation
         metadata = raw.metadata
@@ -48,6 +53,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
     public init(
         prompt: String,
         reason: String? = nil,
+        requirement: UserInputRequirement = .required,
         input: UserInputSpec = .text(
             .init()
         ),
@@ -58,6 +64,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
             .init(
                 prompt: prompt,
                 reason: reason,
+                requirement: requirement,
                 input: input,
                 presentation: presentation,
                 metadata: metadata
@@ -81,6 +88,7 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
         try Raw(
             prompt: prompt,
             reason: reason,
+            requirement: requirement,
             input: input,
             presentation: presentation,
             metadata: metadata
@@ -94,16 +102,82 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
 public typealias PendingUserInput = UserInputRequest
 
 public struct UserInputResponse: Sendable, Hashable {
-    public let answer: UserInputAnswer
+    public enum Outcome: Sendable, Hashable {
+        case answered(UserInputAnswer)
+        case skipped
+    }
+
+    public let outcome: Outcome
+
+    public init(
+        _ reply: UserInputReply,
+        for request: UserInputRequest
+    ) throws {
+        switch reply {
+        case .answer(let answer):
+            outcome = .answered(
+                try UserInputRefinement.answer(
+                    answer,
+                    for: request.input
+                )
+            )
+
+        case .skip:
+            guard request.requirement == .optional else {
+                throw UserInputError.requiredInputCannotBeSkipped
+            }
+
+            outcome = .skipped
+        }
+    }
 
     public init(
         answer: UserInputAnswer,
         for request: UserInputRequest
     ) throws {
-        self.answer = try UserInputRefinement.answer(
-            answer,
-            for: request.input
+        try self.init(
+            .answer(
+                answer
+            ),
+            for: request
         )
+    }
+
+    public init(
+        skipping request: UserInputRequest
+    ) throws {
+        try self.init(
+            .skip,
+            for: request
+        )
+    }
+
+    public var answer: UserInputAnswer? {
+        guard case .answered(let answer) = outcome else {
+            return nil
+        }
+
+        return answer
+    }
+
+    public var reply: UserInputReply {
+        switch outcome {
+        case .answered(let answer):
+            return .answer(
+                answer
+            )
+
+        case .skipped:
+            return .skip
+        }
+    }
+
+    public var isSkipped: Bool {
+        if case .skipped = outcome {
+            return true
+        }
+
+        return false
     }
 }
 
@@ -415,9 +489,12 @@ private enum UserInputRefinement {
         )
         let constraint = constraint ?? .init()
 
-        if constraint.required,
-           trimmed.isEmpty {
-            throw UserInputError.emptyTextAnswer
+        if trimmed.isEmpty {
+            guard constraint.allowsEmpty else {
+                throw UserInputError.emptyTextAnswer
+            }
+
+            return ""
         }
 
         if let minimum = constraint.minimumLength,
@@ -551,17 +628,26 @@ private enum UserInputRefinement {
         var values: [String: String] = [:]
 
         for field in spec.fields {
-            let rawValue = answer.values[field.id]
-                ?? field.defaultText
-                ?? ""
-            let value = try text(
+            let rawValue: String
+
+            if let provided = answer.values[field.id] {
+                rawValue = provided
+            } else if let defaultText = field.defaultText {
+                rawValue = defaultText
+            } else {
+                guard field.requirement == .optional else {
+                    throw UserInputError.missingRequiredField(
+                        field.id
+                    )
+                }
+
+                continue
+            }
+
+            values[field.id] = try text(
                 rawValue,
                 constraint: field.constraint
             )
-
-            if !value.isEmpty {
-                values[field.id] = value
-            }
         }
 
         return .init(

@@ -313,6 +313,7 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
     public var placeholder: String?
     public var defaultText: String?
     public var multiline: Bool
+    public var requirement: UserInputRequirement
     public var constraint: UserInputTextConstraint?
     public var metadata: [String: String]
 
@@ -322,8 +323,13 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
         case placeholder
         case defaultText
         case multiline
+        case requirement
         case validation
         case metadata
+    }
+
+    private struct LegacyConstraintRequirement: Decodable {
+        let required: Bool?
     }
 
     public init(
@@ -332,6 +338,7 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
         placeholder: String? = nil,
         defaultText: String? = nil,
         multiline: Bool = false,
+        requirement: UserInputRequirement = .required,
         constraint: UserInputTextConstraint? = nil,
         metadata: [String: String] = [:]
     ) {
@@ -340,6 +347,7 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
         self.placeholder = placeholder
         self.defaultText = defaultText
         self.multiline = multiline
+        self.requirement = requirement
         self.constraint = constraint
         self.metadata = metadata
     }
@@ -371,6 +379,16 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
             Bool.self,
             forKey: .multiline
         ) ?? false
+
+        let legacy = try container.decodeIfPresent(
+            LegacyConstraintRequirement.self,
+            forKey: .validation
+        )
+
+        requirement = try container.decodeIfPresent(
+            UserInputRequirement.self,
+            forKey: .requirement
+        ) ?? (legacy?.required == false ? .optional : .required)
         constraint = try container.decodeIfPresent(
             UserInputTextConstraint.self,
             forKey: .validation
@@ -408,6 +426,10 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
             multiline,
             forKey: .multiline
         )
+        try container.encode(
+            requirement,
+            forKey: .requirement
+        )
         try container.encodeIfPresent(
             constraint,
             forKey: .validation
@@ -420,26 +442,91 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
 }
 
 public struct UserInputTextConstraint: Sendable, Codable, Hashable {
-    public var required: Bool
+    public var allowsEmpty: Bool
     public var minimumLength: Int?
     public var maximumLength: Int?
     public var patternDescription: String?
 
+    private enum CodingKeys: String, CodingKey {
+        case allowsEmpty
+        case required
+        case minimumLength
+        case maximumLength
+        case patternDescription
+    }
+
     public init(
-        required: Bool = true,
+        allowsEmpty: Bool = false,
         minimumLength: Int? = nil,
         maximumLength: Int? = nil,
         patternDescription: String? = nil
     ) {
-        self.required = required
+        self.allowsEmpty = allowsEmpty
         self.minimumLength = minimumLength
         self.maximumLength = maximumLength
         self.patternDescription = patternDescription
     }
-}
 
-@available(*, deprecated, renamed: "UserInputTextConstraint")
-public typealias UserInputValidation = UserInputTextConstraint
+    public init(
+        from decoder: any Decoder
+    ) throws {
+        let container = try decoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        if let allowsEmpty = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .allowsEmpty
+        ) {
+            self.allowsEmpty = allowsEmpty
+        } else if let legacyRequired = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .required
+        ) {
+            self.allowsEmpty = !legacyRequired
+        } else {
+            self.allowsEmpty = false
+        }
+
+        minimumLength = try container.decodeIfPresent(
+            Int.self,
+            forKey: .minimumLength
+        )
+        maximumLength = try container.decodeIfPresent(
+            Int.self,
+            forKey: .maximumLength
+        )
+        patternDescription = try container.decodeIfPresent(
+            String.self,
+            forKey: .patternDescription
+        )
+    }
+
+    public func encode(
+        to encoder: any Encoder
+    ) throws {
+        var container = encoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        try container.encode(
+            allowsEmpty,
+            forKey: .allowsEmpty
+        )
+        try container.encodeIfPresent(
+            minimumLength,
+            forKey: .minimumLength
+        )
+        try container.encodeIfPresent(
+            maximumLength,
+            forKey: .maximumLength
+        )
+        try container.encodeIfPresent(
+            patternDescription,
+            forKey: .patternDescription
+        )
+    }
+}
 
 public struct UserInputPresentation: Sendable, Codable, Hashable {
     public var title: String?
@@ -734,6 +821,8 @@ public enum UserInputError: Error, Sendable, LocalizedError, Equatable {
     case tooFewSelections(Int)
     case tooManySelections(Int)
     case unknownFieldID(String)
+    case requiredInputCannotBeSkipped
+    case missingRequiredField(String)
 
     public var errorDescription: String? {
         switch self {
@@ -786,6 +875,10 @@ public enum UserInputError: Error, Sendable, LocalizedError, Equatable {
             return "Expected at most \(maximum) selected choice(s)."
         case .unknownFieldID(let id):
             return "Unknown form field id '\(id)'."
+        case .requiredInputCannotBeSkipped:
+            return "Required user input cannot be skipped."
+        case .missingRequiredField(let id):
+            return "Required form field '\(id)' is missing."
         }
     }
 }
