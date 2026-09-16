@@ -7,6 +7,7 @@ public struct AgentModelSelectionDiagnostic: Sendable, Codable, Hashable {
     public enum Code: String, Sendable, Codable, Hashable, CaseIterable {
         case preferred_profile_selected
         case preferred_model_selected
+        case preferred_gateway_selected
         case purpose_default_selected
         case purpose_match_selected
         case fallback_selected
