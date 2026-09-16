@@ -43,11 +43,14 @@ public extension KnownModel {
             "qwen:qwen3-coder-next"
         public static let coder_3_30b_a3b: AgentModelID =
             "qwen:qwen3-coder-30b-a3b"
+        public static let coder_3_480b_a35b: AgentModelID =
+            "qwen:qwen3-coder-480b-a35b"
         public static let next_3_80b_a3b: AgentModelID =
             "qwen:qwen3-next-80b-a3b"
 
         public static let qwen3_coder_next = coder_3_next
         public static let qwen3_coder_30b_a3b = coder_3_30b_a3b
+        public static let qwen3_coder_480b_a35b = coder_3_480b_a35b
         public static let qwen3_next_80b_a3b = next_3_80b_a3b
     }
 
