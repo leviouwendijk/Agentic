@@ -41,17 +41,20 @@ public struct AgentModelRequirements: Sendable, Codable, Hashable {
 public struct AgentModelPreferences: Sendable, Codable, Hashable {
     public var preferredProfileIdentifier: AgentModelProfileIdentifier?
     public var preferredModelID: AgentModelID?
+    public var gateway: AgentModelGatewayIdentifier?
     public var cost: AgentModelCostClass?
     public var latency: AgentModelLatencyClass?
 
     public init(
         preferredProfileIdentifier: AgentModelProfileIdentifier? = nil,
         preferredModelID: AgentModelID? = nil,
+        gateway: AgentModelGatewayIdentifier? = nil,
         cost: AgentModelCostClass? = nil,
         latency: AgentModelLatencyClass? = nil
     ) {
         self.preferredProfileIdentifier = preferredProfileIdentifier
         self.preferredModelID = preferredModelID
+        self.gateway = gateway
         self.cost = cost
         self.latency = latency
     }
@@ -67,6 +70,9 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
             preferredModelID:
                 higherPriority.preferredModelID
                     ?? preferredModelID,
+            gateway:
+                higherPriority.gateway
+                    ?? gateway,
             cost:
                 higherPriority.cost
                     ?? cost,
