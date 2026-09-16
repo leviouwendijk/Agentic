@@ -7,6 +7,11 @@ public enum AgentModelGatewayFactoryError:
         expected: AgentModelGatewayIdentifier,
         actual: AgentModelGatewayIdentifier
     )
+
+    case unavailable(
+        identifier: AgentModelGatewayIdentifier,
+        reason: AgentModelGatewayUnavailability
+    )
 }
 
 public struct AgentModelGatewayFactory:
@@ -15,34 +20,71 @@ public struct AgentModelGatewayFactory:
 {
     public let identifier: AgentModelGatewayIdentifier
 
-    private let makeHandler:
-        @Sendable () async throws -> any AgentModelGateway
+    private let resolveHandler:
+        @Sendable () async throws -> AgentModelGatewayResolution
+
+    public init(
+        identifier: AgentModelGatewayIdentifier,
+        resolve: @escaping @Sendable () async throws
+            -> AgentModelGatewayResolution
+    ) {
+        self.identifier = identifier
+        self.resolveHandler = resolve
+    }
 
     public init(
         identifier: AgentModelGatewayIdentifier,
         make: @escaping @Sendable () async throws
             -> any AgentModelGateway
     ) {
-        self.identifier = identifier
-        self.makeHandler = make
+        self.init(
+            identifier: identifier
+        ) {
+            .available(
+                try await make()
+            )
+        }
     }
 
     public var id: AgentModelGatewayIdentifier {
         identifier
     }
 
+    public func resolve() async throws
+        -> AgentModelGatewayResolution
+    {
+        let resolution = try await resolveHandler()
+
+        switch resolution {
+        case .available(let gateway):
+            guard gateway.identifier == identifier else {
+                throw AgentModelGatewayFactoryError.identifierMismatch(
+                    expected: identifier,
+                    actual: gateway.identifier
+                )
+            }
+
+            return .available(
+                gateway
+            )
+
+        case .unavailable:
+            return resolution
+        }
+    }
+
     public func make() async throws
         -> any AgentModelGateway
     {
-        let gateway = try await makeHandler()
+        switch try await resolve() {
+        case .available(let gateway):
+            return gateway
 
-        guard gateway.identifier == identifier else {
-            throw AgentModelGatewayFactoryError.identifierMismatch(
-                expected: identifier,
-                actual: gateway.identifier
+        case .unavailable(let reason):
+            throw AgentModelGatewayFactoryError.unavailable(
+                identifier: identifier,
+                reason: reason
             )
         }
-
-        return gateway
     }
 }
