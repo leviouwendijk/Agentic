@@ -4,8 +4,8 @@ public struct AgentSkillDraft: Sendable, Hashable {
     public var summary: String?
     public var body: String
     public var domains: [AgentSkillDomain]
-    public var requiredTools: [AgentToolReference]
-    public var optionalTools: [AgentToolReference]
+    public var requiredTools: [ToolReference]
+    public var optionalTools: [ToolReference]
     public var tags: [String]
     public var attributes: [String: String]
 
@@ -15,8 +15,8 @@ public struct AgentSkillDraft: Sendable, Hashable {
         summary: String? = nil,
         body: String,
         domains: [AgentSkillDomain] = [],
-        requiredTools: [AgentToolReference] = [],
-        optionalTools: [AgentToolReference] = [],
+        requiredTools: [ToolReference] = [],
+        optionalTools: [ToolReference] = [],
         tags: [String] = [],
         attributes: [String: String] = [:]
     ) {
@@ -102,7 +102,7 @@ public extension AgentSkillDraft {
     }
 
     func requires(
-        _ identifiers: AgentToolIdentifier...
+        _ identifiers: ToolIdentifier...
     ) -> Self {
         requires(
             identifiers.map {
@@ -112,7 +112,7 @@ public extension AgentSkillDraft {
     }
 
     func requires(
-        _ references: AgentToolReference...
+        _ references: ToolReference...
     ) -> Self {
         requires(
             references
@@ -120,7 +120,7 @@ public extension AgentSkillDraft {
     }
 
     func requires(
-        _ references: [AgentToolReference]
+        _ references: [ToolReference]
     ) -> Self {
         var copy = self
         copy.requiredTools.append(
@@ -130,7 +130,7 @@ public extension AgentSkillDraft {
     }
 
     func optionally(
-        _ identifiers: AgentToolIdentifier...
+        _ identifiers: ToolIdentifier...
     ) -> Self {
         optionally(
             identifiers.map {
@@ -140,7 +140,7 @@ public extension AgentSkillDraft {
     }
 
     func optionally(
-        _ references: AgentToolReference...
+        _ references: ToolReference...
     ) -> Self {
         optionally(
             references
@@ -148,7 +148,7 @@ public extension AgentSkillDraft {
     }
 
     func optionally(
-        _ references: [AgentToolReference]
+        _ references: [ToolReference]
     ) -> Self {
         var copy = self
         copy.optionalTools.append(

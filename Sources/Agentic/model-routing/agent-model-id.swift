@@ -1,28 +1,14 @@
 import Primitives
 
-public struct AgentModelProviderID: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+public struct AgentModelProviderID:
+    StringIdentifier
+{
     public let rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
-    }
-
-    public init(
-        stringLiteral value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
-    }
-
-    public init(
-        _ value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
     }
 }
 

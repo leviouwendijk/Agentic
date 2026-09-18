@@ -1,36 +1,26 @@
 import Foundation
 import Primitives
 
-public enum AgentToolPlanNodeKind:
-    String,
-    Sendable,
-    Codable,
-    Hashable,
-    CaseIterable
-{
-    case call
-    case sequence
-    case batch
-}
-
-public struct AgentToolPlan:
+public struct ToolPlan:
     Sendable,
     Codable,
     Hashable,
     Identifiable
 {
     public let id: String
-    public let root: AgentToolPlanNode
-    public let guidelineRelations: [AgentGuidelineRelation]
+    public let root: Node
+    public let guidelines: [AgentGuidelineRelation]
 
     public init(
         id: String = UUID().uuidString,
-        root: AgentToolPlanNode,
-        guidelineRelations: [AgentGuidelineRelation] = []
-    ) {
+        root: Node,
+        guidelines: [AgentGuidelineRelation] = []
+    ) throws {
+        try root.requireUniqueCallIDs()
+
         self.id = id
         self.root = root
-        self.guidelineRelations = guidelineRelations
+        self.guidelines = guidelines
     }
 
     private enum CodingKeys:
@@ -39,7 +29,7 @@ public struct AgentToolPlan:
     {
         case id
         case root
-        case guidelineRelations
+        case guidelines
     }
 
     public init(
@@ -49,22 +39,20 @@ public struct AgentToolPlan:
             keyedBy: CodingKeys.self
         )
 
-        self.id = try container.decode(
-            String.self,
-            forKey: .id
-        )
-
-        self.root = try container.decode(
-            AgentToolPlanNode.self,
-            forKey: .root
-        )
-
-        self.guidelineRelations =
-            try container.decodeIfPresent(
+        try self.init(
+            id: container.decode(
+                String.self,
+                forKey: .id
+            ),
+            root: container.decode(
+                Node.self,
+                forKey: .root
+            ),
+            guidelines: container.decodeIfPresent(
                 [AgentGuidelineRelation].self,
-                forKey: .guidelineRelations
-            )
-            ?? []
+                forKey: .guidelines
+            ) ?? []
+        )
     }
 
     public func encode(
@@ -85,176 +73,163 @@ public struct AgentToolPlan:
         )
 
         try container.encode(
-            guidelineRelations,
-            forKey: .guidelineRelations
-        )
-    }
-
-    /// Check whole-tree invariants that cannot be represented by one node.
-    ///
-    /// Node structure itself is encoded by AgentToolPlanNode cases.
-    public func validate() throws {
-        var callIDs = Set<String>()
-
-        try root.validateUniqueCallIDs(
-            callIDs: &callIDs
+            guidelines,
+            forKey: .guidelines
         )
     }
 }
 
-/// Structurally valid AgentToolPlan node.
-///
-/// The enum cases encode the legal node shapes directly:
-/// - call nodes own one call, optional execution metadata, and outcome branches;
-/// - sequence and batch nodes own children only.
-public indirect enum AgentToolPlanNode:
-    Sendable,
-    Codable,
-    Hashable
-{
-    case call(
-        AgentToolCall,
-        execution: JSONValue? = nil,
-        onSuccess: [Self] = [],
-        onFailure: [Self] = [],
-        onDenied: [Self] = []
-    )
+public extension ToolPlan {
+    indirect enum Node:
+        Sendable,
+        Codable,
+        Hashable
+    {
+        public enum Kind:
+            String,
+            Sendable,
+            Codable,
+            Hashable,
+            CaseIterable
+        {
+            case call
+            case sequence
+            case batch
+        }
 
-    case sequence(
-        [Self]
-    )
+        case call(
+            ToolCall,
+            execution: JSONValue? = nil,
+            onSuccess: [Self] = [],
+            onFailure: [Self] = [],
+            onDenied: [Self] = []
+        )
 
-    case batch(
-        [Self]
-    )
+        case sequence(
+            [Self]
+        )
 
-    public var kind: AgentToolPlanNodeKind {
-        switch self {
-        case .call:
-            .call
+        case batch(
+            [Self]
+        )
 
-        case .sequence:
-            .sequence
+        public var kind: Kind {
+            switch self {
+            case .call:
+                .call
 
-        case .batch:
-            .batch
+            case .sequence:
+                .sequence
+
+            case .batch:
+                .batch
+            }
+        }
+
+        public var call: ToolCall? {
+            guard case .call(
+                let call,
+                _,
+                _,
+                _,
+                _
+            ) = self else {
+                return nil
+            }
+
+            return call
+        }
+
+        public var execution: JSONValue? {
+            guard case .call(
+                _,
+                let execution,
+                _,
+                _,
+                _
+            ) = self else {
+                return nil
+            }
+
+            return execution
+        }
+
+        public var children: [Self] {
+            switch self {
+            case .call:
+                []
+
+            case .sequence(let children),
+                 .batch(let children):
+                children
+            }
+        }
+
+        public var onSuccess: [Self] {
+            guard case .call(
+                _,
+                _,
+                let onSuccess,
+                _,
+                _
+            ) = self else {
+                return []
+            }
+
+            return onSuccess
+        }
+
+        public var onFailure: [Self] {
+            guard case .call(
+                _,
+                _,
+                _,
+                let onFailure,
+                _
+            ) = self else {
+                return []
+            }
+
+            return onFailure
+        }
+
+        public var onDenied: [Self] {
+            guard case .call(
+                _,
+                _,
+                _,
+                _,
+                let onDenied
+            ) = self else {
+                return []
+            }
+
+            return onDenied
         }
     }
 
-    public var call: AgentToolCall? {
-        guard case .call(
-            let call,
-            _,
-            _,
-            _,
-            _
-        ) = self else {
-            return nil
+    enum Error:
+        Swift.Error,
+        Sendable,
+        LocalizedError,
+        Equatable
+    {
+        case duplicateToolCallID(
+            String
+        )
+
+        public var errorDescription: String? {
+            switch self {
+            case .duplicateToolCallID(
+                let id
+            ):
+                "ToolPlan contains duplicate tool call id '\(id)'."
+            }
         }
-
-        return call
-    }
-
-    public var execution: JSONValue? {
-        guard case .call(
-            _,
-            let execution,
-            _,
-            _,
-            _
-        ) = self else {
-            return nil
-        }
-
-        return execution
-    }
-
-    public var children: [Self] {
-        switch self {
-        case .call:
-            []
-
-        case .sequence(let children),
-             .batch(let children):
-            children
-        }
-    }
-
-    public var onSuccess: [Self] {
-        guard case .call(
-            _,
-            _,
-            let onSuccess,
-            _,
-            _
-        ) = self else {
-            return []
-        }
-
-        return onSuccess
-    }
-
-    public var onFailure: [Self] {
-        guard case .call(
-            _,
-            _,
-            _,
-            let onFailure,
-            _
-        ) = self else {
-            return []
-        }
-
-        return onFailure
-    }
-
-    public var onDenied: [Self] {
-        guard case .call(
-            _,
-            _,
-            _,
-            _,
-            let onDenied
-        ) = self else {
-            return []
-        }
-
-        return onDenied
     }
 }
 
-public enum AgentToolPlanError:
-    Error,
-    Sendable,
-    LocalizedError,
-    Equatable
-{
-    case invalidNode(
-        path: String,
-        reason: String
-    )
-
-    case duplicateToolCallID(
-        String
-    )
-
-    public var errorDescription: String? {
-        switch self {
-        case .invalidNode(
-            let path,
-            let reason
-        ):
-            return "Invalid tool-plan node at '\(path)': \(reason)"
-
-        case .duplicateToolCallID(
-            let id
-        ):
-            return "AgentToolPlan contains duplicate tool call id '\(id)'."
-        }
-    }
-}
-
-public extension AgentToolPlanNode {
+public extension ToolPlan.Node {
     private enum CodingKeys:
         String,
         CodingKey
@@ -276,7 +251,7 @@ public extension AgentToolPlanNode {
         )
 
         let kind = try container.decode(
-            AgentToolPlanNodeKind.self,
+            Kind.self,
             forKey: .kind
         )
 
@@ -313,7 +288,7 @@ public extension AgentToolPlanNode {
 
             self = .call(
                 try container.decode(
-                    AgentToolCall.self,
+                    ToolCall.self,
                     forKey: .call
                 ),
                 execution: try container.decodeIfPresent(
@@ -430,8 +405,18 @@ public extension AgentToolPlanNode {
             )
         }
     }
+}
 
-    fileprivate func validateUniqueCallIDs(
+private extension ToolPlan.Node {
+    func requireUniqueCallIDs() throws {
+        var callIDs = Set<String>()
+
+        try requireUniqueCallIDs(
+            callIDs: &callIDs
+        )
+    }
+
+    func requireUniqueCallIDs(
         callIDs: inout Set<String>
     ) throws {
         switch self {
@@ -445,41 +430,41 @@ public extension AgentToolPlanNode {
             guard callIDs.insert(
                 call.id
             ).inserted else {
-                throw AgentToolPlanError.duplicateToolCallID(
+                throw ToolPlan.Error.duplicateToolCallID(
                     call.id
                 )
             }
 
-            try validateUniqueCallIDs(
+            try requireUniqueCallIDs(
                 onSuccess,
                 callIDs: &callIDs
             )
 
-            try validateUniqueCallIDs(
+            try requireUniqueCallIDs(
                 onFailure,
                 callIDs: &callIDs
             )
 
-            try validateUniqueCallIDs(
+            try requireUniqueCallIDs(
                 onDenied,
                 callIDs: &callIDs
             )
 
         case .sequence(let children),
              .batch(let children):
-            try validateUniqueCallIDs(
+            try requireUniqueCallIDs(
                 children,
                 callIDs: &callIDs
             )
         }
     }
 
-    fileprivate func validateUniqueCallIDs(
+    func requireUniqueCallIDs(
         _ nodes: [Self],
         callIDs: inout Set<String>
     ) throws {
         for node in nodes {
-            try node.validateUniqueCallIDs(
+            try node.requireUniqueCallIDs(
                 callIDs: &callIDs
             )
         }

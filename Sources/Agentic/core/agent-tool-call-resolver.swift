@@ -1,7 +1,7 @@
-public protocol AgentToolCallResolver:
+public protocol ToolCallResolver:
     Sendable
 {
     func resolve(
-        _ call: AgentToolCall
-    ) async throws -> AgentToolResult
+        _ call: ToolCall
+    ) async throws -> ToolResult
 }

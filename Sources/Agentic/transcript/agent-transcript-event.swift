@@ -1,7 +1,7 @@
 public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
     case message(AgentMessage)
-    case tool_call(AgentToolCall)
-    case tool_result(AgentToolResult)
+    case tool_call(ToolCall)
+    case tool_result(ToolResult)
     case session_branch(AgentSessionBranchEvent)
     case note(id: String, text: String)
 
@@ -86,14 +86,14 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
 
         case .tool_call:
             if let value = try container.decodeIfPresent(
-                AgentToolCall.self,
+                ToolCall.self,
                 forKey: .tool_call
             ) {
                 self = .tool_call(value)
             } else {
                 self = .tool_call(
                     try legacyContainer.decode(
-                        AgentToolCall.self,
+                        ToolCall.self,
                         forKey: .toolcall
                     )
                 )
@@ -101,14 +101,14 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
 
         case .tool_result:
             if let value = try container.decodeIfPresent(
-                AgentToolResult.self,
+                ToolResult.self,
                 forKey: .tool_result
             ) {
                 self = .tool_result(value)
             } else {
                 self = .tool_result(
                     try legacyContainer.decode(
-                        AgentToolResult.self,
+                        ToolResult.self,
                         forKey: .toolresult
                     )
                 )
@@ -232,10 +232,10 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
             return message.content.text
 
         case .tool_call(let call):
-            return call.name
+            return call.tool.rawValue
 
         case .tool_result(let result):
-            return result.name ?? result.toolCallID
+            return result.tool?.rawValue ?? result.toolCallID
 
         case .session_branch(let event):
             return event.summaryText

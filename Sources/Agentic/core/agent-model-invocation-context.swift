@@ -1,8 +1,8 @@
 public struct AgentModelInvocationContext: Sendable {
-    public let toolCallResolver: (any AgentToolCallResolver)?
+    public let toolCallResolver: (any ToolCallResolver)?
 
     public init(
-        toolCallResolver: (any AgentToolCallResolver)? = nil
+        toolCallResolver: (any ToolCallResolver)? = nil
     ) {
         self.toolCallResolver = toolCallResolver
     }

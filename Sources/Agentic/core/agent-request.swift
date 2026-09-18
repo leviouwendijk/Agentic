@@ -1,6 +1,6 @@
 public struct AgentRequest: Sendable, Codable, Hashable {
     public var messages: [AgentMessage]
-    public var tools: [AgentToolDefinition]
+    public var tools: [ToolDescriptor]
     public var generationConfiguration: AgentGenerationConfiguration
     public var responseFormat: AgentResponseFormat
     public var invocationoptions: AgentModelInvocationOptions?
@@ -8,7 +8,7 @@ public struct AgentRequest: Sendable, Codable, Hashable {
 
     public init(
         messages: [AgentMessage],
-        tools: [AgentToolDefinition] = [],
+        tools: [ToolDescriptor] = [],
         generationConfiguration: AgentGenerationConfiguration = .default,
         responseFormat: AgentResponseFormat = .text,
         invocationoptions: AgentModelInvocationOptions? = nil,

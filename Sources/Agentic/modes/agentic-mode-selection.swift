@@ -1,7 +1,7 @@
 public struct ModeOverlay: Sendable, Codable, Hashable {
     public var routeDefaults: ModeRouteDefaults?
     public var autonomyMode: AutonomyMode?
-    public var exposedToolIdentifiers: [AgentToolIdentifier]?
+    public var exposedToolIdentifiers: [ToolIdentifier]?
     public var loadedSkillIdentifiers: [AgentSkillIdentifier]?
     public var budgetPosture: BudgetPosture?
     public var approvalStrictness: ApprovalStrictness?
@@ -10,7 +10,7 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
     public init(
         routeDefaults: ModeRouteDefaults? = nil,
         autonomyMode: AutonomyMode? = nil,
-        exposedToolIdentifiers: [AgentToolIdentifier]? = nil,
+        exposedToolIdentifiers: [ToolIdentifier]? = nil,
         loadedSkillIdentifiers: [AgentSkillIdentifier]? = nil,
         budgetPosture: BudgetPosture? = nil,
         approvalStrictness: ApprovalStrictness? = nil,
@@ -88,7 +88,7 @@ public struct ModeSelection: Sendable, Codable, Hashable {
         mode.routeDefaults.primarySelection
     }
 
-    public var exposedToolIdentifiers: [AgentToolIdentifier] {
+    public var exposedToolIdentifiers: [ToolIdentifier] {
         mode.exposedToolIdentifiers
     }
 

@@ -31,7 +31,7 @@ public struct AgenticMode: Sendable, Codable, Hashable, Identifiable {
     public var title: String
     public var routeDefaults: ModeRouteDefaults
     public var autonomyMode: AutonomyMode
-    public var exposedToolIdentifiers: [AgentToolIdentifier]
+    public var exposedToolIdentifiers: [ToolIdentifier]
     public var loadedSkillIdentifiers: [AgentSkillIdentifier]
     public var budgetPosture: BudgetPosture
     public var approvalStrictness: ApprovalStrictness
@@ -42,7 +42,7 @@ public struct AgenticMode: Sendable, Codable, Hashable, Identifiable {
         title: String,
         routeDefaults: ModeRouteDefaults,
         autonomyMode: AutonomyMode,
-        exposedToolIdentifiers: [AgentToolIdentifier] = [],
+        exposedToolIdentifiers: [ToolIdentifier] = [],
         loadedSkillIdentifiers: [AgentSkillIdentifier] = [],
         budgetPosture: BudgetPosture = .balanced,
         approvalStrictness: ApprovalStrictness = .review_privileged,

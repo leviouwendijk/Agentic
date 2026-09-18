@@ -1,51 +1,25 @@
-public struct AgentModelProfileIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+import Primitives
+
+public struct AgentModelProfileIdentifier:
+    StringIdentifier
+{
     public let rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
-    }
-
-    public init(
-        stringLiteral value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
-    }
-
-    public init(
-        _ value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
     }
 }
 
-public struct AgentModelGatewayIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+public struct AgentModelGatewayIdentifier:
+    StringIdentifier
+{
     public let rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
-    }
-
-    public init(
-        stringLiteral value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
-    }
-
-    public init(
-        _ value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
     }
 }

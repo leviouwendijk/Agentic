@@ -1,23 +1,27 @@
 import Primitives
 
-public struct AgentToolResult: Sendable, Codable, Hashable {
+public struct ToolResult:
+    Sendable,
+    Codable,
+    Hashable
+{
     public let toolCallID: String
-    public let name: String?
+    public let tool: ToolIdentifier?
     public let output: JSONValue
-    public let processing: AgentToolResultProcessing?
+    public let projection: ToolCall.ResultProjection?
     public let isError: Bool
 
     public init(
         toolCallID: String,
-        name: String? = nil,
+        tool: ToolIdentifier? = nil,
         output: JSONValue,
-        processing: AgentToolResultProcessing? = nil,
+        projection: ToolCall.ResultProjection? = nil,
         isError: Bool = false
     ) {
         self.toolCallID = toolCallID
-        self.name = name
+        self.tool = tool
         self.output = output
-        self.processing = processing
+        self.projection = projection
         self.isError = isError
     }
 }

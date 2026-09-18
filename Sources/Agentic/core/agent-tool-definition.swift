@@ -1,13 +1,18 @@
 import Primitives
 
-public struct AgentToolDefinition: Sendable, Codable, Hashable, Identifiable {
-    public let identifier: AgentToolIdentifier
+public struct ToolDescriptor:
+    Sendable,
+    Codable,
+    Hashable,
+    Identifiable
+{
+    public let identifier: ToolIdentifier
     public let description: String
     public let inputSchema: JSONValue?
     public let risk: ActionRisk
 
     public init(
-        identifier: AgentToolIdentifier,
+        identifier: ToolIdentifier,
         description: String,
         inputSchema: JSONValue? = nil,
         risk: ActionRisk = .observe
@@ -19,8 +24,8 @@ public struct AgentToolDefinition: Sendable, Codable, Hashable, Identifiable {
     }
 }
 
-public extension AgentToolDefinition {
-    var id: AgentToolIdentifier {
+public extension ToolDescriptor {
+    var id: ToolIdentifier {
         identifier
     }
 

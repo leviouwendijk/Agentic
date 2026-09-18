@@ -1,9 +1,13 @@
-public struct AgentToolReference: Sendable, Codable, Hashable {
-    public let identifier: AgentToolIdentifier
+public struct ToolReference:
+    Sendable,
+    Codable,
+    Hashable
+{
+    public let identifier: ToolIdentifier
     public let owner: String?
 
     public init(
-        identifier: AgentToolIdentifier,
+        identifier: ToolIdentifier,
         owner: String? = nil
     ) {
         self.identifier = identifier
@@ -11,13 +15,13 @@ public struct AgentToolReference: Sendable, Codable, Hashable {
     }
 }
 
-public extension AgentToolReference {
+public extension ToolReference {
     var name: String {
         identifier.rawValue
     }
 
     static func tool(
-        _ identifier: AgentToolIdentifier,
+        _ identifier: ToolIdentifier,
         owner: String? = nil
     ) -> Self {
         .init(

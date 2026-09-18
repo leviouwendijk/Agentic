@@ -1,28 +1,15 @@
 import Foundation
+import Primitives
 
-public struct AgentModelProfileSourceIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+public struct AgentModelProfileSourceIdentifier:
+    StringIdentifier
+{
     public var rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
-    }
-
-    public init(
-        stringLiteral value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
-    }
-
-    public init(
-        _ value: String
-    ) {
-        self.init(
-            rawValue: value
-        )
     }
 }
 
@@ -66,4 +53,3 @@ public extension AgentModelProfileSnapshot {
         )
     }
 }
-

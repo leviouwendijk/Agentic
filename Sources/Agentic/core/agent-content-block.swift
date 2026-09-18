@@ -1,8 +1,8 @@
 public enum AgentContentBlock: Sendable, Codable, Hashable {
     case text(String)
     case resource(AgentResource)
-    case tool_call(AgentToolCall)
-    case tool_result(AgentToolResult)
+    case tool_call(ToolCall)
+    case tool_result(ToolResult)
 
     private enum CodingKeys: String, CodingKey {
         case kind
@@ -80,14 +80,14 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
 
         case .tool_call:
             if let value = try container.decodeIfPresent(
-                AgentToolCall.self,
+                ToolCall.self,
                 forKey: .tool_call
             ) {
                 self = .tool_call(value)
             } else {
                 self = .tool_call(
                     try legacyContainer.decode(
-                        AgentToolCall.self,
+                        ToolCall.self,
                         forKey: .toolcall
                     )
                 )
@@ -95,14 +95,14 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
 
         case .tool_result:
             if let value = try container.decodeIfPresent(
-                AgentToolResult.self,
+                ToolResult.self,
                 forKey: .tool_result
             ) {
                 self = .tool_result(value)
             } else {
                 self = .tool_result(
                     try legacyContainer.decode(
-                        AgentToolResult.self,
+                        ToolResult.self,
                         forKey: .toolresult
                     )
                 )

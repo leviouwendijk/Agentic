@@ -1,25 +1,13 @@
-public struct AgentSkillIdentifier: Sendable, Codable, Hashable, RawRepresentable, ExpressibleByStringLiteral, CustomStringConvertible {
+import Primitives
+
+public struct AgentSkillIdentifier:
+    StringIdentifier
+{
     public let rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
-    }
-
-    public init(
-        _ rawValue: String
-    ) {
-        self.rawValue = rawValue
-    }
-
-    public init(
-        stringLiteral value: String
-    ) {
-        self.rawValue = value
-    }
-
-    public var description: String {
-        rawValue
     }
 }

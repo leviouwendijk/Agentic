@@ -1,11 +1,11 @@
 public struct AgentSkillMetadata: Sendable, Codable, Hashable {
     public struct ToolReferenceAPI: Sendable, Codable, Hashable {
-        public var required: [AgentToolReference]
-        public var optional: [AgentToolReference]
+        public var required: [ToolReference]
+        public var optional: [ToolReference]
         
         public init(
-            required: [AgentToolReference] = [],
-            optional: [AgentToolReference] = []
+            required: [ToolReference] = [],
+            optional: [ToolReference] = []
         ) {
             self.required = required
             self.optional = optional

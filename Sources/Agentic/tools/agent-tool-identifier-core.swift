@@ -1,57 +1,60 @@
-public extension AgentToolIdentifier {
-    static let clarify_with_user: Self = "clarify_with_user"
+import Macros
 
-    static let compose_context: Self = "compose_context"
-    static let inspect_context_sources: Self = "inspect_context_sources"
-    static let estimate_context_size: Self = "estimate_context_size"
+@StringIdentifiers
+public extension ToolIdentifier {
+    static var clarify_with_user: Self
 
-    static let read_file: Self = "read_file"
-    static let mutate_files: Self = "mutate_files"
-    static let scan_paths: Self = "scan_paths"
-    static let read_selection: Self = "read_selection"
+    static var compose_context: Self
+    static var inspect_context_sources: Self
+    static var estimate_context_size: Self
 
-    static let inspect_workspace: Self = "inspect_workspace"
-    static let list_path_roots: Self = "list_path_roots"
-    static let list_path_grants: Self = "list_path_grants"
-    static let explain_path_access: Self = "explain_path_access"
-    static let find_paths: Self = "find_paths"
-    static let request_path_grant: Self = "request_path_grant"
+    static var read_file: Self
+    static var mutate_files: Self
+    static var scan_paths: Self
+    static var read_selection: Self
 
-    static let emit_artifact: Self = "emit_artifact"
-    static let list_artifacts: Self = "list_artifacts"
-    static let read_artifact: Self = "read_artifact"
+    static var inspect_workspace: Self
+    static var list_path_roots: Self
+    static var list_path_grants: Self
+    static var explain_path_access: Self
+    static var find_paths: Self
+    static var request_path_grant: Self
 
-    static let list_skills: Self = "list_skills"
-    static let load_skill: Self = "load_skill"
+    static var emit_artifact: Self
+    static var list_artifacts: Self
+    static var read_artifact: Self
 
-    static let search_transcript: Self = "search_transcript"
-    static let read_transcript_events: Self = "read_transcript_events"
-    static let summarize_transcript_window: Self = "summarize_transcript_window"
+    static var list_skills: Self
+    static var load_skill: Self
 
-    static let task_create: Self = "task_create"
-    static let task_update: Self = "task_update"
-    static let task_list: Self = "task_list"
-    static let task_get: Self = "task_get"
-    static let task_claim: Self = "task_claim"
-    static let task_complete: Self = "task_complete"
+    static var search_transcript: Self
+    static var read_transcript_events: Self
+    static var summarize_transcript_window: Self
 
-    static let list_prepared_intents: Self = "list_prepared_intents"
-    static let read_prepared_intent: Self = "read_prepared_intent"
-    static let review_prepared_intent: Self = "review_prepared_intent"
+    static var task_create: Self
+    static var task_update: Self
+    static var task_list: Self
+    static var task_get: Self
+    static var task_claim: Self
+    static var task_complete: Self
 
-    static let list_agent_sessions: Self = "list_agent_sessions"
-    static let read_agent_session: Self = "read_agent_session"
-    static let read_agent_transcript: Self = "read_agent_transcript"
-    static let read_agent_approvals: Self = "read_agent_approvals"
-    static let list_agent_artifacts: Self = "list_agent_artifacts"
-    static let read_agent_artifact: Self = "read_agent_artifact"
-    static let list_agent_prepared_intents: Self = "list_agent_prepared_intents"
-    static let read_agent_prepared_intent: Self = "read_agent_prepared_intent"
+    static var list_prepared_intents: Self
+    static var read_prepared_intent: Self
+    static var review_prepared_intent: Self
 
-    static let execute_prepared_intent: Self = "execute_prepared_intent"
+    static var list_agent_sessions: Self
+    static var read_agent_session: Self
+    static var read_agent_transcript: Self
+    static var read_agent_approvals: Self
+    static var list_agent_artifacts: Self
+    static var read_agent_artifact: Self
+    static var list_agent_prepared_intents: Self
+    static var read_agent_prepared_intent: Self
 
-    static let list_file_mutations: Self = "list_file_mutations"
-    static let inspect_file_mutation: Self = "inspect_file_mutation"
+    static var execute_prepared_intent: Self
 
-    static let rollback_file_mutation: Self = "rollback_file_mutation"
+    static var list_file_mutations: Self
+    static var inspect_file_mutation: Self
+
+    static var rollback_file_mutation: Self
 }
