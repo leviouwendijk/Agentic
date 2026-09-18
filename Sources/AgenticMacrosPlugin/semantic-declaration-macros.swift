@@ -165,7 +165,7 @@ private enum AgentMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let identifier = semanticIdentifier(
             context.lexicalPath
         )
@@ -192,7 +192,7 @@ private enum InferenceMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let identifier = semanticIdentifier(
             context.lexicalPath
         )
@@ -218,7 +218,7 @@ private enum ProgramMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let identifier = semanticIdentifier(
             context.lexicalPath
         )
@@ -248,7 +248,7 @@ private enum ToolMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let identifier = semanticIdentifier(
             context.lexicalPath
         )
@@ -260,6 +260,16 @@ private enum ToolMacroSpecification:
             ),
         ]
     }
+}
+
+func semanticMemberAccessPrefix(
+    _ context: DeclarationMacroContext
+) -> String {
+    if context.access == "private" {
+        return "fileprivate "
+    }
+
+    return context.accessPrefix
 }
 
 func semanticIdentifier(

@@ -53,7 +53,7 @@ private enum DomainMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let namespace = Case.convert(
             context.name,
             to: .snake

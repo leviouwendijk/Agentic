@@ -54,7 +54,7 @@ private enum InferenceRealizationMacroSpecification:
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = context.accessPrefix
+        let access = semanticMemberAccessPrefix(context)
         let identifier = semanticIdentifier(
             context.lexicalPath
         )
