@@ -26,7 +26,10 @@ public struct ProgramRealization<
         public let configuration: InferenceRealizationConfiguration
 
         public init<InferenceType: Inference>(
-            _ site: InferenceSite<InferenceType>,
+            _ site: InferenceSite<
+                ProgramType,
+                InferenceType
+            >,
             realization: InferenceRealizationDefinition<InferenceType>
         ) {
             self.site = site.identifier
@@ -62,7 +65,10 @@ public struct ProgramRealization<
     }
 
     public func binding<InferenceType: Inference>(
-        for site: InferenceSite<InferenceType>
+        for site: InferenceSite<
+            ProgramType,
+            InferenceType
+        >
     ) -> Binding? {
         bindings.first { binding in
             binding.site == site.identifier
@@ -70,7 +76,10 @@ public struct ProgramRealization<
     }
 
     public func replacing<InferenceType: Inference>(
-        _ site: InferenceSite<InferenceType>,
+        _ site: InferenceSite<
+            ProgramType,
+            InferenceType
+        >,
         with realization: InferenceRealizationDefinition<InferenceType>
     ) -> Self {
         let replacement = Binding(

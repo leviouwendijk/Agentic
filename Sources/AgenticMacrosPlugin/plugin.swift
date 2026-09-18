@@ -10,6 +10,7 @@ struct AgenticMacrosPlugin:
         AgentMacro.self,
         InferenceMacro.self,
         ProgramMacro.self,
+        InferenceSiteMacro.self,
         ToolMacro.self,
         InferenceRealizationMacro.self,
         OptimizationMacro.self,

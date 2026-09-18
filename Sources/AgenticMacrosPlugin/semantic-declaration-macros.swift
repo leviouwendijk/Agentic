@@ -228,6 +228,10 @@ private enum ProgramMacroSpecification:
                 stringLiteral:
                     "\(access)static let definition: ProgramDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose)"
             ),
+            DeclSyntax(
+                stringLiteral:
+                    "\(access)typealias Site<InferenceType: Inference> = InferenceSite<\(context.name), InferenceType>"
+            ),
         ]
     }
 }

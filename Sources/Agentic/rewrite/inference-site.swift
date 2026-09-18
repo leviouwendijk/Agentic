@@ -11,6 +11,7 @@ public struct InferenceSiteIdentifier: StringIdentifier {
 }
 
 public struct InferenceSite<
+    ProgramType: Program,
     InferenceType: Inference
 >:
     Sendable,
@@ -28,6 +29,10 @@ public struct InferenceSite<
 
     public var id: InferenceSiteIdentifier {
         identifier
+    }
+
+    public var program: ProgramIdentifier {
+        ProgramType.definition.identifier
     }
 
     public var inference: InferenceIdentifier {

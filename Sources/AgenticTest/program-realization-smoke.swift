@@ -1,22 +1,45 @@
 import Agentic
 
-extension SmokeDomain.Programs.MacroSmokeProgram {
-    static let composeSite:
-        InferenceSite<SmokeDomain.Inferences.MacroSmokeInference> = .init(
-            identifier: .init(
-                rawValue: "smoke_domain.programs.macro_smoke_program.sites.compose"
-            )
-        )
-}
-
 func runProgramRealizationSmoke() {
     let site =
-        SmokeDomain.Programs.MacroSmokeProgram.composeSite
+        SmokeDomain.Programs.MacroSmokeProgram.compose
 
     let inferenceRealization =
         SmokeDomain.Realizations
             .MacroSmokeInferenceRealization
             .definition
+
+    requireOwnedInferenceSite(
+        site,
+        program:
+            SmokeDomain.Programs.MacroSmokeProgram.self,
+        inference:
+            SmokeDomain.Inferences.MacroSmokeInference.self
+    )
+
+    guard site.identifier.rawValue ==
+        "smoke_domain.programs.macro_smoke_program.sites.compose"
+    else {
+        fatalError(
+            "Unexpected Inference site semantic identifier: \(site.identifier.rawValue)"
+        )
+    }
+
+    guard site.program ==
+        SmokeDomain.Programs.MacroSmokeProgram.definition.identifier
+    else {
+        fatalError(
+            "Expected Inference site to preserve Program ownership."
+        )
+    }
+
+    guard site.inference ==
+        SmokeDomain.Inferences.MacroSmokeInference.definition.identifier
+    else {
+        fatalError(
+            "Expected Inference site to preserve Inference identity."
+        )
+    }
 
     do {
         let programRealization = try
@@ -106,5 +129,19 @@ func runProgramRealizationSmoke() {
         )
     }
 
-    print("PASS: typed Program realization semantics")
+    print(
+        "PASS: owned typed Program realization semantics"
+    )
 }
+
+private func requireOwnedInferenceSite<
+    ProgramType: Program,
+    InferenceType: Inference
+>(
+    _: InferenceSite<
+        ProgramType,
+        InferenceType
+    >,
+    program _: ProgramType.Type,
+    inference _: InferenceType.Type
+) {}

@@ -26,7 +26,9 @@ public macro Inference() = #externalMacro(
 
 @attached(
     member,
-    names: named(definition)
+    names:
+        named(definition),
+        named(Site)
 )
 @attached(
     extension,
@@ -35,6 +37,12 @@ public macro Inference() = #externalMacro(
 public macro Program() = #externalMacro(
     module: "AgenticMacrosPlugin",
     type: "ProgramMacro"
+)
+
+@attached(accessor)
+public macro InferenceSite() = #externalMacro(
+    module: "AgenticMacrosPlugin",
+    type: "InferenceSiteMacro"
 )
 
 @attached(

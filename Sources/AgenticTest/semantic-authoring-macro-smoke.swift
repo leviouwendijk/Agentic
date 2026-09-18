@@ -59,6 +59,10 @@ extension SmokeDomain.Programs {
 
         static let purpose =
             "Prove lexical Program declaration synthesis."
+
+        @InferenceSite
+        static var compose:
+            Site<SmokeDomain.Inferences.MacroSmokeInference>
     }
 }
 
