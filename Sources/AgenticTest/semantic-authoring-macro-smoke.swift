@@ -98,6 +98,14 @@ extension SmokeDomain.Realizations {
     }
 }
 
+extension SmokeDomain.Optimizations {
+    @Optimization
+    struct MacroSmokeOptimization {
+        static let purpose =
+            "Prove lexical Optimization declaration synthesis."
+    }
+}
+
 func runSemanticAuthoringMacroSmoke() {
     requireAgent(
         SmokeDomain.Agents.MacroSmokeAgent.self
@@ -113,6 +121,9 @@ func runSemanticAuthoringMacroSmoke() {
     )
     requireInferenceRealization(
         SmokeDomain.Realizations.MacroSmokeInferenceRealization.self
+    )
+    requireOptimization(
+        SmokeDomain.Optimizations.MacroSmokeOptimization.self
     )
 
     requireIdentifier(
@@ -131,6 +142,10 @@ func runSemanticAuthoringMacroSmoke() {
         SmokeDomain.Tools.MacroSmokeTool.definition.identifier.rawValue,
         expected: "smoke_domain.tools.macro_smoke_tool"
     )
+    requireIdentifier(
+        SmokeDomain.Optimizations.MacroSmokeOptimization.definition.identifier.rawValue,
+        expected: "smoke_domain.optimizations.macro_smoke_optimization"
+    )
 
     let realization =
         SmokeDomain.Realizations
@@ -145,12 +160,6 @@ func runSemanticAuthoringMacroSmoke() {
     guard realization.configuration.strategy == .direct else {
         fatalError(
             "Expected direct inference realization strategy."
-        )
-    }
-
-    guard realization.configuration.modelSelection == .executor else {
-        fatalError(
-            "Expected executor model selection default."
         )
     }
 
@@ -180,6 +189,7 @@ func runSemanticAuthoringMacroSmoke() {
     }
 
     _ = SmokeDomain.Realizations.self
+    _ = SmokeDomain.Optimizations.self
 
     print("PASS: semantic authoring macros")
 }
@@ -203,6 +213,10 @@ private func requireTool<Value: Tool>(
 private func requireInferenceRealization<
     Value: InferenceRealization
 >(
+    _: Value.Type
+) {}
+
+private func requireOptimization<Value: Optimization>(
     _: Value.Type
 ) {}
 

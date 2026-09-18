@@ -62,7 +62,7 @@ private enum InferenceRealizationMacroSpecification:
         return [
             DeclSyntax(
                 stringLiteral:
-                    "\(access)static let definition: InferenceRealizationDefinition<InferenceType> = .init(identifier: .init(rawValue: \"\(identifier)\"), configuration: .init(strategy: Self.strategy, modelSelection: Self.modelSelection, instructions: Self.instructions, budget: Self.budget, recovery: Self.recovery, adapter: Self.adapter, demonstrations: Self.demonstrations, generation: Self.generation, metadata: Self.metadata))"
+                    "\(access)static let definition: InferenceRealizationDefinition<InferenceType> = .init(identifier: .init(rawValue: \"\(identifier)\"), configuration: .init(strategy: Self.strategy, instructions: Self.instructions, budget: Self.budget, recovery: Self.recovery, adapter: Self.adapter, demonstrations: Self.demonstrations, generation: Self.generation, metadata: Self.metadata))"
             ),
         ]
     }

@@ -1,10 +1,9 @@
 import MacroEngine
-import Primitives
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct DomainMacro:
+public struct OptimizationMacro:
     MemberMacro,
     ExtensionMacro
 {
@@ -15,10 +14,10 @@ public struct DomainMacro:
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         try DeclarationMacroEngine<
-            DomainMacroSpecification
+            OptimizationMacroSpecification
         >.members(
             of: declaration,
-            macroName: "Domain",
+            macroName: "Optimization",
             lexicalContext: context.lexicalContext
         )
     }
@@ -31,56 +30,38 @@ public struct DomainMacro:
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
-            DomainMacroSpecification
+            OptimizationMacroSpecification
         >.extensions(
             of: declaration,
             type: type,
-            macroName: "Domain",
+            macroName: "Optimization",
             lexicalContext: context.lexicalContext
         )
     }
 }
 
-private enum DomainMacroSpecification:
+private enum OptimizationMacroSpecification:
     DeclarationMacroSpecification
 {
     static let supportedKinds: Set<DeclarationMacroKind> = [
+        .struct,
         .enum,
     ]
 
-    static let conformance: String? = "Domain"
+    static let conformance: String? = "Optimization"
 
     static func members(
         in context: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
         let access = context.accessPrefix
-        let namespace = Case.convert(
-            context.name,
-            to: .snake
+        let identifier = semanticIdentifier(
+            context.lexicalPath
         )
 
         return [
             DeclSyntax(
                 stringLiteral:
-                    "\(access)static let definition: DomainDefinition = .init(namespace: .init(rawValue: \"\(namespace)\"))"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Agents {}"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Inferences {}"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Programs {}"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Tools {}"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Realizations {}"
-            ),
-            DeclSyntax(
-                stringLiteral: "\(access)enum Optimizations {}"
+                    "\(access)static let definition: OptimizationDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose)"
             ),
         ]
     }
