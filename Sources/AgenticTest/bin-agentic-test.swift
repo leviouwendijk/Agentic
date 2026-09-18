@@ -83,6 +83,7 @@ struct AgenticTest {
         _ = SmokeDomain.Realizations.self
 
         runSemanticAuthoringMacroSmoke()
+        runProgramRealizationSmoke()
 
         print("PASS: @Domain smoke")
     }
