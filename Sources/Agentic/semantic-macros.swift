@@ -49,3 +49,16 @@ public macro Tool() = #externalMacro(
     module: "AgenticMacrosPlugin",
     type: "ToolMacro"
 )
+
+@attached(
+    member,
+    names: named(definition)
+)
+@attached(
+    extension,
+    conformances: InferenceRealization
+)
+public macro InferenceRealization() = #externalMacro(
+    module: "AgenticMacrosPlugin",
+    type: "InferenceRealizationMacro"
+)

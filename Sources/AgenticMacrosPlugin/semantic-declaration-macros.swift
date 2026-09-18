@@ -258,7 +258,7 @@ private enum ToolMacroSpecification:
     }
 }
 
-private func semanticIdentifier(
+func semanticIdentifier(
     _ lexicalPath: [String]
 ) -> String {
     lexicalPath

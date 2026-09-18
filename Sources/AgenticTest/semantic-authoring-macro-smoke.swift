@@ -84,6 +84,20 @@ extension SmokeDomain.Tools {
     }
 }
 
+extension SmokeDomain.Realizations {
+    @InferenceRealization
+    struct MacroSmokeInferenceRealization {
+        typealias InferenceType =
+            SmokeDomain.Inferences.MacroSmokeInference
+
+        static let strategy:
+            InferenceStrategyIdentifier = .direct
+
+        static let instructions =
+            "Use the direct smoke realization."
+    }
+}
+
 func runSemanticAuthoringMacroSmoke() {
     requireAgent(
         SmokeDomain.Agents.MacroSmokeAgent.self
@@ -96,6 +110,9 @@ func runSemanticAuthoringMacroSmoke() {
     )
     requireTool(
         SmokeDomain.Tools.MacroSmokeTool.self
+    )
+    requireInferenceRealization(
+        SmokeDomain.Realizations.MacroSmokeInferenceRealization.self
     )
 
     requireIdentifier(
@@ -115,6 +132,53 @@ func runSemanticAuthoringMacroSmoke() {
         expected: "smoke_domain.tools.macro_smoke_tool"
     )
 
+    let realization =
+        SmokeDomain.Realizations
+            .MacroSmokeInferenceRealization
+            .definition
+
+    requireIdentifier(
+        realization.identifier.rawValue,
+        expected: "smoke_domain.realizations.macro_smoke_inference_realization"
+    )
+
+    guard realization.configuration.strategy == .direct else {
+        fatalError(
+            "Expected direct inference realization strategy."
+        )
+    }
+
+    guard realization.configuration.modelSelection == .executor else {
+        fatalError(
+            "Expected executor model selection default."
+        )
+    }
+
+    guard realization.configuration.budget == .singleAttempt else {
+        fatalError(
+            "Expected single-attempt inference budget default."
+        )
+    }
+
+    do {
+        _ = try InferenceBudget(
+            maximumAttempts: 0
+        )
+        fatalError(
+            "Expected invalid inference budget to be rejected."
+        )
+    } catch let error as InferenceBudgetParsingError {
+        guard case .nonPositiveMaximumAttempts = error else {
+            fatalError(
+                "Unexpected inference budget parsing error: \(error)"
+            )
+        }
+    } catch {
+        fatalError(
+            "Unexpected inference budget error: \(error)"
+        )
+    }
+
     _ = SmokeDomain.Realizations.self
 
     print("PASS: semantic authoring macros")
@@ -133,6 +197,12 @@ private func requireProgram<Value: Program>(
 ) {}
 
 private func requireTool<Value: Tool>(
+    _: Value.Type
+) {}
+
+private func requireInferenceRealization<
+    Value: InferenceRealization
+>(
     _: Value.Type
 ) {}
 

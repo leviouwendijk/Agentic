@@ -11,5 +11,6 @@ struct AgenticMacrosPlugin:
         InferenceMacro.self,
         ProgramMacro.self,
         ToolMacro.self,
+        InferenceRealizationMacro.self,
     ]
 }
