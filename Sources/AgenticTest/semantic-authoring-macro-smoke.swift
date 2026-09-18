@@ -63,6 +63,15 @@ extension SmokeDomain.Programs {
         @InferenceSite
         static var compose:
             Site<SmokeDomain.Inferences.MacroSmokeInference>
+
+        func run(
+            _ input: Input,
+            in _: ProgramContext
+        ) async throws -> Output {
+            .init(
+                value: input.value
+            )
+        }
     }
 }
 
