@@ -1,5 +1,6 @@
 import AgenticRecovery
 import Foundation
+import Macros
 import Primitives
 
 public struct InferenceRealizationIdentifier:
@@ -26,11 +27,12 @@ public struct InferenceStrategyIdentifier:
     }
 }
 
+@StringIdentifiers
 public extension InferenceStrategyIdentifier {
-    static let direct: Self = "direct"
-    static let native_reasoning: Self = "native_reasoning"
-    static let sampled: Self = "sampled"
-    static let refining: Self = "refining"
+    static var direct: Self
+    static var native_reasoning: Self
+    static var sampled: Self
+    static var refining: Self
 }
 
 public struct InferenceAdapterIdentifier:
