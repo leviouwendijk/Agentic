@@ -58,6 +58,31 @@ public struct ProgramRealization<
         self.bindings = bindings
     }
 
+    init(
+        authoredBindings: [Binding]
+    ) {
+        var bindings: [Binding] = []
+        bindings.reserveCapacity(
+            authoredBindings.count
+        )
+
+        for binding in authoredBindings {
+            if let index = bindings.firstIndex(
+                where: { existing in
+                    existing.site == binding.site
+                }
+            ) {
+                bindings[index] = binding
+            } else {
+                bindings.append(
+                    binding
+                )
+            }
+        }
+
+        self.bindings = bindings
+    }
+
     private init(
         validatedBindings: [Binding]
     ) {
@@ -103,16 +128,6 @@ public struct ProgramRealization<
 
         return Self(
             validatedBindings: bindings
-        )
-    }
-}
-
-public extension Program {
-    static func realization(
-        _ bindings: ProgramRealization<Self>.Binding...
-    ) throws -> ProgramRealization<Self> {
-        try .init(
-            bindings: bindings
         )
     }
 }
