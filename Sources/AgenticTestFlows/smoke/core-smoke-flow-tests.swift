@@ -58,9 +58,8 @@ struct SmokeTool:
     }
 }
 
-@main
 struct AgenticTest {
-    static func main() {
+    static func runDomainSmoke() {
         requireDomain(
             SmokeDomain.self
         )
@@ -85,9 +84,6 @@ struct AgenticTest {
         _ = SmokeDomain.Programs.self
         _ = SmokeDomain.Tools.self
         _ = SmokeDomain.Realizations.self
-
-        runSemanticAuthoringMacroSmoke()
-        runProgramRealizationSmoke()
 
         print("PASS: @Domain smoke")
     }

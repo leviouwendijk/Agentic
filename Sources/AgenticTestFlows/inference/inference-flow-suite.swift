@@ -2,7 +2,6 @@ import Agentic
 import AgenticStandard
 import TestFlows
 
-@main
 enum AgenticInferenceFlowTestMain {
     static func main() async {
         await TestFlowCLI.run(

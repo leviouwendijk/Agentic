@@ -4,7 +4,7 @@ import TestFlows
 struct AgenticFlowTesting {
     static func main() async {
         await TestFlowCLI.run(
-            suite: AgenticFlowSuite.self
+            suite: UnifiedAgenticFlowSuite.self
         )
     }
 }

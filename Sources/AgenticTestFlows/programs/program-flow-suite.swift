@@ -1,6 +1,5 @@
 import TestFlows
 
-@main
 enum ProgramsFlowTestMain {
     static func main() async {
         await TestFlowCLI.run(

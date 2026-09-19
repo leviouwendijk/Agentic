@@ -1,7 +1,6 @@
 import Agentic
 import TestFlows
 
-@main
 enum OptimizerTestMain {
     static func main() async {
         await TestFlowCLI.run(

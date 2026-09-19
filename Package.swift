@@ -24,31 +24,7 @@ let package = Package(
         .executable(
             name: "agentictest",
             targets: [
-                "AgenticTest",
-            ]
-        ),
-        .executable(
-            name: "ainftest",
-            targets: [
-                "AgenticInferenceTestFlows",
-            ]
-        ),
-        .executable(
-            name: "aprogtest",
-            targets: [
-                "AgenticProgramsTestFlows",
-            ]
-        ),
-        .executable(
-            name: "aopttest",
-            targets: [
-                "AgenticOptimizerTestFlows",
-            ]
-        ),
-        .executable(
-            name: "adaptest",
-            targets: [
-                "AgenticAdaptersTestFlows",
+                "AgenticTestFlows",
             ]
         ),
     ],
@@ -149,7 +125,7 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "AgenticInferenceTestFlows",
+            name: "AgenticTestFlows",
             dependencies: [
                 "Agentic",
                 "AgenticStandard",
@@ -158,66 +134,6 @@ let package = Package(
                     package: "AgenticRecovery"
                 ),
                 .product(
-                    name: "Macros",
-                    package: "Macros"
-                ),
-                .product(
-                    name: "Schema",
-                    package: "Schema"
-                ),
-                .product(
-                    name: "TestFlows",
-                    package: "TestFlows"
-                ),
-            ]
-        ),
-        .executableTarget(
-            name: "AgenticProgramsTestFlows",
-            dependencies: [
-                "Agentic",
-                "AgenticStandard",
-                .product(
-                    name: "Primitives",
-                    package: "Primitives"
-                ),
-                .product(
-                    name: "Schema",
-                    package: "Schema"
-                ),
-                .product(
-                    name: "Macros",
-                    package: "Macros"
-                ),
-                .product(
-                    name: "TestFlows",
-                    package: "TestFlows"
-                ),
-            ]
-        ),
-        .executableTarget(
-            name: "AgenticOptimizerTestFlows",
-            dependencies: [
-                "Agentic",
-                "AgenticStandard",
-                .product(
-                    name: "Primitives",
-                    package: "Primitives"
-                ),
-                .product(
-                    name: "TestFlows",
-                    package: "TestFlows"
-                ),
-            ]
-        ),
-        .executableTarget(
-            name: "AgenticAdaptersTestFlows",
-            dependencies: [
-                "Agentic",
-                .product(
-                    name: "AgenticRecovery",
-                    package: "AgenticRecovery"
-                ),
-                .product(
                     name: "Primitives",
                     package: "Primitives"
                 ),
@@ -225,20 +141,6 @@ let package = Package(
                     name: "Macros",
                     package: "Macros"
                 ),
-                .product(
-                    name: "Schema",
-                    package: "Schema"
-                ),
-                .product(
-                    name: "TestFlows",
-                    package: "TestFlows"
-                ),
-            ]
-        ),
-        .executableTarget(
-            name: "AgenticTest",
-            dependencies: [
-                "Agentic",
                 .product(
                     name: "Schema",
                     package: "Schema"
@@ -247,6 +149,20 @@ let package = Package(
                     name: "Workspace",
                     package: "Workspace"
                 ),
+                .product(
+                    name: "TestFlows",
+                    package: "TestFlows"
+                ),
+            ],
+            path: "Sources/AgenticTestFlows",
+            sources: [
+                "bin.swift",
+                "unified-flow-suite.swift",
+                "smoke",
+                "inference",
+                "programs",
+                "optimization",
+                "adapters",
             ]
         ),
         .macro(
