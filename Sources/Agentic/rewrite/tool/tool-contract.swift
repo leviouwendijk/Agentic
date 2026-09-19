@@ -1,31 +1,17 @@
-import Schema
+// import Schema
 
-public protocol ToolInput: 
-    Sendable 
-    & Decodable 
-    & JSONSchemaProviding 
-{}
-    // var repository: String? { get }
-// }
-
-// extension ToolInput {
-//     var repository: String? {
-//         nil
-//     }
-// }
-
-public protocol ToolOutput: 
-    Sendable 
-    & Encodable 
-{}
-
-// public protocol ToolEnvironment: 
+// public protocol ToolInput: 
 //     Sendable 
+//     & Decodable 
+//     & JSONSchemaProviding 
 // {}
 
-// -------------------------------
+// public protocol ToolOutput: 
+//     Sendable 
+//     & Encodable 
+// {}
 
-public protocol ToolContract: Sendable {
-    associatedtype Input: ToolInput
-    associatedtype Output: ToolOutput
-}
+// public protocol ToolContract: Sendable {
+//     associatedtype Input: ToolInput
+//     associatedtype Output: ToolOutput
+// }
