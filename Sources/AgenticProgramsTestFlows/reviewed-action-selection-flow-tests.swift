@@ -1,0 +1,263 @@
+import Agentic
+import AgenticStandard
+import Foundation
+import TestFlows
+
+private struct ReviewedActionObservation: Sendable {
+    let inference: InferenceIdentifier
+    let strategy: InferenceStrategyIdentifier
+}
+
+private actor ReviewedActionRecorder {
+    private var observations: [ReviewedActionObservation] = []
+
+    func append(
+        _ observation: ReviewedActionObservation
+    ) {
+        observations.append(
+            observation
+        )
+    }
+
+    func snapshot() -> [ReviewedActionObservation] {
+        observations
+    }
+}
+
+private struct ReviewedActionFixtureExecutor:
+    InferenceExecuting,
+    Sendable
+{
+    let selectedActionIdentifier: String
+    let acceptable: Bool
+    let assessment: String
+    let recorder: ReviewedActionRecorder
+
+    func execute(
+        _ invocation: InferenceInvocation
+    ) async throws -> InferenceInvocationResult {
+        await recorder.append(
+            ReviewedActionObservation(
+                inference: invocation.definition.identifier,
+                strategy: invocation.realization.strategy
+            )
+        )
+
+        let encoded: Data
+
+        switch invocation.definition.identifier {
+        case Standard.Inferences.DetermineNextAction.definition.identifier:
+            encoded = try JSONEncoder().encode(
+                Standard.Inferences.DetermineNextAction.Output(
+                    selectedActionIdentifier: selectedActionIdentifier
+                )
+            )
+
+        case Standard.Inferences.AssessCandidateAction.definition.identifier:
+            encoded = try JSONEncoder().encode(
+                Standard.Inferences.AssessCandidateAction.Output(
+                    acceptable: acceptable,
+                    assessment: assessment
+                )
+            )
+
+        default:
+            throw ReviewedActionFixtureError.unexpectedInference(
+                invocation.definition.identifier
+            )
+        }
+
+        return InferenceInvocationResult(
+            output: encoded,
+            record: InferenceExecutionRecord(
+                inference: invocation.definition.identifier,
+                strategy: invocation.realization.strategy,
+                metadata: [
+                    "fixture": "reviewed_action_selection",
+                ]
+            )
+        )
+    }
+}
+
+private enum ReviewedActionFixtureError: Error {
+    case unexpectedInference(InferenceIdentifier)
+}
+
+@InferenceRealization
+private struct ReviewedSelectionRealization {
+    typealias InferenceType =
+        Standard.Inferences.DetermineNextAction
+
+    static let strategy:
+        InferenceStrategyIdentifier = .native_reasoning
+
+    static let instructions =
+        "Select the best next candidate."
+}
+
+@InferenceRealization
+private struct ReviewedAssessmentRealization {
+    typealias InferenceType =
+        Standard.Inferences.AssessCandidateAction
+
+    static let strategy:
+        InferenceStrategyIdentifier = .direct
+
+    static let instructions =
+        "Assess whether the selected candidate should proceed."
+}
+
+extension ProgramsFlowTesting {
+    static func runReviewedActionSelection()
+        async throws
+        -> [TestFlowDiagnostic]
+    {
+        let input = Standard.Inferences.DetermineNextAction.Input(
+            goal: "Publish the completed change safely.",
+            state: "Implementation and all tests are complete.",
+            candidates: [
+                .init(
+                    identifier: "review",
+                    description: "Review the completed changes."
+                ),
+                .init(
+                    identifier: "publish",
+                    description: "Publish the completed changes."
+                ),
+            ]
+        )
+
+        let recorder = ReviewedActionRecorder()
+        let executor = ReviewedActionFixtureExecutor(
+            selectedActionIdentifier: "publish",
+            acceptable: true,
+            assessment: "The completed and tested change is ready to publish.",
+            recorder: recorder
+        )
+        let realization = Standard.Programs.ReviewedActionSelection.realization {
+            Standard.Programs.ReviewedActionSelection.selection.use(
+                ReviewedSelectionRealization.self
+            )
+            Standard.Programs.ReviewedActionSelection.assessment.use(
+                ReviewedAssessmentRealization.self
+            )
+        }
+        let invoker = ProgramInferenceInvoker(
+            realization: realization,
+            executor: executor
+        )
+        let context = ProgramContext(
+            inference: invoker
+        )
+
+        let output = try await Standard.Programs.ReviewedActionSelection().run(
+            input,
+            in: context
+        )
+        let observations = await recorder.snapshot()
+
+        try Expect.equal(
+            Standard.Programs.ReviewedActionSelection.definition.identifier,
+            ProgramIdentifier("standard.programs.reviewed_action_selection"),
+            "standard ReviewedActionSelection exposes namespaced semantic Program identifier"
+        )
+        try Expect.equal(
+            output.candidate.identifier,
+            "publish",
+            "multi-stage program returns the deterministically resolved selected candidate"
+        )
+        try Expect.equal(
+            output.assessment,
+            "The completed and tested change is ready to publish.",
+            "multi-stage program preserves the assessment result"
+        )
+        try Expect.equal(
+            observations.count,
+            2,
+            "multi-stage program executes exactly two semantic inference sites"
+        )
+        try Expect.equal(
+            observations[0].inference,
+            Standard.Inferences.DetermineNextAction.definition.identifier,
+            "first stage selects the next action"
+        )
+        try Expect.equal(
+            observations[0].strategy,
+            .native_reasoning,
+            "selection site uses its independently bound realization"
+        )
+        try Expect.equal(
+            observations[1].inference,
+            Standard.Inferences.AssessCandidateAction.definition.identifier,
+            "second stage assesses the selected action"
+        )
+        try Expect.equal(
+            observations[1].strategy,
+            .direct,
+            "assessment site uses its independently bound realization"
+        )
+
+        let rejectedRecorder = ReviewedActionRecorder()
+        let rejectedExecutor = ReviewedActionFixtureExecutor(
+            selectedActionIdentifier: "publish",
+            acceptable: false,
+            assessment: "Publishing is not appropriate yet.",
+            recorder: rejectedRecorder
+        )
+        let rejectedInvoker = ProgramInferenceInvoker(
+            realization: realization,
+            executor: rejectedExecutor
+        )
+        let rejectedContext = ProgramContext(
+            inference: rejectedInvoker
+        )
+
+        var rejectedIdentifier: String?
+
+        do {
+            _ = try await Standard.Programs.ReviewedActionSelection().run(
+                input,
+                in: rejectedContext
+            )
+        } catch Standard.Programs.ReviewedActionSelectionError.selectedActionRejected(
+            let identifier,
+            _
+        ) {
+            rejectedIdentifier = identifier
+        }
+
+        try Expect.equal(
+            rejectedIdentifier,
+            "publish",
+            "ordinary program control flow rejects an unacceptable assessed action"
+        )
+
+        return [
+            .field(
+                "program",
+                Standard.Programs.ReviewedActionSelection.definition.identifier.rawValue
+            ),
+            .field(
+                "selected",
+                output.candidate.identifier
+            ),
+            .field(
+                "stages",
+                String(observations.count)
+            ),
+            .field(
+                "selection_strategy",
+                observations[0].strategy.rawValue
+            ),
+            .field(
+                "assessment_strategy",
+                observations[1].strategy.rawValue
+            ),
+            .field(
+                "rejection_branch",
+                String(rejectedIdentifier != nil)
+            ),
+        ]
+    }
+}

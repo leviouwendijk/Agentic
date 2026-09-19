@@ -33,6 +33,12 @@ let package = Package(
                 "AgenticInferenceTestFlows",
             ]
         ),
+        .executable(
+            name: "aprogtest",
+            targets: [
+                "AgenticProgramsTestFlows",
+            ]
+        ),
     ],
     dependencies: [
         .package(
@@ -142,6 +148,29 @@ let package = Package(
                 .product(
                     name: "Schema",
                     package: "Schema"
+                ),
+                .product(
+                    name: "TestFlows",
+                    package: "TestFlows"
+                ),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticProgramsTestFlows",
+            dependencies: [
+                "Agentic",
+                "AgenticStandard",
+                .product(
+                    name: "Primitives",
+                    package: "Primitives"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
+                ),
+                .product(
+                    name: "Macros",
+                    package: "Macros"
                 ),
                 .product(
                     name: "TestFlows",
