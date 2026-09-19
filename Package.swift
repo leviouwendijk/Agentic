@@ -39,6 +39,12 @@ let package = Package(
                 "AgenticProgramsTestFlows",
             ]
         ),
+        .executable(
+            name: "aopttest",
+            targets: [
+                "AgenticOptimizerTestFlows",
+            ]
+        ),
     ],
     dependencies: [
         .package(
@@ -123,6 +129,10 @@ let package = Package(
             dependencies: [
                 "Agentic",
                 .product(
+                    name: "Primitives",
+                    package: "Primitives"
+                ),
+                .product(
                     name: "Macros",
                     package: "Macros"
                 ),
@@ -171,6 +181,21 @@ let package = Package(
                 .product(
                     name: "Macros",
                     package: "Macros"
+                ),
+                .product(
+                    name: "TestFlows",
+                    package: "TestFlows"
+                ),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticOptimizerTestFlows",
+            dependencies: [
+                "Agentic",
+                "AgenticStandard",
+                .product(
+                    name: "Primitives",
+                    package: "Primitives"
                 ),
                 .product(
                     name: "TestFlows",
