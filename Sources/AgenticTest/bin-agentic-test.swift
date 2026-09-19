@@ -6,7 +6,7 @@ import Workspace
 enum SmokeDomain {}
 
 struct SmokeToolInput:
-    ToolInput,
+    Source,
     RawRepresentable
 {
     let rawValue: String
@@ -29,8 +29,12 @@ struct SmokeToolInput:
     }
 }
 
-struct SmokeToolOutput: ToolOutput {
+struct SmokeToolOutput: Result {
     let value: String
+
+    static var jsonschema: JSONSchema {
+        .object()
+    }
 }
 
 struct SmokeTool:

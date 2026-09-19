@@ -44,7 +44,7 @@ public struct AgentMacro:
 
 public struct InferenceMacro:
     MemberMacro,
-    MemberAttributeMacro,
+    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(
@@ -98,7 +98,7 @@ public struct InferenceMacro:
 
 public struct ProgramMacro:
     MemberMacro,
-    MemberAttributeMacro,
+    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(
@@ -152,7 +152,7 @@ public struct ProgramMacro:
 
 public struct ToolMacro:
     MemberMacro,
-    MemberAttributeMacro,
+    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(

@@ -1,12 +1,13 @@
 import Workspace
 
 public protocol Tool:
-    ToolContract,
+    // ToolContract,
+    Producer,
     ToolRecovery,
     ToolProjection
 {
-    typealias Arguments = ToolInput
-    typealias Result = ToolOutput
+    // typealias Arguments = ToolInput
+    // typealias Result = ToolOutput
 
     // REMOVED: Input and Output are canonically owned by ToolContract.
     // associatedtype Input: Arguments

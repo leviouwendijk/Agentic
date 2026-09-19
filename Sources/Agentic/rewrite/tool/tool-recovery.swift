@@ -1,7 +1,7 @@
 import Workspace
 import AgenticRecovery
 
-public protocol ToolRecovery: ToolContract {
+public protocol ToolRecovery: Producer {
     func classify(
         _ error: any Error,
         phase: ToolCall.Phase,

@@ -13,11 +13,15 @@ extension SmokeDomain.Agents {
 extension SmokeDomain.Inferences {
     @Inference
     struct MacroSmokeInference {
-        struct Input {
+        struct Input: Source {
             let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
         }
 
-        struct Output {
+        struct Output: Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -33,15 +37,15 @@ extension SmokeDomain.Inferences {
     struct MacroSmokeExplicitInference:
         Inference
     {
-        struct Input:
-            SemanticInput
-        {
+        struct Input: Source {
             let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
         }
 
-        struct Output:
-            InferredOutput
-        {
+        struct Output: Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -57,12 +61,20 @@ extension SmokeDomain.Inferences {
 extension SmokeDomain.Programs {
     @Program
     struct MacroSmokeProgram {
-        struct Input {
+        struct Input: Source {
             let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
         }
 
-        struct Output {
+        struct Output: Result {
             let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
         }
 
         static let purpose =
@@ -106,7 +118,7 @@ extension SmokeDomain.Programs {
 extension SmokeDomain.Tools {
     @Tool
     struct MacroSmokeTool {
-        struct Input {
+        struct Input: Source {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -114,8 +126,12 @@ extension SmokeDomain.Tools {
             }
         }
 
-        struct Output {
+        struct Output: Result {
             let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
         }
 
         static let purpose =
@@ -182,22 +198,22 @@ func runSemanticAuthoringMacroSmoke() {
         SmokeDomain.Optimizations.MacroSmokeOptimization.self
     )
 
-    requireSemanticInput(
+    requireSource(
         SmokeDomain.Inferences.MacroSmokeInference.Input.self
     )
-    requireInferredOutput(
+    requireResult(
         SmokeDomain.Inferences.MacroSmokeInference.Output.self
     )
-    requireSemanticInput(
+    requireSource(
         SmokeDomain.Programs.MacroSmokeProgram.Input.self
     )
-    requireSemanticOutput(
+    requireResult(
         SmokeDomain.Programs.MacroSmokeProgram.Output.self
     )
-    requireToolInput(
+    requireSource(
         SmokeDomain.Tools.MacroSmokeTool.Input.self
     )
-    requireToolOutput(
+    requireResult(
         SmokeDomain.Tools.MacroSmokeTool.Output.self
     )
 
@@ -289,23 +305,11 @@ private func requireTool<Value: Tool>(
     _: Value.Type
 ) {}
 
-private func requireSemanticInput<Value: SemanticInput>(
+private func requireSource<Value: Source>(
     _: Value.Type
 ) {}
 
-private func requireSemanticOutput<Value: SemanticOutput>(
-    _: Value.Type
-) {}
-
-private func requireInferredOutput<Value: InferredOutput>(
-    _: Value.Type
-) {}
-
-private func requireToolInput<Value: ToolInput>(
-    _: Value.Type
-) {}
-
-private func requireToolOutput<Value: ToolOutput>(
+private func requireResult<Value: Result>(
     _: Value.Type
 ) {}
 

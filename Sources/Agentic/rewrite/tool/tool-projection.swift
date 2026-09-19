@@ -1,4 +1,4 @@
-public protocol ToolProjection: ToolContract {
+public protocol ToolProjection: Producer {
     func process(
         _ output: Output,
         input: Input

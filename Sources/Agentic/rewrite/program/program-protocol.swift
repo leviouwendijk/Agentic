@@ -1,4 +1,4 @@
-public protocol Program: SemanticContract {
+public protocol Program: Producer {
     static var definition: ProgramDefinition { get }
 
     func run(

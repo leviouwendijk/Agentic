@@ -129,7 +129,7 @@ extension ToolCall {
 
 extension ToolCall {
     public enum Reconciliation<Output>: Sendable
-    where Output: ToolOutput
+    where Output: Result
     {
         case applied(Output)
         case applied_without_output
