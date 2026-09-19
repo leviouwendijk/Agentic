@@ -26,7 +26,7 @@ public struct OptimizationMacro:
         of _: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo _: [TypeSyntax],
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
@@ -34,6 +34,7 @@ public struct OptimizationMacro:
         >.extensions(
             of: declaration,
             type: type,
+            conformingTo: protocols,
             macroName: "Optimization",
             lexicalContext: context.lexicalContext
         )

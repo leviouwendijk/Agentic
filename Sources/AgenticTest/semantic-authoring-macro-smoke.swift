@@ -28,6 +28,30 @@ extension SmokeDomain.Inferences {
         static let purpose =
             "Prove lexical Inference declaration synthesis."
     }
+
+    @Inference
+    struct MacroSmokeExplicitInference:
+        Inference
+    {
+        struct Input:
+            SemanticInput
+        {
+            let value: String
+        }
+
+        struct Output:
+            InferredOutput
+        {
+            let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
+        static let purpose =
+            "Prove an explicit Inference conformance is not restated by its macro."
+    }
 }
 
 extension SmokeDomain.Programs {
@@ -139,6 +163,9 @@ func runSemanticAuthoringMacroSmoke() {
     requireInference(
         SmokeDomain.Inferences.MacroSmokeInference.self
     )
+    requireInference(
+        SmokeDomain.Inferences.MacroSmokeExplicitInference.self
+    )
     requireProgram(
         SmokeDomain.Programs.MacroSmokeProgram.self
     )
@@ -181,6 +208,10 @@ func runSemanticAuthoringMacroSmoke() {
     requireIdentifier(
         SmokeDomain.Inferences.MacroSmokeInference.definition.identifier.rawValue,
         expected: "smoke_domain.inferences.macro_smoke_inference"
+    )
+    requireIdentifier(
+        SmokeDomain.Inferences.MacroSmokeExplicitInference.definition.identifier.rawValue,
+        expected: "smoke_domain.inferences.macro_smoke_explicit_inference"
     )
     requireIdentifier(
         SmokeDomain.Programs.MacroSmokeProgram.definition.identifier.rawValue,

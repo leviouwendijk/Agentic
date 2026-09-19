@@ -27,7 +27,7 @@ public struct AgentMacro:
         of _: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo _: [TypeSyntax],
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
@@ -35,6 +35,7 @@ public struct AgentMacro:
         >.extensions(
             of: declaration,
             type: type,
+            conformingTo: protocols,
             macroName: "Agent",
             lexicalContext: context.lexicalContext
         )
@@ -80,7 +81,7 @@ public struct InferenceMacro:
         of _: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo _: [TypeSyntax],
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
@@ -88,6 +89,7 @@ public struct InferenceMacro:
         >.extensions(
             of: declaration,
             type: type,
+            conformingTo: protocols,
             macroName: "Inference",
             lexicalContext: context.lexicalContext
         )
@@ -133,7 +135,7 @@ public struct ProgramMacro:
         of _: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo _: [TypeSyntax],
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
@@ -141,6 +143,7 @@ public struct ProgramMacro:
         >.extensions(
             of: declaration,
             type: type,
+            conformingTo: protocols,
             macroName: "Program",
             lexicalContext: context.lexicalContext
         )
@@ -186,7 +189,7 @@ public struct ToolMacro:
         of _: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo _: [TypeSyntax],
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         try DeclarationMacroEngine<
@@ -194,6 +197,7 @@ public struct ToolMacro:
         >.extensions(
             of: declaration,
             type: type,
+            conformingTo: protocols,
             macroName: "Tool",
             lexicalContext: context.lexicalContext
         )
