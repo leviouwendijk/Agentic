@@ -1,15 +1,6 @@
 {
-  "originHash" : "e7f931538409ba035851cb3e6aada65f4e092827b1f1bece629fa7c69f19c978",
+  "originHash" : "a551115782c4ea7da6c0be6615d93c51319eee45aeeee2c2ad7d408e252ac519",
   "pins" : [
-    {
-      "identity" : "agenticrecovery",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/leviouwendijk/AgenticRecovery.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "6e5a1c6c5fdfa5d7c2b2e801289373dbe3936594"
-      }
-    },
     {
       "identity" : "ansi",
       "kind" : "remoteSourceControl",
