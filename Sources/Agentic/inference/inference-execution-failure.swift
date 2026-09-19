@@ -1,4 +1,3 @@
-import AgenticRecovery
 import Foundation
 
 /// Terminal failure of one inference execution.

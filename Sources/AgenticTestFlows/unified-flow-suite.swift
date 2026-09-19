@@ -9,4 +9,5 @@ enum UnifiedAgenticFlowSuite: TestFlowRegistry {
             + ProgramsFlowSuite.flows
             + OptimizerFlowSuite.flows
             + InferenceAdapterFlowSuite.flows
+            + RecoveryFlowSuite.flows
 }

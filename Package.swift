@@ -58,7 +58,7 @@ let package = Package(
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/AgenticRecovery.git",
+            url: "https://github.com/leviouwendijk/Errors.git",
             branch: "master"
         ),
         .package(
@@ -100,8 +100,8 @@ let package = Package(
                     package: "Difference"
                 ),
                 .product(
-                    name: "AgenticRecovery",
-                    package: "AgenticRecovery"
+                    name: "Errors",
+                    package: "Errors"
                 ),
                 "AgenticMacrosPlugin",
             ]
@@ -130,8 +130,8 @@ let package = Package(
                 "Agentic",
                 "AgenticStandard",
                 .product(
-                    name: "AgenticRecovery",
-                    package: "AgenticRecovery"
+                    name: "Errors",
+                    package: "Errors"
                 ),
                 .product(
                     name: "Primitives",
@@ -163,6 +163,7 @@ let package = Package(
                 "programs",
                 "optimization",
                 "adapters",
+                "recovery",
             ]
         ),
         .macro(
