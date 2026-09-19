@@ -1,0 +1,51 @@
+import Agentic
+import Macros
+import Schema
+
+extension Standard.Inferences {
+    @Inference
+    public struct AssessCandidateAction {
+        @JSONSchema
+        public struct Input:
+            Source,
+            Hashable
+        {
+            public var goal: String
+            public var state: String
+            public var candidate: Standard.Inferences.DetermineNextAction.Candidate
+
+            public init(
+                goal: String,
+                state: String,
+                candidate: Standard.Inferences.DetermineNextAction.Candidate
+            ) {
+                self.goal = goal
+                self.state = state
+                self.candidate = candidate
+            }
+        }
+
+        @JSONSchema
+        public struct Output:
+            Result,
+            Hashable
+        {
+            /// Whether the candidate is appropriate to perform next.
+            public var acceptable: Bool
+
+            /// Concise assessment of why the candidate is or is not appropriate.
+            public var assessment: String
+
+            public init(
+                acceptable: Bool,
+                assessment: String
+            ) {
+                self.acceptable = acceptable
+                self.assessment = assessment
+            }
+        }
+
+        public static let purpose =
+            "Assess whether one candidate action is appropriate for the current goal and state."
+    }
+}

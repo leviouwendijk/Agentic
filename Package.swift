@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3
 
 import CompilerPluginSupport
 import PackageDescription
@@ -25,6 +25,12 @@ let package = Package(
             name: "agentictest",
             targets: [
                 "AgenticTest",
+            ]
+        ),
+        .executable(
+            name: "ainftest",
+            targets: [
+                "AgenticInferenceTestFlows",
             ]
         ),
     ],
@@ -59,6 +65,10 @@ let package = Package(
 
         .package(
             url: "https://github.com/leviouwendijk/AgenticRecovery.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/TestFlows.git",
             branch: "master"
         ),
 
@@ -106,6 +116,37 @@ let package = Package(
             name: "AgenticStandard",
             dependencies: [
                 "Agentic",
+                .product(
+                    name: "Macros",
+                    package: "Macros"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
+                ),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticInferenceTestFlows",
+            dependencies: [
+                "Agentic",
+                "AgenticStandard",
+                .product(
+                    name: "AgenticRecovery",
+                    package: "AgenticRecovery"
+                ),
+                .product(
+                    name: "Macros",
+                    package: "Macros"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
+                ),
+                .product(
+                    name: "TestFlows",
+                    package: "TestFlows"
+                ),
             ]
         ),
         .executableTarget(
