@@ -15,6 +15,12 @@ let package = Package(
                 "Agentic",
             ]
         ),
+        .library(
+            name: "AgenticStandard",
+            targets: [
+                "AgenticStandard",
+            ]
+        ),
         .executable(
             name: "agentictest",
             targets: [
@@ -94,6 +100,12 @@ let package = Package(
                     package: "AgenticRecovery"
                 ),
                 "AgenticMacrosPlugin",
+            ]
+        ),
+        .target(
+            name: "AgenticStandard",
+            dependencies: [
+                "Agentic",
             ]
         ),
         .executableTarget(
