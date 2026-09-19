@@ -13,18 +13,11 @@ extension SmokeDomain.Agents {
 extension SmokeDomain.Inferences {
     @Inference
     struct MacroSmokeInference {
-        struct Input:
-            Codable,
-            Sendable
-        {
+        struct Input {
             let value: String
         }
 
-        struct Output:
-            JSONSchemaProviding,
-            Codable,
-            Sendable
-        {
+        struct Output {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -37,25 +30,16 @@ extension SmokeDomain.Inferences {
     }
 }
 
-struct MacroSmokeProgramInput:
-    Codable,
-    Sendable
-{
-    let value: String
-}
-
-struct MacroSmokeProgramOutput:
-    Codable,
-    Sendable
-{
-    let value: String
-}
-
 extension SmokeDomain.Programs {
     @Program
     struct MacroSmokeProgram {
-        typealias Input = MacroSmokeProgramInput
-        typealias Output = MacroSmokeProgramOutput
+        struct Input {
+            let value: String
+        }
+
+        struct Output {
+            let value: String
+        }
 
         static let purpose =
             "Prove lexical Program declaration synthesis."
@@ -73,13 +57,42 @@ extension SmokeDomain.Programs {
             )
         }
     }
+
+    @Program
+    struct MacroSmokeAliasedProgram {
+        typealias Input =
+            SmokeDomain.Inferences.MacroSmokeInference.Input
+        typealias Output =
+            SmokeDomain.Inferences.MacroSmokeInference.Output
+
+        static let purpose =
+            "Prove semantic contract aliases remain untouched."
+
+        func run(
+            _ input: Input,
+            in _: ProgramContext
+        ) async throws -> Output {
+            .init(
+                value: input.value
+            )
+        }
+    }
 }
 
 extension SmokeDomain.Tools {
     @Tool
     struct MacroSmokeTool {
-        typealias Input = SmokeToolInput
-        typealias Output = SmokeToolOutput
+        struct Input {
+            let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
+        struct Output {
+            let value: String
+        }
 
         static let purpose =
             "Prove lexical Tool declaration synthesis."
@@ -91,7 +104,7 @@ extension SmokeDomain.Tools {
             workspace _: WorkspaceContext?
         ) async throws -> Output {
             .init(
-                value: input.rawValue
+                value: input.value
             )
         }
     }
@@ -129,6 +142,9 @@ func runSemanticAuthoringMacroSmoke() {
     requireProgram(
         SmokeDomain.Programs.MacroSmokeProgram.self
     )
+    requireProgram(
+        SmokeDomain.Programs.MacroSmokeAliasedProgram.self
+    )
     requireTool(
         SmokeDomain.Tools.MacroSmokeTool.self
     )
@@ -137,6 +153,25 @@ func runSemanticAuthoringMacroSmoke() {
     )
     requireOptimization(
         SmokeDomain.Optimizations.MacroSmokeOptimization.self
+    )
+
+    requireSemanticInput(
+        SmokeDomain.Inferences.MacroSmokeInference.Input.self
+    )
+    requireInferredOutput(
+        SmokeDomain.Inferences.MacroSmokeInference.Output.self
+    )
+    requireSemanticInput(
+        SmokeDomain.Programs.MacroSmokeProgram.Input.self
+    )
+    requireSemanticOutput(
+        SmokeDomain.Programs.MacroSmokeProgram.Output.self
+    )
+    requireToolInput(
+        SmokeDomain.Tools.MacroSmokeTool.Input.self
+    )
+    requireToolOutput(
+        SmokeDomain.Tools.MacroSmokeTool.Output.self
     )
 
     requireIdentifier(
@@ -220,6 +255,26 @@ private func requireProgram<Value: Program>(
 ) {}
 
 private func requireTool<Value: Tool>(
+    _: Value.Type
+) {}
+
+private func requireSemanticInput<Value: SemanticInput>(
+    _: Value.Type
+) {}
+
+private func requireSemanticOutput<Value: SemanticOutput>(
+    _: Value.Type
+) {}
+
+private func requireInferredOutput<Value: InferredOutput>(
+    _: Value.Type
+) {}
+
+private func requireToolInput<Value: ToolInput>(
+    _: Value.Type
+) {}
+
+private func requireToolOutput<Value: ToolOutput>(
     _: Value.Type
 ) {}
 
