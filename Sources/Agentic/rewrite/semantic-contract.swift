@@ -2,16 +2,8 @@ import Schema
 
 public enum Contract {
     public enum Semantic {
-        public protocol Object:
-            Sendable,
-            Codable
-        {}
-
-        public protocol SchematizableObject:
-            Sendable,
-            Codable,
-            JSONSchemaProviding
-        {}
+        public typealias Object = Sendable & Codable
+        public typealias SchematizableObject = Sendable & Codable & JSONSchemaProviding
     }
 
     public enum Process {
