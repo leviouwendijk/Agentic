@@ -1,3 +1,7 @@
+import Macros
+import Schema
+
+@JSONSchema
 public enum UserInputRequirement:
     String,
     Sendable,

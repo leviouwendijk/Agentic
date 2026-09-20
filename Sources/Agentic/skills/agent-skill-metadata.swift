@@ -1,4 +1,9 @@
+import Macros
+import Schema
+
+@JSONSchema
 public struct AgentSkillMetadata: Sendable, Codable, Hashable {
+    @JSONSchema
     public struct ToolReferenceAPI: Sendable, Codable, Hashable {
         public var required: [ToolReference]
         public var optional: [ToolReference]

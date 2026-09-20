@@ -1,3 +1,7 @@
+import Macros
+import Schema
+
+@JSONSchema
 public struct ToolReference:
     Sendable,
     Codable,

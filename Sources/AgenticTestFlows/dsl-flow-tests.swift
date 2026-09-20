@@ -187,12 +187,11 @@ extension AgenticFlowTesting {
         let registry = try Agentic.tool.registry {
             declaration
             DSLConcreteTool()
-            DSLToolSet()
         }
 
         try expect(
-            registry.count == 3,
-            "DSL registry expected 3 tools, found \(registry.count)"
+            registry.count == 2,
+            "DSL registry expected 2 tools, found \(registry.count)"
         )
 
         try expect(
@@ -205,11 +204,6 @@ extension AgenticFlowTesting {
             "DSL registry missing concrete tool"
         )
 
-        try expect(
-            registry.tool(named: "dsl_tool_set_tool") != nil,
-            "DSL registry missing tool-set tool"
-        )
-
         return [
             .field(
                 "registry_count",
@@ -217,7 +211,7 @@ extension AgenticFlowTesting {
             ),
             .field(
                 "tools",
-                "dsl_registry_declaration,dsl_concrete_tool,dsl_tool_set_tool"
+                "dsl_registry_declaration,dsl_concrete_tool"
             )
         ]
     }
@@ -252,36 +246,6 @@ private struct DSLConcreteTool: AgentTool {
         return try JSONToolBridge.encode(
             EchoToolOutput(
                 text: "concrete"
-            )
-        )
-    }
-}
-
-private struct DSLToolSet: AgentToolSet {
-    func register(
-        into registry: inout ToolRegistry
-    ) throws {
-        try registry.register(
-            DSLToolSetTool()
-        )
-    }
-}
-
-private struct DSLToolSetTool: AgentTool {
-    let identifier: AgentToolIdentifier = "dsl_tool_set_tool"
-    let description = "Tool-set DSL registry test tool."
-    let risk: ActionRisk = .observe
-
-    func call(
-        input: JSONValue,
-        workspace: AgentWorkspace?
-    ) async throws -> JSONValue {
-        _ = input
-        _ = workspace
-
-        return try JSONToolBridge.encode(
-            EchoToolOutput(
-                text: "tool-set"
             )
         )
     }

@@ -1,3 +1,7 @@
+import Macros
+import Schema
+
+@JSONSchema
 public enum AgentArtifactKind: String, Sendable, Codable, Hashable, CaseIterable {
     case text
     case markdown

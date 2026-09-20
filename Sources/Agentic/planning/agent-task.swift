@@ -1,8 +1,11 @@
 import Foundation
+import Macros
 import Primitives
+import Schema
 
 public struct AgentTaskIdentifier:
-    StringIdentifier
+    StringIdentifier,
+    JSONSchemaProviding
 {
     public let rawValue: String
 
@@ -11,8 +14,13 @@ public struct AgentTaskIdentifier:
     ) {
         self.rawValue = rawValue
     }
+
+    public static var jsonschema: JSONSchema {
+        .string()
+    }
 }
 
+@JSONSchema
 public enum AgentTaskStatus: String, Sendable, Codable, Hashable, CaseIterable {
     case pending
     case processing
@@ -20,6 +28,7 @@ public enum AgentTaskStatus: String, Sendable, Codable, Hashable, CaseIterable {
     case cancelled
 }
 
+@JSONSchema
 public struct AgentTask: Sendable, Codable, Hashable, Identifiable {
     public let id: AgentTaskIdentifier
     public var subject: String

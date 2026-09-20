@@ -1,6 +1,17 @@
 import Foundation
+import Macros
+import Schema
 
-public enum UserInputSpec: Sendable, Codable, Hashable {
+public enum UserInputSpec:
+    Sendable,
+    Codable,
+    Hashable,
+    JSONSchemaProviding
+{
+    public static var jsonschema: JSONSchema {
+        .any
+    }
+
     case text(TextUserInput)
     case single_choice(SingleChoiceUserInput)
     case multi_choice(MultiChoiceUserInput)
@@ -528,6 +539,7 @@ public struct UserInputTextConstraint: Sendable, Codable, Hashable {
     }
 }
 
+@JSONSchema
 public struct UserInputPresentation: Sendable, Codable, Hashable {
     public var title: String?
     public var help: String?
@@ -547,6 +559,7 @@ public struct UserInputPresentation: Sendable, Codable, Hashable {
     }
 }
 
+@JSONSchema
 public enum UserInputControl: String, Sendable, Codable, Hashable, CaseIterable {
     case text_field
     case text_area
@@ -556,6 +569,7 @@ public enum UserInputControl: String, Sendable, Codable, Hashable, CaseIterable 
     case form
 }
 
+@JSONSchema
 public enum UserInputOrdering: String, Sendable, Codable, Hashable, CaseIterable {
     case provided
     case alphabetical

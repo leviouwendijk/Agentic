@@ -1,5 +1,5 @@
 {
-  "originHash" : "a551115782c4ea7da6c0be6615d93c51319eee45aeeee2c2ad7d408e252ac519",
+  "originHash" : "758393fa6aaf64c3fe3fd20c5a8377f5ed79e35795db62a450f129e2854504db",
   "pins" : [
     {
       "identity" : "ansi",
@@ -74,12 +74,30 @@
       }
     },
     {
+      "identity" : "fuzzy",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Fuzzy.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "b51fd4d53899dcfd0150bd8b8215c12acb25910f"
+      }
+    },
+    {
       "identity" : "guidelines",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/leviouwendijk/Guidelines.git",
       "state" : {
         "branch" : "master",
         "revision" : "0a5bd3f30af7eaeb79c0ac37007f10322920f95a"
+      }
+    },
+    {
+      "identity" : "guidelinessearch",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/GuidelinesSearch.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "791d4382cfb7434b265398843167b5d9c10060c5"
       }
     },
     {
@@ -98,6 +116,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "581226ca30433e5adbe4244cf48cbe559a1aba88"
+      }
+    },
+    {
+      "identity" : "matching",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Matching.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "5ac7de66e96468fb00a5fb5748fd85101a009968"
       }
     },
     {
@@ -142,7 +169,7 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "03f80f4df2eab71c69de01e5b0e43f786c8abaad"
+        "revision" : "d9618666777170ca8d58489d8e4b344232a1f6a7"
       }
     },
     {
@@ -152,6 +179,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "866ef7b22350aac41f455c5b2188f95f411a4507"
+      }
+    },
+    {
+      "identity" : "ranking",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Ranking.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "5180cfb8c8e0ff6ec6224b3430507cccd83995a4"
       }
     },
     {
@@ -169,7 +205,16 @@
       "location" : "https://github.com/leviouwendijk/Schema.git",
       "state" : {
         "branch" : "master",
-        "revision" : "703253bef3f4ae18e03bb35e68ac6db0d1bc584d"
+        "revision" : "c532020b10f5f583d28cbc62f7e62ccf06022a76"
+      }
+    },
+    {
+      "identity" : "search",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Search.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "eba51288c71cf69d2f8463beb105e708a6d553af"
       }
     },
     {
@@ -215,6 +260,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "ef72deb44f924372959189d0c258c5cf7e2ba8ae"
+      }
+    },
+    {
+      "identity" : "tokens",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Tokens.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4e6c16afcaa81606fa7b2dcd80f9a25965403687"
       }
     },
     {

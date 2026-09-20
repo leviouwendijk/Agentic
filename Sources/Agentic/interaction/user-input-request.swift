@@ -1,6 +1,9 @@
 import Foundation
+import Macros
+import Schema
 
-public struct UserInputRequest: Sendable, Codable, Hashable {
+public struct UserInputRequest: Sendable, Codable, Hashable, JSONSchemaProviding {
+    @JSONSchema
     public struct Raw: Sendable, Codable, Hashable {
         public var prompt: String
         public var reason: String?
@@ -26,6 +29,10 @@ public struct UserInputRequest: Sendable, Codable, Hashable {
             self.presentation = presentation
             self.metadata = metadata
         }
+    }
+
+    public static var jsonschema: JSONSchema {
+        Raw.jsonschema
     }
 
     public let prompt: String

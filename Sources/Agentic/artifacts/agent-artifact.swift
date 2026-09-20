@@ -1,5 +1,8 @@
 import Foundation
+import Macros
+import Schema
 
+@JSONSchema
 public struct AgentArtifact: Sendable, Codable, Hashable, Identifiable {
     public let id: String
     public let sessionID: String

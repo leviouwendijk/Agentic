@@ -1,3 +1,7 @@
+import Macros
+import Schema
+
+@JSONSchema
 public enum TranscriptEventKind: String, Sendable, Codable, Hashable, CaseIterable {
     case message
     case tool_call
@@ -6,6 +10,7 @@ public enum TranscriptEventKind: String, Sendable, Codable, Hashable, CaseIterab
     case note
 }
 
+@JSONSchema
 public struct TranscriptEventRecord: Sendable, Codable, Hashable {
     public let index: Int
     public let id: String
@@ -37,6 +42,7 @@ public struct TranscriptEventRecord: Sendable, Codable, Hashable {
     }
 }
 
+@JSONSchema
 public struct TranscriptWindowSummary: Sendable, Codable, Hashable {
     public let totalEventCount: Int
     public let selectedEventCount: Int

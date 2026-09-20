@@ -1,9 +1,15 @@
+import Macros
+import Schema
+
+@JSONSchema
 public struct AgentModelSelectionDiagnostic: Sendable, Codable, Hashable {
+    @JSONSchema
     public enum Severity: String, Sendable, Codable, Hashable, CaseIterable {
         case info
         case warning
     }
 
+    @JSONSchema
     public enum Code: String, Sendable, Codable, Hashable, CaseIterable {
         case preferred_profile_selected
         case preferred_model_selected

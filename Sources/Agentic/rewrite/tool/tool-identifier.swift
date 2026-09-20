@@ -1,11 +1,19 @@
 import Primitives
+import Schema
 
-public struct ToolIdentifier: StringIdentifier {
+public struct ToolIdentifier:
+    StringIdentifier,
+    JSONSchemaProviding
+{
     public let rawValue: String
 
     public init(
         rawValue: String
     ) {
         self.rawValue = rawValue
+    }
+
+    public static var jsonschema: JSONSchema {
+        .string()
     }
 }

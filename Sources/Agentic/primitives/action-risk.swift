@@ -1,3 +1,7 @@
+import Macros
+import Schema
+
+@JSONSchema
 public enum ActionRisk: String, Sendable, Codable, Hashable, CaseIterable {
     case observe
     case boundedmutate

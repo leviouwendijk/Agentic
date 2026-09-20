@@ -1,7 +1,9 @@
 import Primitives
+import Schema
 
 public struct AgentSkillDomain:
-    StringIdentifier
+    StringIdentifier,
+    JSONSchemaProviding
 {
     public let rawValue: String
 
@@ -9,6 +11,10 @@ public struct AgentSkillDomain:
         rawValue: String
     ) {
         self.rawValue = rawValue
+    }
+
+    public static var jsonschema: JSONSchema {
+        .string()
     }
 }
 

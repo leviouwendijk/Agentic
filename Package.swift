@@ -46,6 +46,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Guidelines.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/GuidelinesSearch.git",
+            branch: "master"
+        ),
 
         .package(
             url: "https://github.com/leviouwendijk/Workspace.git",
@@ -59,6 +63,10 @@ let package = Package(
 
         .package(
             url: "https://github.com/leviouwendijk/Errors.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Search.git",
             branch: "master"
         ),
         .package(
@@ -121,6 +129,22 @@ let package = Package(
                 .product(
                     name: "Schema",
                     package: "Schema"
+                ),
+                .product(
+                    name: "Workspace",
+                    package: "Workspace"
+                ),
+                .product(
+                    name: "Guidelines",
+                    package: "Guidelines"
+                ),
+                .product(
+                    name: "GuidelinesSearch",
+                    package: "GuidelinesSearch"
+                ),
+                .product(
+                    name: "Search",
+                    package: "Search"
                 ),
             ]
         ),
