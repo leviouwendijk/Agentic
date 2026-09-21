@@ -1,3 +1,4 @@
+import AgenticTesting
 import TestFlows
 
 enum AgenticSmokeFlowSuite: TestFlowRegistry {
@@ -29,6 +30,44 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
             runProgramRealizationSmoke()
 
             return []
+        },
+        TestFlow(
+            "typed-tool-call",
+            tags: [
+                "agentic",
+                "smoke",
+                "tool",
+                "typed",
+            ]
+        ) {
+            let input = SmokeToolInput(
+                rawValue: "typed-tool-smoke"
+            )
+            let result = try await DirectToolTest.call(
+                SmokeTool(),
+                input: input
+            )
+
+            try Expect.equal(
+                result.output.value,
+                input.rawValue,
+                "direct typed tool output"
+            )
+
+            return [
+                .field(
+                    "tool",
+                    result.tool.rawValue
+                ),
+                .field(
+                    "input",
+                    result.input.rawValue
+                ),
+                .field(
+                    "output",
+                    result.output.value
+                ),
+            ]
         },
         TestFlow(
             "domain-smoke",

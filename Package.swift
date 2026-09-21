@@ -21,6 +21,12 @@ let package = Package(
                 "AgenticStandard",
             ]
         ),
+        .library(
+            name: "AgenticTesting",
+            targets: [
+                "AgenticTesting",
+            ]
+        ),
         .executable(
             name: "agentictest",
             targets: [
@@ -148,11 +154,23 @@ let package = Package(
                 ),
             ]
         ),
+        .target(
+            name: "AgenticTesting",
+            dependencies: [
+                "Agentic",
+                .product(
+                    name: "Workspace",
+                    package: "Workspace"
+                ),
+            ],
+            path: "Testing/AgenticTesting"
+        ),
         .executableTarget(
             name: "AgenticTestFlows",
             dependencies: [
                 "Agentic",
                 "AgenticStandard",
+                "AgenticTesting",
                 .product(
                     name: "Errors",
                     package: "Errors"
@@ -178,7 +196,7 @@ let package = Package(
                     package: "TestFlows"
                 ),
             ],
-            path: "Sources/AgenticTestFlows",
+            path: "Testing/AgenticTestFlows",
             sources: [
                 "bin.swift",
                 "unified-flow-suite.swift",
