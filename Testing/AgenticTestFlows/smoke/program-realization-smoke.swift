@@ -1,4 +1,5 @@
 import Agentic
+import AgenticTesting
 
 extension SmokeDomain.Realizations {
     @InferenceRealization
@@ -28,7 +29,7 @@ func runProgramRealizationSmoke() {
             .MacroSmokeInferenceRealizationOverride
             .definition
 
-    requireOwnedInferenceSite(
+    ContractProof.inferenceSite(
         site,
         program:
             SmokeDomain.Programs.MacroSmokeProgram.self,
@@ -187,14 +188,3 @@ func runProgramRealizationSmoke() {
     )
 }
 
-private func requireOwnedInferenceSite<
-    ProgramType: Program,
-    InferenceType: Inference
->(
-    _: InferenceSite<
-        ProgramType,
-        InferenceType
-    >,
-    program _: ProgramType.Type,
-    inference _: InferenceType.Type
-) {}

@@ -1,4 +1,5 @@
 import Agentic
+import AgenticTesting
 import Schema
 import Workspace
 
@@ -172,72 +173,72 @@ extension SmokeDomain.Optimizations {
     }
 }
 
-func runSemanticAuthoringMacroSmoke() {
-    requireAgent(
+func runSemanticAuthoringMacroSmoke() throws {
+    ContractProof.agent(
         SmokeDomain.Agents.MacroSmokeAgent.self
     )
-    requireInference(
+    ContractProof.inference(
         SmokeDomain.Inferences.MacroSmokeInference.self
     )
-    requireInference(
+    ContractProof.inference(
         SmokeDomain.Inferences.MacroSmokeExplicitInference.self
     )
-    requireProgram(
+    ContractProof.program(
         SmokeDomain.Programs.MacroSmokeProgram.self
     )
-    requireProgram(
+    ContractProof.program(
         SmokeDomain.Programs.MacroSmokeAliasedProgram.self
     )
-    requireTool(
+    ContractProof.tool(
         SmokeDomain.Tools.MacroSmokeTool.self
     )
-    requireInferenceRealization(
+    ContractProof.inferenceRealization(
         SmokeDomain.Realizations.MacroSmokeInferenceRealization.self
     )
-    requireOptimization(
+    ContractProof.optimization(
         SmokeDomain.Optimizations.MacroSmokeOptimization.self
     )
 
-    requireSource(
+    ContractProof.source(
         SmokeDomain.Inferences.MacroSmokeInference.Input.self
     )
-    requireResult(
+    ContractProof.result(
         SmokeDomain.Inferences.MacroSmokeInference.Output.self
     )
-    requireSource(
+    ContractProof.source(
         SmokeDomain.Programs.MacroSmokeProgram.Input.self
     )
-    requireResult(
+    ContractProof.result(
         SmokeDomain.Programs.MacroSmokeProgram.Output.self
     )
-    requireSource(
+    ContractProof.source(
         SmokeDomain.Tools.MacroSmokeTool.Input.self
     )
-    requireResult(
+    ContractProof.result(
         SmokeDomain.Tools.MacroSmokeTool.Output.self
     )
 
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Agents.MacroSmokeAgent.definition.identifier.rawValue,
         expected: "smoke_domain.agents.macro_smoke_agent"
     )
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Inferences.MacroSmokeInference.definition.identifier.rawValue,
         expected: "smoke_domain.inferences.macro_smoke_inference"
     )
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Inferences.MacroSmokeExplicitInference.definition.identifier.rawValue,
         expected: "smoke_domain.inferences.macro_smoke_explicit_inference"
     )
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Programs.MacroSmokeProgram.definition.identifier.rawValue,
         expected: "smoke_domain.programs.macro_smoke_program"
     )
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeTool.definition.identifier.rawValue,
         expected: "smoke_domain.tools.macro_smoke_tool"
     )
-    requireIdentifier(
+    try ContractProof.identifier(
         SmokeDomain.Optimizations.MacroSmokeOptimization.definition.identifier.rawValue,
         expected: "smoke_domain.optimizations.macro_smoke_optimization"
     )
@@ -247,7 +248,7 @@ func runSemanticAuthoringMacroSmoke() {
             .MacroSmokeInferenceRealization
             .definition
 
-    requireIdentifier(
+    try ContractProof.identifier(
         realization.identifier.rawValue,
         expected: "smoke_domain.realizations.macro_smoke_inference_realization"
     )
@@ -289,47 +290,3 @@ func runSemanticAuthoringMacroSmoke() {
     print("PASS: semantic authoring macros")
 }
 
-private func requireAgent<Value: Agent>(
-    _: Value.Type
-) {}
-
-private func requireInference<Value: Inference>(
-    _: Value.Type
-) {}
-
-private func requireProgram<Value: Program>(
-    _: Value.Type
-) {}
-
-private func requireTool<Value: Tool>(
-    _: Value.Type
-) {}
-
-private func requireSource<Value: Source>(
-    _: Value.Type
-) {}
-
-private func requireResult<Value: Result>(
-    _: Value.Type
-) {}
-
-private func requireInferenceRealization<
-    Value: InferenceRealization
->(
-    _: Value.Type
-) {}
-
-private func requireOptimization<Value: Optimization>(
-    _: Value.Type
-) {}
-
-private func requireIdentifier(
-    _ actual: String,
-    expected: String
-) {
-    guard actual == expected else {
-        fatalError(
-            "Expected semantic identifier '\(expected)', got '\(actual)'."
-        )
-    }
-}

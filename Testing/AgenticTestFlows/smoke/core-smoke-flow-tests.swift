@@ -1,4 +1,5 @@
 import Agentic
+import AgenticTesting
 import Schema
 import Workspace
 
@@ -60,10 +61,10 @@ struct SmokeTool:
 
 struct AgenticTest {
     static func runDomainSmoke() {
-        requireDomain(
+        ContractProof.domain(
             SmokeDomain.self
         )
-        requireTool(
+        ContractProof.tool(
             SmokeTool.self
         )
 
@@ -88,15 +89,4 @@ struct AgenticTest {
         print("PASS: @Domain smoke")
     }
 
-    private static func requireDomain<
-        Value: Domain
-    >(
-        _: Value.Type
-    ) {}
-
-    private static func requireTool<
-        Value: Tool
-    >(
-        _: Value.Type
-    ) {}
 }

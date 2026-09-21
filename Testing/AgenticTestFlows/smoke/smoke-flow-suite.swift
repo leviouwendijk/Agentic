@@ -12,12 +12,12 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
                 "smoke",
                 "semantic",
                 "macros",
-            ]
-        ) {
-            runSemanticAuthoringMacroSmoke()
-
-            return []
-        },
+            ],
+            operation: {
+                try runSemanticAuthoringMacroSmoke()
+                return []
+            }
+        ),
         TestFlow(
             "program-realization-authoring",
             tags: [
@@ -25,61 +25,110 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
                 "smoke",
                 "program",
                 "realization",
-            ]
-        ) {
-            runProgramRealizationSmoke()
-
-            return []
-        },
+            ],
+            operation: {
+                runProgramRealizationSmoke()
+                return []
+            }
+        ),
         TestFlow(
-            "typed-tool-call",
+            "typed-tool-characterization",
             tags: [
                 "agentic",
                 "smoke",
                 "tool",
                 "typed",
-            ]
-        ) {
-            let input = SmokeToolInput(
-                rawValue: "typed-tool-smoke"
-            )
-            let result = try await DirectToolTest.call(
-                SmokeTool(),
-                input: input
-            )
+            ],
+            operation: {
+                let input = SmokeToolInput(
+                    rawValue: "typed-tool-smoke"
+                )
+                let result = try await DirectToolTest.characterize(
+                    SmokeTool(),
+                    input: input
+                )
 
-            try Expect.equal(
-                result.output.value,
-                input.rawValue,
-                "direct typed tool output"
-            )
+                try Expect.equal(
+                    result.output.value,
+                    input.rawValue,
+                    "direct typed tool output"
+                )
+                try Expect.equal(
+                    result.preflight.tool.rawValue,
+                    result.definition.identifier.rawValue,
+                    "direct typed tool preflight preserves the Tool contract identifier"
+                )
 
-            return [
-                .field(
-                    "tool",
-                    result.tool.rawValue
-                ),
-                .field(
-                    "input",
-                    result.input.rawValue
-                ),
-                .field(
-                    "output",
-                    result.output.value
-                ),
-            ]
-        },
+                return [
+                    .field(
+                        "tool",
+                        result.definition.identifier.rawValue
+                    ),
+                    .field(
+                        "input",
+                        result.input.rawValue
+                    ),
+                    .field(
+                        "preflight",
+                        result.preflight.summary
+                    ),
+                    .field(
+                        "output",
+                        result.output.value
+                    ),
+                ]
+            }
+        ),
+        TestFlow(
+            "typed-program-run",
+            tags: [
+                "agentic",
+                "smoke",
+                "program",
+                "typed",
+            ],
+            operation: {
+                let input = SmokeDomain.Programs.MacroSmokeProgram.Input(
+                    value: "typed-program-smoke"
+                )
+                let result = try await DirectProgramTest.run(
+                    SmokeDomain.Programs.MacroSmokeProgram(),
+                    input: input
+                )
+
+                try Expect.equal(
+                    result.output.value,
+                    input.value,
+                    "direct typed Program output"
+                )
+
+                return [
+                    .field(
+                        "program",
+                        result.definition.identifier.rawValue
+                    ),
+                    .field(
+                        "input",
+                        result.input.value
+                    ),
+                    .field(
+                        "output",
+                        result.output.value
+                    ),
+                ]
+            }
+        ),
         TestFlow(
             "domain-smoke",
             tags: [
                 "agentic",
                 "smoke",
                 "domain",
-            ]
-        ) {
-            AgenticTest.runDomainSmoke()
-
-            return []
-        },
+            ],
+            operation: {
+                AgenticTest.runDomainSmoke()
+                return []
+            }
+        ),
     ]
 }

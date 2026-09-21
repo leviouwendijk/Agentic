@@ -1,19 +1,7 @@
 import Agentic
 import AgenticStandard
+import AgenticTesting
 import TestFlows
-
-private struct ProgramUserInputContextFixture:
-    ProgramUserInputInvoking
-{
-    let response: UserInputResponse
-
-    func ask(
-        _ request: UserInputRequest
-    ) async throws -> UserInputResponse {
-        _ = request
-        return response
-    }
-}
 
 extension ProgramsFlowTesting {
     static func runProgramUserInputContext()
@@ -29,13 +17,21 @@ extension ProgramsFlowTesting {
             ),
             for: request
         )
+        let userInput = RecordingProgramUserInput(
+            response: expected
+        )
         let context = ProgramContext(
-            userInput: ProgramUserInputContextFixture(
-                response: expected
-            )
+            userInput: userInput
         )
         let observed = try await context.ask(
             request
+        )
+        let recordedRequests = await userInput.recordedRequests()
+
+        try Expect.equal(
+            recordedRequests.count,
+            1,
+            "Program user-input double records the delegated request"
         )
 
         try Expect.equal(
@@ -66,6 +62,10 @@ extension ProgramsFlowTesting {
                 String(
                     describing: observed.answer
                 )
+            ),
+            .field(
+                "recorded_requests",
+                String(recordedRequests.count)
             ),
             .field(
                 "unavailable",
