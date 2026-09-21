@@ -21,6 +21,8 @@ let package = Package(
                 "AgenticStandard",
             ]
         ),
+
+        // testing
         .library(
             name: "AgenticTesting",
             targets: [
@@ -235,7 +237,8 @@ let package = Package(
                     name: "SwiftSyntaxMacros",
                     package: "swift-syntax"
                 ),
-            ]
+            ],
+            path: "Macros/AgenticMacrosPlugin"
         ),
     ]
 )
