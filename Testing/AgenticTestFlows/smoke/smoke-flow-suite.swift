@@ -119,6 +119,32 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
             }
         ),
         TestFlow(
+            "agentic-testing-tool-lifecycle",
+            tags: [
+                "agentic",
+                "smoke",
+                "testing",
+                "tool",
+                "lifecycle",
+            ],
+            operation: {
+                try await runAgenticTestingToolLifecycleSmoke()
+            }
+        ),
+        TestFlow(
+            "scripted-model-responses",
+            tags: [
+                "agentic",
+                "smoke",
+                "testing",
+                "model",
+                "scripted",
+            ],
+            operation: {
+                try await runScriptedModelResponsesSmoke()
+            }
+        ),
+        TestFlow(
             "domain-smoke",
             tags: [
                 "agentic",

@@ -57,6 +57,26 @@ struct SmokeTool:
             value: input.rawValue
         )
     }
+
+    func process(
+        _ output: Output,
+        input: Input
+    ) throws -> ToolCall.ResultProjection? {
+        .init(
+            status: "smoke",
+            summary: "\(input.rawValue):\(output.value)"
+        )
+    }
+
+    func reconcile(
+        _ input: Input,
+        after failure: ToolCall.Failure,
+        workspace _: WorkspaceContext?
+    ) async throws -> ToolCall.Reconciliation<Output>? {
+        _ = input
+        _ = failure
+        return .not_applied
+    }
 }
 
 struct AgenticTest {
