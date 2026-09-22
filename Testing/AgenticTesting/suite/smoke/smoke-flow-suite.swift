@@ -144,6 +144,20 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
             }
         ),
         TestFlow(
+            "standard-tool-namespace",
+            tags: [
+                "agentic",
+                "smoke",
+                "standard",
+                "tool",
+                "namespace",
+            ],
+            operation: {
+                try runStandardToolNamespaceSmoke()
+                return []
+            }
+        ),
+        TestFlow(
             "domain-smoke",
             tags: [
                 "agentic",

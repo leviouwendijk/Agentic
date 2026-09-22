@@ -3,122 +3,124 @@ import Workspace
 import Foundation
 import Primitives
 
-public struct AgentAdvisor: Tool {
-    public typealias Input = AgentAdvisorInput
-    public typealias Output = AgentAdvisorOutput
+public extension Standard.Tools {
+    struct AgentAdvisor: Tool {
+        public typealias Input = AgentAdvisorInput
+        public typealias Output = AgentAdvisorOutput
 
-    public static let identifier = AgentAdvisorDefaults.identifier
-    public static let description = "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
-    public static let risk: ActionRisk = .observe
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var modelInvoker: any AgentModelInvoking
-    public var configuration: AgentAdvisorConfiguration
-
-    public init(
-        modelInvoker: any AgentModelInvoking,
-        configuration: AgentAdvisorConfiguration = .init()
-    ) {
-        self.modelInvoker = modelInvoker
-        self.configuration = configuration
-    }
-
-    public var identifier: ToolIdentifier {
-        configuration.identifier
-    }
-
-    public var description: String {
-        "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
-    }
-
-    public var risk: ActionRisk {
-        .observe
-    }
-
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-        ToolPreflight(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: """
-            Ask an advisor model using route purpose '\(configuration.modelSelection.purpose.rawValue)'.
-
-            The advisor call receives bounded text context only.
-            No tools are exposed to the advisor model.
-            """,
-            sideEffects: [
-                "model_call",
-                "route:\(configuration.modelSelection.purpose.rawValue)",
-            ]
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let prompt = try Self.normalizedPrompt(
-            input.prompt
+        public static let identifier = AgentAdvisorDefaults.identifier
+        public static let description = "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
+        public static let risk: ActionRisk = .observe
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        var metadata: [String: String] = [:]
+        public var modelInvoker: any AgentModelInvoking
+        public var configuration: AgentAdvisorConfiguration
 
-        metadata["tool"] = Self.definition.identifier.rawValue
-        metadata["route"] = configuration.modelSelection.purpose.rawValue
+        public init(
+            modelInvoker: any AgentModelInvoking,
+            configuration: AgentAdvisorConfiguration = .init()
+        ) {
+            self.modelInvoker = modelInvoker
+            self.configuration = configuration
+        }
 
-        let request = AgentRequest(
-            messages: [
-                .init(
-                    role: .system,
-                    text: configuration.systemPrompt
+        public var identifier: ToolIdentifier {
+            configuration.identifier
+        }
+
+        public var description: String {
+            "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
+        }
+
+        public var risk: ActionRisk {
+            .observe
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            ToolPreflight(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: """
+                Ask an advisor model using route purpose '\(configuration.modelSelection.purpose.rawValue)'.
+
+                The advisor call receives bounded text context only.
+                No tools are exposed to the advisor model.
+                """,
+                sideEffects: [
+                    "model_call",
+                    "route:\(configuration.modelSelection.purpose.rawValue)",
+                ]
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+
+            let prompt = try Self.normalizedPrompt(
+                input.prompt
+            )
+
+            var metadata: [String: String] = [:]
+
+            metadata["tool"] = Self.definition.identifier.rawValue
+            metadata["route"] = configuration.modelSelection.purpose.rawValue
+
+            let request = AgentRequest(
+                messages: [
+                    .init(
+                        role: .system,
+                        text: configuration.systemPrompt
+                    ),
+                    .init(
+                        role: .user,
+                        text: Self.userPrompt(
+                            input: input,
+                            prompt: prompt
+                        )
+                    ),
+                ],
+                tools: [],
+                generationConfiguration: .init(
+                    maxOutputTokens: configuration.maxOutputTokens,
+                    temperature: configuration.temperature
                 ),
-                .init(
-                    role: .user,
-                    text: Self.userPrompt(
-                        input: input,
-                        prompt: prompt
-                    )
-                ),
-            ],
-            tools: [],
-            generationConfiguration: .init(
-                maxOutputTokens: configuration.maxOutputTokens,
-                temperature: configuration.temperature
-            ),
-            metadata: metadata
-        )
-
-        let result = try await modelInvoker.buffered(
-            AgentModelInvocation(
-                request: request,
-                selection: configuration.modelSelection,
-                context: .default,
                 metadata: metadata
             )
-        )
-        let route = result.route.route
 
-        let output = AgentAdvisorOutput(
-            routePurpose: route.purpose.rawValue,
-            profile: route.profile.identifier.rawValue,
-            gateway: route.profile.gatewayIdentifier.rawValue,
-            model: route.profile.model,
-            diagnostics: result.route.diagnostics,
-            advice: result.response.message.content.text
-        )
+            let result = try await modelInvoker.buffered(
+                AgentModelInvocation(
+                    request: request,
+                    selection: configuration.modelSelection,
+                    context: .default,
+                    metadata: metadata
+                )
+            )
+            let route = result.route.route
 
-        return output
+            let output = AgentAdvisorOutput(
+                routePurpose: route.purpose.rawValue,
+                profile: route.profile.identifier.rawValue,
+                gateway: route.profile.gatewayIdentifier.rawValue,
+                model: route.profile.model,
+                diagnostics: result.route.diagnostics,
+                advice: result.response.message.content.text
+            )
+
+            return output
+        }
     }
 }
 
-private extension AgentAdvisor {
+private extension Standard.Tools.AgentAdvisor {
     static func normalizedPrompt(
         _ value: String
     ) throws -> String {
