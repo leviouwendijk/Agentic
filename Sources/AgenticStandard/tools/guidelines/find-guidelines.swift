@@ -47,7 +47,8 @@ public struct FindGuidelinesOutput:
     public let matches: [GuidelineSummary]
 }
 
-public struct FindGuidelines: Tool {
+public extension Standard.Tools {
+    struct FindGuidelines: Tool {
     public typealias Input = FindGuidelinesInput
     public typealias Output = FindGuidelinesOutput
 
@@ -144,5 +145,6 @@ public struct FindGuidelines: Tool {
         }
 
         return query
+    }
     }
 }

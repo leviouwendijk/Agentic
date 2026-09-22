@@ -35,7 +35,8 @@ public struct ReadGuidelineOutput:
     public let explanation: String
 }
 
-public struct ReadGuideline: Tool {
+public extension Standard.Tools {
+    struct ReadGuideline: Tool {
     public typealias Input = ReadGuidelineInput
     public typealias Output = ReadGuidelineOutput
 
@@ -156,6 +157,7 @@ public struct ReadGuideline: Tool {
 
         return guideline
     }
+    }
 }
 
 @JSONSchema
@@ -188,7 +190,8 @@ public struct ReadGuidelineChapterOutput:
     public let guidelines: [GuidelineSummary]
 }
 
-public struct ReadGuidelineChapter: Tool {
+public extension Standard.Tools {
+    struct ReadGuidelineChapter: Tool {
     public typealias Input = ReadGuidelineChapterInput
     public typealias Output = ReadGuidelineChapterOutput
 
@@ -318,5 +321,6 @@ public struct ReadGuidelineChapter: Tool {
         }
 
         return chapter
+    }
     }
 }

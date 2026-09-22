@@ -56,7 +56,8 @@ public struct GuidelineIndexOutput:
     public let chapters: [GuidelineIndexChapter]
 }
 
-public struct GuidelineIndex: Tool {
+public extension Standard.Tools {
+    struct GuidelineIndex: Tool {
     public typealias Input = GuidelineIndexInput
     public typealias Output = GuidelineIndexOutput
 
@@ -184,5 +185,6 @@ public struct GuidelineIndex: Tool {
         }
 
         return area
+    }
     }
 }

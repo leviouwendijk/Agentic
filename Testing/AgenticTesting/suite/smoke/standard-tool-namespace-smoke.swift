@@ -16,6 +16,18 @@ func runStandardToolNamespaceSmoke() throws {
     ContractProof.tool(
         Standard.Tools.FindTools.self
     )
+    ContractProof.tool(
+        Standard.Tools.FindGuidelines.self
+    )
+    ContractProof.tool(
+        Standard.Tools.GuidelineIndex.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ReadGuideline.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ReadGuidelineChapter.self
+    )
 
     try ContractProof.identifier(
         Standard.Tools.AgentAdvisor.definition.identifier.rawValue,
@@ -36,5 +48,21 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.FindTools.definition.identifier.rawValue,
         expected: "find_tools"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.FindGuidelines.definition.identifier.rawValue,
+        expected: "find_guidelines"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.GuidelineIndex.definition.identifier.rawValue,
+        expected: "guideline_index"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ReadGuideline.definition.identifier.rawValue,
+        expected: "read_guideline"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ReadGuidelineChapter.definition.identifier.rawValue,
+        expected: "read_guideline_chapter"
     )
 }
