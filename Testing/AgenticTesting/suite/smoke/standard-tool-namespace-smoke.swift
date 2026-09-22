@@ -83,6 +83,33 @@ func runStandardToolNamespaceSmoke() throws {
     ContractProof.result(
         Standard.Tools.ReadGuidelineChapter.Output.self
     )
+    ContractProof.tool(
+        Standard.Tools.ClarifyWithUser.self
+    )
+    ContractProof.source(
+        Standard.Tools.ClarifyWithUser.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ClarifyWithUser.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ListSkills.self
+    )
+    ContractProof.source(
+        Standard.Tools.ListSkills.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ListSkills.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.LoadSkill.self
+    )
+    ContractProof.source(
+        Standard.Tools.LoadSkill.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.LoadSkill.Output.self
+    )
 
     try ContractProof.identifier(
         Standard.Tools.AgentAdvisor.definition.identifier.rawValue,
@@ -119,5 +146,17 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.ReadGuidelineChapter.definition.identifier.rawValue,
         expected: "read_guideline_chapter"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ClarifyWithUser.definition.identifier.rawValue,
+        expected: "clarify_with_user"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ListSkills.definition.identifier.rawValue,
+        expected: "list_skills"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.LoadSkill.definition.identifier.rawValue,
+        expected: "load_skill"
     )
 }
