@@ -148,6 +148,39 @@ extension SmokeDomain.Tools {
             )
         }
     }
+
+    @Tool
+    struct MacroSmokeExplicitTool: Tool {
+        struct Input: Source {
+            let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
+        struct Output: Result {
+            let value: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
+        static let purpose =
+            "Prove an explicit Tool conformance is not restated by its macro."
+
+        static let risk: ActionRisk = .observe
+
+        func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            .init(
+                value: input.value
+            )
+        }
+    }
 }
 
 extension SmokeDomain.Realizations {
@@ -191,6 +224,9 @@ func runSemanticAuthoringMacroSmoke() throws {
     ContractProof.tool(
         SmokeDomain.Tools.MacroSmokeTool.self
     )
+    ContractProof.tool(
+        SmokeDomain.Tools.MacroSmokeExplicitTool.self
+    )
     ContractProof.inferenceRealization(
         SmokeDomain.Realizations.MacroSmokeInferenceRealization.self
     )
@@ -216,6 +252,12 @@ func runSemanticAuthoringMacroSmoke() throws {
     ContractProof.result(
         SmokeDomain.Tools.MacroSmokeTool.Output.self
     )
+    ContractProof.source(
+        SmokeDomain.Tools.MacroSmokeExplicitTool.Input.self
+    )
+    ContractProof.result(
+        SmokeDomain.Tools.MacroSmokeExplicitTool.Output.self
+    )
 
     try ContractProof.identifier(
         SmokeDomain.Agents.MacroSmokeAgent.definition.identifier.rawValue,
@@ -236,6 +278,10 @@ func runSemanticAuthoringMacroSmoke() throws {
     try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeTool.definition.identifier.rawValue,
         expected: "smoke_domain.tools.macro_smoke_tool"
+    )
+    try ContractProof.identifier(
+        SmokeDomain.Tools.MacroSmokeExplicitTool.definition.identifier.rawValue,
+        expected: "smoke_domain.tools.macro_smoke_explicit_tool"
     )
     try ContractProof.identifier(
         SmokeDomain.Optimizations.MacroSmokeOptimization.definition.identifier.rawValue,
