@@ -130,7 +130,7 @@ public struct ProgramRegistry: Sendable {
         input: ProgramType.Input,
         in context: ProgramContext
     ) async throws -> ProgramType.Output {
-        let encodedInput = try JSONValueCodec.encodeValue(
+        let encodedInput = try JSONValue.encoding(
             input
         )
         let encodedOutput = try await run(
@@ -139,7 +139,7 @@ public struct ProgramRegistry: Sendable {
             in: context
         )
 
-        return try encodedOutput.as(
+        return try encodedOutput.decode(
             ProgramType.Output.self
         )
     }

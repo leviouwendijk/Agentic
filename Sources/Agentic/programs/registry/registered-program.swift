@@ -19,7 +19,7 @@ public struct RegisteredProgram: Sendable {
     ) {
         self.definition = ProgramType.definition
         self.runHandler = { input, context in
-            let decoded = try input.as(
+            let decoded = try input.decode(
                 ProgramType.Input.self
             )
             let output = try await program.run(
@@ -27,7 +27,7 @@ public struct RegisteredProgram: Sendable {
                 in: context
             )
 
-            return try JSONValueCodec.encodeValue(
+            return try JSONValue.encoding(
                 output
             )
         }

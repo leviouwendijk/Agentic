@@ -23,16 +23,10 @@ let package = Package(
         ),
 
         // testing
-        .library(
-            name: "AgenticTesting",
+        .executable(
+            name: "t_agentic",
             targets: [
                 "AgenticTesting",
-            ]
-        ),
-        .executable(
-            name: "agentictest",
-            targets: [
-                "AgenticTestFlows",
             ]
         ),
     ],
@@ -78,7 +72,7 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/TestFlows.git",
+            url: "https://github.com/leviouwendijk/Testing.git",
             branch: "master"
         ),
 
@@ -156,23 +150,11 @@ let package = Package(
                 ),
             ]
         ),
-        .target(
+        .executableTarget(
             name: "AgenticTesting",
             dependencies: [
                 "Agentic",
-                .product(
-                    name: "Workspace",
-                    package: "Workspace"
-                ),
-            ],
-            path: "Testing/AgenticTesting"
-        ),
-        .executableTarget(
-            name: "AgenticTestFlows",
-            dependencies: [
-                "Agentic",
                 "AgenticStandard",
-                "AgenticTesting",
                 .product(
                     name: "Errors",
                     package: "Errors"
@@ -194,21 +176,11 @@ let package = Package(
                     package: "Workspace"
                 ),
                 .product(
-                    name: "TestFlows",
-                    package: "TestFlows"
+                    name: "Testing",
+                    package: "Testing"
                 ),
             ],
-            path: "Testing/AgenticTestFlows",
-            sources: [
-                "bin.swift",
-                "unified-flow-suite.swift",
-                "smoke",
-                "inference",
-                "programs",
-                "optimization",
-                "adapters",
-                "recovery",
-            ]
+            path: "Testing/AgenticTesting"
         ),
         .macro(
             name: "AgenticMacrosPlugin",

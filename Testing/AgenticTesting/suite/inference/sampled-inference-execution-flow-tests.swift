@@ -1,0 +1,604 @@
+import Agentic
+import AgenticStandard
+import Macros
+import Schema
+import Foundation
+import Testing
+
+private struct SampledFixtureInference: Inference {
+    @JSONSchema
+    struct Input:
+        Source
+    {
+        let value: String
+    }
+
+    typealias Output = String
+
+    static let definition = InferenceDefinition(
+        identifier: "fixture.sampled_execution",
+        purpose: "Prove sampled inference candidate generation and evaluation."
+    )
+}
+
+private struct SampledFixtureAdapter:
+    InferenceAdapter,
+    Sendable
+{
+    let identifier: InferenceAdapterIdentifier =
+        "sampled_fixture_adapter"
+
+    func prepare<InferenceType: Inference>(
+        _ inference: InferenceType.Type,
+        input: InferenceType.Input,
+        realization: InferenceRealizationConfiguration
+    ) throws -> InferenceAdaptation {
+        InferenceAdaptation(
+            request: AgentRequest(
+                messages: [
+                    AgentMessage(
+                        role: .user,
+                        text: "sampled fixture request"
+                    ),
+                ],
+                generationConfiguration: realization.generation
+            ),
+            requirements: AgentModelRequirements(
+                capabilities: [
+                    .structured_output,
+                ]
+            )
+        )
+    }
+
+    func decode<InferenceType: Inference>(
+        _ inference: InferenceType.Type,
+        response: AgentResponse
+    ) throws -> InferenceType.Output {
+        try JSONDecoder().decode(
+            InferenceType.Output.self,
+            from: Data(
+                response.message.content.text.utf8
+            )
+        )
+    }
+}
+
+private struct SampledFixtureAdapterResolver:
+    InferenceAdapterResolving,
+    Sendable
+{
+    let adapter = SampledFixtureAdapter()
+
+    func require(
+        _ identifier: InferenceAdapterIdentifier
+    ) throws -> any InferenceAdapter {
+        guard identifier == adapter.identifier else {
+            throw SampledFixtureError.unknownAdapter(
+                identifier.rawValue
+            )
+        }
+
+        return adapter
+    }
+}
+
+private actor SampledFixtureState {
+    private var outputs: [String]
+    private var invocationCount = 0
+
+    init(
+        outputs: [String]
+    ) {
+        self.outputs = outputs
+    }
+
+    func nextOutput() throws -> String {
+        guard !outputs.isEmpty else {
+            throw SampledFixtureError.responsesExhausted
+        }
+
+        invocationCount += 1
+        return outputs.removeFirst()
+    }
+
+    func count() -> Int {
+        invocationCount
+    }
+}
+
+private struct SampledFixtureModelInvoker:
+    AgentModelInvoking,
+    Sendable
+{
+    let state: SampledFixtureState
+
+    func buffered(
+        _ invocation: AgentModelInvocation
+    ) async throws -> AgentModelInvocationResult {
+        let output = try await state.nextOutput()
+        let encodedOutput = try JSONEncoder().encode(
+            output
+        )
+        let response = AgentResponse(
+            message: AgentMessage(
+                role: .assistant,
+                text: String(
+                    decoding: encodedOutput,
+                    as: UTF8.self
+                )
+            ),
+            stopReason: .end_turn,
+            usage: AgentUsage(
+                inputTokens: 1,
+                outputTokens: 1,
+                totalTokens: 2
+            ),
+            metadata: [
+                "fixture_output": output,
+            ]
+        )
+        let profile = AgentModelProfile(
+            identifier: "sampled_fixture_profile",
+            gatewayIdentifier: "sampled_fixture_gateway",
+            model: "fixture",
+            purposes: [
+                invocation.selection.purpose,
+            ],
+            capabilities: [
+                .text,
+                .structured_output,
+            ]
+        )
+        let route = AgentModelRoute(
+            purpose: invocation.selection.purpose,
+            profile: profile
+        )
+
+        return AgentModelInvocationResult(
+            response: response,
+            route: AgentModelRouteRecord(
+                route: route,
+                requestMetadata: invocation.metadata,
+                responseMetadata: response.metadata,
+                usage: response.usage
+            )
+        )
+    }
+
+    func stream(
+        _ invocation: AgentModelInvocation
+    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.finish(
+                throwing: SampledFixtureError.streamingUnsupported
+            )
+        }
+    }
+}
+
+private struct SampledFixtureEvaluator:
+    InferenceCandidateEvaluating,
+    Sendable
+{
+    let identifier: InferenceEvaluatorIdentifier =
+        "fixture_quality"
+    let failingAttemptIndex: Int?
+
+    init(
+        failingAttemptIndex: Int? = nil
+    ) {
+        self.failingAttemptIndex = failingAttemptIndex
+    }
+
+    func evaluate<InferenceType: Inference>(
+        _ inference: InferenceType.Type,
+        input: InferenceType.Input,
+        output: InferenceType.Output,
+        attempt: InferenceAttemptRecord
+    ) async throws -> InferenceCandidateScore {
+        if failingAttemptIndex == attempt.index {
+            throw SampledFixtureError.evaluationFailed(
+                attempt.index
+            )
+        }
+
+        let data = try JSONEncoder().encode(
+            output
+        )
+        let value = try JSONDecoder().decode(
+            String.self,
+            from: data
+        )
+        let score: Double
+
+        switch value {
+        case "BEST":
+            score = 0.9
+        case "MID":
+            score = 0.5
+        default:
+            score = 0.1
+        }
+
+        return try InferenceCandidateScore(
+            score: score,
+            metadata: [
+                "value": value,
+            ]
+        )
+    }
+}
+
+private enum SampledFixtureError:
+    Error,
+    Sendable
+{
+    case unknownAdapter(String)
+    case responsesExhausted
+    case evaluationFailed(Int)
+    case streamingUnsupported
+}
+
+extension InferenceExecutionFlowTests {
+    static func runSampled()
+        async throws
+        -> [TestDiagnostic]
+    {
+        let state = SampledFixtureState(
+            outputs: [
+                "LOW",
+                "BEST",
+                "MID",
+            ]
+        )
+        let evaluator = SampledFixtureEvaluator()
+        let executor = InferenceExecutor(
+            modelInvoker: SampledFixtureModelInvoker(
+                state: state
+            ),
+            adapters: SampledFixtureAdapterResolver(),
+            sampleEvaluator: evaluator
+        )
+        let realization = InferenceRealizationConfiguration(
+            strategy: .sampled,
+            instructions: "Generate multiple candidate outputs.",
+            budget: try InferenceBudget(
+                maximumAttempts: 3
+            ),
+            adapter: "sampled_fixture_adapter"
+        )
+
+        let result = try await SampledFixtureInference.execute(
+            using: executor,
+            input: SampledFixtureInference.Input(
+                value: "sample"
+            ),
+            realization: realization
+        )
+        let invocationCount = await state.count()
+
+        try Expect.equal(
+            result.output,
+            "BEST",
+            "sampled inference returns the highest-scoring candidate"
+        )
+        try Expect.equal(
+            result.record.strategy,
+            .sampled,
+            "sampled inference records sampled strategy"
+        )
+        try Expect.equal(
+            result.record.attempts.count,
+            3,
+            "sampled inference executes one attempt per configured sample budget"
+        )
+        try Expect.equal(
+            result.record.budgetUsage.totalTokens,
+            6,
+            "sampled inference aggregates token usage across attempts"
+        )
+        try Expect.equal(
+            result.record.sampling?.evaluator,
+            evaluator.identifier,
+            "sampling record preserves evaluator identity"
+        )
+        try Expect.equal(
+            result.record.sampling?.evaluations.count,
+            3,
+            "sampling record preserves typed candidate evaluations"
+        )
+        try Expect.equal(
+            result.record.sampling?.selectedAttemptIndex,
+            1,
+            "sampling record identifies the winning attempt"
+        )
+        try Expect.equal(
+            invocationCount,
+            3,
+            "sampled inference performs the expected number of model invocations"
+        )
+
+        let cappedState = SampledFixtureState(
+            outputs: [
+                "LOW",
+                "BEST",
+                "MID",
+            ]
+        )
+        let cappedExecutor = InferenceExecutor(
+            modelInvoker: SampledFixtureModelInvoker(
+                state: cappedState
+            ),
+            adapters: SampledFixtureAdapterResolver(),
+            sampleEvaluator: evaluator
+        )
+        let cappedResult = try await SampledFixtureInference.execute(
+            using: cappedExecutor,
+            input: SampledFixtureInference.Input(
+                value: "token-capped"
+            ),
+            realization: InferenceRealizationConfiguration(
+                strategy: .sampled,
+                instructions: "Stop sampling when the token budget is exhausted.",
+                budget: try InferenceBudget(
+                    maximumAttempts: 3,
+                    maximumTotalTokens: 4
+                ),
+                adapter: "sampled_fixture_adapter"
+            )
+        )
+        let cappedInvocationCount = await cappedState.count()
+
+        try Expect.equal(
+            cappedResult.output,
+            "BEST",
+            "token-capped sampling selects among completed candidates"
+        )
+        try Expect.equal(
+            cappedResult.record.attempts.count,
+            2,
+            "token budget stops further sampling after completed attempts"
+        )
+        try Expect.equal(
+            cappedResult.record.budgetUsage.totalTokens,
+            4,
+            "token-capped sampling records consumed tokens"
+        )
+        try Expect.equal(
+            cappedResult.record.sampling?.selectedAttemptIndex,
+            1,
+            "token-capped sampling preserves winning candidate provenance"
+        )
+        try Expect.equal(
+            cappedInvocationCount,
+            2,
+            "budget rejection prevents an additional model invocation"
+        )
+
+        let failureState = SampledFixtureState(
+            outputs: [
+                "BEST",
+            ]
+        )
+        let failureExecutor = InferenceExecutor(
+            modelInvoker: SampledFixtureModelInvoker(
+                state: failureState
+            ),
+            adapters: SampledFixtureAdapterResolver(),
+            sampleEvaluator: evaluator
+        )
+        let executionFailure: InferenceExecutionFailure?
+
+        do {
+            _ = try await SampledFixtureInference.execute(
+                using: failureExecutor,
+                input: .init(
+                    value: "terminal-failure"
+                ),
+                realization: InferenceRealizationConfiguration(
+                    strategy: .sampled,
+                    instructions: "Preserve completed samples when a later sample fails.",
+                    budget: try InferenceBudget(
+                        maximumAttempts: 2
+                    ),
+                    adapter: "sampled_fixture_adapter"
+                )
+            )
+            executionFailure = nil
+        } catch let error as InferenceExecutionFailure {
+            executionFailure = error
+        } catch {
+            throw error
+        }
+
+        let sampledFailure = try Expect.notNil(
+            executionFailure,
+            "sampled terminal attempt failure becomes canonical execution failure"
+        )
+        let terminalSampleAttempt = try Expect.notNil(
+            sampledFailure.terminalAttempt,
+            "sampled attempt failure preserves its exact terminal attempt"
+        )
+        let partialSampling = try Expect.notNil(
+            sampledFailure.record.sampling,
+            "sampled failure preserves completed evaluation state"
+        )
+
+        try Expect.equal(
+            sampledFailure.record.strategy,
+            .sampled,
+            "sampled failure preserves strategy identity"
+        )
+        try Expect.equal(
+            sampledFailure.record.attempts.count,
+            2,
+            "sampled failure preserves completed and terminal failed attempts"
+        )
+        try Expect.equal(
+            sampledFailure.record.attempts[0].failure == nil,
+            true,
+            "first sampled attempt remains a successful candidate"
+        )
+        try Expect.equal(
+            sampledFailure.record.attempts[1],
+            terminalSampleAttempt.record,
+            "terminal sampled attempt is preserved exactly"
+        )
+        try Expect.equal(
+            terminalSampleAttempt.record.index,
+            1,
+            "sampled failure preserves the failed semantic attempt index"
+        )
+        try Expect.equal(
+            partialSampling.evaluations.count,
+            1,
+            "sampled failure preserves only evaluations actually completed"
+        )
+        try Expect.equal(
+            partialSampling.selectedAttemptIndex,
+            0,
+            "sampled failure preserves the best completed candidate"
+        )
+        try Expect.equal(
+            sampledFailure.record.budgetUsage.invocationCount,
+            2,
+            "sampled failed execution accounts for successful and failed provider invocations"
+        )
+        try Expect.equal(
+            sampledFailure.record.budgetUsage.reportedTotalTokens,
+            2,
+            "sampled failed execution preserves reported spend from completed provider work"
+        )
+        try Expect.equal(
+            sampledFailure.record.budgetUsage.unreportedTokenInvocationCount,
+            1,
+            "failed provider invocation remains explicit when token usage was never reported"
+        )
+        try Expect.equal(
+            sampledFailure.record.failure,
+            sampledFailure.failure,
+            "sampled attempt failure is durable on the execution record"
+        )
+
+        let evaluatorFailureState = SampledFixtureState(
+            outputs: [
+                "LOW",
+                "BEST",
+            ]
+        )
+        let evaluatorFailureExecutor = InferenceExecutor(
+            modelInvoker: SampledFixtureModelInvoker(
+                state: evaluatorFailureState
+            ),
+            adapters: SampledFixtureAdapterResolver(),
+            sampleEvaluator: SampledFixtureEvaluator(
+                failingAttemptIndex: 1
+            )
+        )
+        let evaluatorExecutionFailure: InferenceExecutionFailure?
+
+        do {
+            _ = try await SampledFixtureInference.execute(
+                using: evaluatorFailureExecutor,
+                input: .init(
+                    value: "evaluator-failure"
+                ),
+                realization: InferenceRealizationConfiguration(
+                    strategy: .sampled,
+                    instructions: "Preserve paid attempts when evaluation fails.",
+                    budget: try InferenceBudget(
+                        maximumAttempts: 2
+                    ),
+                    adapter: "sampled_fixture_adapter"
+                )
+            )
+            evaluatorExecutionFailure = nil
+        } catch let error as InferenceExecutionFailure {
+            evaluatorExecutionFailure = error
+        } catch {
+            throw error
+        }
+
+        let evaluatorFailure = try Expect.notNil(
+            evaluatorExecutionFailure,
+            "sample evaluator failure becomes canonical execution failure"
+        )
+        let evaluatorSampling = try Expect.notNil(
+            evaluatorFailure.record.sampling,
+            "evaluator failure preserves completed sampling state"
+        )
+
+        try Expect.equal(
+            evaluatorFailure.terminalAttempt == nil,
+            true,
+            "strategy-local evaluator failure manufactures no failed semantic attempt"
+        )
+        try Expect.equal(
+            evaluatorFailure.record.failure,
+            evaluatorFailure.failure,
+            "strategy-local evaluator failure is durable on the execution record"
+        )
+        try Expect.equal(
+            evaluatorFailure.record.attempts.count,
+            2,
+            "evaluator failure retains both successful paid model attempts"
+        )
+        try Expect.equal(
+            evaluatorFailure.record.attempts[1].failure == nil,
+            true,
+            "model attempt remains successful when only subsequent evaluation fails"
+        )
+        try Expect.equal(
+            evaluatorSampling.evaluations.count,
+            1,
+            "evaluator failure preserves only completed evaluations"
+        )
+        try Expect.equal(
+            evaluatorSampling.selectedAttemptIndex,
+            0,
+            "evaluator failure preserves the best fully evaluated candidate"
+        )
+        try Expect.equal(
+            evaluatorFailure.record.budgetUsage.invocationCount,
+            2,
+            "evaluator failure retains both provider invocations"
+        )
+        try Expect.equal(
+            evaluatorFailure.record.budgetUsage.totalTokens,
+            4,
+            "evaluator failure preserves all reported provider spend"
+        )
+
+        return [
+            .field(
+                "output",
+                result.output
+            ),
+            .field(
+                "attempts",
+                String(result.record.attempts.count)
+            ),
+            .field(
+                "evaluator",
+                evaluator.identifier.rawValue
+            ),
+            .field(
+                "selected_attempt",
+                String(result.record.sampling?.selectedAttemptIndex ?? -1)
+            ),
+            .field(
+                "token_capped_attempts",
+                String(cappedResult.record.attempts.count)
+            ),
+            .field(
+                "failed_execution_attempts",
+                String(sampledFailure.record.attempts.count)
+            ),
+            .field(
+                "evaluator_failure_tokens",
+                String(evaluatorFailure.record.budgetUsage.totalTokens ?? 0)
+            ),
+        ]
+    }
+}
