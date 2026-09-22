@@ -56,7 +56,8 @@ public struct ReadArtifactOutput: Sendable, Codable, Hashable {
     }
 }
 
-public struct ReadArtifact: Tool {
+public extension Standard.Tools {
+    struct ReadArtifact: Tool {
     public typealias Input = ReadArtifactInput
     public typealias Output = ReadArtifactOutput
 
@@ -137,9 +138,10 @@ public struct ReadArtifact: Tool {
                 truncated: truncated
             )
     }
+    }
 }
 
-private extension ReadArtifact {
+private extension Standard.Tools.ReadArtifact {
     func limitedContent(
         _ content: String,
         maxCharacters: Int?

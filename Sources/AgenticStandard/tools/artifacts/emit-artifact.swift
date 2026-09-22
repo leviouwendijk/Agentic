@@ -54,7 +54,8 @@ public struct EmitArtifactOutput: Sendable, Codable, Hashable {
     }
 }
 
-public struct EmitArtifact: Tool {
+public extension Standard.Tools {
+    struct EmitArtifact: Tool {
     public typealias Input = EmitArtifactInput
     public typealias Output = EmitArtifactOutput
 
@@ -133,9 +134,10 @@ public struct EmitArtifact: Tool {
                 )
             )
     }
+    }
 }
 
-private extension EmitArtifact {
+private extension Standard.Tools.EmitArtifact {
     func summary(
         for input: EmitArtifactInput
     ) -> String {

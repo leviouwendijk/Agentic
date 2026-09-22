@@ -4,7 +4,8 @@ import Foundation
 import Primitives
 import Search
 
-public struct FindTools: Tool {
+public extension Standard.Tools {
+    struct FindTools: Tool {
     public typealias Input = FindToolsInput
     public typealias Output = FindToolsOutput
 
@@ -125,9 +126,10 @@ public struct FindTools: Tool {
             activated: activated
         )
     }
+    }
 }
 
-private extension FindTools {
+private extension Standard.Tools.FindTools {
     struct SearchScore {
         var identifierScore = 0
         var descriptionScore = 0

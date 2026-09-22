@@ -52,7 +52,8 @@ public struct ListArtifactsOutput: Sendable, Codable, Hashable {
     }
 }
 
-public struct ListArtifacts: Tool {
+public extension Standard.Tools {
+    struct ListArtifacts: Tool {
     public typealias Input = ListArtifactsInput
     public typealias Output = ListArtifactsOutput
 
@@ -115,9 +116,10 @@ public struct ListArtifacts: Tool {
                 artifacts: artifacts
             )
     }
+    }
 }
 
-private extension ListArtifacts {
+private extension Standard.Tools.ListArtifacts {
     func summary(
         for input: ListArtifactsInput
     ) -> String {
