@@ -5,59 +5,56 @@ import Primitives
 import Schema
 import Macros
 
-@JSONSchema
-public struct EmitArtifactInput: Sendable, Codable, Hashable {
-    /// Artifact kind to emit.
-    public let kind: AgentArtifactKind
-    /// Optional human-readable artifact title.
-    public let title: String?
-    /// Optional preferred artifact filename.
-    public let filename: String?
-    /// Optional MIME/content type.
-    public let contentType: String?
-    /// Artifact content to persist.
-    public let content: String
-    /// Additional artifact metadata.
-    public let metadata: [String: String]
-
-    public init(
-        kind: AgentArtifactKind,
-        title: String? = nil,
-        filename: String? = nil,
-        contentType: String? = nil,
-        content: String,
-        metadata: [String: String] = [:]
-    ) {
-        self.kind = kind
-        self.title = title
-        self.filename = filename
-        self.contentType = contentType
-        self.content = content
-        self.metadata = metadata
-    }
-}
-
-@JSONSchema
-public struct EmitArtifactOutput: Sendable, Codable, Hashable {
-    public let artifact: AgentArtifact
-    public let contentCharacterCount: Int
-    public let approximateTokenCount: Int
-
-    public init(
-        artifact: AgentArtifact,
-        contentCharacterCount: Int,
-        approximateTokenCount: Int
-    ) {
-        self.artifact = artifact
-        self.contentCharacterCount = contentCharacterCount
-        self.approximateTokenCount = approximateTokenCount
-    }
-}
-
 public extension Standard.Tools {
     struct EmitArtifact: Tool {
-    public typealias Input = EmitArtifactInput
-    public typealias Output = EmitArtifactOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Artifact kind to emit.
+            public let kind: AgentArtifactKind
+            /// Optional human-readable artifact title.
+            public let title: String?
+            /// Optional preferred artifact filename.
+            public let filename: String?
+            /// Optional MIME/content type.
+            public let contentType: String?
+            /// Artifact content to persist.
+            public let content: String
+            /// Additional artifact metadata.
+            public let metadata: [String: String]
+
+            public init(
+                kind: AgentArtifactKind,
+                title: String? = nil,
+                filename: String? = nil,
+                contentType: String? = nil,
+                content: String,
+                metadata: [String: String] = [:]
+            ) {
+                self.kind = kind
+                self.title = title
+                self.filename = filename
+                self.contentType = contentType
+                self.content = content
+                self.metadata = metadata
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let artifact: AgentArtifact
+            public let contentCharacterCount: Int
+            public let approximateTokenCount: Int
+
+            public init(
+                artifact: AgentArtifact,
+                contentCharacterCount: Int,
+                approximateTokenCount: Int
+            ) {
+                self.artifact = artifact
+                self.contentCharacterCount = contentCharacterCount
+                self.approximateTokenCount = approximateTokenCount
+            }
+        }
 
     public static let identifier: ToolIdentifier = "emit_artifact"
     public static let description = "Emit a durable runtime artifact under the current Agentic session artifact directory."
@@ -126,7 +123,7 @@ public extension Standard.Tools {
             )
         )
 
-        return EmitArtifactOutput(
+        return Output(
                 artifact: record.artifact,
                 contentCharacterCount: input.content.count,
                 approximateTokenCount: approximateTokenCount(
@@ -139,7 +136,7 @@ public extension Standard.Tools {
 
 private extension Standard.Tools.EmitArtifact {
     func summary(
-        for input: EmitArtifactInput
+        for input: Input
     ) -> String {
         let title = input.title?.trimmingCharacters(
             in: .whitespacesAndNewlines

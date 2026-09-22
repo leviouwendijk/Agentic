@@ -29,6 +29,61 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ReadGuidelineChapter.self
     )
 
+    ContractProof.source(
+        Standard.Tools.AgentAdvisor.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.AgentAdvisor.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.EmitArtifact.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.EmitArtifact.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.ListArtifacts.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ListArtifacts.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.ReadArtifact.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ReadArtifact.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.FindTools.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.FindTools.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.FindGuidelines.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.FindGuidelines.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.GuidelineIndex.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.GuidelineIndex.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.ReadGuideline.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ReadGuideline.Output.self
+    )
+    ContractProof.source(
+        Standard.Tools.ReadGuidelineChapter.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ReadGuidelineChapter.Output.self
+    )
+
     try ContractProof.identifier(
         Standard.Tools.AgentAdvisor.definition.identifier.rawValue,
         expected: "advisor_ask"

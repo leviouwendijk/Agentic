@@ -6,22 +6,6 @@ import Schema
 import Macros
 
 @JSONSchema
-public struct GuidelineIndexInput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    /// Optional exact guideline area such as design, web_design, ergonomics, structure, or ai.
-    public let area: String?
-
-    public init(
-        area: String? = nil
-    ) {
-        self.area = area
-    }
-}
-
-@JSONSchema
 public struct GuidelineIndexEntry:
     Sendable,
     Codable,
@@ -44,22 +28,27 @@ public struct GuidelineIndexChapter:
     public let guidelines: [GuidelineIndexEntry]
 }
 
-@JSONSchema
-public struct GuidelineIndexOutput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    public let area: String?
-    public let chapterCount: Int
-    public let guidelineCount: Int
-    public let chapters: [GuidelineIndexChapter]
-}
-
 public extension Standard.Tools {
     struct GuidelineIndex: Tool {
-    public typealias Input = GuidelineIndexInput
-    public typealias Output = GuidelineIndexOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Optional exact guideline area such as design, web_design, ergonomics, structure, or ai.
+            public let area: String?
+
+            public init(
+                area: String? = nil
+            ) {
+                self.area = area
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let area: String?
+            public let chapterCount: Int
+            public let guidelineCount: Int
+            public let chapters: [GuidelineIndexChapter]
+        }
 
     public static let identifier: ToolIdentifier =
         "guideline_index"

@@ -4,62 +4,59 @@ import Primitives
 import Schema
 import Macros
 
-@JSONSchema
-public struct ReadArtifactInput: Sendable, Codable, Hashable {
-    /// Exact artifact identifier to read.
-    public let id: String
-    /// Whether to include artifact content. Defaults to true when omitted.
-    public let includeContent: Bool?
-    /// Optional maximum number of content characters to return.
-    public let maxCharacters: Int?
-
-    public init(
-        id: String,
-        includeContent: Bool? = nil,
-        maxCharacters: Int? = nil
-    ) {
-        self.id = id
-        self.includeContent = includeContent
-        self.maxCharacters = maxCharacters
-    }
-
-    public var shouldIncludeContent: Bool {
-        includeContent ?? true
-    }
-
-    public var resolvedMaxCharacters: Int? {
-        guard let maxCharacters else {
-            return nil
-        }
-
-        return max(
-            0,
-            maxCharacters
-        )
-    }
-}
-
-@JSONSchema
-public struct ReadArtifactOutput: Sendable, Codable, Hashable {
-    public let artifact: AgentArtifact
-    public let content: String?
-    public let truncated: Bool
-
-    public init(
-        artifact: AgentArtifact,
-        content: String?,
-        truncated: Bool
-    ) {
-        self.artifact = artifact
-        self.content = content
-        self.truncated = truncated
-    }
-}
-
 public extension Standard.Tools {
     struct ReadArtifact: Tool {
-    public typealias Input = ReadArtifactInput
-    public typealias Output = ReadArtifactOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Exact artifact identifier to read.
+            public let id: String
+            /// Whether to include artifact content. Defaults to true when omitted.
+            public let includeContent: Bool?
+            /// Optional maximum number of content characters to return.
+            public let maxCharacters: Int?
+
+            public init(
+                id: String,
+                includeContent: Bool? = nil,
+                maxCharacters: Int? = nil
+            ) {
+                self.id = id
+                self.includeContent = includeContent
+                self.maxCharacters = maxCharacters
+            }
+
+            public var shouldIncludeContent: Bool {
+                includeContent ?? true
+            }
+
+            public var resolvedMaxCharacters: Int? {
+                guard let maxCharacters else {
+                    return nil
+                }
+
+                return max(
+                    0,
+                    maxCharacters
+                )
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let artifact: AgentArtifact
+            public let content: String?
+            public let truncated: Bool
+
+            public init(
+                artifact: AgentArtifact,
+                content: String?,
+                truncated: Bool
+            ) {
+                self.artifact = artifact
+                self.content = content
+                self.truncated = truncated
+            }
+        }
 
     public static let identifier: ToolIdentifier = "read_artifact"
     public static let description = "Read a durable artifact emitted for the current Agentic session."
@@ -132,7 +129,7 @@ public extension Standard.Tools {
             truncated = false
         }
 
-        return ReadArtifactOutput(
+        return Output(
                 artifact: record.artifact,
                 content: renderedContent,
                 truncated: truncated

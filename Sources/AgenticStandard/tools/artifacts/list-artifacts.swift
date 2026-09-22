@@ -4,58 +4,55 @@ import Primitives
 import Schema
 import Macros
 
-@JSONSchema
-public struct ListArtifactsInput: Sendable, Codable, Hashable {
-    /// Artifact kinds to include. An empty array includes every kind.
-    public let kinds: [AgentArtifactKind]
-    /// Whether to list newest artifacts first. Defaults to true when omitted.
-    public let latestFirst: Bool?
-    /// Optional maximum number of artifacts to return.
-    public let limit: Int?
-
-    public init(
-        kinds: [AgentArtifactKind] = [],
-        latestFirst: Bool? = nil,
-        limit: Int? = nil
-    ) {
-        self.kinds = kinds
-        self.latestFirst = latestFirst
-        self.limit = limit
-    }
-
-    public var resolvedLatestFirst: Bool {
-        latestFirst ?? true
-    }
-
-    public var resolvedLimit: Int? {
-        guard let limit else {
-            return nil
-        }
-
-        return max(
-            0,
-            limit
-        )
-    }
-}
-
-@JSONSchema
-public struct ListArtifactsOutput: Sendable, Codable, Hashable {
-    public let artifacts: [AgentArtifact]
-    public let count: Int
-
-    public init(
-        artifacts: [AgentArtifact]
-    ) {
-        self.artifacts = artifacts
-        self.count = artifacts.count
-    }
-}
-
 public extension Standard.Tools {
     struct ListArtifacts: Tool {
-    public typealias Input = ListArtifactsInput
-    public typealias Output = ListArtifactsOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Artifact kinds to include. An empty array includes every kind.
+            public let kinds: [AgentArtifactKind]
+            /// Whether to list newest artifacts first. Defaults to true when omitted.
+            public let latestFirst: Bool?
+            /// Optional maximum number of artifacts to return.
+            public let limit: Int?
+
+            public init(
+                kinds: [AgentArtifactKind] = [],
+                latestFirst: Bool? = nil,
+                limit: Int? = nil
+            ) {
+                self.kinds = kinds
+                self.latestFirst = latestFirst
+                self.limit = limit
+            }
+
+            public var resolvedLatestFirst: Bool {
+                latestFirst ?? true
+            }
+
+            public var resolvedLimit: Int? {
+                guard let limit else {
+                    return nil
+                }
+
+                return max(
+                    0,
+                    limit
+                )
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let artifacts: [AgentArtifact]
+            public let count: Int
+
+            public init(
+                artifacts: [AgentArtifact]
+            ) {
+                self.artifacts = artifacts
+                self.count = artifacts.count
+            }
+        }
 
     public static let identifier: ToolIdentifier = "list_artifacts"
     public static let description = "List durable artifacts emitted for the current Agentic session."
@@ -112,7 +109,7 @@ public extension Standard.Tools {
             limit: input.resolvedLimit
         )
 
-        return ListArtifactsOutput(
+        return Output(
                 artifacts: artifacts
             )
     }
@@ -121,7 +118,7 @@ public extension Standard.Tools {
 
 private extension Standard.Tools.ListArtifacts {
     func summary(
-        for input: ListArtifactsInput
+        for input: Input
     ) -> String {
         guard !input.kinds.isEmpty else {
             return "List session artifacts"

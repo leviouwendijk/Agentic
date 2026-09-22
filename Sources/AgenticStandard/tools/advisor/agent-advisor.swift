@@ -2,11 +2,58 @@ import Agentic
 import Workspace
 import Foundation
 import Primitives
+import Schema
+import Macros
 
 public extension Standard.Tools {
     struct AgentAdvisor: Tool {
-        public typealias Input = AgentAdvisorInput
-        public typealias Output = AgentAdvisorOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// The concrete question or decision to ask the advisor model about.
+            public var prompt: String
+
+            /// Optional bounded context already gathered by the executor.
+            public var context: String?
+
+            /// Optional extra instruction for the advisor response shape.
+            public var instruction: String?
+
+            public init(
+                prompt: String,
+                context: String? = nil,
+                instruction: String? = nil
+            ) {
+                self.prompt = prompt
+                self.context = context
+                self.instruction = instruction
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public var routePurpose: String
+            public var profile: String
+            public var gateway: String
+            public var model: String
+            public var diagnostics: [AgentModelSelectionDiagnostic]
+            public var advice: String
+
+            public init(
+                routePurpose: String,
+                profile: String,
+                gateway: String,
+                model: String,
+                diagnostics: [AgentModelSelectionDiagnostic],
+                advice: String
+            ) {
+                self.routePurpose = routePurpose
+                self.profile = profile
+                self.gateway = gateway
+                self.model = model
+                self.diagnostics = diagnostics
+                self.advice = advice
+            }
+        }
 
         public static let identifier = AgentAdvisorDefaults.identifier
         public static let description = "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
@@ -106,7 +153,7 @@ public extension Standard.Tools {
             )
             let route = result.route.route
 
-            let output = AgentAdvisorOutput(
+            let output = Output(
                 routePurpose: route.purpose.rawValue,
                 profile: route.profile.identifier.rawValue,
                 gateway: route.profile.gatewayIdentifier.rawValue,
@@ -150,7 +197,7 @@ private extension Standard.Tools.AgentAdvisor {
     }
 
     static func userPrompt(
-        input: AgentAdvisorInput,
+        input: Input,
         prompt: String
     ) -> String {
         var sections: [String] = []

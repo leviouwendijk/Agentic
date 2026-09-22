@@ -3,11 +3,75 @@ import Workspace
 import Foundation
 import Primitives
 import Search
+import Schema
+import Macros
 
 public extension Standard.Tools {
     struct FindTools: Tool {
-    public typealias Input = FindToolsInput
-    public typealias Output = FindToolsOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Natural-language capability or operation to search for.
+            public let query: String
+
+            /// Maximum number of matching tools to return and activate. Defaults to 5 and is capped at 8.
+            public let maximumResults: Int?
+
+            public init(
+                query: String,
+                maximumResults: Int? = nil
+            ) {
+                self.query = query
+                self.maximumResults = maximumResults
+            }
+
+            public var resultLimit: Int {
+                max(
+                    1,
+                    min(
+                        maximumResults ?? 5,
+                        8
+                    )
+                )
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            @JSONSchema
+            public struct FoundTool:
+                Sendable,
+                Codable,
+                Hashable
+            {
+                public let identifier: ToolIdentifier
+                public let description: String
+                public let risk: ActionRisk
+
+                public init(
+                    identifier: ToolIdentifier,
+                    description: String,
+                    risk: ActionRisk
+                ) {
+                    self.identifier = identifier
+                    self.description = description
+                    self.risk = risk
+                }
+            }
+
+            public let query: String
+            public let tools: [FoundTool]
+            public let activated: [ToolIdentifier]
+
+            public init(
+                query: String,
+                tools: [FoundTool],
+                activated: [ToolIdentifier]
+            ) {
+                self.query = query
+                self.tools = tools
+                self.activated = activated
+            }
+        }
 
     public static let identifier: ToolIdentifier = "find_tools"
     public static let description = "Search the installed Agentic tool catalog by exact identifier or natural-language capability. Returned matches are exposed as native tools on subsequent model turns."
@@ -109,7 +173,7 @@ public extension Standard.Tools {
         }
 
         let tools = selected.map { definition in
-            FoundTool(
+            Output.FoundTool(
                 identifier: definition.identifier,
                 description: definition.description,
                 risk: definition.risk
@@ -120,7 +184,7 @@ public extension Standard.Tools {
             tools.map(\.identifier)
         )
 
-        return FindToolsOutput(
+        return Output(
             query: query,
             tools: tools,
             activated: activated

@@ -6,39 +6,28 @@ import GuidelinesSearch
 import Schema
 import Macros
 
-@JSONSchema
-public struct ReadGuidelineInput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    /// Exact guideline reference returned by guideline_index or find_guidelines.
-    public let reference: String
-
-    public init(
-        reference: String
-    ) {
-        self.reference = reference
-    }
-}
-
-@JSONSchema
-public struct ReadGuidelineOutput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    public let reference: String
-    public let area: String
-    public let title: String
-    public let summary: String
-    public let explanation: String
-}
-
 public extension Standard.Tools {
     struct ReadGuideline: Tool {
-    public typealias Input = ReadGuidelineInput
-    public typealias Output = ReadGuidelineOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Exact guideline reference returned by guideline_index or find_guidelines.
+            public let reference: String
+
+            public init(
+                reference: String
+            ) {
+                self.reference = reference
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let reference: String
+            public let area: String
+            public let title: String
+            public let summary: String
+            public let explanation: String
+        }
 
     public static let identifier: ToolIdentifier =
         "read_guideline"
@@ -160,40 +149,29 @@ public extension Standard.Tools {
     }
 }
 
-@JSONSchema
-public struct ReadGuidelineChapterInput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    /// Exact chapter reference returned by guideline_index.
-    public let reference: String
-
-    public init(
-        reference: String
-    ) {
-        self.reference = reference
-    }
-}
-
-@JSONSchema
-public struct ReadGuidelineChapterOutput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    public let reference: String
-    public let area: String
-    public let title: String
-    public let introduction: String
-    public let guidelineCount: Int
-    public let guidelines: [GuidelineSummary]
-}
-
 public extension Standard.Tools {
     struct ReadGuidelineChapter: Tool {
-    public typealias Input = ReadGuidelineChapterInput
-    public typealias Output = ReadGuidelineChapterOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Exact chapter reference returned by guideline_index.
+            public let reference: String
+
+            public init(
+                reference: String
+            ) {
+                self.reference = reference
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let reference: String
+            public let area: String
+            public let title: String
+            public let introduction: String
+            public let guidelineCount: Int
+            public let guidelines: [GuidelineSummary]
+        }
 
     public static let identifier: ToolIdentifier =
         "read_guideline_chapter"

@@ -5,52 +5,41 @@ import GuidelinesSearch
 import Schema
 import Macros
 
-@JSONSchema
-public struct FindGuidelinesInput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    /// Natural-language intent, guideline title, summary text, or exact guideline reference.
-    public let query: String
-
-    /// Optional result limit. Defaults to 5 and is clamped to 1...8.
-    public let maximumResults: Int?
-
-    public init(
-        query: String,
-        maximumResults: Int? = nil
-    ) {
-        self.query = query
-        self.maximumResults = maximumResults
-    }
-
-    public var resultLimit: Int {
-        max(
-            1,
-            min(
-                maximumResults ?? 5,
-                8
-            )
-        )
-    }
-}
-
-@JSONSchema
-public struct FindGuidelinesOutput:
-    Sendable,
-    Codable,
-    Hashable
-{
-    public let query: String
-    public let count: Int
-    public let matches: [GuidelineSummary]
-}
-
 public extension Standard.Tools {
     struct FindGuidelines: Tool {
-    public typealias Input = FindGuidelinesInput
-    public typealias Output = FindGuidelinesOutput
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            /// Natural-language intent, guideline title, summary text, or exact guideline reference.
+            public let query: String
+
+            /// Optional result limit. Defaults to 5 and is clamped to 1...8.
+            public let maximumResults: Int?
+
+            public init(
+                query: String,
+                maximumResults: Int? = nil
+            ) {
+                self.query = query
+                self.maximumResults = maximumResults
+            }
+
+            public var resultLimit: Int {
+                max(
+                    1,
+                    min(
+                        maximumResults ?? 5,
+                        8
+                    )
+                )
+            }
+        }
+
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let query: String
+            public let count: Int
+            public let matches: [GuidelineSummary]
+        }
 
     public static let identifier: ToolIdentifier =
         "find_guidelines"
