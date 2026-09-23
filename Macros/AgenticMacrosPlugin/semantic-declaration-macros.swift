@@ -161,33 +161,32 @@ public struct ToolMacro:
         conformingTo _: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let declaration = declaration.as(
-            StructDeclSyntax.self
-        ) else {
-            throw MacroExpansionErrorMessage(
-                "@Tool can only attach to a struct declaration."
-            )
-        }
-
-        let identifier = try toolIdentifier(
-            from: attribute,
-            declarationName: declaration.name.text
-        )
-        let access = toolMemberAccessPrefix(
-            declaration,
+        try DeclarationMacroEngine<
+            ToolMacroSpecification
+        >.members(
+            of: declaration,
+            macroName: "Tool",
             lexicalContext: context.lexicalContext
-        )
+        ) { declarationContext in
+            let identifier = try toolIdentifier(
+                from: attribute,
+                declarationName: declarationContext.name
+            )
+            let access = semanticMemberAccessPrefix(
+                declarationContext
+            )
 
-        return [
-            DeclSyntax(
-                stringLiteral:
-                    "\(access)static let identifier: ToolIdentifier = .init(rawValue: \"\(identifier)\")"
-            ),
-            DeclSyntax(
-                stringLiteral:
-                    "\(access)static let definition: ToolDefinition = .init(identifier: Self.identifier, purpose: Self.purpose, risk: Self.risk)"
-            ),
-        ]
+            return [
+                DeclSyntax(
+                    stringLiteral:
+                        "\(access)static let identifier: ToolIdentifier = .init(rawValue: \"\(identifier)\")"
+                ),
+                DeclSyntax(
+                    stringLiteral:
+                        "\(access)static let definition: ToolDefinition = .init(identifier: Self.identifier, purpose: Self.purpose, risk: Self.risk)"
+                ),
+            ]
+        }
     }
 
     public static func expansion(
@@ -360,67 +359,6 @@ func toolIdentifier(
     }
 
     return identifier
-}
-
-func toolMemberAccessPrefix(
-    _ declaration: StructDeclSyntax,
-    lexicalContext: [Syntax]
-) -> String {
-    if let access = semanticAccess(
-        in: declaration.modifiers
-    ) {
-        return semanticAccessPrefix(
-            access
-        )
-    }
-
-    for syntax in lexicalContext.reversed() {
-        guard let declaration = syntax.as(
-            ExtensionDeclSyntax.self
-        ),
-        let access = semanticAccess(
-            in: declaration.modifiers
-        ) else {
-            continue
-        }
-
-        return semanticAccessPrefix(
-            access
-        )
-    }
-
-    return ""
-}
-
-private func semanticAccess(
-    in modifiers: DeclModifierListSyntax
-) -> String? {
-    let accessLevels: Set<String> = [
-        "private",
-        "fileprivate",
-        "internal",
-        "package",
-        "public",
-        "open",
-    ]
-
-    return modifiers
-        .map(\.name.text)
-        .first { modifier in
-            accessLevels.contains(
-                modifier
-            )
-        }
-}
-
-private func semanticAccessPrefix(
-    _ access: String
-) -> String {
-    if access == "private" {
-        return "fileprivate "
-    }
-
-    return "\(access) "
 }
 
 func semanticMemberAccessPrefix(

@@ -1,5 +1,5 @@
 {
-  "originHash" : "5f2f5d109dad5d980a3126729fbf97dd8c038813007b36f9696bc4865038eca8",
+  "originHash" : "b6c2c11eeaee01308bebd5641640ab84e8a35bd472a17a0636f49f03451baef8",
   "pins" : [
     {
       "identity" : "ansi",
@@ -124,7 +124,7 @@
       "location" : "https://github.com/leviouwendijk/Macros.git",
       "state" : {
         "branch" : "master",
-        "revision" : "581226ca30433e5adbe4244cf48cbe559a1aba88"
+        "revision" : "cfcf3c3595a90c52cce313a60cd42e04f245490f"
       }
     },
     {
