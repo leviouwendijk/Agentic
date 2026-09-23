@@ -5,7 +5,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
-    struct CreateAgentTask: Tool {
+    struct CreateTask: Tool {
         /// Create a new agent task.
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -109,7 +109,7 @@ public extension Standard.Tools {
         }
     }
 
-    struct UpdateAgentTask: Tool {
+    struct UpdateTask: Tool {
         /// Update mutable fields on an existing agent task.
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -228,7 +228,7 @@ public extension Standard.Tools {
         }
     }
 
-    struct ListAgentTasks: Tool {
+    struct ListTasks: Tool {
         /// List agent tasks with optional status, owner, readiness, and completion filters.
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -321,7 +321,7 @@ public extension Standard.Tools {
         }
     }
 
-    struct GetAgentTask: Tool {
+    struct GetTask: Tool {
         /// Read one agent task by identifier.
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -400,7 +400,7 @@ public extension Standard.Tools {
         }
     }
 
-    struct ClaimAgentTask: Tool {
+    struct ClaimTask: Tool {
         /// Claim an agent task for an owner.
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -488,7 +488,7 @@ public extension Standard.Tools {
         }
     }
 
-    struct CompleteAgentTask: Tool {
+    struct CompleteTask: Tool {
         /// Mark an agent task complete.
         @JSONSchema
         public struct Input: Source, Hashable {

@@ -6,7 +6,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
-    struct AgentAdvisor: Tool {
+    struct AskAdvisor: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
             /// The concrete question or decision to ask the advisor model about.
@@ -167,7 +167,7 @@ public extension Standard.Tools {
     }
 }
 
-private extension Standard.Tools.AgentAdvisor {
+private extension Standard.Tools.AskAdvisor {
     static func normalizedPrompt(
         _ value: String
     ) throws -> String {
