@@ -50,8 +50,7 @@ public extension Standard.Tools {
             public let chapters: [GuidelineIndexChapter]
         }
 
-    public static let identifier: ToolIdentifier =
-        "guideline_index"
+    public static let identifier: ToolIdentifier = "guideline_index"
 
     public static let description =
         "Inspect a cheap body-free index of guideline areas, chapters, references, and titles. Use this for structural orientation before loading summaries or full explanations."

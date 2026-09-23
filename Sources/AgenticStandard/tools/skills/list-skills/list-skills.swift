@@ -63,8 +63,7 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier =
-            "list_skills"
+        public static let identifier: ToolIdentifier = "list_skills"
 
         public static let description =
             "List available skills and their summaries."

@@ -110,6 +110,87 @@ func runStandardToolNamespaceSmoke() throws {
     ContractProof.result(
         Standard.Tools.LoadSkill.Output.self
     )
+    ContractProof.tool(
+        Standard.Tools.CreateAgentTask.self
+    )
+    ContractProof.source(
+        Standard.Tools.CreateAgentTask.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.CreateAgentTask.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.UpdateAgentTask.self
+    )
+    ContractProof.source(
+        Standard.Tools.UpdateAgentTask.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.UpdateAgentTask.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ListAgentTasks.self
+    )
+    ContractProof.source(
+        Standard.Tools.ListAgentTasks.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ListAgentTasks.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.GetAgentTask.self
+    )
+    ContractProof.source(
+        Standard.Tools.GetAgentTask.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.GetAgentTask.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ClaimAgentTask.self
+    )
+    ContractProof.source(
+        Standard.Tools.ClaimAgentTask.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ClaimAgentTask.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.CompleteAgentTask.self
+    )
+    ContractProof.source(
+        Standard.Tools.CompleteAgentTask.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.CompleteAgentTask.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.ReadTranscriptEvents.self
+    )
+    ContractProof.source(
+        Standard.Tools.ReadTranscriptEvents.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ReadTranscriptEvents.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.SearchTranscript.self
+    )
+    ContractProof.source(
+        Standard.Tools.SearchTranscript.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.SearchTranscript.Output.self
+    )
+    ContractProof.tool(
+        Standard.Tools.SummarizeTranscriptWindow.self
+    )
+    ContractProof.source(
+        Standard.Tools.SummarizeTranscriptWindow.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.SummarizeTranscriptWindow.Output.self
+    )
 
     try ContractProof.identifier(
         Standard.Tools.AgentAdvisor.definition.identifier.rawValue,
@@ -158,5 +239,41 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.LoadSkill.definition.identifier.rawValue,
         expected: "load_skill"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.CreateAgentTask.definition.identifier.rawValue,
+        expected: "task_create"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.UpdateAgentTask.definition.identifier.rawValue,
+        expected: "task_update"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ListAgentTasks.definition.identifier.rawValue,
+        expected: "task_list"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.GetAgentTask.definition.identifier.rawValue,
+        expected: "task_get"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ClaimAgentTask.definition.identifier.rawValue,
+        expected: "task_claim"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.CompleteAgentTask.definition.identifier.rawValue,
+        expected: "task_complete"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ReadTranscriptEvents.definition.identifier.rawValue,
+        expected: "read_transcript_events"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.SearchTranscript.definition.identifier.rawValue,
+        expected: "search_transcript"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.SummarizeTranscriptWindow.definition.identifier.rawValue,
+        expected: "summarize_transcript_window"
     )
 }

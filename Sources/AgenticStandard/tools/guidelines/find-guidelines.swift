@@ -41,8 +41,7 @@ public extension Standard.Tools {
             public let matches: [GuidelineSummary]
         }
 
-    public static let identifier: ToolIdentifier =
-        "find_guidelines"
+    public static let identifier: ToolIdentifier = "find_guidelines"
 
     public static let description =
         "Search guidelines by natural-language intent and return a bounded set of references, titles, chapters, and summaries without full explanations."

@@ -29,8 +29,7 @@ public extension Standard.Tools {
             public let explanation: String
         }
 
-    public static let identifier: ToolIdentifier =
-        "read_guideline"
+    public static let identifier: ToolIdentifier = "read_guideline"
 
     public static let description =
         "Load the full title, summary, and explanation for one exact guideline reference after discovery or when the reference is already known."
@@ -173,8 +172,7 @@ public extension Standard.Tools {
             public let guidelines: [GuidelineSummary]
         }
 
-    public static let identifier: ToolIdentifier =
-        "read_guideline_chapter"
+    public static let identifier: ToolIdentifier = "read_guideline_chapter"
 
     public static let description =
         "Load one guideline chapter introduction plus guideline references, titles, and summaries without loading every full guideline explanation."

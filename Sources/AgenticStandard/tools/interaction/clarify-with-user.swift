@@ -61,8 +61,7 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier =
-            "clarify_with_user"
+        public static let identifier: ToolIdentifier = "clarify_with_user"
 
         public static let description =
             "Suspend the current agent run and ask the user for missing information needed to continue."

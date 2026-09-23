@@ -4,555 +4,572 @@ import Primitives
 import Schema
 import Macros
 
-/// Create a new agent task.
-@JSONSchema
-public struct CreateAgentTaskInput: Sendable, Codable, Hashable {
-    public let subject: String
-    public let description: String
-    public let blockedBy: [AgentTaskIdentifier]
-    public let owner: String?
-    public let sessionID: String?
-    public let metadata: [String: String]
+public extension Standard.Tools {
+    struct CreateAgentTask: Tool {
+        /// Create a new agent task.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let subject: String
+            public let description: String
+            public let blockedBy: [AgentTaskIdentifier]
+            public let owner: String?
+            public let sessionID: String?
+            public let metadata: [String: String]
 
-    public init(
-        subject: String,
-        description: String = "",
-        blockedBy: [AgentTaskIdentifier] = [],
-        owner: String? = nil,
-        sessionID: String? = nil,
-        metadata: [String: String] = [:]
-    ) {
-        self.subject = subject
-        self.description = description
-        self.blockedBy = blockedBy
-        self.owner = owner
-        self.sessionID = sessionID
-        self.metadata = metadata
-    }
-}
+            public init(
+                subject: String,
+                description: String = "",
+                blockedBy: [AgentTaskIdentifier] = [],
+                owner: String? = nil,
+                sessionID: String? = nil,
+                metadata: [String: String] = [:]
+            ) {
+                self.subject = subject
+                self.description = description
+                self.blockedBy = blockedBy
+                self.owner = owner
+                self.sessionID = sessionID
+                self.metadata = metadata
+            }
+        }
 
-/// Update mutable fields on an existing agent task.
-@JSONSchema
-public struct UpdateAgentTaskInput: Sendable, Codable, Hashable {
-    public let id: AgentTaskIdentifier
-    public let subject: String?
-    public let description: String?
-    public let status: AgentTaskStatus?
-    public let owner: String?
-    public let addBlockedBy: [AgentTaskIdentifier]
-    public let removeBlockedBy: [AgentTaskIdentifier]
-    public let sessionID: String?
-    public let metadataPatch: [String: String]
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let task: AgentTask
 
-    public init(
-        id: AgentTaskIdentifier,
-        subject: String? = nil,
-        description: String? = nil,
-        status: AgentTaskStatus? = nil,
-        owner: String? = nil,
-        addBlockedBy: [AgentTaskIdentifier] = [],
-        removeBlockedBy: [AgentTaskIdentifier] = [],
-        sessionID: String? = nil,
-        metadataPatch: [String: String] = [:]
-    ) {
-        self.id = id
-        self.subject = subject
-        self.description = description
-        self.status = status
-        self.owner = owner
-        self.addBlockedBy = addBlockedBy
-        self.removeBlockedBy = removeBlockedBy
-        self.sessionID = sessionID
-        self.metadataPatch = metadataPatch
-    }
-}
+            public init(
+                task: AgentTask
+            ) {
+                self.task = task
+            }
+        }
 
-/// List agent tasks with optional status, owner, readiness, and completion filters.
-@JSONSchema
-public struct ListAgentTasksInput: Sendable, Codable, Hashable {
-    public let statuses: [AgentTaskStatus]
-    public let owner: String?
-    public let readyOnly: Bool
-    public let includeCompleted: Bool
-
-    public init(
-        statuses: [AgentTaskStatus] = [],
-        owner: String? = nil,
-        readyOnly: Bool = false,
-        includeCompleted: Bool = true
-    ) {
-        self.statuses = statuses
-        self.owner = owner
-        self.readyOnly = readyOnly
-        self.includeCompleted = includeCompleted
-    }
-}
-
-/// Read one agent task by identifier.
-@JSONSchema
-public struct GetAgentTaskInput: Sendable, Codable, Hashable {
-    public let id: AgentTaskIdentifier
-
-    public init(
-        id: AgentTaskIdentifier
-    ) {
-        self.id = id
-    }
-}
-
-/// Claim an agent task for an owner.
-@JSONSchema
-public struct ClaimAgentTaskInput: Sendable, Codable, Hashable {
-    public let id: AgentTaskIdentifier
-    public let owner: String
-
-    public init(
-        id: AgentTaskIdentifier,
-        owner: String
-    ) {
-        self.id = id
-        self.owner = owner
-    }
-}
-
-/// Mark an agent task complete.
-@JSONSchema
-public struct CompleteAgentTaskInput: Sendable, Codable, Hashable {
-    public let id: AgentTaskIdentifier
-
-    public init(
-        id: AgentTaskIdentifier
-    ) {
-        self.id = id
-    }
-}
-
-@JSONSchema
-public struct AgentTaskOutput: Sendable, Codable, Hashable {
-    public let task: AgentTask
-
-    public init(
-        task: AgentTask
-    ) {
-        self.task = task
-    }
-}
-
-@JSONSchema
-public struct AgentTaskListOutput: Sendable, Codable, Hashable {
-    public let tasks: [AgentTask]
-    public let count: Int
-
-    public init(
-        tasks: [AgentTask]
-    ) {
-        self.tasks = tasks
-        self.count = tasks.count
-    }
-}
-
-public struct CreateAgentTask: Tool {
-    public typealias Input = CreateAgentTaskInput
-    public typealias Output = AgentTaskOutput
-
-    public static let identifier: ToolIdentifier = "task_create"
-    public static let description = "Create a durable Agentic task."
-    public static let risk: ActionRisk = .boundedmutate
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
-
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
-
-    public let manager: AgentTaskManager
-
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
-
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-
-        return .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "Create durable task: \(input.subject)",
-            estimates: .init(
-                write: .init(count: 1)
-            ),
-            sideEffects: [
-                "writes task file"
-            ]
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let task = try await manager.create(
-            subject: input.subject,
-            description: input.description,
-            blockedBy: input.blockedBy,
-            owner: input.owner,
-            sessionID: input.sessionID,
-            metadata: input.metadata
+        public static let identifier: ToolIdentifier = "task_create"
+        public static let description = "Create a durable Agentic task."
+        public static let risk: ActionRisk = .boundedmutate
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "Create durable task: \(input.subject)",
+                estimates: .init(
+                    write: .init(count: 1)
+                ),
+                sideEffects: [
+                    "writes task file"
+                ]
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let task = try await manager.create(
+                subject: input.subject,
+                description: input.description,
+                blockedBy: input.blockedBy,
+                owner: input.owner,
+                sessionID: input.sessionID,
+                metadata: input.metadata
+            )
+
+            return Output(
                 task: task
             )
-    }
-}
-
-public struct UpdateAgentTask: Tool {
-    public typealias Input = UpdateAgentTaskInput
-    public typealias Output = AgentTaskOutput
-
-    public static let identifier: ToolIdentifier = "task_update"
-    public static let description = "Update a durable Agentic task."
-    public static let risk: ActionRisk = .boundedmutate
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
+        }
     }
 
-    public var description: String {
-        Self.description
-    }
+    struct UpdateAgentTask: Tool {
+        /// Update mutable fields on an existing agent task.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let id: AgentTaskIdentifier
+            public let subject: String?
+            public let description: String?
+            public let status: AgentTaskStatus?
+            public let owner: String?
+            public let addBlockedBy: [AgentTaskIdentifier]
+            public let removeBlockedBy: [AgentTaskIdentifier]
+            public let sessionID: String?
+            public let metadataPatch: [String: String]
 
-    public var risk: ActionRisk {
-        Self.risk
-    }
+            public init(
+                id: AgentTaskIdentifier,
+                subject: String? = nil,
+                description: String? = nil,
+                status: AgentTaskStatus? = nil,
+                owner: String? = nil,
+                addBlockedBy: [AgentTaskIdentifier] = [],
+                removeBlockedBy: [AgentTaskIdentifier] = [],
+                sessionID: String? = nil,
+                metadataPatch: [String: String] = [:]
+            ) {
+                self.id = id
+                self.subject = subject
+                self.description = description
+                self.status = status
+                self.owner = owner
+                self.addBlockedBy = addBlockedBy
+                self.removeBlockedBy = removeBlockedBy
+                self.sessionID = sessionID
+                self.metadataPatch = metadataPatch
+            }
+        }
 
-    public let manager: AgentTaskManager
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let task: AgentTask
 
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
+            public init(
+                task: AgentTask
+            ) {
+                self.task = task
+            }
+        }
 
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-
-        return .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "Update durable task \(input.id.rawValue).",
-            estimates: .init(
-                write: .init(
-                    count: input.status == .completed ? 2 : 1
-                )
-            ),
-            sideEffects: [
-                "writes task file",
-                "may clear dependency from blocked tasks"
-            ]
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let task = try await manager.update(
-            id: input.id,
-            subject: input.subject,
-            description: input.description,
-            status: input.status,
-            owner: input.owner,
-            addBlockedBy: input.addBlockedBy,
-            removeBlockedBy: input.removeBlockedBy,
-            sessionID: input.sessionID,
-            metadataPatch: input.metadataPatch
+        public static let identifier: ToolIdentifier = "task_update"
+        public static let description = "Update a durable Agentic task."
+        public static let risk: ActionRisk = .boundedmutate
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "Update durable task \(input.id.rawValue).",
+                estimates: .init(
+                    write: .init(
+                        count: input.status == .completed ? 2 : 1
+                    )
+                ),
+                sideEffects: [
+                    "writes task file",
+                    "may clear dependency from blocked tasks"
+                ]
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let task = try await manager.update(
+                id: input.id,
+                subject: input.subject,
+                description: input.description,
+                status: input.status,
+                owner: input.owner,
+                addBlockedBy: input.addBlockedBy,
+                removeBlockedBy: input.removeBlockedBy,
+                sessionID: input.sessionID,
+                metadataPatch: input.metadataPatch
+            )
+
+            return Output(
                 task: task
             )
-    }
-}
-
-public struct ListAgentTasks: Tool {
-    public typealias Input = ListAgentTasksInput
-    public typealias Output = AgentTaskListOutput
-
-    public static let identifier: ToolIdentifier = "task_list"
-    public static let description = "List durable Agentic tasks."
-    public static let risk: ActionRisk = .observe
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
+        }
     }
 
-    public var description: String {
-        Self.description
-    }
+    struct ListAgentTasks: Tool {
+        /// List agent tasks with optional status, owner, readiness, and completion filters.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let statuses: [AgentTaskStatus]
+            public let owner: String?
+            public let readyOnly: Bool
+            public let includeCompleted: Bool
 
-    public var risk: ActionRisk {
-        Self.risk
-    }
+            public init(
+                statuses: [AgentTaskStatus] = [],
+                owner: String? = nil,
+                readyOnly: Bool = false,
+                includeCompleted: Bool = true
+            ) {
+                self.statuses = statuses
+                self.owner = owner
+                self.readyOnly = readyOnly
+                self.includeCompleted = includeCompleted
+            }
+        }
 
-    public let manager: AgentTaskManager
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let tasks: [AgentTask]
+            public let count: Int
 
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
+            public init(
+                tasks: [AgentTask]
+            ) {
+                self.tasks = tasks
+                self.count = tasks.count
+            }
+        }
 
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-        .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "List durable tasks.",
-            sideEffects: []
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let tasks = try await manager.list(
-            statuses: input.statuses,
-            owner: input.owner,
-            readyOnly: input.readyOnly,
-            includeCompleted: input.includeCompleted
+        public static let identifier: ToolIdentifier = "task_list"
+        public static let description = "List durable Agentic tasks."
+        public static let risk: ActionRisk = .observe
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskListOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "List durable tasks.",
+                sideEffects: []
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let tasks = try await manager.list(
+                statuses: input.statuses,
+                owner: input.owner,
+                readyOnly: input.readyOnly,
+                includeCompleted: input.includeCompleted
+            )
+
+            return Output(
                 tasks: tasks
             )
-    }
-}
-
-public struct GetAgentTask: Tool {
-    public typealias Input = GetAgentTaskInput
-    public typealias Output = AgentTaskOutput
-
-    public static let identifier: ToolIdentifier = "task_get"
-    public static let description = "Read a durable Agentic task."
-    public static let risk: ActionRisk = .observe
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
+        }
     }
 
-    public var description: String {
-        Self.description
-    }
+    struct GetAgentTask: Tool {
+        /// Read one agent task by identifier.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let id: AgentTaskIdentifier
 
-    public var risk: ActionRisk {
-        Self.risk
-    }
+            public init(
+                id: AgentTaskIdentifier
+            ) {
+                self.id = id
+            }
+        }
 
-    public let manager: AgentTaskManager
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let task: AgentTask
 
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
+            public init(
+                task: AgentTask
+            ) {
+                self.task = task
+            }
+        }
 
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-
-        return .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "Read durable task \(input.id.rawValue).",
-            sideEffects: []
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let task = try await manager.get(
-            input.id
+        public static let identifier: ToolIdentifier = "task_get"
+        public static let description = "Read a durable Agentic task."
+        public static let risk: ActionRisk = .observe
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "Read durable task \(input.id.rawValue).",
+                sideEffects: []
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let task = try await manager.get(
+                input.id
+            )
+
+            return Output(
                 task: task
             )
-    }
-}
-
-public struct ClaimAgentTask: Tool {
-    public typealias Input = ClaimAgentTaskInput
-    public typealias Output = AgentTaskOutput
-
-    public static let identifier: ToolIdentifier = "task_claim"
-    public static let description = "Claim a durable Agentic task for an owner."
-    public static let risk: ActionRisk = .boundedmutate
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
+        }
     }
 
-    public var description: String {
-        Self.description
-    }
+    struct ClaimAgentTask: Tool {
+        /// Claim an agent task for an owner.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let id: AgentTaskIdentifier
+            public let owner: String
 
-    public var risk: ActionRisk {
-        Self.risk
-    }
+            public init(
+                id: AgentTaskIdentifier,
+                owner: String
+            ) {
+                self.id = id
+                self.owner = owner
+            }
+        }
 
-    public let manager: AgentTaskManager
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let task: AgentTask
 
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
+            public init(
+                task: AgentTask
+            ) {
+                self.task = task
+            }
+        }
 
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-
-        return .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "Claim task \(input.id.rawValue) for \(input.owner).",
-            estimates: .init(
-                write: .init(count: 1)
-            ),
-            sideEffects: [
-                "writes task file"
-            ]
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let task = try await manager.claim(
-            id: input.id,
-            owner: input.owner
+        public static let identifier: ToolIdentifier = "task_claim"
+        public static let description = "Claim a durable Agentic task for an owner."
+        public static let risk: ActionRisk = .boundedmutate
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "Claim task \(input.id.rawValue) for \(input.owner).",
+                estimates: .init(
+                    write: .init(count: 1)
+                ),
+                sideEffects: [
+                    "writes task file"
+                ]
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let task = try await manager.claim(
+                id: input.id,
+                owner: input.owner
+            )
+
+            return Output(
                 task: task
             )
-    }
-}
-
-public struct CompleteAgentTask: Tool {
-    public typealias Input = CompleteAgentTaskInput
-    public typealias Output = AgentTaskOutput
-
-    public static let identifier: ToolIdentifier = "task_complete"
-    public static let description = "Complete a durable Agentic task and unblock dependents."
-    public static let risk: ActionRisk = .boundedmutate
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
-    public var identifier: ToolIdentifier {
-        Self.identifier
+        }
     }
 
-    public var description: String {
-        Self.description
-    }
+    struct CompleteAgentTask: Tool {
+        /// Mark an agent task complete.
+        @JSONSchema
+        public struct Input: Source, Hashable {
+            public let id: AgentTaskIdentifier
 
-    public var risk: ActionRisk {
-        Self.risk
-    }
+            public init(
+                id: AgentTaskIdentifier
+            ) {
+                self.id = id
+            }
+        }
 
-    public let manager: AgentTaskManager
+        @JSONSchema
+        public struct Output: Result, Hashable {
+            public let task: AgentTask
 
-    public init(
-        manager: AgentTaskManager
-    ) {
-        self.manager = manager
-    }
+            public init(
+                task: AgentTask
+            ) {
+                self.task = task
+            }
+        }
 
-    public func preflight(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> ToolPreflight {
-
-        return .init(
-            tool: Self.definition.identifier,
-            risk: Self.definition.risk,
-            summary: "Complete task \(input.id.rawValue) and clear dependency edges.",
-            estimates: .init(
-                write: .init(count: 2)
-            ),
-            sideEffects: [
-                "writes task file",
-                "may unblock dependent tasks"
-            ]
-        )
-    }
-
-    public func call(
-        _ input: Input,
-        workspace _: WorkspaceContext?
-    ) async throws -> Output {
-
-        let task = try await manager.complete(
-            id: input.id
+        public static let identifier: ToolIdentifier = "task_complete"
+        public static let description = "Complete a durable Agentic task and unblock dependents."
+        public static let risk: ActionRisk = .boundedmutate
+        public static let definition = ToolDefinition(
+            identifier: identifier,
+            purpose: description,
+            risk: risk
         )
 
-        return AgentTaskOutput(
+        public var identifier: ToolIdentifier {
+            Self.identifier
+        }
+
+        public var description: String {
+            Self.description
+        }
+
+        public var risk: ActionRisk {
+            Self.risk
+        }
+
+        public let manager: AgentTaskManager
+
+        public init(
+            manager: AgentTaskManager
+        ) {
+            self.manager = manager
+        }
+
+        public func preflight(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> ToolPreflight {
+            .init(
+                tool: Self.definition.identifier,
+                risk: Self.definition.risk,
+                summary: "Complete task \(input.id.rawValue) and clear dependency edges.",
+                estimates: .init(
+                    write: .init(count: 2)
+                ),
+                sideEffects: [
+                    "writes task file",
+                    "may unblock dependent tasks"
+                ]
+            )
+        }
+
+        public func call(
+            _ input: Input,
+            workspace _: WorkspaceContext?
+        ) async throws -> Output {
+            let task = try await manager.complete(
+                id: input.id
+            )
+
+            return Output(
                 task: task
             )
+        }
     }
 }
