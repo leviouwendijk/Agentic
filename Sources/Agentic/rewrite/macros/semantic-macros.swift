@@ -11,7 +11,6 @@ public macro Agent() = #externalMacro(
     type: "AgentMacro"
 )
 
-// @attached(memberAttribute)
 @attached(
     member,
     names: named(definition)
@@ -25,7 +24,6 @@ public macro Inference() = #externalMacro(
     type: "InferenceMacro"
 )
 
-// @attached(memberAttribute)
 @attached(
     member,
     names:
@@ -47,7 +45,6 @@ public macro InferenceSite() = #externalMacro(
     type: "InferenceSiteMacro"
 )
 
-// @attached(memberAttribute)
 @attached(
     member,
     names:
@@ -62,53 +59,6 @@ public macro Tool(_ identifier: String? = nil) = #externalMacro(
     module: "AgenticMacrosPlugin",
     type: "ToolMacro"
 )
-
-/*
-@attached(
-    extension,
-    conformances: SemanticInput
-)
-public macro _SemanticInput() = #externalMacro(
-    module: "AgenticMacrosPlugin",
-    type: "ContractConformanceMacro"
-)
-
-@attached(
-    extension,
-    conformances: SemanticOutput
-)
-public macro _SemanticOutput() = #externalMacro(
-    module: "AgenticMacrosPlugin",
-    type: "ContractConformanceMacro"
-)
-
-@attached(
-    extension,
-    conformances: InferredOutput
-)
-public macro _InferredOutput() = #externalMacro(
-    module: "AgenticMacrosPlugin",
-    type: "ContractConformanceMacro"
-)
-
-@attached(
-    extension,
-    conformances: ToolInput
-)
-public macro _ToolInput() = #externalMacro(
-    module: "AgenticMacrosPlugin",
-    type: "ContractConformanceMacro"
-)
-
-@attached(
-    extension,
-    conformances: ToolOutput
-)
-public macro _ToolOutput() = #externalMacro(
-    module: "AgenticMacrosPlugin",
-    type: "ContractConformanceMacro"
-)
-*/
 
 @attached(
     member,

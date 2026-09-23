@@ -12,7 +12,6 @@ struct AgenticMacrosPlugin:
         ProgramMacro.self,
         InferenceSiteMacro.self,
         ToolMacro.self,
-        ContractConformanceMacro.self,
         InferenceRealizationMacro.self,
         OptimizationMacro.self,
     ]

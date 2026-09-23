@@ -44,7 +44,6 @@ public struct AgentMacro:
 
 public struct InferenceMacro:
     MemberMacro,
-    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(
@@ -59,21 +58,6 @@ public struct InferenceMacro:
             of: declaration,
             macroName: "Inference",
             lexicalContext: context.lexicalContext
-        )
-    }
-
-    public static func expansion(
-        of _: AttributeSyntax,
-        attachedTo _: some DeclGroupSyntax,
-        providingAttributesFor member: some DeclSyntaxProtocol,
-        in _: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        contractMemberAttributes(
-            for: member,
-            inputMacro: "_SemanticInput",
-            inputConformance: "SemanticInput",
-            outputMacro: "_InferredOutput",
-            outputConformance: "InferredOutput"
         )
     }
 
@@ -98,7 +82,6 @@ public struct InferenceMacro:
 
 public struct ProgramMacro:
     MemberMacro,
-    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(
@@ -113,21 +96,6 @@ public struct ProgramMacro:
             of: declaration,
             macroName: "Program",
             lexicalContext: context.lexicalContext
-        )
-    }
-
-    public static func expansion(
-        of _: AttributeSyntax,
-        attachedTo _: some DeclGroupSyntax,
-        providingAttributesFor member: some DeclSyntaxProtocol,
-        in _: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        contractMemberAttributes(
-            for: member,
-            inputMacro: "_SemanticInput",
-            inputConformance: "SemanticInput",
-            outputMacro: "_SemanticOutput",
-            outputConformance: "SemanticOutput"
         )
     }
 
@@ -152,7 +120,6 @@ public struct ProgramMacro:
 
 public struct ToolMacro:
     MemberMacro,
-    // MemberAttributeMacro,
     ExtensionMacro
 {
     public static func expansion(
@@ -187,21 +154,6 @@ public struct ToolMacro:
                 ),
             ]
         }
-    }
-
-    public static func expansion(
-        of _: AttributeSyntax,
-        attachedTo _: some DeclGroupSyntax,
-        providingAttributesFor member: some DeclSyntaxProtocol,
-        in _: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        contractMemberAttributes(
-            for: member,
-            inputMacro: "_ToolInput",
-            inputConformance: "ToolInput",
-            outputMacro: "_ToolOutput",
-            outputConformance: "ToolOutput"
-        )
     }
 
     public static func expansion(
