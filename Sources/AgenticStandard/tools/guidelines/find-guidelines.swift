@@ -6,6 +6,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct FindGuidelines: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -41,33 +42,15 @@ public extension Standard.Tools {
             public let matches: [GuidelineSummary]
         }
 
-    public static let identifier: ToolIdentifier = "find_guidelines"
-
-    public static let description =
+    public static let purpose =
         "Search guidelines by natural-language intent and return a bounded set of references, titles, chapters, and summaries without full explanations."
 
     public static let risk: ActionRisk =
         .observe
 
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
     public init() {}
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public func preflight(
         _ input: Input,

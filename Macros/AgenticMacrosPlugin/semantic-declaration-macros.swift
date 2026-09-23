@@ -181,7 +181,11 @@ public struct ToolMacro:
         return [
             DeclSyntax(
                 stringLiteral:
-                    "\(access)static let definition: ToolDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, risk: Self.risk)"
+                    "\(access)static let identifier: ToolIdentifier = .init(rawValue: \"\(identifier)\")"
+            ),
+            DeclSyntax(
+                stringLiteral:
+                    "\(access)static let definition: ToolDefinition = .init(identifier: Self.identifier, purpose: Self.purpose, risk: Self.risk)"
             ),
         ]
     }

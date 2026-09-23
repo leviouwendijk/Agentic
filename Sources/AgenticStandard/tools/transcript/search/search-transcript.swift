@@ -19,6 +19,7 @@ public struct SearchTranscriptMatch: Sendable, Codable, Hashable {
 }
 
 public extension Standard.Tools {
+    @Tool
     struct SearchTranscript: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -78,26 +79,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "search_transcript"
-        public static let description = "Search transcript events in an attached transcript store."
+        public static let purpose = "Search transcript events in an attached transcript store."
+
         public static let risk: ActionRisk = .observe
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let store: any AgentTranscriptStore
 

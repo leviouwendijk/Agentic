@@ -7,6 +7,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct FindTools: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -73,26 +74,11 @@ public extension Standard.Tools {
             }
         }
 
-    public static let identifier: ToolIdentifier = "find_tools"
-    public static let description = "Search the installed Agentic tool catalog by exact identifier or natural-language capability. Returned matches are exposed as native tools on subsequent model turns."
+    public static let purpose = "Search the installed Agentic tool catalog by exact identifier or natural-language capability. Returned matches are exposed as native tools on subsequent model turns."
+
     public static let risk: ActionRisk = .observe
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public let availability: any ToolAvailability
     public let exposure: any ToolExposure

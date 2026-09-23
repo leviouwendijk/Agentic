@@ -5,6 +5,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct SummarizeTranscriptWindow: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -55,26 +56,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "summarize_transcript_window"
-        public static let description = "Create a deterministic summary of a transcript event window."
+        public static let purpose = "Create a deterministic summary of a transcript event window."
+
         public static let risk: ActionRisk = .observe
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let store: any AgentTranscriptStore
 

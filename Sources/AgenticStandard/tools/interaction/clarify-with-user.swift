@@ -5,6 +5,7 @@ import Primitives
 import Schema
 
 public extension Standard.Tools {
+    @Tool
     struct ClarifyWithUser: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -61,30 +62,12 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "clarify_with_user"
-
-        public static let description =
+        public static let purpose =
             "Suspend the current agent run and ask the user for missing information needed to continue."
 
         public static let risk: ActionRisk = .observe
 
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
-
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public init() {}
 

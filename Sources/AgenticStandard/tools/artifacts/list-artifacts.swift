@@ -5,6 +5,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct ListArtifacts: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -54,26 +55,11 @@ public extension Standard.Tools {
             }
         }
 
-    public static let identifier: ToolIdentifier = "list_artifacts"
-    public static let description = "List durable artifacts emitted for the current Agentic session."
+    public static let purpose = "List durable artifacts emitted for the current Agentic session."
+
     public static let risk: ActionRisk = .observe
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public let store: any AgentArtifactStore
 

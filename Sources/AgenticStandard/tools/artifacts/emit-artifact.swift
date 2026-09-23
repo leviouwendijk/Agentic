@@ -6,6 +6,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct EmitArtifact: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -56,26 +57,11 @@ public extension Standard.Tools {
             }
         }
 
-    public static let identifier: ToolIdentifier = "emit_artifact"
-    public static let description = "Emit a durable runtime artifact under the current Agentic session artifact directory."
+    public static let purpose = "Emit a durable runtime artifact under the current Agentic session artifact directory."
+
     public static let risk: ActionRisk = .boundedmutate
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public let store: any AgentArtifactStore
 

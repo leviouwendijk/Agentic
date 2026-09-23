@@ -29,6 +29,7 @@ public struct GuidelineIndexChapter:
 }
 
 public extension Standard.Tools {
+    @Tool
     struct GuidelineIndex: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -50,33 +51,15 @@ public extension Standard.Tools {
             public let chapters: [GuidelineIndexChapter]
         }
 
-    public static let identifier: ToolIdentifier = "guideline_index"
-
-    public static let description =
+    public static let purpose =
         "Inspect a cheap body-free index of guideline areas, chapters, references, and titles. Use this for structural orientation before loading summaries or full explanations."
 
     public static let risk: ActionRisk =
         .observe
 
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
     public init() {}
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public func preflight(
         _ input: Input,

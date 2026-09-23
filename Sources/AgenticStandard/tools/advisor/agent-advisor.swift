@@ -6,6 +6,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool("advisor_ask")
     struct AskAdvisor: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -55,14 +56,9 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier = AgentAdvisorDefaults.identifier
-        public static let description = "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
+        public static let purpose = "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
+
         public static let risk: ActionRisk = .observe
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
         public var modelInvoker: any AgentModelInvoking
         public var configuration: AgentAdvisorConfiguration
@@ -75,17 +71,7 @@ public extension Standard.Tools {
             self.configuration = configuration
         }
 
-        public var identifier: ToolIdentifier {
-            configuration.identifier
-        }
 
-        public var description: String {
-            "Ask the configured advisor model for bounded, advisory reasoning. The advisor receives no tools and cannot authorize actions."
-        }
-
-        public var risk: ActionRisk {
-            .observe
-        }
 
         public func preflight(
             _ input: Input,

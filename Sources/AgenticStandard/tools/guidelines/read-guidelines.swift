@@ -7,6 +7,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct ReadGuideline: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -29,33 +30,15 @@ public extension Standard.Tools {
             public let explanation: String
         }
 
-    public static let identifier: ToolIdentifier = "read_guideline"
-
-    public static let description =
+    public static let purpose =
         "Load the full title, summary, and explanation for one exact guideline reference after discovery or when the reference is already known."
 
     public static let risk: ActionRisk =
         .observe
 
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
     public init() {}
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public func preflight(
         _ input: Input,
@@ -149,6 +132,7 @@ public extension Standard.Tools {
 }
 
 public extension Standard.Tools {
+    @Tool
     struct ReadGuidelineChapter: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -172,33 +156,15 @@ public extension Standard.Tools {
             public let guidelines: [GuidelineSummary]
         }
 
-    public static let identifier: ToolIdentifier = "read_guideline_chapter"
-
-    public static let description =
+    public static let purpose =
         "Load one guideline chapter introduction plus guideline references, titles, and summaries without loading every full guideline explanation."
 
     public static let risk: ActionRisk =
         .observe
 
-    public static let definition = ToolDefinition(
-        identifier: identifier,
-        purpose: description,
-        risk: risk
-    )
-
     public init() {}
 
-    public var identifier: ToolIdentifier {
-        Self.identifier
-    }
 
-    public var description: String {
-        Self.description
-    }
-
-    public var risk: ActionRisk {
-        Self.risk
-    }
 
     public func preflight(
         _ input: Input,

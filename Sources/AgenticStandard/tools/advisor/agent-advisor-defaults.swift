@@ -1,10 +1,6 @@
 import Agentic
 
 public enum AgentAdvisorDefaults {
-    public static let identifier = ToolIdentifier(
-        "advisor_ask"
-    )
-
     public static let systemPrompt = """
     You are an advisor model inside an Agentic run.
 

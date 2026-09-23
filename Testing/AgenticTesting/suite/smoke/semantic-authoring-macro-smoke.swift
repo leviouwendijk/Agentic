@@ -276,8 +276,16 @@ func runSemanticAuthoringMacroSmoke() throws {
         expected: "smoke_domain.programs.macro_smoke_program"
     )
     try ContractProof.identifier(
+        SmokeDomain.Tools.MacroSmokeTool.identifier.rawValue,
+        expected: "macro_smoke_tool"
+    )
+    try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeTool.definition.identifier.rawValue,
         expected: "macro_smoke_tool"
+    )
+    try ContractProof.identifier(
+        SmokeDomain.Tools.MacroSmokeExplicitTool.identifier.rawValue,
+        expected: "explicit_tool"
     )
     try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeExplicitTool.definition.identifier.rawValue,

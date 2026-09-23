@@ -5,6 +5,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool("task_create")
     struct CreateTask: Tool {
         /// Create a new agent task.
         @JSONSchema
@@ -44,26 +45,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_create"
-        public static let description = "Create a durable Agentic task."
+        public static let purpose = "Create a durable Agentic task."
+
         public static let risk: ActionRisk = .boundedmutate
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 
@@ -109,6 +95,7 @@ public extension Standard.Tools {
         }
     }
 
+    @Tool("task_update")
     struct UpdateTask: Tool {
         /// Update mutable fields on an existing agent task.
         @JSONSchema
@@ -157,26 +144,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_update"
-        public static let description = "Update a durable Agentic task."
+        public static let purpose = "Update a durable Agentic task."
+
         public static let risk: ActionRisk = .boundedmutate
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 
@@ -228,6 +200,7 @@ public extension Standard.Tools {
         }
     }
 
+    @Tool("task_list")
     struct ListTasks: Tool {
         /// List agent tasks with optional status, owner, readiness, and completion filters.
         @JSONSchema
@@ -263,26 +236,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_list"
-        public static let description = "List durable Agentic tasks."
+        public static let purpose = "List durable Agentic tasks."
+
         public static let risk: ActionRisk = .observe
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 
@@ -321,6 +279,7 @@ public extension Standard.Tools {
         }
     }
 
+    @Tool("task_get")
     struct GetTask: Tool {
         /// Read one agent task by identifier.
         @JSONSchema
@@ -345,26 +304,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_get"
-        public static let description = "Read a durable Agentic task."
+        public static let purpose = "Read a durable Agentic task."
+
         public static let risk: ActionRisk = .observe
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 
@@ -400,6 +344,7 @@ public extension Standard.Tools {
         }
     }
 
+    @Tool("task_claim")
     struct ClaimTask: Tool {
         /// Claim an agent task for an owner.
         @JSONSchema
@@ -427,26 +372,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_claim"
-        public static let description = "Claim a durable Agentic task for an owner."
+        public static let purpose = "Claim a durable Agentic task for an owner."
+
         public static let risk: ActionRisk = .boundedmutate
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 
@@ -488,6 +418,7 @@ public extension Standard.Tools {
         }
     }
 
+    @Tool("task_complete")
     struct CompleteTask: Tool {
         /// Mark an agent task complete.
         @JSONSchema
@@ -512,26 +443,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "task_complete"
-        public static let description = "Complete a durable Agentic task and unblock dependents."
+        public static let purpose = "Complete a durable Agentic task and unblock dependents."
+
         public static let risk: ActionRisk = .boundedmutate
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
 
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let manager: AgentTaskManager
 

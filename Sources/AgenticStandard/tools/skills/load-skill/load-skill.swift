@@ -5,6 +5,7 @@ import Schema
 import Macros
 
 public extension Standard.Tools {
+    @Tool
     struct LoadSkill: Tool {
         @JSONSchema
         public struct Input: Source, Hashable {
@@ -51,30 +52,12 @@ public extension Standard.Tools {
             }
         }
 
-        public static let identifier: ToolIdentifier = "load_skill"
-
-        public static let description =
+        public static let purpose =
             "Load the full instructions for one available skill by id or name."
 
         public static let risk: ActionRisk = .observe
 
-        public static let definition = ToolDefinition(
-            identifier: identifier,
-            purpose: description,
-            risk: risk
-        )
 
-        public var identifier: ToolIdentifier {
-            Self.identifier
-        }
-
-        public var description: String {
-            Self.description
-        }
-
-        public var risk: ActionRisk {
-            Self.risk
-        }
 
         public let registry: SkillRegistry
 

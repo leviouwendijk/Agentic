@@ -50,7 +50,9 @@ public macro InferenceSite() = #externalMacro(
 // @attached(memberAttribute)
 @attached(
     member,
-    names: named(definition)
+    names:
+        named(identifier),
+        named(definition)
 )
 @attached(
     extension,
