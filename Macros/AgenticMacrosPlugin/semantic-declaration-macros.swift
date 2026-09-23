@@ -156,18 +156,34 @@ public struct ToolMacro:
     ExtensionMacro
 {
     public static func expansion(
-        of _: AttributeSyntax,
+        of attribute: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo _: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        try DeclarationMacroEngine<
-            ToolMacroSpecification
-        >.members(
-            of: declaration,
-            macroName: "Tool",
+        guard let declaration = declaration.as(
+            StructDeclSyntax.self
+        ) else {
+            throw MacroExpansionErrorMessage(
+                "@Tool can only attach to a struct declaration."
+            )
+        }
+
+        let identifier = try toolIdentifier(
+            from: attribute,
+            declarationName: declaration.name.text
+        )
+        let access = toolMemberAccessPrefix(
+            declaration,
             lexicalContext: context.lexicalContext
         )
+
+        return [
+            DeclSyntax(
+                stringLiteral:
+                    "\(access)static let definition: ToolDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, risk: Self.risk)"
+            ),
+        ]
     }
 
     public static func expansion(
@@ -298,20 +314,109 @@ private enum ToolMacroSpecification:
     static let conformance: String? = "Tool"
 
     static func members(
-        in context: DeclarationMacroContext
+        in _: DeclarationMacroContext
     ) throws -> [DeclSyntax] {
-        let access = semanticMemberAccessPrefix(context)
-        let identifier = semanticIdentifier(
-            context.lexicalPath
-        )
-
-        return [
-            DeclSyntax(
-                stringLiteral:
-                    "\(access)static let definition: ToolDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, risk: Self.risk)"
-            ),
-        ]
+        []
     }
+}
+
+func toolIdentifier(
+    from attribute: AttributeSyntax,
+    declarationName: String
+) throws -> String {
+    guard let arguments = attribute.arguments else {
+        return semanticIdentifier(
+            [declarationName]
+        )
+    }
+
+    guard case let .argumentList(argumentList) = arguments,
+          argumentList.count == 1,
+          let argument = argumentList.first,
+          argument.label == nil,
+          let literal = argument.expression.as(
+              StringLiteralExprSyntax.self
+          ),
+          literal.segments.count == 1,
+          let segment = literal.segments.first?.as(
+              StringSegmentSyntax.self
+          )
+    else {
+        throw MacroExpansionErrorMessage(
+            "@Tool accepts zero arguments or one static string identifier override."
+        )
+    }
+
+    let identifier = segment.content.text
+
+    guard !identifier.isEmpty else {
+        throw MacroExpansionErrorMessage(
+            "@Tool identifier override must not be empty."
+        )
+    }
+
+    return identifier
+}
+
+func toolMemberAccessPrefix(
+    _ declaration: StructDeclSyntax,
+    lexicalContext: [Syntax]
+) -> String {
+    if let access = semanticAccess(
+        in: declaration.modifiers
+    ) {
+        return semanticAccessPrefix(
+            access
+        )
+    }
+
+    for syntax in lexicalContext.reversed() {
+        guard let declaration = syntax.as(
+            ExtensionDeclSyntax.self
+        ),
+        let access = semanticAccess(
+            in: declaration.modifiers
+        ) else {
+            continue
+        }
+
+        return semanticAccessPrefix(
+            access
+        )
+    }
+
+    return ""
+}
+
+private func semanticAccess(
+    in modifiers: DeclModifierListSyntax
+) -> String? {
+    let accessLevels: Set<String> = [
+        "private",
+        "fileprivate",
+        "internal",
+        "package",
+        "public",
+        "open",
+    ]
+
+    return modifiers
+        .map(\.name.text)
+        .first { modifier in
+            accessLevels.contains(
+                modifier
+            )
+        }
+}
+
+private func semanticAccessPrefix(
+    _ access: String
+) -> String {
+    if access == "private" {
+        return "fileprivate "
+    }
+
+    return "\(access) "
 }
 
 func semanticMemberAccessPrefix(

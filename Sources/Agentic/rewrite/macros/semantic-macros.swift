@@ -56,7 +56,7 @@ public macro InferenceSite() = #externalMacro(
     extension,
     conformances: Tool
 )
-public macro Tool() = #externalMacro(
+public macro Tool(_ identifier: String? = nil) = #externalMacro(
     module: "AgenticMacrosPlugin",
     type: "ToolMacro"
 )

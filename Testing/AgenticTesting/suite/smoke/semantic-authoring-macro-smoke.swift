@@ -135,7 +135,7 @@ extension SmokeDomain.Tools {
         }
 
         static let purpose =
-            "Prove lexical Tool declaration synthesis."
+            "Prove inferred flat Tool identifier synthesis."
 
         static let risk: ActionRisk = .observe
 
@@ -149,7 +149,7 @@ extension SmokeDomain.Tools {
         }
     }
 
-    @Tool
+    @Tool("explicit_tool")
     struct MacroSmokeExplicitTool: Tool {
         struct Input: Source {
             let value: String
@@ -168,7 +168,7 @@ extension SmokeDomain.Tools {
         }
 
         static let purpose =
-            "Prove an explicit Tool conformance is not restated by its macro."
+            "Prove explicit Tool conformance and identifier override semantics."
 
         static let risk: ActionRisk = .observe
 
@@ -277,11 +277,11 @@ func runSemanticAuthoringMacroSmoke() throws {
     )
     try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeTool.definition.identifier.rawValue,
-        expected: "smoke_domain.tools.macro_smoke_tool"
+        expected: "macro_smoke_tool"
     )
     try ContractProof.identifier(
         SmokeDomain.Tools.MacroSmokeExplicitTool.definition.identifier.rawValue,
-        expected: "smoke_domain.tools.macro_smoke_explicit_tool"
+        expected: "explicit_tool"
     )
     try ContractProof.identifier(
         SmokeDomain.Optimizations.MacroSmokeOptimization.definition.identifier.rawValue,
