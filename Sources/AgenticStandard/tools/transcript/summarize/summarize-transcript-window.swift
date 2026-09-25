@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct SummarizeTranscriptWindow: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Optional first transcript event index for the summary window.
             public let startIndex: Int?
             /// Optional maximum number of transcript events in the summary window.
@@ -46,7 +46,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let window: TranscriptWindowSummary
 
             public init(

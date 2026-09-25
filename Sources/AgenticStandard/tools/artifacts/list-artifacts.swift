@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct ListArtifacts: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Artifact kinds to include. An empty array includes every kind.
             public let kinds: [AgentArtifactKind]
             /// Whether to list newest artifacts first. Defaults to true when omitted.
@@ -43,7 +43,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let artifacts: [AgentArtifact]
             public let count: Int
 

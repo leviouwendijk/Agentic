@@ -9,7 +9,7 @@ public extension Standard.Tools {
     struct CreateTask: Tool {
         /// Create a new agent task.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let subject: String
             public let description: String
             public let blockedBy: [AgentTaskIdentifier]
@@ -35,7 +35,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let task: AgentTask
 
             public init(
@@ -99,7 +99,7 @@ public extension Standard.Tools {
     struct UpdateTask: Tool {
         /// Update mutable fields on an existing agent task.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let id: AgentTaskIdentifier
             public let subject: String?
             public let description: String?
@@ -134,7 +134,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let task: AgentTask
 
             public init(
@@ -204,7 +204,7 @@ public extension Standard.Tools {
     struct ListTasks: Tool {
         /// List agent tasks with optional status, owner, readiness, and completion filters.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let statuses: [AgentTaskStatus]
             public let owner: String?
             public let readyOnly: Bool
@@ -224,7 +224,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let tasks: [AgentTask]
             public let count: Int
 
@@ -283,7 +283,7 @@ public extension Standard.Tools {
     struct GetTask: Tool {
         /// Read one agent task by identifier.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let id: AgentTaskIdentifier
 
             public init(
@@ -294,7 +294,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let task: AgentTask
 
             public init(
@@ -348,7 +348,7 @@ public extension Standard.Tools {
     struct ClaimTask: Tool {
         /// Claim an agent task for an owner.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let id: AgentTaskIdentifier
             public let owner: String
 
@@ -362,7 +362,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let task: AgentTask
 
             public init(
@@ -422,7 +422,7 @@ public extension Standard.Tools {
     struct CompleteTask: Tool {
         /// Mark an agent task complete.
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let id: AgentTaskIdentifier
 
             public init(
@@ -433,7 +433,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let task: AgentTask
 
             public init(

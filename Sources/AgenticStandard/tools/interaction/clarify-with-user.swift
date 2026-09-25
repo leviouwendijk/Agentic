@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct ClarifyWithUser: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public let prompt: String
             public let reason: String?
             public let requirement: UserInputRequirement?
@@ -49,7 +49,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let kind: String
             public let request: UserInputRequest
 

@@ -22,7 +22,7 @@ public extension Standard.Tools {
     @Tool
     struct SearchTranscript: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Text query to search for in transcript events.
             public let query: String
             /// Transcript event kinds to search. An empty array includes all kinds.
@@ -60,7 +60,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let query: String
             public let totalEventCount: Int
             public let matchCount: Int

@@ -10,7 +10,7 @@ public extension Standard.Tools {
     @Tool
     struct ReadGuideline: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Exact guideline reference returned by guideline_index or find_guidelines.
             public let reference: String
 
@@ -22,7 +22,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let reference: String
             public let area: String
             public let title: String
@@ -135,7 +135,7 @@ public extension Standard.Tools {
     @Tool
     struct ReadGuidelineChapter: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Exact chapter reference returned by guideline_index.
             public let reference: String
 
@@ -147,7 +147,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let reference: String
             public let area: String
             public let title: String

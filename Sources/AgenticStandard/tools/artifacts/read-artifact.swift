@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct ReadArtifact: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Exact artifact identifier to read.
             public let id: String
             /// Whether to include artifact content. Defaults to true when omitted.
@@ -43,7 +43,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let artifact: AgentArtifact
             public let content: String?
             public let truncated: Bool

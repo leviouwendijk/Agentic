@@ -32,7 +32,7 @@ public extension Standard.Tools {
     @Tool
     struct GuidelineIndex: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Optional exact guideline area such as design, web_design, ergonomics, structure, or ai.
             public let area: String?
 
@@ -44,7 +44,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let area: String?
             public let chapterCount: Int
             public let guidelineCount: Int

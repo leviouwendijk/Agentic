@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct LoadSkill: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Optional exact skill identifier. Supply id or name.
             public let id: String?
 
@@ -30,7 +30,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let id: String
             public let name: String
             public let summary: String

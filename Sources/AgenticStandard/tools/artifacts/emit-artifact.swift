@@ -9,7 +9,7 @@ public extension Standard.Tools {
     @Tool
     struct EmitArtifact: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Artifact kind to emit.
             public let kind: AgentArtifactKind
             /// Optional human-readable artifact title.
@@ -41,7 +41,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let artifact: AgentArtifact
             public let contentCharacterCount: Int
             public let approximateTokenCount: Int

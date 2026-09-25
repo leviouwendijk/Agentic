@@ -8,7 +8,7 @@ public extension Standard.Tools {
     @Tool
     struct ReadTranscriptEvents: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Optional first transcript event index to read.
             public let startIndex: Int?
             /// Optional maximum number of transcript events to return.
@@ -40,7 +40,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let totalEventCount: Int
             public let returnedEventCount: Int
             public let events: [TranscriptEventRecord]

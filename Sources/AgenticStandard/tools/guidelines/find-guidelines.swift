@@ -9,7 +9,7 @@ public extension Standard.Tools {
     @Tool
     struct FindGuidelines: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Natural-language intent, guideline title, summary text, or exact guideline reference.
             public let query: String
 
@@ -36,7 +36,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let query: String
             public let count: Int
             public let matches: [GuidelineSummary]

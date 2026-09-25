@@ -9,7 +9,7 @@ public extension Standard.Tools {
     @Tool("advisor_ask")
     struct AskAdvisor: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// The concrete question or decision to ask the advisor model about.
             public var prompt: String
 
@@ -31,7 +31,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public var routePurpose: String
             public var profile: String
             public var gateway: String

@@ -31,7 +31,7 @@ public extension Standard.Tools {
     @Tool
     struct ListSkills: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Optional text used to filter the skill catalog.
             public let query: String?
 
@@ -48,7 +48,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             public let skills: [ListedSkill]
             public let count: Int
             public let catalog: String

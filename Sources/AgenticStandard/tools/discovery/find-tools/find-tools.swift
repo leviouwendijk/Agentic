@@ -10,7 +10,7 @@ public extension Standard.Tools {
     @Tool
     struct FindTools: Tool {
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             /// Natural-language capability or operation to search for.
             public let query: String
 
@@ -37,7 +37,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             @JSONSchema
             public struct FoundTool:
                 Sendable,
