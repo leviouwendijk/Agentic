@@ -196,7 +196,7 @@ private enum AgentMacroSpecification:
         return [
             DeclSyntax(
                 stringLiteral:
-                    "\(access)static let definition: AgentDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose)"
+                    "\(access)static let definition: AgentDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, instructions: Self.instructions, capabilities: Self.capabilities, delegation: Self.delegation)"
             ),
         ]
     }

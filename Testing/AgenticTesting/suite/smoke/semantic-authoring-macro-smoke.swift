@@ -5,6 +5,22 @@ import Workspace
 extension SmokeDomain.Agents {
     @Agent
     enum MacroSmokeAgent {
+        struct Input: Source {
+            let objective: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
+        struct Output: Result {
+            let summary: String
+
+            static var jsonschema: JSONSchema {
+                .object()
+            }
+        }
+
         static let purpose =
             "Prove lexical Agent declaration synthesis."
     }
@@ -208,6 +224,12 @@ extension SmokeDomain.Optimizations {
 func runSemanticAuthoringMacroSmoke() throws {
     ContractProof.agent(
         SmokeDomain.Agents.MacroSmokeAgent.self
+    )
+    ContractProof.source(
+        SmokeDomain.Agents.MacroSmokeAgent.Input.self
+    )
+    ContractProof.result(
+        SmokeDomain.Agents.MacroSmokeAgent.Output.self
     )
     ContractProof.inference(
         SmokeDomain.Inferences.MacroSmokeInference.self

@@ -23,8 +23,8 @@ public enum Contract {
         }
 
         public enum Agent {
-            public typealias Source = Sendable & Codable & Hashable
-            public typealias Result = Sendable & Codable & Hashable
+            public typealias Source = Sendable & Codable & JSONSchemaProviding
+            public typealias Result = Sendable & Codable & JSONSchemaProviding
         }
     }
 
