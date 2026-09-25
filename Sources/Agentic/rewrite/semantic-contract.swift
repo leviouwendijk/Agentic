@@ -21,6 +21,11 @@ public enum Contract {
             public typealias Source = Sendable & Codable
             public typealias Result = Sendable & Codable
         }
+
+        public enum Agent {
+            public typealias Source = Sendable & Codable & Hashable
+            public typealias Result = Sendable & Codable & Hashable
+        }
     }
 
     // for possible divergence:
@@ -29,12 +34,14 @@ public enum Contract {
 
     // for uniformity of the objects:
     public typealias Product = Source & Result
+    public typealias HashableProduct = Source & Result & Hashable
 }
 
 public typealias Source = Contract.Source
 public typealias Result = Contract.Result
 
 public typealias Product = Contract.Product
+public typealias HashableProduct = Contract.HashableProduct
 
 // technically:
 // ALL require Sendable
