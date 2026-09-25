@@ -6,7 +6,7 @@ extension Standard.Inferences {
     @Inference
     public struct DetermineNextAction {
         @JSONSchema
-        public struct Candidate: Product, Hashable {
+        public struct Candidate: HashableProduct {
             public var identifier: String
             public var description: String
 
@@ -20,7 +20,7 @@ extension Standard.Inferences {
         }
 
         @JSONSchema
-        public struct Input: Source, Hashable {
+        public struct Input: HashableSource {
             public var goal: String
             public var state: String
             public var candidates: [Standard.Inferences.DetermineNextAction.Candidate]
@@ -37,7 +37,7 @@ extension Standard.Inferences {
         }
 
         @JSONSchema
-        public struct Output: Result, Hashable {
+        public struct Output: HashableResult {
             /// Identifier of the candidate that should be performed next.
             public var selectedActionIdentifier: String
 

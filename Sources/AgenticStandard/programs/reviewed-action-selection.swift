@@ -34,10 +34,7 @@ extension Standard.Programs {
         public typealias Input = Standard.Inferences.DetermineNextAction.Input
 
         @JSONSchema
-        public struct Output:
-            Result,
-            Hashable
-        {
+        public struct Output: HashableResult {
             public var candidate: Standard.Inferences.DetermineNextAction.Candidate
             public var assessment: String
 

@@ -6,10 +6,7 @@ extension Standard.Inferences {
     @Inference
     public struct AssessCandidateAction {
         @JSONSchema
-        public struct Input:
-            Source,
-            Hashable
-        {
+        public struct Input: HashableSource {
             public var goal: String
             public var state: String
             public var candidate: Standard.Inferences.DetermineNextAction.Candidate
@@ -26,10 +23,7 @@ extension Standard.Inferences {
         }
 
         @JSONSchema
-        public struct Output:
-            Result,
-            Hashable
-        {
+        public struct Output: HashableResult {
             /// Whether the candidate is appropriate to perform next.
             public var acceptable: Bool
 
@@ -45,7 +39,8 @@ extension Standard.Inferences {
             }
         }
 
-        public static let purpose =
-            "Assess whether one candidate action is appropriate for the current goal and state."
+        public static let purpose = """
+        Assess whether one candidate action is appropriate for the current goal and state.
+        """
     }
 }

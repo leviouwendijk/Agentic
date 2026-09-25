@@ -4,6 +4,7 @@ public enum Contract {
     public enum Semantic {
         public typealias Object = Sendable & Codable
         public typealias SchematizableObject = Sendable & Codable & JSONSchemaProviding
+        public typealias HashableSchematizableObject = Sendable & Codable & JSONSchemaProviding & Hashable
     }
 
     public enum Process {
@@ -32,6 +33,9 @@ public enum Contract {
     public typealias Source = Contract.Semantic.SchematizableObject
     public typealias Result = Contract.Semantic.SchematizableObject
 
+    public typealias HashableSource = Contract.Semantic.HashableSchematizableObject
+    public typealias HashableResult = Contract.Semantic.HashableSchematizableObject
+
     // for uniformity of the objects:
     public typealias Product = Source & Result
     public typealias HashableProduct = Source & Result & Hashable
@@ -39,6 +43,9 @@ public enum Contract {
 
 public typealias Source = Contract.Source
 public typealias Result = Contract.Result
+
+public typealias HashableSource = Contract.HashableSource
+public typealias HashableResult = Contract.HashableSource
 
 public typealias Product = Contract.Product
 public typealias HashableProduct = Contract.HashableProduct

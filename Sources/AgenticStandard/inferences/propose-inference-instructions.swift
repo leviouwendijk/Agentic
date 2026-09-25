@@ -3,10 +3,7 @@ import Schema
 import Macros
 
 @JSONSchema
-public struct InferenceInstructionProposalExample:
-    Product,
-    Hashable
-{
+public struct InferenceInstructionProposalExample: HashableProduct {
     public var inputJSON: String
     public var expectedOutputJSON: String
     public var metadata: [String: String]
@@ -23,10 +20,7 @@ public struct InferenceInstructionProposalExample:
 }
 
 @JSONSchema
-public struct InferenceInstructionProposal:
-    Product,
-    Hashable
-{
+public struct InferenceInstructionProposal: HashableProduct {
     /// Complete instructions that can replace the seed realization instructions.
     public var instructions: String
 
@@ -46,10 +40,7 @@ extension Standard.Inferences {
     @Inference
     public struct ProposeInferenceInstructions {
         @JSONSchema
-        public struct Input:
-            Source,
-            Hashable
-        {
+        public struct Input: HashableSource {
             public var inferenceIdentifier: String
             public var inferencePurpose: String
             public var seedInstructions: String
@@ -72,10 +63,7 @@ extension Standard.Inferences {
         }
 
         @JSONSchema
-        public struct Output:
-            Result,
-            Hashable
-        {
+        public struct Output: HashableResult {
             /// Distinct instruction alternatives worth evaluating against the supplied examples.
             public var proposals: [InferenceInstructionProposal]
 
@@ -86,7 +74,8 @@ extension Standard.Inferences {
             }
         }
 
-        public static let purpose =
-            "Propose distinct complete instruction variants for a semantic inference so an optimizer can evaluate them against typed examples."
+        public static let purpose = """
+        Propose distinct complete instruction variants for a semantic inference so an optimizer can evaluate them against typed examples.
+        """
     }
 }
