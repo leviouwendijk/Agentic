@@ -1,5 +1,5 @@
 {
-  "originHash" : "b6c2c11eeaee01308bebd5641640ab84e8a35bd472a17a0636f49f03451baef8",
+  "originHash" : "bfa57e8543f5dc758ea6fefda375bc0b7928f8e0291420d3cfb2c20987165d9f",
   "pins" : [
     {
       "identity" : "ansi",
@@ -25,7 +25,7 @@
       "location" : "https://github.com/leviouwendijk/Atomos.git",
       "state" : {
         "branch" : "master",
-        "revision" : "7c42aff0baef9cc1a500ec7207caad8146dfeac8"
+        "revision" : "5ffdb160c4913e02214020eb75ac620900cf2914"
       }
     },
     {
@@ -124,7 +124,7 @@
       "location" : "https://github.com/leviouwendijk/Macros.git",
       "state" : {
         "branch" : "master",
-        "revision" : "cfcf3c3595a90c52cce313a60cd42e04f245490f"
+        "revision" : "e01a42e9d0ee8061e861bc68c1fb2a02d26cbde4"
       }
     },
     {
@@ -214,7 +214,7 @@
       "location" : "https://github.com/leviouwendijk/Schema.git",
       "state" : {
         "branch" : "master",
-        "revision" : "c532020b10f5f583d28cbc62f7e62ccf06022a76"
+        "revision" : "6b8f45a73ab92ce083c4848bb520db6d99866a06"
       }
     },
     {

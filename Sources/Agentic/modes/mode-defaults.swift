@@ -29,7 +29,7 @@ public struct ModeRouteDefaults: Sendable, Codable, Hashable {
     }
 }
 
-public extension AgenticModeIdentifier {
+public extension ModeIdentifier {
     static let planning: Self = "planning"
     static let research: Self = "research"
     static let coder: Self = "coder"

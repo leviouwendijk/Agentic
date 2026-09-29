@@ -62,10 +62,10 @@ public extension Standard.Tools {
 
 
 
-        public let store: any AgentTranscriptStore
+        public let store: any TranscriptStore
 
         public init(
-            store: any AgentTranscriptStore
+            store: any TranscriptStore
         ) {
             self.store = store
         }

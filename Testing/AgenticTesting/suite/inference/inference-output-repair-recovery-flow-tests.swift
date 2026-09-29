@@ -56,7 +56,7 @@ private struct OutputRepairFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "initial structured-output fixture request"
                     ),
@@ -97,11 +97,11 @@ private struct OutputRepairFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .assistant,
                         text: response.message.content.text
                     ),
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "repair structured output: \(error.localizedDescription)"
                     ),
@@ -195,7 +195,7 @@ private struct OutputRepairFixtureModelInvoker:
         }
 
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: text
             ),

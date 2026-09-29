@@ -106,9 +106,9 @@ private struct NativeStructuredRecoveryFixtureModelInvoker:
         }
 
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
-                content: AgentContent(
+                content: MessageContent(
                     text: text
                 )
             ),

@@ -1,8 +1,16 @@
-public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
-    case message(AgentMessage)
+import Schema
+
+public enum TranscriptEvent:
+    Sendable,
+    Codable,
+    Hashable,
+    Identifiable,
+    JSONSchemaProviding
+{
+    case message(Message)
     case tool_call(ToolCall)
     case tool_result(ToolResult)
-    case session_branch(AgentSessionBranchEvent)
+    case session_branch(SessionBranchEvent)
     case note(id: String, text: String)
 
     private enum CodingKeys: String, CodingKey {
@@ -13,12 +21,6 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
         case tool_call
         case tool_result
         case session_branch
-    }
-
-    private enum LegacyCodingKeys: String, CodingKey {
-        case toolcall = "toolCall"
-        case toolresult = "toolResult"
-        case sessionbranch = "sessionBranch"
     }
 
     private enum Kind: String, Codable {
@@ -40,13 +42,13 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
             case "message":
                 self = .message
 
-            case "tool_call", "toolCall":
+            case "tool_call":
                 self = .tool_call
 
-            case "tool_result", "toolResult":
+            case "tool_result":
                 self = .tool_result
 
-            case "session_branch", "sessionBranch":
+            case "session_branch":
                 self = .session_branch
 
             case "note":
@@ -55,7 +57,7 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
             default:
                 throw DecodingError.dataCorruptedError(
                     in: container,
-                    debugDescription: "Unsupported AgentTranscriptEvent.Kind '\(rawValue)'."
+                    debugDescription: "Unsupported TranscriptEvent.Kind '\(rawValue)'."
                 )
             }
         }
@@ -67,9 +69,6 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
         let container = try decoder.container(
             keyedBy: CodingKeys.self
         )
-        let legacyContainer = try decoder.container(
-            keyedBy: LegacyCodingKeys.self
-        )
         let kind = try container.decode(
             Kind.self,
             forKey: .kind
@@ -79,55 +78,34 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
         case .message:
             self = .message(
                 try container.decode(
-                    AgentMessage.self,
+                    Message.self,
                     forKey: .message
                 )
             )
 
         case .tool_call:
-            if let value = try container.decodeIfPresent(
-                ToolCall.self,
-                forKey: .tool_call
-            ) {
-                self = .tool_call(value)
-            } else {
-                self = .tool_call(
-                    try legacyContainer.decode(
-                        ToolCall.self,
-                        forKey: .toolcall
-                    )
+            self = .tool_call(
+                try container.decode(
+                    ToolCall.self,
+                    forKey: .tool_call
                 )
-            }
+            )
 
         case .tool_result:
-            if let value = try container.decodeIfPresent(
-                ToolResult.self,
-                forKey: .tool_result
-            ) {
-                self = .tool_result(value)
-            } else {
-                self = .tool_result(
-                    try legacyContainer.decode(
-                        ToolResult.self,
-                        forKey: .toolresult
-                    )
+            self = .tool_result(
+                try container.decode(
+                    ToolResult.self,
+                    forKey: .tool_result
                 )
-            }
+            )
 
         case .session_branch:
-            if let value = try container.decodeIfPresent(
-                AgentSessionBranchEvent.self,
-                forKey: .session_branch
-            ) {
-                self = .session_branch(value)
-            } else {
-                self = .session_branch(
-                    try legacyContainer.decode(
-                        AgentSessionBranchEvent.self,
-                        forKey: .sessionbranch
-                    )
+            self = .session_branch(
+                try container.decode(
+                    SessionBranchEvent.self,
+                    forKey: .session_branch
                 )
-            }
+            )
 
         case .note:
             self = .note(
@@ -205,6 +183,111 @@ public enum AgentTranscriptEvent: Sendable, Codable, Hashable, Identifiable {
                 forKey: .text
             )
         }
+    }
+
+    public static var jsonschema: JSONSchema {
+        .oneOf([
+            .object(
+                properties: [
+                    .init(
+                        name: "kind",
+                        schema: .string(
+                            cases: [
+                                "message",
+                            ]
+                        ),
+                        required: true
+                    ),
+                    .init(
+                        name: "message",
+                        schema: .any,
+                        required: true
+                    ),
+                ],
+                additionalProperties: .disallowed
+            ),
+            .object(
+                properties: [
+                    .init(
+                        name: "kind",
+                        schema: .string(
+                            cases: [
+                                "tool_call",
+                            ]
+                        ),
+                        required: true
+                    ),
+                    .init(
+                        name: "tool_call",
+                        schema: .any,
+                        required: true
+                    ),
+                ],
+                additionalProperties: .disallowed
+            ),
+            .object(
+                properties: [
+                    .init(
+                        name: "kind",
+                        schema: .string(
+                            cases: [
+                                "tool_result",
+                            ]
+                        ),
+                        required: true
+                    ),
+                    .init(
+                        name: "tool_result",
+                        schema: .any,
+                        required: true
+                    ),
+                ],
+                additionalProperties: .disallowed
+            ),
+            .object(
+                properties: [
+                    .init(
+                        name: "kind",
+                        schema: .string(
+                            cases: [
+                                "session_branch",
+                            ]
+                        ),
+                        required: true
+                    ),
+                    .init(
+                        name: "session_branch",
+                        schema: .any,
+                        required: true
+                    ),
+                ],
+                additionalProperties: .disallowed
+            ),
+            .object(
+                properties: [
+                    .init(
+                        name: "kind",
+                        schema: .string(
+                            cases: [
+                                "note",
+                            ]
+                        ),
+                        required: true
+                    ),
+                    .init(
+                        name: "id",
+                        schema: .string(),
+                        required: true
+                    ),
+                    .init(
+                        name: "text",
+                        schema: .string(),
+                        required: true
+                    ),
+                ],
+                additionalProperties: .disallowed
+            ),
+        ])
     }
 
     public var id: String {

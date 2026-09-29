@@ -1,6 +1,6 @@
 import Primitives
 
-public struct AgenticModeIdentifier: StringIdentifier {
+public struct ModeIdentifier: StringIdentifier {
     public let rawValue: String
 
     public init(
@@ -26,8 +26,8 @@ public enum ApprovalStrictness: String, Sendable, Codable, Hashable, CaseIterabl
     case locked_down
 }
 
-public struct AgenticMode: Sendable, Codable, Hashable, Identifiable {
-    public var id: AgenticModeIdentifier
+public struct Mode: Sendable, Codable, Hashable, Identifiable {
+    public var id: ModeIdentifier
     public var title: String
     public var routeDefaults: ModeRouteDefaults
     public var autonomyMode: AutonomyMode
@@ -38,7 +38,7 @@ public struct AgenticMode: Sendable, Codable, Hashable, Identifiable {
     public var metadata: [String: String]
 
     public init(
-        id: AgenticModeIdentifier,
+        id: ModeIdentifier,
         title: String,
         routeDefaults: ModeRouteDefaults,
         autonomyMode: AutonomyMode,

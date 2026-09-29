@@ -55,7 +55,7 @@ private struct TransportRecoveryFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "transport recovery fixture request"
                     ),
@@ -139,7 +139,7 @@ private struct TransportRecoveryFixtureModelInvoker:
             "RECOVERED"
         )
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: String(
                     decoding: encoded,

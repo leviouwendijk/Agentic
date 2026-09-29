@@ -26,8 +26,8 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
     }
 
     public func apply(
-        to mode: AgenticMode
-    ) -> AgenticMode {
+        to mode: Mode
+    ) -> Mode {
         var copy = mode
 
         if let routeDefaults {
@@ -65,10 +65,10 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
 }
 
 public struct ModeSelection: Sendable, Codable, Hashable {
-    public var mode: AgenticMode
+    public var mode: Mode
 
     public init(
-        mode: AgenticMode,
+        mode: Mode,
         overlay: ModeOverlay = .init()
     ) {
         self.mode = overlay.apply(
@@ -76,7 +76,7 @@ public struct ModeSelection: Sendable, Codable, Hashable {
         )
     }
 
-    public var modeID: AgenticModeIdentifier {
+    public var modeID: ModeIdentifier {
         mode.id
     }
 

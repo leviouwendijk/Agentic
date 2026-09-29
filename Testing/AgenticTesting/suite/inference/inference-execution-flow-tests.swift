@@ -35,7 +35,7 @@ private struct FixtureInferenceAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "fixture request"
                     ),
@@ -172,7 +172,7 @@ enum InferenceExecutionFlowTests {
         let modelInvoker = FixtureModelInvoker(
             recorder: recorder,
             response: AgentResponse(
-                message: AgentMessage(
+                message: Message(
                     role: .assistant,
                     text: "\"REASONED\""
                 ),
@@ -292,7 +292,7 @@ enum InferenceExecutionFlowTests {
         let modelInvoker = FixtureModelInvoker(
             recorder: recorder,
             response: AgentResponse(
-                message: AgentMessage(
+                message: Message(
                     role: .assistant,
                     text: "\"DONE\""
                 ),

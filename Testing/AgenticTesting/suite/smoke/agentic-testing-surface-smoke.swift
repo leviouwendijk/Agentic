@@ -102,14 +102,14 @@ func runScriptedModelResponsesSmoke()
     -> [TestDiagnostic]
 {
     let firstResponse = AgentResponse(
-        message: AgentMessage(
+        message: Message(
             role: .assistant,
             text: "first"
         ),
         stopReason: .end_turn
     )
     let secondResponse = AgentResponse(
-        message: AgentMessage(
+        message: Message(
             role: .assistant,
             text: "second"
         ),
@@ -148,7 +148,7 @@ func runScriptedModelResponsesSmoke()
     )
     let request = AgentRequest(
         messages: [
-            AgentMessage(
+            Message(
                 role: .user,
                 text: "scripted request"
             ),

@@ -36,7 +36,7 @@ private struct SampledFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "sampled fixture request"
                     ),
@@ -121,7 +121,7 @@ private struct SampledFixtureModelInvoker:
             output
         )
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: String(
                     decoding: encodedOutput,

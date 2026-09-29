@@ -3,7 +3,7 @@ import Foundation
 
 enum TranscriptSupport {
     static func record(
-        for event: AgentTranscriptEvent,
+        for event: TranscriptEvent,
         index: Int,
         includeFullText: Bool
     ) -> TranscriptEventRecord {
@@ -32,7 +32,7 @@ enum TranscriptSupport {
     }
 
     static func kind(
-        of event: AgentTranscriptEvent
+        of event: TranscriptEvent
     ) -> TranscriptEventKind {
         switch event {
         case .message:
@@ -53,7 +53,7 @@ enum TranscriptSupport {
     }
 
     static func matchesKinds(
-        _ event: AgentTranscriptEvent,
+        _ event: TranscriptEvent,
         allowedKinds: [TranscriptEventKind]
     ) -> Bool {
         guard !allowedKinds.isEmpty else {
@@ -68,7 +68,7 @@ enum TranscriptSupport {
     }
 
     static func summary(
-        for event: AgentTranscriptEvent,
+        for event: TranscriptEvent,
         maxLength: Int = 240
     ) -> String {
         truncate(
@@ -80,7 +80,7 @@ enum TranscriptSupport {
     }
 
     static func fullText(
-        for event: AgentTranscriptEvent
+        for event: TranscriptEvent
     ) -> String {
         switch event {
         case .message(let message):
@@ -112,8 +112,8 @@ enum TranscriptSupport {
     }
 
     static func messageRole(
-        for event: AgentTranscriptEvent
-    ) -> AgentRole? {
+        for event: TranscriptEvent
+    ) -> MessageRole? {
         guard case .message(let message) = event else {
             return nil
         }
@@ -122,7 +122,7 @@ enum TranscriptSupport {
     }
 
     static func toolName(
-        for event: AgentTranscriptEvent
+        for event: TranscriptEvent
     ) -> String? {
         switch event {
         case .tool_call(let call):
@@ -139,7 +139,7 @@ enum TranscriptSupport {
     }
 
     static func isError(
-        for event: AgentTranscriptEvent
+        for event: TranscriptEvent
     ) -> Bool? {
         guard case .tool_result(let result) = event else {
             return nil
@@ -170,12 +170,12 @@ enum TranscriptSupport {
     }
 
     static func selectedEvents(
-        from events: [AgentTranscriptEvent],
+        from events: [TranscriptEvent],
         startIndex: Int?,
         limit: Int?,
         allowedKinds: [TranscriptEventKind],
         latestFirst: Bool
-    ) -> [(index: Int, event: AgentTranscriptEvent)] {
+    ) -> [(index: Int, event: TranscriptEvent)] {
         let clampedLimit = max(
             1,
             min(
@@ -196,7 +196,7 @@ enum TranscriptSupport {
             )
         }
 
-        let selected: [(offset: Int, element: AgentTranscriptEvent)]
+        let selected: [(offset: Int, element: TranscriptEvent)]
         if latestFirst {
             selected = Array(
                 filtered.reversed().prefix(
@@ -220,7 +220,7 @@ enum TranscriptSupport {
     }
 
     static func containsQuery(
-        _ event: AgentTranscriptEvent,
+        _ event: TranscriptEvent,
         query: String,
         caseSensitive: Bool
     ) -> Bool {
@@ -247,7 +247,7 @@ enum TranscriptSupport {
     }
 
     static func score(
-        _ event: AgentTranscriptEvent,
+        _ event: TranscriptEvent,
         query: String,
         caseSensitive: Bool
     ) -> Int {
@@ -301,7 +301,7 @@ enum TranscriptSupport {
     }
 
     static func summarize(
-        events indexedEvents: [(index: Int, event: AgentTranscriptEvent)],
+        events indexedEvents: [(index: Int, event: TranscriptEvent)],
         totalEventCount: Int,
         maxExcerptCharacters: Int
     ) -> TranscriptWindowSummary {

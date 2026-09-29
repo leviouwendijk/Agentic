@@ -36,7 +36,7 @@ private struct RefiningFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "refining fixture request"
                     ),
@@ -133,7 +133,7 @@ private struct RefiningFixtureModelInvoker:
             output
         )
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: String(
                     decoding: encodedOutput,

@@ -81,7 +81,7 @@ private struct StrategyRecoveryFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: realization.instructions
                     ),
@@ -122,11 +122,11 @@ private struct StrategyRecoveryFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .assistant,
                         text: response.message.content.text
                     ),
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "repair structured output: \(error.localizedDescription)"
                     ),
@@ -248,7 +248,7 @@ private struct StrategyRecoveryFixtureModelInvoker:
         }
 
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: text
             ),

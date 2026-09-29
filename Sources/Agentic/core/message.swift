@@ -1,14 +1,14 @@
 import Foundation
 
-public struct AgentMessage: Sendable, Codable, Hashable, Identifiable {
+public struct Message: Sendable, Codable, Hashable, Identifiable {
     public let id: String
-    public let role: AgentRole
-    public var content: AgentContent
+    public let role: MessageRole
+    public var content: MessageContent
 
     public init(
         id: String,
-        role: AgentRole,
-        content: AgentContent
+        role: MessageRole,
+        content: MessageContent
     ) {
         self.id = id
         self.role = role
@@ -16,10 +16,10 @@ public struct AgentMessage: Sendable, Codable, Hashable, Identifiable {
     }
 }
 
-public extension AgentMessage {
+public extension Message {
     init(
-        role: AgentRole,
-        content: AgentContent
+        role: MessageRole,
+        content: MessageContent
     ) {
         self.init(
             id: UUID().uuidString,
@@ -29,7 +29,7 @@ public extension AgentMessage {
     }
 
     init(
-        role: AgentRole,
+        role: MessageRole,
         text: String
     ) {
         self.init(

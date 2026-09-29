@@ -1,14 +1,14 @@
-public struct AgentContent: Sendable, Codable, Hashable {
-    public var blocks: [AgentContentBlock]
+public struct MessageContent: Sendable, Codable, Hashable {
+    public var blocks: [MessageContentBlock]
 
     public init(
-        blocks: [AgentContentBlock] = []
+        blocks: [MessageContentBlock] = []
     ) {
         self.blocks = blocks
     }
 }
 
-public extension AgentContent {
+public extension MessageContent {
     init(
         text: String
     ) {

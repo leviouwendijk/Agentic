@@ -1,6 +1,6 @@
 import Foundation
 
-public actor FileTranscriptStore: AgentTranscriptStore {
+public actor FileTranscriptStore: TranscriptStore {
     public let fileURL: URL
 
     public init(
@@ -9,7 +9,7 @@ public actor FileTranscriptStore: AgentTranscriptStore {
         self.fileURL = fileURL
     }
 
-    public func loadEvents() async throws -> [AgentTranscriptEvent] {
+    public func loadEvents() async throws -> [TranscriptEvent] {
         guard FileManager.default.fileExists(
             atPath: fileURL.path
         ) else {
@@ -25,7 +25,7 @@ public actor FileTranscriptStore: AgentTranscriptStore {
         }
 
         if let events = try? JSONDecoder().decode(
-            [AgentTranscriptEvent].self,
+            [TranscriptEvent].self,
             from: data
         ) {
             return events
@@ -47,14 +47,14 @@ public actor FileTranscriptStore: AgentTranscriptStore {
                 let data = Data(line.utf8)
 
                 return try JSONDecoder().decode(
-                    AgentTranscriptEvent.self,
+                    TranscriptEvent.self,
                     from: data
                 )
             }
     }
 
     public func append(
-        _ event: AgentTranscriptEvent
+        _ event: TranscriptEvent
     ) async throws {
         try ensureParentDirectoryExists()
 

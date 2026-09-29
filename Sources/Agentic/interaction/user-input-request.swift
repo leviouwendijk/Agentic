@@ -105,8 +105,6 @@ public struct UserInputRequest: Sendable, Codable, Hashable, JSONSchemaProviding
     }
 }
 
-@available(*, deprecated, renamed: "UserInputRequest")
-public typealias PendingUserInput = UserInputRequest
 
 public struct UserInputResponse: Sendable, Hashable {
     public enum Outcome: Sendable, Hashable {

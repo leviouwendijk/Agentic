@@ -13,7 +13,7 @@ public struct TranscriptRetriever: Sendable {
 
     public func retrieve(
         _ query: String,
-        in events: [AgentTranscriptEvent]
+        in events: [TranscriptEvent]
     ) -> SearchResult<Int> {
         let corpus = SearchCorpus(
             documents: events.enumerated().map { index, event in
@@ -49,8 +49,8 @@ public struct TranscriptRetriever: Sendable {
 
     public func event(
         for hit: SearchHit<Int>,
-        in events: [AgentTranscriptEvent]
-    ) -> AgentTranscriptEvent? {
+        in events: [TranscriptEvent]
+    ) -> TranscriptEvent? {
         guard events.indices.contains(
             hit.documentID
         ) else {

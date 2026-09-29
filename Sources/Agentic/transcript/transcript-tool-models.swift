@@ -17,7 +17,7 @@ public struct TranscriptEventRecord: Sendable, Codable, Hashable {
     public let kind: TranscriptEventKind
     public let summary: String
     public let text: String?
-    public let messageRole: AgentRole?
+    public let messageRole: MessageRole?
     public let toolName: String?
     public let isError: Bool?
 
@@ -27,7 +27,7 @@ public struct TranscriptEventRecord: Sendable, Codable, Hashable {
         kind: TranscriptEventKind,
         summary: String,
         text: String?,
-        messageRole: AgentRole?,
+        messageRole: MessageRole?,
         toolName: String?,
         isError: Bool?
     ) {

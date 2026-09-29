@@ -1,11 +1,11 @@
 public struct AgentResponse: Sendable, Codable, Hashable {
-    public let message: AgentMessage
+    public let message: Message
     public let stopReason: AgentStopReason
     public let usage: AgentUsage?
     public let metadata: [String: String]
 
     public init(
-        message: AgentMessage,
+        message: Message,
         stopReason: AgentStopReason,
         usage: AgentUsage? = nil,
         metadata: [String: String] = [:]

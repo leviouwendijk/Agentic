@@ -1,4 +1,8 @@
-public struct AgentSessionBranch: Sendable, Codable, Hashable {
+import Macros
+import Schema
+
+@JSONSchema
+public struct SessionBranch: Sendable, Codable, Hashable {
     public let parentSessionID: String
     public let branchedAtEventID: String?
     public let branchedAtCheckpointID: String?

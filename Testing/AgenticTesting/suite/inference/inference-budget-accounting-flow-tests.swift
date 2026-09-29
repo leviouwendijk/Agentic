@@ -45,7 +45,7 @@ private struct BudgetFixtureAdapter:
         InferenceAdaptation(
             request: AgentRequest(
                 messages: [
-                    AgentMessage(
+                    Message(
                         role: .user,
                         text: "budget fixture request"
                     ),
@@ -176,7 +176,7 @@ extension InferenceExecutionFlowTests {
     {
         let executionRecorder = BudgetInvocationRecorder()
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
                 text: "\"BUDGETED\""
             ),
@@ -549,7 +549,7 @@ extension InferenceExecutionFlowTests {
             modelInvoker: BudgetFixtureModelInvoker(
                 recorder: unavailableRecorder,
                 response: AgentResponse(
-                    message: AgentMessage(
+                    message: Message(
                         role: .assistant,
                         text: "\"NO_USAGE\""
                     ),

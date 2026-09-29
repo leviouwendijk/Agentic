@@ -162,9 +162,9 @@ enum NativeStructuredAdapterFlowTests {
     static func decodingDiagnostics() throws -> [TestDiagnostic] {
         let adapter = NativeStructuredAdapter()
         let response = AgentResponse(
-            message: AgentMessage(
+            message: Message(
                 role: .assistant,
-                content: AgentContent(
+                content: MessageContent(
                     text: "\"HELLO\""
                 )
             ),
@@ -188,9 +188,9 @@ enum NativeStructuredAdapterFlowTests {
             _ = try adapter.decode(
                 ProbeStructuredInference.self,
                 response: AgentResponse(
-                    message: AgentMessage(
+                    message: Message(
                         role: .assistant,
-                        content: AgentContent(
+                        content: MessageContent(
                             text: "not-json"
                         )
                     ),
@@ -205,9 +205,9 @@ enum NativeStructuredAdapterFlowTests {
             _ = try adapter.decode(
                 ProbeStructuredInference.self,
                 response: AgentResponse(
-                    message: AgentMessage(
+                    message: Message(
                         role: .assistant,
-                        content: AgentContent()
+                        content: MessageContent()
                     ),
                     stopReason: .end_turn
                 )

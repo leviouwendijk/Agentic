@@ -1,4 +1,4 @@
-public enum AgentContentBlock: Sendable, Codable, Hashable {
+public enum MessageContentBlock: Sendable, Codable, Hashable {
     case text(String)
     case resource(AgentResource)
     case tool_call(ToolCall)
@@ -10,11 +10,6 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
         case resource
         case tool_call
         case tool_result
-    }
-
-    private enum LegacyCodingKeys: String, CodingKey {
-        case toolcall = "toolCall"
-        case toolresult = "toolResult"
     }
 
     private enum Kind: String, Codable {
@@ -34,16 +29,16 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
             case "resource":
                 self = .resource
 
-            case "tool_call", "toolCall":
+            case "tool_call":
                 self = .tool_call
 
-            case "tool_result", "toolResult":
+            case "tool_result":
                 self = .tool_result
 
             default:
                 throw DecodingError.dataCorruptedError(
                     in: container,
-                    debugDescription: "Unsupported AgentContentBlock.Kind '\(rawValue)'."
+                    debugDescription: "Unsupported MessageContentBlock.Kind '\(rawValue)'."
                 )
             }
         }
@@ -52,9 +47,6 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(
             keyedBy: CodingKeys.self
-        )
-        let legacyContainer = try decoder.container(
-            keyedBy: LegacyCodingKeys.self
         )
         let kind = try container.decode(
             Kind.self,
@@ -79,34 +71,20 @@ public enum AgentContentBlock: Sendable, Codable, Hashable {
             )
 
         case .tool_call:
-            if let value = try container.decodeIfPresent(
-                ToolCall.self,
-                forKey: .tool_call
-            ) {
-                self = .tool_call(value)
-            } else {
-                self = .tool_call(
-                    try legacyContainer.decode(
-                        ToolCall.self,
-                        forKey: .toolcall
-                    )
+            self = .tool_call(
+                try container.decode(
+                    ToolCall.self,
+                    forKey: .tool_call
                 )
-            }
+            )
 
         case .tool_result:
-            if let value = try container.decodeIfPresent(
-                ToolResult.self,
-                forKey: .tool_result
-            ) {
-                self = .tool_result(value)
-            } else {
-                self = .tool_result(
-                    try legacyContainer.decode(
-                        ToolResult.self,
-                        forKey: .toolresult
-                    )
+            self = .tool_result(
+                try container.decode(
+                    ToolResult.self,
+                    forKey: .tool_result
                 )
-            }
+            )
         }
     }
 

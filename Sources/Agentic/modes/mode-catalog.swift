@@ -16,10 +16,10 @@ public enum ModeCatalogError: Error, Sendable, LocalizedError {
 }
 
 public struct ModeCatalog: Sendable, Codable, Hashable {
-    private var modes: [AgenticModeIdentifier: AgenticMode]
+    private var modes: [ModeIdentifier: Mode]
 
     public init(
-        modes: [AgenticMode] = []
+        modes: [Mode] = []
     ) throws {
         self.modes = [:]
 
@@ -30,14 +30,14 @@ public struct ModeCatalog: Sendable, Codable, Hashable {
         }
     }
 
-    public var all: [AgenticMode] {
+    public var all: [Mode] {
         modes.values.sorted {
             $0.id.rawValue < $1.id.rawValue
         }
     }
 
     public mutating func register(
-        _ mode: AgenticMode
+        _ mode: Mode
     ) throws {
         guard modes[mode.id] == nil else {
             throw ModeCatalogError.duplicateMode(
@@ -49,8 +49,8 @@ public struct ModeCatalog: Sendable, Codable, Hashable {
     }
 
     public func mode(
-        _ id: AgenticModeIdentifier
-    ) throws -> AgenticMode {
+        _ id: ModeIdentifier
+    ) throws -> Mode {
         guard let mode = modes[id] else {
             throw ModeCatalogError.missingMode(
                 id.rawValue
@@ -61,7 +61,7 @@ public struct ModeCatalog: Sendable, Codable, Hashable {
     }
 
     public func selection(
-        _ id: AgenticModeIdentifier,
+        _ id: ModeIdentifier,
         overlay: ModeOverlay = .init()
     ) throws -> ModeSelection {
         try .init(

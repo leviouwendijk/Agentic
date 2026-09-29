@@ -19,7 +19,7 @@ public struct NativeStructuredAdapter:
         input: InferenceType.Input,
         realization: InferenceRealizationConfiguration
     ) throws -> InferenceAdaptation {
-        var messages: [AgentMessage] = []
+        var messages: [Message] = []
 
         let instructions = renderInstructions(
             definition: inference.definition,
@@ -28,9 +28,9 @@ public struct NativeStructuredAdapter:
 
         if !instructions.isEmpty {
             messages.append(
-                AgentMessage(
+                Message(
                     role: .system,
-                    content: AgentContent(
+                    content: MessageContent(
                         text: instructions
                     )
                 )
@@ -39,9 +39,9 @@ public struct NativeStructuredAdapter:
 
         for demonstration in realization.demonstrations {
             messages.append(
-                AgentMessage(
+                Message(
                     role: .user,
-                    content: AgentContent(
+                    content: MessageContent(
                         text: try renderJSON(
                             demonstration.input
                         )
@@ -50,9 +50,9 @@ public struct NativeStructuredAdapter:
             )
 
             messages.append(
-                AgentMessage(
+                Message(
                     role: .assistant,
-                    content: AgentContent(
+                    content: MessageContent(
                         text: try renderJSON(
                             demonstration.output
                         )
@@ -62,9 +62,9 @@ public struct NativeStructuredAdapter:
         }
 
         messages.append(
-            AgentMessage(
+            Message(
                 role: .user,
-                content: AgentContent(
+                content: MessageContent(
                     text: try renderInput(
                         input
                     )
@@ -139,9 +139,9 @@ public struct NativeStructuredAdapter:
             response.message
         )
         adaptation.request.messages.append(
-            AgentMessage(
+            Message(
                 role: .user,
-                content: AgentContent(
+                content: MessageContent(
                     text: """
                     The previous response could not be decoded as the required structured output.
                     Return only a value that conforms to the required JSON schema.

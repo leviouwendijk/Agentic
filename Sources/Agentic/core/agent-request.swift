@@ -1,5 +1,5 @@
 public struct AgentRequest: Sendable, Codable, Hashable {
-    public var messages: [AgentMessage]
+    public var messages: [Message]
     public var tools: [ToolDescriptor]
     public var generationConfiguration: AgentGenerationConfiguration
     public var responseFormat: AgentResponseFormat
@@ -7,7 +7,7 @@ public struct AgentRequest: Sendable, Codable, Hashable {
     public var metadata: [String: String]
 
     public init(
-        messages: [AgentMessage],
+        messages: [Message],
         tools: [ToolDescriptor] = [],
         generationConfiguration: AgentGenerationConfiguration = .default,
         responseFormat: AgentResponseFormat = .text,

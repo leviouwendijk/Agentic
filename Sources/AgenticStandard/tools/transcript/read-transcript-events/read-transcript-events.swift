@@ -62,10 +62,10 @@ public extension Standard.Tools {
 
 
 
-        public let store: any AgentTranscriptStore
+        public let store: any TranscriptStore
 
         public init(
-            store: any AgentTranscriptStore
+            store: any TranscriptStore
         ) {
             self.store = store
         }
@@ -90,7 +90,7 @@ public extension Standard.Tools {
         ) async throws -> Output {
             let events = try await store.loadEvents()
 
-            let selected: [(index: Int, event: AgentTranscriptEvent)]
+            let selected: [(index: Int, event: TranscriptEvent)]
             if input.eventIDs.isEmpty {
                 selected = TranscriptSupport.selectedEvents(
                     from: events,

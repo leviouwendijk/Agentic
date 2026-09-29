@@ -1,15 +1,18 @@
 import Foundation
+import Macros
+import Schema
 
-public struct AgentSessionBranchEvent: Sendable, Codable, Hashable, Identifiable {
+@JSONSchema
+public struct SessionBranchEvent: Sendable, Codable, Hashable, Identifiable {
     public let id: String
     public let sessionID: String
-    public let branch: AgentSessionBranch
+    public let branch: SessionBranch
     public let createdAt: Date
 
     public init(
         id: String = UUID().uuidString,
         sessionID: String,
-        branch: AgentSessionBranch,
+        branch: SessionBranch,
         createdAt: Date = Date()
     ) {
         self.id = id
