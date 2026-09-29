@@ -1,7 +1,10 @@
 import Difference
 import Foundation
+import Macros
+import Schema
 import Workspace
 
+@JSONSchema
 public struct ToolPreflight:
     Sendable,
     Codable,
@@ -146,6 +149,7 @@ public struct ToolPreflight:
 }
 
 public extension ToolPreflight {
+    @JSONSchema
     struct Access:
         Sendable,
         Codable,
@@ -180,6 +184,7 @@ public extension ToolPreflight {
         }
     }
 
+    @JSONSchema
     struct Estimates:
         Sendable,
         Codable,
@@ -228,6 +233,7 @@ public extension ToolPreflight {
             .max()
         }
 
+        @JSONSchema
         public struct Scan:
             Sendable,
             Codable,
@@ -247,6 +253,7 @@ public extension ToolPreflight {
             public static let none = Self()
         }
 
+        @JSONSchema
         public struct Read:
             Sendable,
             Codable,
@@ -269,6 +276,7 @@ public extension ToolPreflight {
             public static let none = Self()
         }
 
+        @JSONSchema
         public struct Write:
             Sendable,
             Codable,
@@ -291,6 +299,7 @@ public extension ToolPreflight {
             public static let none = Self()
         }
 
+        @JSONSchema
         public struct Context:
             Sendable,
             Codable,
@@ -317,6 +326,7 @@ public extension ToolPreflight {
         }
     }
 
+    @JSONSchema
     struct Preview:
         Sendable,
         Codable,
@@ -340,6 +350,7 @@ public extension ToolPreflight {
                 && (difference?.isEmpty ?? true)
         }
 
+        @JSONSchema
         public struct Difference:
             Sendable,
             Codable,

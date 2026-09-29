@@ -43,7 +43,7 @@
       "location" : "https://github.com/leviouwendijk/Difference.git",
       "state" : {
         "branch" : "master",
-        "revision" : "1938bd3531e7d4c9476b67d10d052375f24c41e3"
+        "revision" : "ad07eb01d829b868cc6349503f40fa38148b52fd"
       }
     },
     {
@@ -295,7 +295,7 @@
       "location" : "https://github.com/leviouwendijk/Workspace.git",
       "state" : {
         "branch" : "master",
-        "revision" : "bb0a7031b250ef31b343480754a6427ca9f634b1"
+        "revision" : "0a88d98969ec53c1927293062fe6c4165d99e641"
       }
     }
   ],
