@@ -1,10 +1,14 @@
 import Guidelines
+import Macros
+import Schema
 
 public enum Reference:
     Sendable,
     Codable,
-    Hashable
+    Hashable,
+    JSONSchemaProviding
 {
+    @JSONSchema
     public enum Kind:
         String,
         Sendable,
@@ -26,6 +30,7 @@ public enum Reference:
 }
 
 public extension Reference {
+    @JSONSchema
     struct Guideline:
         Sendable,
         Codable,
@@ -62,6 +67,7 @@ public extension Reference {
 }
 
 public extension Reference.Guideline {
+    @JSONSchema
     enum Disposition:
         String,
         Sendable,
@@ -73,6 +79,26 @@ public extension Reference.Guideline {
         case upholds
         case verifies
         case deviates
+    }
+}
+
+public extension Reference {
+    static var jsonschema: JSONSchema {
+        .object(
+            properties: [
+                .init(
+                    name: "kind",
+                    schema: Kind.jsonschema,
+                    required: true
+                ),
+                .init(
+                    name: "guideline",
+                    schema: Guideline.jsonschema,
+                    required: true
+                ),
+            ],
+            additionalProperties: .disallowed
+        )
     }
 }
 
