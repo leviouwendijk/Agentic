@@ -9,18 +9,18 @@ public struct ToolPlan:
 {
     public let id: String
     public let root: Node
-    public let guidelines: [AgentGuidelineRelation]
+    public let references: [Reference]
 
     public init(
         id: String = UUID().uuidString,
         root: Node,
-        guidelines: [AgentGuidelineRelation] = []
+        references: [Reference] = []
     ) throws {
         try root.requireUniqueCallIDs()
 
         self.id = id
         self.root = root
-        self.guidelines = guidelines
+        self.references = references
     }
 
     private enum CodingKeys:
@@ -29,7 +29,7 @@ public struct ToolPlan:
     {
         case id
         case root
-        case guidelines
+        case references
     }
 
     public init(
@@ -48,10 +48,10 @@ public struct ToolPlan:
                 Node.self,
                 forKey: .root
             ),
-            guidelines: container.decodeIfPresent(
-                [AgentGuidelineRelation].self,
-                forKey: .guidelines
-            ) ?? []
+            references: container.decode(
+                [Reference].self,
+                forKey: .references
+            )
         )
     }
 
@@ -73,8 +73,8 @@ public struct ToolPlan:
         )
 
         try container.encode(
-            guidelines,
-            forKey: .guidelines
+            references,
+            forKey: .references
         )
     }
 }

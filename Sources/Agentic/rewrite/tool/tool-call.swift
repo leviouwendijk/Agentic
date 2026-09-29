@@ -1,6 +1,9 @@
 import Foundation
+import Macros
 import Primitives
+import Schema
 
+@JSONSchema
 public struct ToolCall:
     Sendable,
     Codable,
