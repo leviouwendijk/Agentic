@@ -7,4 +7,5 @@ enum InferenceAdapterFlowSuite: TestFlowRegistry {
         InferenceAdapterSubstrateFlowTests.all
             + NativeStructuredAdapterFlowTests.all
             + nativeStructuredAdapterRecoveryFlows
+            + DecisionAuthoringFlowTests.all
 }

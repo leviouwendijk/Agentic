@@ -17,9 +17,11 @@ public macro Agent() = #externalMacro(
 )
 @attached(
     extension,
-    conformances: Inference
+    conformances: Inference, DecisionInference
 )
-public macro Inference() = #externalMacro(
+public macro Inference(
+    _ kind: InferenceKind = .generative
+) = #externalMacro(
     module: "AgenticMacrosPlugin",
     type: "InferenceMacro"
 )

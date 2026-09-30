@@ -19,6 +19,13 @@ public struct NativeStructuredAdapter:
         input: InferenceType.Input,
         realization: InferenceRealizationConfiguration
     ) throws -> InferenceAdaptation {
+        switch try inference.specification(for: input) {
+        case .generative:
+            break
+        case .decision:
+            throw Decision.Error.modelExecutionUnavailable
+        }
+
         var messages: [Message] = []
 
         let instructions = renderInstructions(

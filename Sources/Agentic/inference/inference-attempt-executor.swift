@@ -162,6 +162,13 @@ public struct InferenceAttemptExecutor:
             capabilities: []
         )
     ) async throws -> InferenceAttemptResult<InferenceType.Output> {
+        switch try inference.specification(for: input) {
+        case .generative:
+            break
+        case .decision:
+            throw Decision.Error.modelExecutionUnavailable
+        }
+
         let attemptPermit = try realization.budget.nextAttempt(
             priorAttempts: priorAttempts
         )

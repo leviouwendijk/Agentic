@@ -4,6 +4,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public var model: String
     public var modelID: AgentModelID?
     public var title: String?
+    public var kind: AgentModelKind
     public var purposes: Set<AgentModelRoutePurpose>
     public var capabilities: Set<AgentModelCapability>
     public var cost: AgentModelCostClass
@@ -18,6 +19,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         model: String,
         modelID: AgentModelID? = nil,
         title: String? = nil,
+        kind: AgentModelKind = .generative,
         purposes: Set<AgentModelRoutePurpose> = [.executor],
         capabilities: Set<AgentModelCapability> = [.text],
         cost: AgentModelCostClass = .balanced,
@@ -31,6 +33,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         self.model = model
         self.modelID = modelID
         self.title = title
+        self.kind = kind
         self.purposes = purposes
         self.capabilities = capabilities
         self.cost = cost
@@ -54,6 +57,10 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public func supports(
         _ selection: AgentModelSelection
     ) -> Bool {
+        guard kind == selection.kind else {
+            return false
+        }
+
         guard purposes.contains(
             selection.purpose
         ) else {

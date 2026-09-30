@@ -147,6 +147,7 @@ public struct AgentModelConstraints: Sendable, Codable, Hashable {
 
 public struct AgentModelSelection: Sendable, Codable, Hashable {
     public var purpose: AgentModelRoutePurpose
+    public var kind: AgentModelKind
     public var requirements: AgentModelRequirements
     public var preferences: AgentModelPreferences
     public var constraints: AgentModelConstraints
@@ -154,12 +155,14 @@ public struct AgentModelSelection: Sendable, Codable, Hashable {
 
     public init(
         purpose: AgentModelRoutePurpose,
+        kind: AgentModelKind = .generative,
         requirements: AgentModelRequirements = .init(),
         preferences: AgentModelPreferences = .init(),
         constraints: AgentModelConstraints = .init(),
         metadata: [String: String] = [:]
     ) {
         self.purpose = purpose
+        self.kind = kind
         self.requirements = requirements
         self.preferences = preferences
         self.constraints = constraints

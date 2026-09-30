@@ -47,12 +47,16 @@ public struct InferenceMacro:
     ExtensionMacro
 {
     public static func expansion(
-        of _: AttributeSyntax,
+        of attribute: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo _: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        try DeclarationMacroEngine<
+        _ = try inferenceMacroKind(
+            from: attribute
+        )
+
+        return try DeclarationMacroEngine<
             InferenceMacroSpecification
         >.members(
             of: declaration,
@@ -62,21 +66,50 @@ public struct InferenceMacro:
     }
 
     public static func expansion(
-        of _: AttributeSyntax,
+        of attribute: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol,
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        try DeclarationMacroEngine<
-            InferenceMacroSpecification
-        >.extensions(
-            of: declaration,
-            type: type,
-            conformingTo: protocols,
-            macroName: "Inference",
-            lexicalContext: context.lexicalContext
-        )
+        switch try inferenceMacroKind(
+            from: attribute
+        ) {
+        case .generative:
+            return try DeclarationMacroEngine<
+                InferenceMacroSpecification
+            >.extensions(
+                of: declaration,
+                type: type,
+                conformingTo: protocols,
+                macroName: "Inference",
+                lexicalContext: context.lexicalContext
+            )
+
+        case .decision:
+            let inferenceExtensions = try DeclarationMacroEngine<
+                InferenceMacroSpecification
+            >.extensions(
+                of: declaration,
+                type: type,
+                conformingTo: protocols,
+                macroName: "Inference",
+                lexicalContext: context.lexicalContext
+            )
+
+            let decisionExtensions = try DeclarationMacroEngine<
+                DecisionInferenceMacroSpecification
+            >.extensions(
+                of: declaration,
+                type: type,
+                conformingTo: protocols,
+                macroName: "Inference",
+                lexicalContext: context.lexicalContext
+            )
+
+            return inferenceExtensions
+                + decisionExtensions
+        }
     }
 }
 
@@ -226,6 +259,64 @@ private enum InferenceMacroSpecification:
                     "\(access)static let definition: InferenceDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose)"
             ),
         ]
+    }
+}
+
+private enum DecisionInferenceMacroSpecification:
+    DeclarationMacroSpecification
+{
+    static let supportedKinds =
+        InferenceMacroSpecification.supportedKinds
+
+    static let conformance: String? =
+        "DecisionInference"
+
+    static func members(
+        in context: DeclarationMacroContext
+    ) throws -> [DeclSyntax] {
+        try InferenceMacroSpecification.members(
+            in: context
+        )
+    }
+}
+
+private enum InferenceMacroKind {
+    case generative
+    case decision
+}
+
+private func inferenceMacroKind(
+    from attribute: AttributeSyntax
+) throws -> InferenceMacroKind {
+    guard let arguments = attribute.arguments else {
+        return .generative
+    }
+
+    guard case let .argumentList(argumentList) = arguments,
+          argumentList.count == 1,
+          let argument = argumentList.first,
+          argument.label == nil,
+          let member = argument.expression.as(
+            MemberAccessExprSyntax.self
+          ),
+          member.base == nil
+    else {
+        throw MacroExpansionErrorMessage(
+            "@Inference accepts zero arguments or one static kind: .generative or .decision."
+        )
+    }
+
+    switch member.declName.baseName.text {
+    case "generative":
+        return .generative
+
+    case "decision":
+        return .decision
+
+    default:
+        throw MacroExpansionErrorMessage(
+            "@Inference kind must be .generative or .decision."
+        )
     }
 }
 

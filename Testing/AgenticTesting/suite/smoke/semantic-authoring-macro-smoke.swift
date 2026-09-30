@@ -72,6 +72,36 @@ extension SmokeDomain.Inferences {
         static let purpose =
             "Prove an explicit Inference conformance is not restated by its macro."
     }
+
+    @Inference(.generative)
+    struct MacroSmokeGenerativeInference {
+        typealias Input = MacroSmokeInference.Input
+        typealias Output = MacroSmokeInference.Output
+
+        static let purpose =
+            "Prove explicit generative inference declaration synthesis."
+    }
+
+    @Inference(.decision)
+    struct MacroSmokeDecisionInference {
+        typealias Input = MacroSmokeInference.Input
+        typealias Output = Decision.Probability
+
+        static let purpose =
+            "Prove decision inference declaration synthesis."
+
+        static func decision(
+            for input: Input
+        ) throws -> Decision.Specification<Output> {
+            try .init(
+                state: input,
+                query: Decision.binary(
+                    instructions:
+                        "Does this smoke-test decision apply?"
+                )
+            )
+        }
+    }
 }
 
 extension SmokeDomain.Programs {
@@ -221,6 +251,10 @@ extension SmokeDomain.Optimizations {
     }
 }
 
+private func requireDecisionInference<InferenceType: DecisionInference>(
+    _: InferenceType.Type
+) {}
+
 func runSemanticAuthoringMacroSmoke() throws {
     ContractProof.agent(
         SmokeDomain.Agents.MacroSmokeAgent.self
@@ -236,6 +270,15 @@ func runSemanticAuthoringMacroSmoke() throws {
     )
     ContractProof.inference(
         SmokeDomain.Inferences.MacroSmokeExplicitInference.self
+    )
+    ContractProof.inference(
+        SmokeDomain.Inferences.MacroSmokeGenerativeInference.self
+    )
+    ContractProof.inference(
+        SmokeDomain.Inferences.MacroSmokeDecisionInference.self
+    )
+    requireDecisionInference(
+        SmokeDomain.Inferences.MacroSmokeDecisionInference.self
     )
     ContractProof.program(
         SmokeDomain.Programs.MacroSmokeProgram.self
@@ -293,6 +336,70 @@ func runSemanticAuthoringMacroSmoke() throws {
         SmokeDomain.Inferences.MacroSmokeExplicitInference.definition.identifier.rawValue,
         expected: "smoke_domain.inferences.macro_smoke_explicit_inference"
     )
+    try ContractProof.identifier(
+        SmokeDomain.Inferences.MacroSmokeGenerativeInference.definition.identifier.rawValue,
+        expected: "smoke_domain.inferences.macro_smoke_generative_inference"
+    )
+    try ContractProof.identifier(
+        SmokeDomain.Inferences.MacroSmokeDecisionInference.definition.identifier.rawValue,
+        expected: "smoke_domain.inferences.macro_smoke_decision_inference"
+    )
+
+    switch try SmokeDomain.Inferences
+        .MacroSmokeInference
+        .specification(
+            for: .init(
+                value: "default"
+            )
+        )
+    {
+    case .generative:
+        break
+
+    case .decision:
+        fatalError(
+            "Expected plain @Inference to remain generative."
+        )
+    }
+
+    switch try SmokeDomain.Inferences
+        .MacroSmokeGenerativeInference
+        .specification(
+            for: .init(
+                value: "explicit-generative"
+            )
+        )
+    {
+    case .generative:
+        break
+
+    case .decision:
+        fatalError(
+            "Expected @Inference(.generative) to synthesize generative inference semantics."
+        )
+    }
+
+    switch try SmokeDomain.Inferences
+        .MacroSmokeDecisionInference
+        .specification(
+            for: .init(
+                value: "decision"
+            )
+        )
+    {
+    case .generative:
+        fatalError(
+            "Expected @Inference(.decision) to synthesize decision inference semantics."
+        )
+
+    case .decision(let specification):
+        guard specification.query.questions.count == 1 else {
+            fatalError(
+                "Expected decision inference smoke fixture to retain its authored query."
+            )
+        }
+    }
+
     try ContractProof.identifier(
         SmokeDomain.Programs.MacroSmokeProgram.definition.identifier.rawValue,
         expected: "smoke_domain.programs.macro_smoke_program"
