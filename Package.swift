@@ -224,6 +224,14 @@ for target in package.targets {
             .treatAllWarnings(as: .error)
         )
 
+        settings.append(
+            .unsafeFlags(
+                [
+                    "-continue-building-after-errors"
+                ]
+            )
+        )
+
         target.swiftSettings = settings
 
     case .plugin, .system, .binary:

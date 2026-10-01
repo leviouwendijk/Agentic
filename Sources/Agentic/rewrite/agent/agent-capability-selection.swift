@@ -24,6 +24,23 @@ where
     public static var none: Self {
         .init()
     }
+
+    public static func + (
+        lhs: Self,
+        rhs: Self
+    ) -> Self {
+        .init(
+            domains: orderedUnique(
+                lhs.domains + rhs.domains
+            ),
+            members: orderedUnique(
+                lhs.members + rhs.members
+            ),
+            excluding: orderedUnique(
+                lhs.excluding + rhs.excluding
+            )
+        )
+    }
 }
 
 public struct AgentCapabilities:
@@ -49,4 +66,26 @@ public struct AgentCapabilities:
     }
 
     public static let none = Self()
+
+    public static func + (
+        lhs: Self,
+        rhs: Self
+    ) -> Self {
+        .init(
+            tools: lhs.tools + rhs.tools,
+            programs: lhs.programs + rhs.programs,
+            inferences: lhs.inferences + rhs.inferences,
+            agents: lhs.agents + rhs.agents
+        )
+    }
+}
+
+private func orderedUnique<Element: Hashable>(
+    _ elements: [Element]
+) -> [Element] {
+    var seen: Set<Element> = []
+
+    return elements.filter { element in
+        seen.insert(element).inserted
+    }
 }
