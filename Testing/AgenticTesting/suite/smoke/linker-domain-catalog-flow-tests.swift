@@ -3,6 +3,43 @@ import AgenticLinkerCatalogFixture
 import AgenticStandard
 import Testing
 
+private final class DomainInstallationProbe:
+    DomainInstallation.Sink
+{
+    var tools: [ToolIdentifier] = []
+    var programs: [ProgramIdentifier] = []
+    var agents: [AgentIdentifier] = []
+
+    func install<T: Tool>(
+        _ tool: T,
+        modelContract _: AgentToolModelContract?,
+        execution _: AgentToolExecutionContract
+    ) {
+        _ = tool
+        tools.append(
+            T.definition.identifier
+        )
+    }
+
+    func install<P: Program>(
+        _ program: P,
+        realization _: ProgramRealization<P>?
+    ) {
+        _ = program
+        programs.append(
+            P.definition.identifier
+        )
+    }
+
+    func install(
+        _ agent: AgentDefinition
+    ) {
+        agents.append(
+            agent.identifier
+        )
+    }
+}
+
 let linkerDomainCatalogFlows: [TestFlow] = [
     TestFlow(
         "linker-domain-catalog-without-build-plugin",
@@ -19,6 +56,11 @@ let linkerDomainCatalogFlows: [TestFlow] = [
             catalog.tools.map {
                 $0.identifier.rawValue
             }
+        )
+        let installation = DomainInstallationProbe()
+
+        LinkerCatalogFixture.installation.install(
+            into: installation
         )
 
         try Expect.equal(
@@ -43,6 +85,21 @@ let linkerDomainCatalogFlows: [TestFlow] = [
             ),
             true,
             "Domain.catalog discovers Beta without referencing Beta.self"
+        )
+
+        try Expect.equal(
+            installation.tools.contains(
+                LinkerCatalogFixture.Tools.Alpha.definition.identifier
+            ),
+            true,
+            "Domain.installation derives an explicitly installable Tool through the linker namespace"
+        )
+        try Expect.equal(
+            installation.tools.contains(
+                LinkerCatalogFixture.Tools.Beta.definition.identifier
+            ),
+            false,
+            "Domain.installation does not fabricate executable installation for a semantic-only Tool"
         )
 
         return [

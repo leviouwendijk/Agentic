@@ -38,6 +38,12 @@ public extension Domain {
         definition.namespace
     }
 
+    static var installation: DomainInstallation {
+        _agentic_domain_installation(
+            namespace: definition.namespace.rawValue
+        )
+    }
+
     static var catalog: Catalog {
         Catalog(
             domains: [

@@ -45,7 +45,8 @@ public struct AgentDefinition:
 }
 
 public protocol Agent:
-    Producer
+    Producer,
+    DomainInstallable
 {
     static var definition: AgentDefinition { get }
     static var purpose: String { get }
@@ -55,6 +56,14 @@ public protocol Agent:
 }
 
 public extension Agent {
+    static func install(
+        into sink: any DomainInstallation.Sink
+    ) {
+        sink.install(
+            definition
+        )
+    }
+
     static var instructions: String? {
         nil
     }

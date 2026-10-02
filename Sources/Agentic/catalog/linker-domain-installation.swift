@@ -4,44 +4,24 @@ import AgenticLinkerSupport
 import MachO
 #endif
 
-private typealias CatalogFactory =
+private typealias InstallationFactory =
     @convention(c) () -> UnsafeMutableRawPointer
 
-final class CatalogLinkerEntryBox {
-    let namespace: String?
-    let declaration: Catalog.Declaration
-    let installable: (any DomainInstallable.Type)?
-
-    init(
-        namespace: String?,
-        declaration: Catalog.Declaration,
-        installable: Any.Type? = nil
-    ) {
-        self.namespace = namespace
-        self.declaration = declaration
-        self.installable = installable as? any DomainInstallable.Type
-    }
-}
-
-public func _agentic_catalog_entry(
-    namespace: String?,
-    declaration: Catalog.Declaration,
-    installable: Any.Type? = nil
-) -> UnsafeMutableRawPointer {
-    Unmanaged.passRetained(
-        CatalogLinkerEntryBox(
-            namespace: namespace,
-            declaration: declaration,
-            installable: installable
-        )
-    ).toOpaque()
-}
-
-func _agentic_catalog_entries(
+func _agentic_domain_installation(
     namespace: String?
-) -> [Catalog.Entry] {
+) -> DomainInstallation {
+    .init(
+        declarations: _agentic_installables(
+            namespace: namespace
+        )
+    )
+}
+
+private func _agentic_installables(
+    namespace: String?
+) -> [any DomainInstallable.Type] {
 #if canImport(MachO)
-    var entries = [Catalog.Entry]()
+    var declarations = [any DomainInstallable.Type]()
     let imageCount = _dyld_image_count()
 
     for imageIndex in 0 ..< imageCount {
@@ -75,14 +55,14 @@ func _agentic_catalog_entries(
             continue
         }
 
-        entries += _agentic_catalog_entries(
+        declarations += _agentic_installables(
             bytes: UnsafeRawPointer(section),
             byteCount: Int(byteCount),
             namespace: namespace
         )
     }
 
-    return entries
+    return declarations
 #elseif objectFormat(ELF)
     guard
         let start = agentic_catalog_section_start(),
@@ -102,7 +82,7 @@ func _agentic_catalog_entries(
         return []
     }
 
-    return _agentic_catalog_entries(
+    return _agentic_installables(
         bytes: start,
         byteCount: stopAddress - startAddress,
         namespace: namespace
@@ -113,20 +93,12 @@ func _agentic_catalog_entries(
 #endif
 }
 
-func _agentic_catalog_declarations(
-    namespace: String?
-) -> [Catalog.Declaration] {
-    _agentic_catalog_entries(
-        namespace: namespace
-    ).map(\.declaration)
-}
-
-private func _agentic_catalog_entries(
+private func _agentic_installables(
     bytes: UnsafeRawPointer,
     byteCount: Int,
     namespace: String?
-) -> [Catalog.Entry] {
-    let entryStride = MemoryLayout<CatalogFactory>.stride
+) -> [any DomainInstallable.Type] {
+    let entryStride = MemoryLayout<InstallationFactory>.stride
 
     guard
         entryStride > 0,
@@ -136,7 +108,7 @@ private func _agentic_catalog_entries(
         return []
     }
 
-    var entries = [Catalog.Entry]()
+    var declarations = [any DomainInstallable.Type]()
 
     for offset in stride(
         from: 0,
@@ -145,7 +117,7 @@ private func _agentic_catalog_entries(
     ) {
         let factory = bytes
             .advanced(by: offset)
-            .load(as: CatalogFactory.self)
+            .load(as: InstallationFactory.self)
         let opaque = factory()
         let entry = Unmanaged<
             CatalogLinkerEntryBox
@@ -153,22 +125,17 @@ private func _agentic_catalog_entries(
             opaque
         ).takeRetainedValue()
 
-        guard entry.namespace == namespace else {
+        guard
+            entry.namespace == namespace,
+            let installable = entry.installable
+        else {
             continue
         }
 
-        entries.append(
-            Catalog.Entry(
-                namespace: entry.namespace.map { rawValue in
-                    Namespace(
-                        rawValue: rawValue
-                    )
-                },
-                declaration: entry.declaration
-            )
+        declarations.append(
+            installable
         )
     }
 
-    return entries
+    return declarations
 }
-

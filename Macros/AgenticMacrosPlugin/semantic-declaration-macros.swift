@@ -187,7 +187,8 @@ public struct ToolMacro:
                 catalogFactoryDeclaration(
                     in: declarationContext,
                     category: "Tools",
-                    declaration: ".tool(Self.definition)"
+                    declaration: ".tool(Self.definition)",
+                    installable: true
                 ),
             ]
         }
@@ -238,7 +239,8 @@ private enum AgentMacroSpecification:
             catalogFactoryDeclaration(
                 in: context,
                 category: "Agents",
-                declaration: ".agent(Self.definition)"
+                declaration: ".agent(Self.definition)",
+                installable: true
             ),
         ]
     }
@@ -363,7 +365,8 @@ private enum ProgramMacroSpecification:
             catalogFactoryDeclaration(
                 in: context,
                 category: "Programs",
-                declaration: ".program(Self.definition)"
+                declaration: ".program(Self.definition)",
+                installable: true
             ),
         ]
     }
@@ -426,7 +429,8 @@ func toolIdentifier(
 func catalogFactoryDeclaration(
     in context: DeclarationMacroContext,
     category: String,
-    declaration: String
+    declaration: String,
+    installable: Bool = false
 ) -> DeclSyntax {
     let lexicalPath = context.lexicalPath
 
@@ -446,6 +450,10 @@ func catalogFactoryDeclaration(
         namespaceExpression = "nil"
     }
 
+    let installableExpression = installable
+        ? "Self.self"
+        : "nil"
+
     return DeclSyntax(
         stringLiteral:
             """
@@ -459,7 +467,8 @@ func catalogFactoryDeclaration(
             static let _agentic_catalog_factory: @convention(c) () -> UnsafeMutableRawPointer = {
                 _agentic_catalog_entry(
                     namespace: \(namespaceExpression),
-                    declaration: \(declaration)
+                    declaration: \(declaration),
+                    installable: \(installableExpression)
                 )
             }
             """
