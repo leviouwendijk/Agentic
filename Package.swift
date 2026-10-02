@@ -148,6 +148,9 @@ let package = Package(
                     name: "Search",
                     package: "Search"
                 ),
+            ],
+            plugins: [
+                "AgenticBuildPlugin",
             ]
         ),
         .executableTarget(
@@ -181,6 +184,28 @@ let package = Package(
                 ),
             ],
             path: "Testing/AgenticTesting"
+        ),
+        .executableTarget(
+            name: "AgenticIndexer",
+            dependencies: [
+                .product(
+                    name: "SwiftParser",
+                    package: "swift-syntax"
+                ),
+                .product(
+                    name: "SwiftSyntax",
+                    package: "swift-syntax"
+                ),
+            ],
+            path: "Tools/AgenticIndexer"
+        ),
+        .plugin(
+            name: "AgenticBuildPlugin",
+            capability: .buildTool(),
+            dependencies: [
+                "AgenticIndexer",
+            ],
+            path: "Plugins/AgenticBuildPlugin"
         ),
         .macro(
             name: "AgenticMacrosPlugin",
