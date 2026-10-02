@@ -32,11 +32,11 @@ public func _agentic_catalog_entry(
     ).toOpaque()
 }
 
-func _agentic_catalog_declarations(
+func _agentic_catalog_entries(
     namespace: String?
-) -> [Catalog.Declaration] {
+) -> [Catalog.Entry] {
 #if canImport(MachO)
-    var declarations = [Catalog.Declaration]()
+    var entries = [Catalog.Entry]()
     let imageCount = _dyld_image_count()
 
     for imageIndex in 0 ..< imageCount {
@@ -70,14 +70,14 @@ func _agentic_catalog_declarations(
             continue
         }
 
-        declarations += _agentic_catalog_declarations(
+        entries += _agentic_catalog_entries(
             bytes: UnsafeRawPointer(section),
             byteCount: Int(byteCount),
             namespace: namespace
         )
     }
 
-    return declarations
+    return entries
 #elseif objectFormat(ELF)
     guard
         let start = agentic_catalog_section_start(),
@@ -97,7 +97,7 @@ func _agentic_catalog_declarations(
         return []
     }
 
-    return _agentic_catalog_declarations(
+    return _agentic_catalog_entries(
         bytes: start,
         byteCount: stopAddress - startAddress,
         namespace: namespace
@@ -108,11 +108,19 @@ func _agentic_catalog_declarations(
 #endif
 }
 
-private func _agentic_catalog_declarations(
+func _agentic_catalog_declarations(
+    namespace: String?
+) -> [Catalog.Declaration] {
+    _agentic_catalog_entries(
+        namespace: namespace
+    ).map(\.declaration)
+}
+
+private func _agentic_catalog_entries(
     bytes: UnsafeRawPointer,
     byteCount: Int,
     namespace: String?
-) -> [Catalog.Declaration] {
+) -> [Catalog.Entry] {
     let entryStride = MemoryLayout<CatalogFactory>.stride
 
     guard
@@ -123,7 +131,7 @@ private func _agentic_catalog_declarations(
         return []
     }
 
-    var declarations = [Catalog.Declaration]()
+    var entries = [Catalog.Entry]()
 
     for offset in stride(
         from: 0,
@@ -144,10 +152,18 @@ private func _agentic_catalog_declarations(
             continue
         }
 
-        declarations.append(
-            entry.declaration
+        entries.append(
+            Catalog.Entry(
+                namespace: entry.namespace.map { rawValue in
+                    Namespace(
+                        rawValue: rawValue
+                    )
+                },
+                declaration: entry.declaration
+            )
         )
     }
 
-    return declarations
+    return entries
 }
+

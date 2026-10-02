@@ -7,21 +7,39 @@ public struct Catalog:
     Hashable
 {
     public let domains: [DomainDefinition]
-    public let declarations: [Declaration]
+    public let entries: [Entry]
+
+    public var declarations: [Declaration] {
+        entries.map(\.declaration)
+    }
+
+    public init(
+        domains: [DomainDefinition] = [],
+        entries: [Entry]
+    ) {
+        self.domains = domains
+        self.entries = entries
+    }
 
     public init(
         domains: [DomainDefinition] = [],
         declarations: [Declaration] = []
     ) {
-        self.domains = domains
-        self.declarations = declarations
+        self.init(
+            domains: domains,
+            entries: declarations.map { declaration in
+                Entry(
+                    declaration: declaration
+                )
+            }
+        )
     }
 
     public static let none = Self()
 
     public static var unscoped: Self {
         .init(
-            declarations: _agentic_catalog_declarations(
+            entries: _agentic_catalog_entries(
                 namespace: nil
             )
         )
@@ -35,14 +53,30 @@ public struct Catalog:
             domains:
                 lhs.domains
                 + rhs.domains,
-            declarations:
-                lhs.declarations
-                + rhs.declarations
+            entries:
+                lhs.entries
+                + rhs.entries
         )
     }
 }
 
 public extension Catalog {
+    struct Entry:
+        Sendable,
+        Hashable
+    {
+        public let namespace: Namespace?
+        public let declaration: Declaration
+
+        public init(
+            namespace: Namespace? = nil,
+            declaration: Declaration
+        ) {
+            self.namespace = namespace
+            self.declaration = declaration
+        }
+    }
+
     enum Declaration:
         Sendable,
         Hashable

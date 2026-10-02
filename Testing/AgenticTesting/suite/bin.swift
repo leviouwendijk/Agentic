@@ -5,11 +5,11 @@ private enum AgenticTestingMainError: Error {
 }
 
 @main
-struct AgenticFlowTesting {
+struct AgenticTestingMain {
     static func main() async throws {
         let reporter = PlainTextTestReporter()
         let result = await TestRunner.run(
-            UnifiedAgenticFlowSuite.testSuite,
+            UnifiedAgenticTestSuite.testSuite,
             sink: reporter
         )
         let rendered = await reporter.rendered()

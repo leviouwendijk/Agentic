@@ -1,4 +1,5 @@
 import Agentic
+import AgenticLinkerCatalogFixture
 import Testing
 
 let capabilitySelectionCompositionFlows: [TestFlow] = [
@@ -193,6 +194,232 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
             .field(
                 "excluding",
                 String(combined.excluding.count)
+            ),
+        ]
+    },
+    TestFlow(
+        "agent-capability-selection-resolution",
+        tags: [
+            "agentic",
+            "agent",
+            "capabilities",
+            "catalog",
+            "resolution",
+            "provenance",
+        ]
+    ) {
+        let namespace = Namespace(
+            rawValue: "fixture.capability_resolution"
+        )
+        let domainTool = ToolIdentifier(
+            rawValue: "fixture.domain_tool"
+        )
+        let excludedTool = ToolIdentifier(
+            rawValue: "fixture.excluded_tool"
+        )
+        let explicitTool = ToolIdentifier(
+            rawValue: "fixture.explicit_tool"
+        )
+        let unknownTool = ToolIdentifier(
+            rawValue: "fixture.unknown_tool"
+        )
+        let program = ProgramIdentifier(
+            rawValue: "fixture.domain_program"
+        )
+        let inference = InferenceIdentifier(
+            rawValue: "fixture.domain_inference"
+        )
+        let agent = AgentIdentifier(
+            rawValue: "fixture.domain_agent"
+        )
+
+        let catalog = Catalog(
+            domains: [
+                DomainDefinition(
+                    namespace: namespace
+                ),
+            ],
+            entries: [
+                .init(
+                    namespace: namespace,
+                    declaration: .tool(
+                        ToolDefinition(
+                            identifier: domainTool,
+                            purpose: "Domain Tool"
+                        )
+                    )
+                ),
+                .init(
+                    namespace: namespace,
+                    declaration: .tool(
+                        ToolDefinition(
+                            identifier: excludedTool,
+                            purpose: "Excluded Tool"
+                        )
+                    )
+                ),
+                .init(
+                    declaration: .tool(
+                        ToolDefinition(
+                            identifier: explicitTool,
+                            purpose: "Explicit Tool"
+                        )
+                    )
+                ),
+                .init(
+                    namespace: namespace,
+                    declaration: .program(
+                        ProgramDefinition(
+                            identifier: program,
+                            purpose: "Domain Program"
+                        )
+                    )
+                ),
+                .init(
+                    namespace: namespace,
+                    declaration: .inference(
+                        InferenceDefinition(
+                            identifier: inference,
+                            purpose: "Domain Inference"
+                        )
+                    )
+                ),
+                .init(
+                    namespace: namespace,
+                    declaration: .agent(
+                        AgentDefinition(
+                            identifier: agent,
+                            purpose: "Domain Agent"
+                        )
+                    )
+                ),
+            ]
+        )
+
+        let resolved = catalog.resolve(
+            AgentCapabilities(
+                tools: .init(
+                    domains: [
+                        namespace,
+                    ],
+                    members: [
+                        explicitTool,
+                        unknownTool,
+                    ],
+                    excluding: [
+                        excludedTool,
+                    ]
+                ),
+                programs: .init(
+                    domains: [
+                        namespace,
+                    ]
+                ),
+                inferences: .init(
+                    domains: [
+                        namespace,
+                    ]
+                ),
+                agents: .init(
+                    domains: [
+                        namespace,
+                    ]
+                )
+            )
+        )
+
+        try Expect.equal(
+            resolved.tools,
+            [
+                explicitTool,
+                unknownTool,
+                domainTool,
+            ],
+            "explicit members survive semantic resolution, selected Domain members expand, and exclusions win"
+        )
+        try Expect.equal(
+            resolved.programs,
+            [
+                program,
+            ],
+            "selected Domain Programs resolve"
+        )
+        try Expect.equal(
+            resolved.inferences,
+            [
+                inference,
+            ],
+            "selected Domain Inferences resolve"
+        )
+        try Expect.equal(
+            resolved.agents,
+            [
+                agent,
+            ],
+            "selected Domain Agents resolve"
+        )
+        try Expect.equal(
+            catalog.declarations,
+            catalog.entries.map(\.declaration),
+            "declarations remains the compatibility projection of Catalog entries"
+        )
+        try Expect.equal(
+            AgentCapabilitySet.none,
+            AgentCapabilitySet(),
+            "AgentCapabilitySet.none is empty"
+        )
+
+        let linkerCatalog =
+            LinkerCatalogFixture.catalog
+
+        try Expect.equal(
+            linkerCatalog.entries.isEmpty,
+            false,
+            "linker-derived Domain catalogs expose entries"
+        )
+        try Expect.equal(
+            linkerCatalog.entries.allSatisfy { entry in
+                entry.namespace
+                    == LinkerCatalogFixture.namespace
+            },
+            true,
+            "linker-derived entries retain their Domain namespace"
+        )
+
+        let unscopedCollision =
+            Catalog.unscoped.entries.first { entry in
+                guard case .tool(let definition) =
+                    entry.declaration
+                else {
+                    return false
+                }
+
+                return definition.identifier.rawValue
+                    == "unscoped_standard_collision"
+            }
+
+        try Expect.equal(
+            unscopedCollision != nil,
+            true,
+            "the unscoped linker fixture remains discoverable"
+        )
+
+        if let unscopedCollision {
+            try Expect.equal(
+                unscopedCollision.namespace == nil,
+                true,
+                "unscoped declarations retain nil namespace provenance"
+            )
+        }
+
+        return [
+            .field(
+                "tools",
+                String(resolved.tools.count)
+            ),
+            .field(
+                "linker_entries",
+                String(linkerCatalog.entries.count)
             ),
         ]
     },

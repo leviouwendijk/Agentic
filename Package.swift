@@ -21,6 +21,12 @@ let package = Package(
                 "AgenticStandard",
             ]
         ),
+        .library(
+            name: "AgenticHarness",
+            targets: [
+                "AgenticHarness",
+            ]
+        ),
 
         // testing
         .executable(
@@ -71,6 +77,7 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Search.git",
             branch: "master"
         ),
+
         .package(
             url: "https://github.com/leviouwendijk/Testing.git",
             branch: "master"
@@ -80,6 +87,12 @@ let package = Package(
             url: "https://github.com/swiftlang/swift-syntax.git",
             from: "603.0.0"
         ),
+
+        .package(
+            url: "https://github.com/leviouwendijk/Version.git",
+            branch: "master"
+        ),
+
     ],
     targets: [
         .target(
@@ -115,6 +128,10 @@ let package = Package(
                 ),
                 "AgenticLinkerSupport",
                 "AgenticMacrosPlugin",
+                .product(
+                    name: "Version",
+                    package: "Version"
+                ),
             ]
         ),
         .target(
@@ -152,6 +169,24 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticHarness",
+            dependencies: [
+                "Agentic",
+                .product(
+                    name: "Macros",
+                    package: "Macros"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
+                ),
+                .product(
+                    name: "Workspace",
+                    package: "Workspace"
+                ),
+            ]
+        ),
+        .target(
             name: "AgenticLinkerCatalogFixture",
             dependencies: [
                 "Agentic",
@@ -175,6 +210,7 @@ let package = Package(
             dependencies: [
                 "Agentic",
                 "AgenticStandard",
+                "AgenticHarness",
                 "AgenticLinkerCatalogFixture",
                 .product(
                     name: "Errors",

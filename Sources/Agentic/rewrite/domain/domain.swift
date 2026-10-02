@@ -43,7 +43,7 @@ public extension Domain {
             domains: [
                 definition,
             ],
-            declarations: _agentic_catalog_declarations(
+            entries: _agentic_catalog_entries(
                 namespace: definition.namespace.rawValue
             )
         )
