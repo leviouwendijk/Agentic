@@ -119,6 +119,7 @@ let package = Package(
                     name: "Errors",
                     package: "Errors"
                 ),
+                "AgenticLinkerSupport",
                 "AgenticMacrosPlugin",
             ]
         ),
@@ -229,6 +230,11 @@ let package = Package(
         //     ],
         //     path: "Plugins/AgenticBuildPlugin"
         // ),
+        .target(
+            name: "AgenticLinkerSupport",
+            path: "Support/AgenticLinkerSupport",
+            publicHeadersPath: "include"
+        ),
         .macro(
             name: "AgenticMacrosPlugin",
             dependencies: [

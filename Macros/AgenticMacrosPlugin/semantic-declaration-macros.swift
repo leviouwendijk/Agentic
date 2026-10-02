@@ -452,6 +452,9 @@ func catalogFactoryDeclaration(
             #if objectFormat(MachO)
             @section("__DATA,__agentic")
             @used
+            #elseif objectFormat(ELF)
+            @section("agentic_catalog")
+            @used
             #endif
             static let _agentic_catalog_factory: @convention(c) () -> UnsafeMutableRawPointer = {
                 _agentic_catalog_entry(

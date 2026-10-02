@@ -1,6 +1,11 @@
+import AgenticLinkerSupport
+
 #if canImport(MachO)
 import MachO
 #endif
+
+private typealias CatalogFactory =
+    @convention(c) () -> UnsafeMutableRawPointer
 
 private final class CatalogLinkerEntryBox {
     let namespace: String?
@@ -31,9 +36,6 @@ func _agentic_catalog_declarations(
     namespace: String?
 ) -> [Catalog.Declaration] {
 #if canImport(MachO)
-    typealias Factory =
-        @convention(c) () -> UnsafeMutableRawPointer
-
     var declarations = [Catalog.Declaration]()
     let imageCount = _dyld_image_count()
 
@@ -68,47 +70,84 @@ func _agentic_catalog_declarations(
             continue
         }
 
-        let entryStride = MemoryLayout<Factory>.stride
-
-        guard
-            entryStride > 0,
-            byteCount % UInt(entryStride) == 0
-        else {
-            continue
-        }
-
-        let bytes = UnsafeRawPointer(
-            section
+        declarations += _agentic_catalog_declarations(
+            bytes: UnsafeRawPointer(section),
+            byteCount: Int(byteCount),
+            namespace: namespace
         )
-
-        for offset in stride(
-            from: 0,
-            to: Int(byteCount),
-            by: entryStride
-        ) {
-            let factory = bytes
-                .advanced(by: offset)
-                .load(as: Factory.self)
-            let opaque = factory()
-            let entry = Unmanaged<
-                CatalogLinkerEntryBox
-            >.fromOpaque(
-                opaque
-            ).takeRetainedValue()
-
-            guard entry.namespace == namespace else {
-                continue
-            }
-
-            declarations.append(
-                entry.declaration
-            )
-        }
     }
 
     return declarations
+#elseif objectFormat(ELF)
+    guard
+        let start = agentic_catalog_section_start(),
+        let stop = agentic_catalog_section_stop()
+    else {
+        return []
+    }
+
+    let startAddress = Int(
+        bitPattern: start
+    )
+    let stopAddress = Int(
+        bitPattern: stop
+    )
+
+    guard stopAddress >= startAddress else {
+        return []
+    }
+
+    return _agentic_catalog_declarations(
+        bytes: start,
+        byteCount: stopAddress - startAddress,
+        namespace: namespace
+    )
 #else
     _ = namespace
     return []
 #endif
+}
+
+private func _agentic_catalog_declarations(
+    bytes: UnsafeRawPointer,
+    byteCount: Int,
+    namespace: String?
+) -> [Catalog.Declaration] {
+    let entryStride = MemoryLayout<CatalogFactory>.stride
+
+    guard
+        entryStride > 0,
+        byteCount >= 0,
+        byteCount % entryStride == 0
+    else {
+        return []
+    }
+
+    var declarations = [Catalog.Declaration]()
+
+    for offset in stride(
+        from: 0,
+        to: byteCount,
+        by: entryStride
+    ) {
+        let factory = bytes
+            .advanced(by: offset)
+            .load(as: CatalogFactory.self)
+        let opaque = factory()
+        let entry = Unmanaged<
+            CatalogLinkerEntryBox
+        >.fromOpaque(
+            opaque
+        ).takeRetainedValue()
+
+        guard entry.namespace == namespace else {
+            continue
+        }
+
+        declarations.append(
+            entry.declaration
+        )
+    }
+
+    return declarations
 }
