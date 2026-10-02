@@ -7,6 +7,7 @@ enum UnifiedAgenticFlowSuite: TestFlowRegistry {
         AgenticSmokeFlowSuite.flows
             + capabilitySelectionCompositionFlows
             + generatedDomainCatalogFlows
+            + linkerDomainCatalogFlows
             + ModelRoutingFlowSuite.flows
             + AgenticInferenceFlowSuite.flows
             + ProgramsFlowSuite.flows

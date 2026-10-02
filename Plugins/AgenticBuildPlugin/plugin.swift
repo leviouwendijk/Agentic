@@ -1,10 +1,11 @@
 import Foundation
 import PackagePlugin
 
+// replaced by dynamic linker implementation
+// which removes the need for manual appending of this plugin
+
 @main
-struct AgenticBuildPlugin:
-    BuildToolPlugin
-{
+struct AgenticBuildPlugin: BuildToolPlugin {
     func createBuildCommands(
         context: PluginContext,
         target: Target

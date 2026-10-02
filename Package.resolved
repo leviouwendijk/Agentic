@@ -1,5 +1,5 @@
 {
-  "originHash" : "bfa57e8543f5dc758ea6fefda375bc0b7928f8e0291420d3cfb2c20987165d9f",
+  "originHash" : "3fc9665b3c150174dbf161dcdcf0ab9e276149cfe37875a16c14a4155637cfe9",
   "pins" : [
     {
       "identity" : "ansi",
@@ -16,7 +16,7 @@
       "location" : "https://github.com/leviouwendijk/Arguments.git",
       "state" : {
         "branch" : "master",
-        "revision" : "d4ea1ad418c54380fde04cefacf5d59fa90054ba"
+        "revision" : "bb9985bc8225bc5300997ce6378d16ad37f92989"
       }
     },
     {

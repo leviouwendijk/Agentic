@@ -51,7 +51,8 @@ public macro InferenceSite() = #externalMacro(
     member,
     names:
         named(identifier),
-        named(definition)
+        named(definition),
+        named(_agentic_catalog_factory)
 )
 @attached(
     extension,

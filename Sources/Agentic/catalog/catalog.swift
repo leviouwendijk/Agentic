@@ -1,3 +1,7 @@
+public protocol CatalogProviding: Sendable {
+    static var catalog: Catalog { get }
+}
+
 public struct Catalog:
     Sendable,
     Hashable

@@ -27,7 +27,8 @@ public struct DomainDefinition:
 }
 
 public protocol Domain:
-    Sendable
+    Sendable,
+    CatalogProviding
 {
     static var definition: DomainDefinition { get }
 }
@@ -35,5 +36,16 @@ public protocol Domain:
 public extension Domain {
     static var namespace: Namespace {
         definition.namespace
+    }
+
+    static var catalog: Catalog {
+        Catalog(
+            domains: [
+                definition,
+            ],
+            declarations: _agentic_catalog_declarations(
+                namespace: definition.namespace.rawValue
+            )
+        )
     }
 }

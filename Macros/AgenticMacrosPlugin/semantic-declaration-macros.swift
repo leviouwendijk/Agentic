@@ -175,6 +175,16 @@ public struct ToolMacro:
             let access = semanticMemberAccessPrefix(
                 declarationContext
             )
+            let domainNamespace = declarationContext
+                .lexicalPath
+                .first
+                .map {
+                    Case.convert(
+                        $0,
+                        to: .snake
+                    )
+                }
+                ?? ""
 
             return [
                 DeclSyntax(
@@ -184,6 +194,21 @@ public struct ToolMacro:
                 DeclSyntax(
                     stringLiteral:
                         "\(access)static let definition: ToolDefinition = .init(identifier: Self.identifier, purpose: Self.purpose, risk: Self.risk)"
+                ),
+                DeclSyntax(
+                    stringLiteral:
+                        """
+                        #if objectFormat(MachO)
+                        @section("__DATA,__agentic")
+                        @used
+                        #endif
+                        static let _agentic_catalog_factory: @convention(c) () -> UnsafeMutableRawPointer = {
+                            _agentic_catalog_entry(
+                                namespace: "\(domainNamespace)",
+                                declaration: .tool(Self.definition)
+                            )
+                        }
+                        """
                 ),
             ]
         }

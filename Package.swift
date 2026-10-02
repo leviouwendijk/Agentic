@@ -159,11 +159,30 @@ let package = Package(
                 "AgenticBuildPlugin",
             ]
         ),
+        .target(
+            name: "AgenticLinkerCatalogFixture",
+            dependencies: [
+                "Agentic",
+                .product(
+                    name: "Macros",
+                    package: "Macros"
+                ),
+                .product(
+                    name: "Schema",
+                    package: "Schema"
+                ),
+                .product(
+                    name: "Workspace",
+                    package: "Workspace"
+                ),
+            ]
+        ),
         .executableTarget(
             name: "AgenticTesting",
             dependencies: [
                 "Agentic",
                 "AgenticStandard",
+                "AgenticLinkerCatalogFixture",
                 .product(
                     name: "Errors",
                     package: "Errors"
