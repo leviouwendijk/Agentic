@@ -27,7 +27,13 @@ public extension LinkerCatalogFixture.Tools {
 
         public static let risk: ActionRisk = .observe
 
-        public init() {}
+        private let value: String
+
+        public init(
+            value: String = "alpha"
+        ) {
+            self.value = value
+        }
 
         public func call(
             _ input: Input,
@@ -37,7 +43,7 @@ public extension LinkerCatalogFixture.Tools {
             _ = workspace
 
             return Output(
-                value: "alpha"
+                value: value
             )
         }
     }

@@ -92,14 +92,14 @@ let linkerDomainCatalogFlows: [TestFlow] = [
                 LinkerCatalogFixture.Tools.Alpha.definition.identifier
             ),
             true,
-            "Domain.installation derives an explicitly installable Tool through the linker namespace"
+            "Domain.installation derives a default-constructible Tool directly from @Tool"
         )
         try Expect.equal(
             installation.tools.contains(
                 LinkerCatalogFixture.Tools.Beta.definition.identifier
             ),
             false,
-            "Domain.installation does not fabricate executable installation for a semantic-only Tool"
+            "Domain.installation leaves a non-default-constructible Tool semantic-only without author installation boilerplate"
         )
 
         return [

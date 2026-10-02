@@ -17,6 +17,7 @@ public protocol Tool:
     // associatedtype Environment: Sendable
 
     static var definition: ToolDefinition { get }
+    static var execution: AgentToolExecutionContract { get }
 
     func preflight(
         _ input: Input,
@@ -30,6 +31,10 @@ public protocol Tool:
 }
 
 public extension Tool {
+    static var execution: AgentToolExecutionContract {
+        .fixed
+    }
+
     func preflight(
         _ input: Input,
         workspace: WorkspaceContext?

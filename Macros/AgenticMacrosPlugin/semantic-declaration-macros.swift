@@ -129,7 +129,22 @@ public struct ProgramMacro:
             of: declaration,
             macroName: "Program",
             lexicalContext: context.lexicalContext
-        )
+        ) { declarationContext in
+            try ProgramMacroSpecification.members(
+                in: declarationContext
+            ) + [
+                catalogFactoryDeclaration(
+                    in: declarationContext,
+                    category: "Programs",
+                    declaration: ".program(Self.definition)",
+                    installer: defaultConstructionInstaller(
+                        for: declaration,
+                        expression:
+                            "{ sink in sink.install(Self(), realization: nil) }"
+                    )
+                ),
+            ]
+        }
     }
 
     public static func expansion(
@@ -188,7 +203,11 @@ public struct ToolMacro:
                     in: declarationContext,
                     category: "Tools",
                     declaration: ".tool(Self.definition)",
-                    installable: true
+                    installer: defaultConstructionInstaller(
+                        for: declaration,
+                        expression:
+                            "{ sink in sink.install(Self(), modelContract: nil, execution: Self.execution) }"
+                    )
                 ),
             ]
         }
@@ -240,7 +259,8 @@ private enum AgentMacroSpecification:
                 in: context,
                 category: "Agents",
                 declaration: ".agent(Self.definition)",
-                installable: true
+                installer:
+                    "{ sink in sink.install(Self.definition) }"
             ),
         ]
     }
@@ -362,12 +382,6 @@ private enum ProgramMacroSpecification:
                 stringLiteral:
                     "\(access)typealias Site<InferenceType: Inference> = InferenceSite<\(context.name), InferenceType>"
             ),
-            catalogFactoryDeclaration(
-                in: context,
-                category: "Programs",
-                declaration: ".program(Self.definition)",
-                installable: true
-            ),
         ]
     }
 }
@@ -426,11 +440,86 @@ func toolIdentifier(
     return identifier
 }
 
+func defaultConstructionInstaller(
+    for declaration: some DeclGroupSyntax,
+    expression: String
+) -> String? {
+    guard defaultConstructible(
+        declaration
+    ) else {
+        return nil
+    }
+
+    return expression
+}
+
+func defaultConstructible(
+    _ declaration: some DeclGroupSyntax
+) -> Bool {
+    guard let structure = declaration.as(
+        StructDeclSyntax.self
+    ) else {
+        return false
+    }
+
+    let initializers = structure.memberBlock.members.compactMap {
+        member in
+        member.decl.as(
+            InitializerDeclSyntax.self
+        )
+    }
+
+    if !initializers.isEmpty {
+        return initializers.contains {
+            initializer in
+            guard initializer.optionalMark == nil else {
+                return false
+            }
+
+            let signature = initializer.signature.description
+
+            guard
+                !signature.contains("throws"),
+                !signature.contains("rethrows"),
+                !signature.contains("async")
+            else {
+                return false
+            }
+
+            return initializer.signature
+                .parameterClause
+                .parameters
+                .allSatisfy { parameter in
+                    parameter.defaultValue != nil
+                }
+        }
+    }
+
+    let hasInstanceStorage = structure.memberBlock.members.contains {
+        member in
+        guard let variable = member.decl.as(
+            VariableDeclSyntax.self
+        ) else {
+            return false
+        }
+
+        let isTypeMember = variable.modifiers.contains {
+            modifier in
+            modifier.name.text == "static"
+                || modifier.name.text == "class"
+        }
+
+        return !isTypeMember
+    }
+
+    return !hasInstanceStorage
+}
+
 func catalogFactoryDeclaration(
     in context: DeclarationMacroContext,
     category: String,
     declaration: String,
-    installable: Bool = false
+    installer: String? = nil
 ) -> DeclSyntax {
     let lexicalPath = context.lexicalPath
 
@@ -450,9 +539,8 @@ func catalogFactoryDeclaration(
         namespaceExpression = "nil"
     }
 
-    let installableExpression = installable
-        ? "Self.self"
-        : "nil"
+    let installerExpression = installer
+        ?? "nil"
 
     return DeclSyntax(
         stringLiteral:
@@ -468,7 +556,7 @@ func catalogFactoryDeclaration(
                 _agentic_catalog_entry(
                     namespace: \(namespaceExpression),
                     declaration: \(declaration),
-                    installable: \(installableExpression)
+                    installer: \(installerExpression)
                 )
             }
             """

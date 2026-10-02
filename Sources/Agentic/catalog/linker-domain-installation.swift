@@ -11,17 +11,17 @@ func _agentic_domain_installation(
     namespace: String?
 ) -> DomainInstallation {
     .init(
-        declarations: _agentic_installables(
+        installers: _agentic_installers(
             namespace: namespace
         )
     )
 }
 
-private func _agentic_installables(
+private func _agentic_installers(
     namespace: String?
-) -> [any DomainInstallable.Type] {
+) -> [DomainInstallation.Installer] {
 #if canImport(MachO)
-    var declarations = [any DomainInstallable.Type]()
+    var installers = [DomainInstallation.Installer]()
     let imageCount = _dyld_image_count()
 
     for imageIndex in 0 ..< imageCount {
@@ -55,14 +55,14 @@ private func _agentic_installables(
             continue
         }
 
-        declarations += _agentic_installables(
+        installers += _agentic_installers(
             bytes: UnsafeRawPointer(section),
             byteCount: Int(byteCount),
             namespace: namespace
         )
     }
 
-    return declarations
+    return installers
 #elseif objectFormat(ELF)
     guard
         let start = agentic_catalog_section_start(),
@@ -82,7 +82,7 @@ private func _agentic_installables(
         return []
     }
 
-    return _agentic_installables(
+    return _agentic_installers(
         bytes: start,
         byteCount: stopAddress - startAddress,
         namespace: namespace
@@ -93,11 +93,11 @@ private func _agentic_installables(
 #endif
 }
 
-private func _agentic_installables(
+private func _agentic_installers(
     bytes: UnsafeRawPointer,
     byteCount: Int,
     namespace: String?
-) -> [any DomainInstallable.Type] {
+) -> [DomainInstallation.Installer] {
     let entryStride = MemoryLayout<InstallationFactory>.stride
 
     guard
@@ -108,7 +108,7 @@ private func _agentic_installables(
         return []
     }
 
-    var declarations = [any DomainInstallable.Type]()
+    var installers = [DomainInstallation.Installer]()
 
     for offset in stride(
         from: 0,
@@ -127,15 +127,15 @@ private func _agentic_installables(
 
         guard
             entry.namespace == namespace,
-            let installable = entry.installable
+            let installer = entry.installer
         else {
             continue
         }
 
-        declarations.append(
-            installable
+        installers.append(
+            installer
         )
     }
 
-    return declarations
+    return installers
 }

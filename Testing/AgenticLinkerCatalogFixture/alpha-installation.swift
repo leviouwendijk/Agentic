@@ -1,13 +1,1 @@
-import Agentic
-
-extension LinkerCatalogFixture.Tools.Alpha:
-    DomainInstallable
-{
-    public static func install(
-        into sink: any DomainInstallation.Sink
-    ) {
-        sink.install(
-            Self()
-        )
-    }
-}
+// Installation is derived directly from @Tool.

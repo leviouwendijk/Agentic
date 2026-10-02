@@ -10,29 +10,29 @@ private typealias CatalogFactory =
 final class CatalogLinkerEntryBox {
     let namespace: String?
     let declaration: Catalog.Declaration
-    let installable: (any DomainInstallable.Type)?
+    let installer: DomainInstallation.Installer?
 
     init(
         namespace: String?,
         declaration: Catalog.Declaration,
-        installable: Any.Type? = nil
+        installer: DomainInstallation.Installer? = nil
     ) {
         self.namespace = namespace
         self.declaration = declaration
-        self.installable = installable as? any DomainInstallable.Type
+        self.installer = installer
     }
 }
 
 public func _agentic_catalog_entry(
     namespace: String?,
     declaration: Catalog.Declaration,
-    installable: Any.Type? = nil
+    installer: DomainInstallation.Installer? = nil
 ) -> UnsafeMutableRawPointer {
     Unmanaged.passRetained(
         CatalogLinkerEntryBox(
             namespace: namespace,
             declaration: declaration,
-            installable: installable
+            installer: installer
         )
     ).toOpaque()
 }

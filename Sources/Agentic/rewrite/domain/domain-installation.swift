@@ -1,10 +1,6 @@
-public protocol DomainInstallable {
-    static func install(
-        into sink: any DomainInstallation.Sink
-    )
-}
-
 public struct DomainInstallation {
+    public typealias Installer = (any Sink) -> Void
+
     public protocol Sink: AnyObject {
         func install<T: Tool>(
             _ tool: T,
@@ -22,20 +18,20 @@ public struct DomainInstallation {
         )
     }
 
-    let declarations: [any DomainInstallable.Type]
+    let installers: [Installer]
 
     init(
-        declarations: [any DomainInstallable.Type]
+        installers: [Installer]
     ) {
-        self.declarations = declarations
+        self.installers = installers
     }
 
     public func install(
         into sink: any Sink
     ) {
-        for declaration in declarations {
-            declaration.install(
-                into: sink
+        for installer in installers {
+            installer(
+                sink
             )
         }
     }
@@ -48,7 +44,7 @@ public extension DomainInstallation.Sink {
         install(
             tool,
             modelContract: nil,
-            execution: .fixed
+            execution: T.execution
         )
     }
 
