@@ -173,7 +173,8 @@ let package = Package(
                     name: "Workspace",
                     package: "Workspace"
                 ),
-            ]
+            ],
+            path: "Testing/AgenticLinkerCatalogFixture"
         ),
         .executableTarget(
             name: "AgenticTesting",
