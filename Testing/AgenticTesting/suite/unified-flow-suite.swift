@@ -6,7 +6,7 @@ enum UnifiedAgenticFlowSuite: TestFlowRegistry {
     static let flows: [TestFlow] =
         AgenticSmokeFlowSuite.flows
             + capabilitySelectionCompositionFlows
-            + generatedDomainCatalogFlows
+            + domainCatalogFlows
             + linkerDomainCatalogFlows
             + ModelRoutingFlowSuite.flows
             + AgenticInferenceFlowSuite.flows

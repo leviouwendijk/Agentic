@@ -3,11 +3,11 @@ import MachO
 #endif
 
 private final class CatalogLinkerEntryBox {
-    let namespace: String
+    let namespace: String?
     let declaration: Catalog.Declaration
 
     init(
-        namespace: String,
+        namespace: String?,
         declaration: Catalog.Declaration
     ) {
         self.namespace = namespace
@@ -16,7 +16,7 @@ private final class CatalogLinkerEntryBox {
 }
 
 public func _agentic_catalog_entry(
-    namespace: String,
+    namespace: String?,
     declaration: Catalog.Declaration
 ) -> UnsafeMutableRawPointer {
     Unmanaged.passRetained(
@@ -28,7 +28,7 @@ public func _agentic_catalog_entry(
 }
 
 func _agentic_catalog_declarations(
-    namespace: String
+    namespace: String?
 ) -> [Catalog.Declaration] {
 #if canImport(MachO)
     typealias Factory =

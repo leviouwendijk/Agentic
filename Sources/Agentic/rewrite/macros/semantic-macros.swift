@@ -1,6 +1,8 @@
 @attached(
     member,
-    names: named(definition)
+    names:
+        named(definition),
+        named(_agentic_catalog_factory)
 )
 @attached(
     extension,
@@ -13,7 +15,9 @@ public macro Agent() = #externalMacro(
 
 @attached(
     member,
-    names: named(definition)
+    names:
+        named(definition),
+        named(_agentic_catalog_factory)
 )
 @attached(
     extension,
@@ -30,7 +34,8 @@ public macro Inference(
     member,
     names:
         named(definition),
-        named(Site)
+        named(Site),
+        named(_agentic_catalog_factory)
 )
 @attached(
     extension,

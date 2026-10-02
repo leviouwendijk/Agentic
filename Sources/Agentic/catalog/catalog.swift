@@ -19,6 +19,14 @@ public struct Catalog:
 
     public static let none = Self()
 
+    public static var unscoped: Self {
+        .init(
+            declarations: _agentic_catalog_declarations(
+                namespace: nil
+            )
+        )
+    }
+
     public static func + (
         lhs: Self,
         rhs: Self

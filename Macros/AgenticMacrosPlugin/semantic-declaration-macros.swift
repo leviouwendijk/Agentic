@@ -175,17 +175,6 @@ public struct ToolMacro:
             let access = semanticMemberAccessPrefix(
                 declarationContext
             )
-            let domainNamespace = declarationContext
-                .lexicalPath
-                .first
-                .map {
-                    Case.convert(
-                        $0,
-                        to: .snake
-                    )
-                }
-                ?? ""
-
             return [
                 DeclSyntax(
                     stringLiteral:
@@ -195,20 +184,10 @@ public struct ToolMacro:
                     stringLiteral:
                         "\(access)static let definition: ToolDefinition = .init(identifier: Self.identifier, purpose: Self.purpose, risk: Self.risk)"
                 ),
-                DeclSyntax(
-                    stringLiteral:
-                        """
-                        #if objectFormat(MachO)
-                        @section("__DATA,__agentic")
-                        @used
-                        #endif
-                        static let _agentic_catalog_factory: @convention(c) () -> UnsafeMutableRawPointer = {
-                            _agentic_catalog_entry(
-                                namespace: "\(domainNamespace)",
-                                declaration: .tool(Self.definition)
-                            )
-                        }
-                        """
+                catalogFactoryDeclaration(
+                    in: declarationContext,
+                    category: "Tools",
+                    declaration: ".tool(Self.definition)"
                 ),
             ]
         }
@@ -256,6 +235,11 @@ private enum AgentMacroSpecification:
                 stringLiteral:
                     "\(access)static let definition: AgentDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, instructions: Self.instructions, capabilities: Self.capabilities, delegation: Self.delegation)"
             ),
+            catalogFactoryDeclaration(
+                in: context,
+                category: "Agents",
+                declaration: ".agent(Self.definition)"
+            ),
         ]
     }
 }
@@ -282,6 +266,11 @@ private enum InferenceMacroSpecification:
             DeclSyntax(
                 stringLiteral:
                     "\(access)static let definition: InferenceDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose)"
+            ),
+            catalogFactoryDeclaration(
+                in: context,
+                category: "Inferences",
+                declaration: ".inference(Self.definition)"
             ),
         ]
     }
@@ -371,6 +360,11 @@ private enum ProgramMacroSpecification:
                 stringLiteral:
                     "\(access)typealias Site<InferenceType: Inference> = InferenceSite<\(context.name), InferenceType>"
             ),
+            catalogFactoryDeclaration(
+                in: context,
+                category: "Programs",
+                declaration: ".program(Self.definition)"
+            ),
         ]
     }
 }
@@ -427,6 +421,46 @@ func toolIdentifier(
     }
 
     return identifier
+}
+
+func catalogFactoryDeclaration(
+    in context: DeclarationMacroContext,
+    category: String,
+    declaration: String
+) -> DeclSyntax {
+    let lexicalPath = context.lexicalPath
+
+    let namespaceExpression: String
+
+    if lexicalPath.count >= 3,
+       lexicalPath[1] == category
+    {
+        let domainNamespace = Case.convert(
+            lexicalPath[0],
+            to: .snake
+        )
+
+        namespaceExpression =
+            "\"\(domainNamespace)\""
+    } else {
+        namespaceExpression = "nil"
+    }
+
+    return DeclSyntax(
+        stringLiteral:
+            """
+            #if objectFormat(MachO)
+            @section("__DATA,__agentic")
+            @used
+            #endif
+            static let _agentic_catalog_factory: @convention(c) () -> UnsafeMutableRawPointer = {
+                _agentic_catalog_entry(
+                    namespace: \(namespaceExpression),
+                    declaration: \(declaration)
+                )
+            }
+            """
+    )
 }
 
 func semanticMemberAccessPrefix(

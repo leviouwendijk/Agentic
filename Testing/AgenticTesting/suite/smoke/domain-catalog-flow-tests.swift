@@ -2,15 +2,15 @@ import Agentic
 import AgenticStandard
 import Testing
 
-let generatedDomainCatalogFlows: [TestFlow] = [
+let domainCatalogFlows: [TestFlow] = [
     TestFlow(
-        "generated-domain-catalog",
+        "domain-catalog-without-build-plugin",
         tags: [
             "agentic",
             "catalog",
             "domain",
-            "generated",
-            "indexing",
+            "derived",
+            "linker",
         ]
     ) {
         try Expect.equal(
@@ -18,7 +18,7 @@ let generatedDomainCatalogFlows: [TestFlow] = [
             [
                 Standard.definition,
             ],
-            "generated Standard catalog retains its domain definition"
+            "derived Standard catalog retains its domain definition"
         )
 
         try Expect.equal(
@@ -29,25 +29,25 @@ let generatedDomainCatalogFlows: [TestFlow] = [
                 }
             ),
             true,
-            "generated Standard catalog discovers tools declared in extension files"
+            "derived Standard catalog discovers tools declared in extension files"
         )
 
         try Expect.equal(
             Standard.catalog.inferences.isEmpty,
             false,
-            "generated Standard catalog discovers inference declarations"
+            "derived Standard catalog discovers inference declarations"
         )
 
         try Expect.equal(
             Standard.catalog.programs.isEmpty,
             false,
-            "generated Standard catalog discovers Program declarations"
+            "derived Standard catalog discovers Program declarations"
         )
 
         try Expect.equal(
             Standard.catalog.declarations.isEmpty,
             false,
-            "generated Standard catalog contains semantic declarations"
+            "derived Standard catalog contains semantic declarations"
         )
 
         let composed =
