@@ -21,6 +21,12 @@ let package = Package(
                 "AgenticStandard",
             ]
         ),
+        .plugin(
+            name: "AgenticBuildPlugin",
+            targets: [
+                "AgenticBuildPlugin",
+            ]
+        ),
 
         // testing
         .executable(
