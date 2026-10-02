@@ -21,12 +21,6 @@ let package = Package(
                 "AgenticStandard",
             ]
         ),
-        // .plugin(
-        //     name: "AgenticBuildPlugin",
-        //     targets: [
-        //         "AgenticBuildPlugin",
-        //     ]
-        // ),
 
         // testing
         .executable(
@@ -209,28 +203,6 @@ let package = Package(
             ],
             path: "Testing/AgenticTesting"
         ),
-        // .executableTarget(
-        //     name: "AgenticIndexer",
-        //     dependencies: [
-        //         .product(
-        //             name: "SwiftParser",
-        //             package: "swift-syntax"
-        //         ),
-        //         .product(
-        //             name: "SwiftSyntax",
-        //             package: "swift-syntax"
-        //         ),
-        //     ],
-        //     path: "Tools/AgenticIndexer"
-        // ),
-        // .plugin(
-        //     name: "AgenticBuildPlugin",
-        //     capability: .buildTool(),
-        //     dependencies: [
-        //         "AgenticIndexer",
-        //     ],
-        //     path: "Plugins/AgenticBuildPlugin"
-        // ),
         .target(
             name: "AgenticLinkerSupport",
             path: "Support/AgenticLinkerSupport",
