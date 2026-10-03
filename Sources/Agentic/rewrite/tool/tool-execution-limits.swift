@@ -222,29 +222,24 @@ public extension ExecutionLimits {
         Hashable
     {
         public var seconds: TimeInterval?
-        public var iterations: Int?
 
         public init(
-            seconds: TimeInterval? = nil,
-            iterations: Int? = nil
+            seconds: TimeInterval? = nil
         ) {
             self.seconds = seconds
-            self.iterations = iterations
         }
 
         public static let unlimited = Self()
 
         public var isUnlimited: Bool {
             seconds == nil
-                && iterations == nil
         }
 
         public func merged(
             with override: Self
         ) -> Self {
             .init(
-                seconds: override.seconds ?? seconds,
-                iterations: override.iterations ?? iterations
+                seconds: override.seconds ?? seconds
             )
         }
     }
