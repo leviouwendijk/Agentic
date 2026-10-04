@@ -23,6 +23,17 @@ extension SmokeDomain.Agents {
 
         static let purpose =
             "Prove lexical Agent declaration synthesis."
+
+        static let modelSelection = AgentModelSelection(
+            purpose: .coder
+        )
+
+        static let toolExposure: AgentToolExposurePolicy =
+            .discoverable(
+                [
+                    SmokeDomain.Tools.MacroSmokeTool.identifier,
+                ]
+            )
     }
 }
 
@@ -328,6 +339,33 @@ func runSemanticAuthoringMacroSmoke() throws {
         SmokeDomain.Agents.MacroSmokeAgent.definition.identifier.rawValue,
         expected: "smoke_domain.agents.macro_smoke_agent"
     )
+
+    guard SmokeDomain.Agents
+        .MacroSmokeAgent
+        .definition
+        .modelSelection
+        .purpose == .coder
+    else {
+        fatalError(
+            "Expected @Agent to retain authored model selection."
+        )
+    }
+
+    guard SmokeDomain.Agents
+        .MacroSmokeAgent
+        .definition
+        .toolExposure
+            == .discoverable(
+                [
+                    SmokeDomain.Tools.MacroSmokeTool.identifier,
+                ]
+            )
+    else {
+        fatalError(
+            "Expected @Agent to retain authored tool exposure."
+        )
+    }
+
     try ContractProof.identifier(
         SmokeDomain.Inferences.MacroSmokeInference.definition.identifier.rawValue,
         expected: "smoke_domain.inferences.macro_smoke_inference"

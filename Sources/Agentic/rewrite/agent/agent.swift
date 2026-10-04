@@ -27,6 +27,8 @@ public struct AgentDefinition:
     public let purpose: String
     public let instructions: String?
     public let capabilities: AgentCapabilities
+    public let modelSelection: AgentModelSelection
+    public let toolExposure: AgentToolExposurePolicy
     public let delegation: AgentDelegationPolicy
 
     public init(
@@ -34,12 +36,18 @@ public struct AgentDefinition:
         purpose: String,
         instructions: String? = nil,
         capabilities: AgentCapabilities = .none,
+        modelSelection: AgentModelSelection = .init(
+            purpose: .executor
+        ),
+        toolExposure: AgentToolExposurePolicy = .all,
         delegation: AgentDelegationPolicy = .disabled
     ) {
         self.identifier = identifier
         self.purpose = purpose
         self.instructions = instructions
         self.capabilities = capabilities
+        self.modelSelection = modelSelection
+        self.toolExposure = toolExposure
         self.delegation = delegation
     }
 }
@@ -51,6 +59,8 @@ public protocol Agent:
     static var purpose: String { get }
     static var instructions: String? { get }
     static var capabilities: AgentCapabilities { get }
+    static var modelSelection: AgentModelSelection { get }
+    static var toolExposure: AgentToolExposurePolicy { get }
     static var delegation: AgentDelegationPolicy { get }
 }
 
@@ -61,6 +71,16 @@ public extension Agent {
 
     static var capabilities: AgentCapabilities {
         .none
+    }
+
+    static var modelSelection: AgentModelSelection {
+        .init(
+            purpose: .executor
+        )
+    }
+
+    static var toolExposure: AgentToolExposurePolicy {
+        .all
     }
 
     static var delegation: AgentDelegationPolicy {
