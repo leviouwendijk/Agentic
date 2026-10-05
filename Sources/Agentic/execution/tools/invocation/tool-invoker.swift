@@ -17,40 +17,25 @@ public struct ToolInvoker: Sendable {
     }
 
     public func review(
-        _ call: ToolCall,
-        execution: ToolInvocation.Execution? = nil,
-        workspace: WorkspaceContext? = nil,
-        references: [Reference] = []
-    ) async throws -> ToolInvocation.Review {
-        try await review(
-            call,
-            execution: execution,
-            context: .init(
-                workspace: workspace
-            ),
-            references: references
-        )
-    }
-
-    public func review(
-        _ call: ToolCall,
-        execution: ToolInvocation.Execution? = nil,
+        _ invocation: ToolInvocation,
         context: ToolContext,
         references: [Reference] = []
     ) async throws -> ToolInvocation.Review {
         let context = try targetedContext(
-            for: call,
-            execution: execution,
+            for: invocation,
             context: context
         )
-
         let preflight = try await registry.preflight(
-            call,
+            ToolCall(
+                id: invocation.id,
+                tool: invocation.tool,
+                input: invocation.arguments
+            ),
             context: context
         )
 
         return .init(
-            call: call,
+            invocation: invocation,
             preflight: preflight,
             requirement: policy.evaluate(
                 preflight
@@ -60,38 +45,13 @@ public struct ToolInvoker: Sendable {
     }
 
     public func invoke(
-        _ call: ToolCall,
-        execution: ToolInvocation.Execution? = nil,
-        workspace: WorkspaceContext? = nil,
-        references: [Reference] = [],
-        approvalHandler: (any ToolApprovalHandler)? = nil
-    ) async throws -> ToolInvocation.Result {
-        try await invoke(
-            call,
-            execution: execution,
-            context: .init(
-                workspace: workspace
-            ),
-            references: references,
-            approvalHandler: approvalHandler
-        )
-    }
-
-    public func invoke(
-        _ call: ToolCall,
-        execution: ToolInvocation.Execution? = nil,
+        _ invocation: ToolInvocation,
         context: ToolContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
-        let context = try targetedContext(
-            for: call,
-            execution: execution,
-            context: context
-        )
-
         let review = try await review(
-            call,
+            invocation,
             context: context,
             references: references
         )
@@ -99,20 +59,6 @@ public struct ToolInvoker: Sendable {
         return try await invoke(
             review,
             context: context,
-            approvalHandler: approvalHandler
-        )
-    }
-
-    public func invoke(
-        _ review: ToolInvocation.Review,
-        workspace: WorkspaceContext? = nil,
-        approvalHandler: (any ToolApprovalHandler)? = nil
-    ) async throws -> ToolInvocation.Result {
-        try await invoke(
-            review,
-            context: .init(
-                workspace: workspace
-            ),
             approvalHandler: approvalHandler
         )
     }
@@ -148,12 +94,21 @@ public struct ToolInvoker: Sendable {
 
         switch decision {
         case .approved:
+            let invocation = review.invocation
+            let context = try targetedContext(
+                for: invocation,
+                context: context
+            )
             let execution = try await ToolExecution(
                 registry: registry,
                 recovery: recovery,
                 context: context
             ).execute(
-                review.call,
+                ToolCall(
+                    id: invocation.id,
+                    tool: invocation.tool,
+                    input: invocation.arguments
+                ),
                 preflight: review.preflight
             )
 
@@ -205,48 +160,22 @@ public struct ToolInvoker: Sendable {
 
 private extension ToolInvoker {
     func targetedContext(
-        for call: ToolCall,
-        execution: ToolInvocation.Execution?,
+        for invocation: ToolInvocation,
         context: ToolContext
     ) throws -> ToolContext {
-        guard let target = execution?.workspace else {
+        guard let target = invocation.execution?.workspace else {
             return context
-        }
-
-        guard let tool = registry.registeredTool(
-            identifiedBy: call.tool
-        ) else {
-            throw ToolRegistryExecutionError.missingTool(
-                call.tool.rawValue
-            )
-        }
-
-        guard
-            tool.capability.execution.workingLocation
-                == AgentToolExecutionContract.WorkingLocation.targetable
-        else {
-            throw WorkspaceToolTargetingError.unsupportedTool(
-                call.tool.rawValue
-            )
         }
 
         guard let workspace = context.workspace else {
             throw WorkspaceToolTargetingError.workspaceRequired(
-                call.tool.rawValue
+                invocation.tool.rawValue
             )
-        }
-
-        let subpath = target.subpath.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        guard !subpath.isEmpty else {
-            throw WorkspaceToolTargetingError.emptySubpath
         }
 
         return context.using(
             workspace: try workspace.context(
-                atRootPath: subpath
+                atRootPath: target.subpath
             )
         )
     }

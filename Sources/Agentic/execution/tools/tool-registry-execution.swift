@@ -49,7 +49,7 @@ public extension ToolRegistry {
         _ call: ToolCall,
         failure: ToolCall.Failure,
         context: ToolContext
-    ) async throws -> RegisteredAgentTool.Reconciliation? {
+    ) async throws -> RegisteredTool.Reconciliation? {
         guard let registered =
             registeredTool(
                 identifiedBy: call.tool

@@ -206,7 +206,7 @@ public struct ToolMacro:
                     installer: defaultConstructionInstaller(
                         for: declaration,
                         expression:
-                            "{ sink in sink.install(Self(), modelContract: nil, execution: Self.execution) }"
+                            "{ sink in sink.install(Self()) }"
                     )
                 ),
             ]

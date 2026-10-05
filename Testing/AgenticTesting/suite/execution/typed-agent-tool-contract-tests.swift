@@ -13,33 +13,45 @@ extension ExecutionTesting {
         var registry = ToolRegistry()
 
         try registry.register(
-            tool,
-            execution: .targetable
+            tool
+        )
+
+        let semanticInput = try JSONValue.encoding(
+            TypedAgentToolContractInput(
+                value: "hello"
+            )
+        )
+        let modelCall = ToolCall(
+            id: "typed-tool-contract-model-call",
+            tool: tool.identifier,
+            input: .object([
+                "arguments": semanticInput,
+            ])
+        )
+        let parsed = try registry.invocation(
+            for: modelCall
+        )
+
+        try Expect.equal(
+            parsed.tool,
+            tool.identifier,
+            "resolution preserves the concrete tool identity"
+        )
+        try Expect.equal(
+            parsed.execution,
+            nil,
+            "omitting invocation execution preserves the current workspace"
+        )
+        try Expect.equal(
+            parsed.arguments,
+            semanticInput,
+            "model invocation unwraps the semantic arguments"
         )
 
         let call = ToolCall(
             id: "typed-tool-contract-call",
             tool: tool.identifier,
-            input: try JSONToolBridge.encode(
-                TypedAgentToolContractInput(
-                    value: "hello"
-                )
-            )
-        )
-
-        let parsed = try registry.parseModelCall(
-            call
-        )
-
-        try Expect.equal(
-            parsed.capability.definition.name,
-            "typed_tool_contract",
-            "registration preserves the concrete tool definition"
-        )
-        try Expect.equal(
-            parsed.capability.execution.workingLocation,
-            AgentToolExecutionContract.WorkingLocation.targetable,
-            "registration captures working-location capability before type erasure"
+            input: semanticInput
         )
 
         let preflight = try await registry.preflight(
@@ -57,9 +69,8 @@ extension ExecutionTesting {
             call,
             workspace: nil
         )
-        let output = try JSONToolBridge.decode(
-            TypedAgentToolContractOutput.self,
-            from: result.result.output
+        let output = try result.result.output.decode(
+            TypedAgentToolContractOutput.self
         )
         let projection = try Expect.notNil(
             result.result.projection,

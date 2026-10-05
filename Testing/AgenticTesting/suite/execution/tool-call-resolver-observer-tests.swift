@@ -246,8 +246,10 @@ private func toolCallResolverObserverCall(
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONToolBridge.encode(
-            ToolCallResolverObserverInput()
-        )
+        input: .object([
+            "arguments": try JSONValue.encoding(
+                ToolCallResolverObserverInput()
+            ),
+        ])
     )
 }

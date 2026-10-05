@@ -113,17 +113,16 @@ private extension ToolPlanExecutor {
         let invocation: ToolInvocation.Result
 
         do {
-            let execution = try node.execution.map {
-                try JSONToolBridge.decode(
-                    ToolInvocation.Execution.self,
-                    from: $0
-                )
-            }
-
             invocation = try await invoker.invoke(
-                call,
-                execution: execution,
-                workspace: workspace,
+                ToolInvocation(
+                    id: call.id,
+                    tool: call.tool,
+                    arguments: call.input,
+                    execution: node.execution
+                ),
+                context: .init(
+                    workspace: workspace
+                ),
                 references: references,
                 approvalHandler: approvalHandler
             )

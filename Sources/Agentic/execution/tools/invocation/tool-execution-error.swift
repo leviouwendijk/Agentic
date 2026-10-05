@@ -52,7 +52,7 @@ extension ToolExecution {
         return ToolResult(
             toolCallID: call.id,
             tool: call.tool,
-            output: try JSONToolBridge.encode(
+            output: try JSONValue.encoding(
                 payload
             ),
             isError: true

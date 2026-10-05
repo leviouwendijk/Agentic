@@ -6,8 +6,6 @@ public struct ToolInventoryEntry:
     public let description: String
     public let risk: ActionRisk
     public let isModelFacing: Bool
-    public let workingLocation:
-        AgentToolExecutionContract.WorkingLocation
     public let collectionIdentifier:
         AgentToolCollectionIdentifier
 
@@ -17,8 +15,6 @@ public struct ToolInventoryEntry:
         description: String,
         risk: ActionRisk,
         isModelFacing: Bool,
-        workingLocation:
-            AgentToolExecutionContract.WorkingLocation,
         collectionIdentifier:
             AgentToolCollectionIdentifier
     ) {
@@ -27,7 +23,6 @@ public struct ToolInventoryEntry:
         self.description = description
         self.risk = risk
         self.isModelFacing = isModelFacing
-        self.workingLocation = workingLocation
         self.collectionIdentifier = collectionIdentifier
     }
 }
@@ -266,7 +261,7 @@ public struct ToolInventory:
     }
 
     private static func inventoryEntry(
-        inspection: AgentToolRegistryInspectionEntry,
+        inspection: ToolRegistryInspectionEntry,
         collection: AgentToolCollectionMetadata
     ) -> ToolInventoryEntry {
         .init(
@@ -275,7 +270,6 @@ public struct ToolInventory:
             description: inspection.description,
             risk: inspection.risk,
             isModelFacing: inspection.isModelFacing,
-            workingLocation: inspection.workingLocation,
             collectionIdentifier: collection.identifier
         )
     }

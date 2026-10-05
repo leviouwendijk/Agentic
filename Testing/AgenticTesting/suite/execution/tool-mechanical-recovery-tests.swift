@@ -33,9 +33,8 @@ extension ExecutionTesting {
         try Expect.equal(execution.observations.map(\.content), ["call 1", "call 2"], "retry retains failed and successful attempt observations")
         try Expect.equal(execution.observations.compactMap { $0.origin?.ordinal }, [1, 2], "retry evidence has distinct operation ordinals")
 
-        let output = try JSONToolBridge.decode(
-            MechanicalRecoveryOutput.self,
-            from: execution.result.output
+        let output = try execution.result.output.decode(
+            MechanicalRecoveryOutput.self
         )
 
         try Expect.equal(
@@ -192,7 +191,12 @@ extension ExecutionTesting {
             scenario: .observe_retry
         )
         let invocation = try await fixture.invoker.invoke(
-            fixture.call
+            ToolInvocation(
+                id: fixture.call.id,
+                tool: fixture.call.tool,
+                arguments: fixture.call.input
+            ),
+            context: .init()
         )
         let execution = try Expect.notNil(
             invocation.execution,
@@ -225,11 +229,11 @@ extension ExecutionTesting {
             "canonical execution evidence defines invocation execution state"
         )
 
-        let persisted = try JSONToolBridge.decode(
-            ToolInvocation.Result.self,
-            from: try JSONToolBridge.encode(
-                invocation
-            )
+        let persistedJSON = try JSONValue.encoding(
+            invocation
+        )
+        let persisted = try persistedJSON.decode(
+            ToolInvocation.Result.self
         )
 
         try Expect.equal(
@@ -298,11 +302,11 @@ extension ExecutionTesting {
             "ToolPlan record preserves exact mechanical recovery actions"
         )
 
-        let persisted = try JSONToolBridge.decode(
-            ToolPlan.Result.self,
-            from: try JSONToolBridge.encode(
-                result
-            )
+        let persistedJSON = try JSONValue.encoding(
+            result
+        )
+        let persisted = try persistedJSON.decode(
+            ToolPlan.Result.self
         )
         let persistedExecution = try Expect.notNil(
             persisted.records.first?.invocation?.execution,
@@ -340,7 +344,12 @@ private extension ExecutionTesting {
             scenario: scenario
         )
         let invocation = try await fixture.invoker.invoke(
-            fixture.call,
+            ToolInvocation(
+                id: fixture.call.id,
+                tool: fixture.call.tool,
+                arguments: fixture.call.input
+            ),
+            context: .init(),
             approvalHandler: MechanicalRecoveryApprovalHandler()
         )
 
@@ -372,7 +381,7 @@ private extension ExecutionTesting {
         let call = ToolCall(
             id: "mechanical-recovery-\(scenario.rawValue)",
             tool: tool.identifier,
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 MechanicalRecoveryInput(
                     scenario: scenario.rawValue
                 )

@@ -99,7 +99,7 @@ public extension ToolPlan {
 
         case call(
             ToolCall,
-            execution: JSONValue? = nil,
+            execution: ToolInvocation.Execution? = nil,
             onSuccess: [Self] = [],
             onFailure: [Self] = [],
             onDenied: [Self] = []
@@ -140,7 +140,7 @@ public extension ToolPlan {
             return call
         }
 
-        public var execution: JSONValue? {
+        public var execution: ToolInvocation.Execution? {
             guard case .call(
                 _,
                 let execution,
@@ -292,7 +292,7 @@ public extension ToolPlan.Node {
                     forKey: .call
                 ),
                 execution: try container.decodeIfPresent(
-                    JSONValue.self,
+                    ToolInvocation.Execution.self,
                     forKey: .execution
                 ),
                 onSuccess: onSuccess,

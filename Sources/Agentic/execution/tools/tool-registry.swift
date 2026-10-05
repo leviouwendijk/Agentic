@@ -1,47 +1,32 @@
 import Workspace
-import Primitives
+import Schema
 
 public struct ToolRegistry: Sendable {
     private var tools:
-        [ToolIdentifier: RegisteredAgentTool]
+        [ToolIdentifier: RegisteredTool]
 
     public init() {
         self.tools = [:]
     }
 
-    public var definitions: [ToolDescriptor] {
-        tools.values
-            .map(
-                \.capability.definition
-            )
-            .sorted { lhs, rhs in
-                lhs.name < rhs.name
-            }
+    public var definitions: [ToolDefinition] {
+        registeredTools.map(
+            \.definition
+        )
     }
 
     public var modelFacingDefinitions: [ToolDescriptor] {
-        capabilities.compactMap { capability in
-            guard capability.isModelFacing else {
-                return nil
-            }
-
-            return capability.definition
-        }
+        registeredTools.compactMap(
+            \.modelFacingDescriptor
+        )
     }
 
     public func modelFacingDefinition(
         identifiedBy identifier: ToolIdentifier
     ) -> ToolDescriptor? {
-        guard let registered =
-            registeredTool(
-                identifiedBy: identifier
-            ),
-            registered.capability.isModelFacing
-        else {
-            return nil
-        }
-
-        return registered.capability.definition
+        registeredTool(
+            identifiedBy: identifier
+        )?.modelFacingDescriptor
     }
 
     public func modelFacingDefinitions(
@@ -80,15 +65,11 @@ public struct ToolRegistry: Sendable {
         }
     }
 
-    public var capabilities: [AgentToolCapability] {
-        tools.values
-            .map(
-                \.capability
-            )
-            .sorted { lhs, rhs in
-                lhs.definition.name
-                    < rhs.definition.name
-            }
+    var registeredTools: [RegisteredTool] {
+        tools.values.sorted { lhs, rhs in
+            lhs.definition.identifier.rawValue
+                < rhs.definition.identifier.rawValue
+        }
     }
 
     public var isEmpty: Bool {
@@ -101,23 +82,21 @@ public struct ToolRegistry: Sendable {
 
     public mutating func register<T>(
         _ tool: T,
-        modelContract: AgentToolModelContract? = nil,
-        execution: AgentToolExecutionContract = .fixed
+        modelContract: ToolModelContract? = nil
     ) throws where T: Tool {
         try register(
-            RegisteredAgentTool(
+            RegisteredTool(
                 tool,
-                modelContract: modelContract,
-                execution: execution
+                modelContract: modelContract
             )
         )
     }
 
     public mutating func register(
-        _ registered: RegisteredAgentTool
+        _ registered: RegisteredTool
     ) throws {
         let identifier =
-            registered.capability.definition.identifier
+            registered.definition.identifier
 
         guard tools[identifier] == nil else {
             throw ToolRegistryError.duplicateTool(
@@ -138,13 +117,13 @@ public struct ToolRegistry: Sendable {
 
     public func registeredTool(
         identifiedBy identifier: ToolIdentifier
-    ) -> RegisteredAgentTool? {
+    ) -> RegisteredTool? {
         tools[identifier]
     }
 
     public func registeredTool(
         named name: String
-    ) -> RegisteredAgentTool? {
+    ) -> RegisteredTool? {
         registeredTool(
             identifiedBy:
                 .init(
@@ -153,15 +132,15 @@ public struct ToolRegistry: Sendable {
         )
     }
 
-    public func parseModelCall(
-        _ call: ToolCall
-    ) throws -> ParsedAgentToolCall {
+    public func invocation(
+        for call: ToolCall
+    ) throws -> ToolInvocation {
         guard let registered =
             registeredTool(
                 named: call.tool.rawValue
             )
         else {
-            throw RegisteredAgentToolError
+            throw RegisteredToolError
                 .invalidModelCall(
                     tool: call.tool.rawValue,
                     reason:
@@ -169,10 +148,9 @@ public struct ToolRegistry: Sendable {
                 )
         }
 
-        return try registered
-            .parseModelCall(
-                call
-            )
+        return try registered.invocation(
+            for: call
+        )
     }
 
     public func preflight(
@@ -217,3 +195,5 @@ public struct ToolRegistry: Sendable {
         )
     }
 }
+
+

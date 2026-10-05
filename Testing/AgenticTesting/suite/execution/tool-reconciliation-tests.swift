@@ -12,9 +12,8 @@ extension ExecutionTesting {
             throw ToolReconciliationFlowError.unexpectedResult
         }
 
-        let output = try JSONToolBridge.decode(
-            ToolReconciliationFixtureOutput.self,
-            from: result.result.output
+        let output = try result.result.output.decode(
+            ToolReconciliationFixtureOutput.self
         )
 
         try Expect.equal(
@@ -228,7 +227,7 @@ private struct ToolReconciliationUnsupportedFixture: Tool {
 
 private func reconciliation(
     _ mode: ToolReconciliationFixtureMode
-) async throws -> RegisteredAgentTool.Reconciliation? {
+) async throws -> RegisteredTool.Reconciliation? {
     let tool = ToolReconciliationFixture(
         mode: mode
     )
@@ -255,7 +254,7 @@ private func reconciliation(
 }
 
 private func unsupportedReconciliation()
-    async throws -> RegisteredAgentTool.Reconciliation?
+    async throws -> RegisteredTool.Reconciliation?
 {
     let tool = ToolReconciliationUnsupportedFixture()
     let call = try reconciliationCall(
@@ -283,7 +282,7 @@ private func reconciliationCall(
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONToolBridge.encode(
+        input: try JSONValue.encoding(
             ToolReconciliationFixtureInput(
                 value: "fixture"
             )

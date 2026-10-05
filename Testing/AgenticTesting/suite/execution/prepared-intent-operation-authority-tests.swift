@@ -139,10 +139,10 @@ extension ExecutionTesting {
             ]
         )
         let review = ToolInvocation.Review(
-            call: .init(
+            invocation: .init(
                 id: "fixture-prepared-intent-call",
                 tool: tool,
-                input: .object([:])
+                arguments: .object([:])
             ),
             preflight: preflight,
             requirement: .needs_human_review

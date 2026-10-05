@@ -109,7 +109,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "first"
                 )
@@ -120,7 +120,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "second"
                 )
@@ -131,7 +131,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "third"
                 )
@@ -142,7 +142,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "fourth"
                 )
@@ -580,7 +580,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "prefix"
                 )
@@ -591,7 +591,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "repair"
                 )
@@ -602,7 +602,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "branch-fix"
                 )
@@ -613,7 +613,7 @@ enum ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "suffix"
                 )
@@ -864,7 +864,7 @@ enum ExecutionTesting {
                             tool: ToolIdentifier(
                                 rawValue: "tool_plan_approval_skip_probe"
                             ),
-                            input: try JSONToolBridge.encode(
+                            input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-prefix"
                                 )
@@ -877,7 +877,7 @@ enum ExecutionTesting {
                             tool: ToolIdentifier(
                                 rawValue: "tool_plan_approval_skip_probe"
                             ),
-                            input: try JSONToolBridge.encode(
+                            input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-skip"
                                 )
@@ -890,7 +890,7 @@ enum ExecutionTesting {
                             tool: ToolIdentifier(
                                 rawValue: "tool_plan_approval_skip_probe"
                             ),
-                            input: try JSONToolBridge.encode(
+                            input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-suffix"
                                 )
@@ -964,7 +964,7 @@ private struct SelectiveSkipApprovalHandler: ToolApprovalHandler {
     func decide(
         on review: ToolInvocation.Review
     ) async throws -> ApprovalDecision {
-        review.call.id == skippedCallID
+        review.invocation.id == skippedCallID
             ? .skipped
             : .approved
     }
@@ -1080,7 +1080,7 @@ private extension ExecutionTesting {
                 rawValue:
                     "tool_plan_failure_evidence_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: retrySafety.rawValue
                 )
@@ -1130,7 +1130,7 @@ private extension ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "prefix"
                 )
@@ -1141,7 +1141,7 @@ private extension ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "repair"
                 )
@@ -1152,7 +1152,7 @@ private extension ExecutionTesting {
             tool: ToolIdentifier(
                 rawValue: "tool_plan_run_probe"
             ),
-            input: try JSONToolBridge.encode(
+            input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "suffix"
                 )

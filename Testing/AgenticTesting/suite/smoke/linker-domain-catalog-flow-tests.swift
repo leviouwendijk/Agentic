@@ -12,8 +12,7 @@ private final class DomainInstallationProbe:
 
     func install<T: Tool>(
         _ tool: T,
-        modelContract _: AgentToolModelContract?,
-        execution _: AgentToolExecutionContract
+        modelContract _: ToolModelContract?
     ) {
         _ = tool
         tools.append(

@@ -73,11 +73,11 @@ public struct GovernedAgentToolCallResolver:
                 )
         }
 
-        let parsed = try registry.parseModelCall(
-            call
+        let toolInvocation = try registry.invocation(
+            for: call
         )
         let invocation = try await invoker.invoke(
-            parsed.call,
+            toolInvocation,
             context: context,
             approvalHandler: approvalHandler
         )
@@ -97,13 +97,13 @@ public struct GovernedAgentToolCallResolver:
 
         case .denied:
             return try deniedResult(
-                for: parsed.call,
+                for: call,
                 review: invocation.review
             )
 
         case .skipped:
             return try skippedResult(
-                for: parsed.call,
+                for: call,
                 review: invocation.review
             )
         }
@@ -129,7 +129,7 @@ private extension GovernedAgentToolCallResolver {
         ToolResult(
             toolCallID: call.id,
             tool: call.tool,
-            output: try JSONToolBridge.encode(
+            output: try JSONValue.encoding(
                 ResolutionPayload(
                     kind: "tool_denied",
                     toolCallID: call.id,
@@ -149,7 +149,7 @@ private extension GovernedAgentToolCallResolver {
         ToolResult(
             toolCallID: call.id,
             tool: call.tool,
-            output: try JSONToolBridge.encode(
+            output: try JSONValue.encoding(
                 ResolutionPayload(
                     kind: "tool_skipped",
                     toolCallID: call.id,

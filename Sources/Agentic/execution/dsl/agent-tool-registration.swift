@@ -37,14 +37,12 @@ public struct AgentToolRegistration: Sendable {
 public extension AgentToolRegistration {
     static func tool<T>(
         _ tool: T,
-        modelContract: AgentToolModelContract? = nil,
-        execution: AgentToolExecutionContract = .fixed
+        modelContract: ToolModelContract? = nil
     ) -> Self where T: Tool {
         .init { registry in
             try registry.register(
                 tool,
-                modelContract: modelContract,
-                execution: execution
+                modelContract: modelContract
             )
         }
     }

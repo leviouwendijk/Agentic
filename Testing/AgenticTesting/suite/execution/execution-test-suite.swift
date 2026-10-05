@@ -216,6 +216,20 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "tool-execution-targeting",
+            tags: [
+                "agentic-execution",
+                "tools",
+                "targeting",
+                "execution",
+                "model-facing",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runToolExecutionTargeting()
+        }
+
+        diagnosticTest(
             "tool-call-resolver",
             tags: [
                 "agentic-execution",

@@ -120,7 +120,7 @@ extension ExecutionTesting {
                 "resolver preserves unresolved human review for durable fallback"
             )
             try Expect.equal(
-                review.call.tool.rawValue,
+                review.invocation.tool.rawValue,
                 "resolver_mutate",
                 "resolver preserves the pending tool call"
             )
@@ -294,8 +294,10 @@ private func toolCallResolverCall(
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONToolBridge.encode(
-            ToolCallResolverProbeInput()
-        )
+        input: .object([
+            "arguments": try JSONValue.encoding(
+                ToolCallResolverProbeInput()
+            ),
+        ])
     )
 }

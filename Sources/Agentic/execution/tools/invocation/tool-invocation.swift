@@ -1,6 +1,15 @@
 import Macros
+import Primitives
 import Schema
 
+/// Workspace-relative execution target selected for one invocation.
+///
+/// `subpath` is relative to the session workspace root. For host workspaces such
+/// as `swiftlibs/`, use sibling package/repository names (e.g. `Agentic`,
+/// `AgenticIO`, `AgenticDomains`) for repository/package-local operations. Omit a
+/// target only when the session workspace itself is intentionally the working
+/// location.
+@JSONSchema
 public struct WorkspaceTarget:
     Sendable,
     Codable,
@@ -15,9 +24,39 @@ public struct WorkspaceTarget:
     }
 }
 
-public enum ToolInvocation {}
+/// One interpreted model/provider Tool call against the Tool universe.
+///
+/// `ToolCall` is the raw model/provider-emitted transport; `ToolInvocation` is the
+/// canonical interpreted invocation produced by the registry. It separates the
+/// semantic `arguments` from the requested `execution` location so targeting never
+/// leaks into the authored Tool input.
+@JSONSchema
+public struct ToolInvocation:
+    Sendable,
+    Codable,
+    Hashable,
+    Identifiable
+{
+    public let id: String
+    public let tool: ToolIdentifier
+    public let arguments: JSONValue
+    public let execution: Execution?
+
+    public init(
+        id: String,
+        tool: ToolIdentifier,
+        arguments: JSONValue,
+        execution: Execution? = nil
+    ) {
+        self.id = id
+        self.tool = tool
+        self.arguments = arguments
+        self.execution = execution
+    }
+}
 
 public extension ToolInvocation {
+    @JSONSchema
     struct Execution:
         Sendable,
         Codable,
@@ -40,18 +79,18 @@ public extension ToolInvocation {
         Codable,
         Hashable
     {
-        public let call: ToolCall
+        public let invocation: ToolInvocation
         public let preflight: ToolPreflight
         public let requirement: ApprovalRequirement
         public let references: [Reference]
 
         public init(
-            call: ToolCall,
+            invocation: ToolInvocation,
             preflight: ToolPreflight,
             requirement: ApprovalRequirement,
             references: [Reference] = []
         ) {
-            self.call = call
+            self.invocation = invocation
             self.preflight = preflight
             self.requirement = requirement
             self.references = references

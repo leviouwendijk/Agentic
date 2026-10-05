@@ -8,7 +8,7 @@ import Workspace
 /// Registration captures every operation that requires the concrete
 /// Self/Input/Output types. The registry never needs to reopen a Tool
 /// existential afterward.
-public struct RegisteredAgentTool: Sendable {
+public struct RegisteredTool: Sendable {
     public enum Reconciliation: Sendable {
         case applied(ToolExecutionResult)
         case applied_without_output
@@ -46,11 +46,29 @@ public struct RegisteredAgentTool: Sendable {
         case unknown
     }
 
-    public let capability: AgentToolCapability
+    public let definition: ToolDefinition
+    public let modelContract: ToolModelContract
 
-    private let parseModelInputHandler:
-        @Sendable (ToolCall) throws -> Void
+    public var semanticInputSchema: JSONSchema? {
+        modelContract.semanticInputSchema
+    }
 
+    public var isModelFacing: Bool {
+        modelContract.isModelFacing
+    }
+
+    public var modelFacingDescriptor: ToolDescriptor? {
+        guard let inputSchema = modelContract.modelFacingInputSchema else {
+            return nil
+        }
+
+        return ToolDescriptor(
+            identifier: definition.identifier,
+            description: definition.purpose,
+            inputSchema: inputSchema.jsonvalue,
+            risk: definition.risk
+        )
+    }
     private let preflightHandler:
         @Sendable (
             ToolCall,
@@ -76,8 +94,7 @@ public struct RegisteredAgentTool: Sendable {
 
     public init<T>(
         _ tool: T,
-        modelContract: AgentToolModelContract? = nil,
-        execution: AgentToolExecutionContract = .fixed
+        modelContract: ToolModelContract? = nil
     ) where T: Tool {
         let semanticInputSchema = T.Input.jsonschema
         let resolvedModelContract =
@@ -86,45 +103,15 @@ public struct RegisteredAgentTool: Sendable {
                     inputSchema: semanticInputSchema
                 )
 
-        let capability = AgentToolCapability(
-            definition: .init(
-                identifier: T.definition.identifier,
-                description: T.definition.purpose,
-                inputSchema:
-                    resolvedModelContract
-                        .semanticInputSchema?
-                        .jsonvalue,
-                risk: T.definition.risk
-            ),
-            modelContract: resolvedModelContract,
-            execution: execution
-        )
-
-        self.capability = capability
-
-        self.parseModelInputHandler = { call in
-            do {
-                _ = try JSONToolBridge.decode(
-                    T.Input.self,
-                    from: call.input
-                )
-            } catch {
-                throw phasedToolCallError(
-                    tool: tool,
-                    call: call,
-                    phase: .decode,
-                    error: error
-                )
-            }
-        }
+        self.definition = T.definition
+        self.modelContract = resolvedModelContract
 
         self.preflightHandler = { call, context in
             let input: T.Input
 
             do {
-                input = try JSONToolBridge.decode(
-                    T.Input.self,
-                    from: call.input
+                input = try call.input.decode(
+                    T.Input.self
                 )
             } catch {
                 throw phasedToolCallError(
@@ -159,9 +146,8 @@ public struct RegisteredAgentTool: Sendable {
             let input: T.Input
 
             do {
-                input = try JSONToolBridge.decode(
-                    T.Input.self,
-                    from: call.input
+                input = try call.input.decode(
+                    T.Input.self
                 )
             } catch {
                 throw phasedToolCallError(
@@ -214,7 +200,7 @@ public struct RegisteredAgentTool: Sendable {
             let encodedOutput: JSONValue
 
             do {
-                encodedOutput = try JSONToolBridge.encode(
+                encodedOutput = try JSONValue.encoding(
                     output
                 )
             } catch {
@@ -238,9 +224,8 @@ public struct RegisteredAgentTool: Sendable {
             let input: T.Input
 
             do {
-                input = try JSONToolBridge.decode(
-                    T.Input.self,
-                    from: call.input
+                input = try call.input.decode(
+                    T.Input.self
                 )
             } catch {
                 throw phasedToolCallError(
@@ -281,7 +266,7 @@ public struct RegisteredAgentTool: Sendable {
                 let encodedOutput: JSONValue
 
                 do {
-                    encodedOutput = try JSONToolBridge.encode(
+                    encodedOutput = try JSONValue.encoding(
                         output
                     )
                 } catch {
@@ -311,22 +296,53 @@ public struct RegisteredAgentTool: Sendable {
         }
     }
 
-    public func parseModelCall(
-        _ call: ToolCall
-    ) throws -> ParsedAgentToolCall {
-        guard capability.isModelFacing else {
-            throw RegisteredAgentToolError.hostOnly(
-                capability.definition.name
+    /// Parse one raw model/provider ToolCall into its canonical invocation.
+    ///
+    /// This layer parses only the framework-owned invocation envelope. Semantic
+    /// Tool arguments remain JSONValue until the registered typed Tool boundary.
+    public func invocation(
+        for call: ToolCall
+    ) throws -> ToolInvocation {
+        guard isModelFacing else {
+            throw RegisteredToolError.hostOnly(
+                definition.identifier.rawValue
             )
         }
 
-        try parseModelInputHandler(
-            call
+        let components = try modelInvocationComponents(
+            for: call.input
         )
 
-        return ParsedAgentToolCall(
-            call: call,
-            capability: capability
+        return ToolInvocation(
+            id: call.id,
+            tool: call.tool,
+            arguments: components.arguments,
+            execution: components.execution
+        )
+    }
+
+    private func modelInvocationComponents(
+        for input: JSONValue
+    ) throws -> (
+        arguments: JSONValue,
+        execution: ToolInvocation.Execution?
+    ) {
+        let object = try input.objectValue
+
+        guard let arguments = object["arguments"] else {
+            throw RegisteredToolError.invalidModelCall(
+                tool: definition.identifier.rawValue,
+                reason: "Model call is missing required 'arguments'."
+            )
+        }
+
+        let execution = try object["execution"]?.decode(
+            ToolInvocation.Execution.self
+        )
+
+        return (
+            arguments: arguments,
+            execution: execution
         )
     }
 
@@ -391,7 +407,7 @@ public struct RegisteredAgentTool: Sendable {
         return ToolExecutionResult(
             result: ToolResult(
                 toolCallID: call.id,
-                tool: capability.definition.identifier,
+                tool: definition.identifier,
                 output: execution.output,
                 projection: execution.projection,
                 isError: execution.isError
@@ -427,12 +443,12 @@ public struct RegisteredAgentTool: Sendable {
         context: ToolContext
     ) async throws -> Reconciliation? {
         guard
-            failure.tool == capability.definition.identifier,
+            failure.tool == definition.identifier,
             failure.toolCallID == call.id,
             failure.phase == .call
         else {
-            throw RegisteredAgentToolError.invalidFailure(
-                tool: capability.definition.name,
+            throw RegisteredToolError.invalidFailure(
+                tool: definition.identifier.rawValue,
                 callID: call.id
             )
         }
@@ -451,7 +467,7 @@ public struct RegisteredAgentTool: Sendable {
                 ToolExecutionResult(
                     result: ToolResult(
                         toolCallID: call.id,
-                        tool: capability.definition.identifier,
+                        tool: definition.identifier,
                         output: output,
                         projection: projection,
                         isError: false
@@ -471,22 +487,8 @@ public struct RegisteredAgentTool: Sendable {
     }
 }
 
-/// A model call that has resolved to one exact registered tool and crossed that
-/// tool's captured typed input parser.
-public struct ParsedAgentToolCall: Sendable {
-    public let call: ToolCall
-    public let capability: AgentToolCapability
 
-    fileprivate init(
-        call: ToolCall,
-        capability: AgentToolCapability
-    ) {
-        self.call = call
-        self.capability = capability
-    }
-}
-
-public enum RegisteredAgentToolError:
+public enum RegisteredToolError:
     Error,
     Sendable,
     LocalizedError

@@ -1,31 +1,29 @@
 import Schema
 
 /// Immutable inspection snapshot for one ToolRegistry.
-public struct AgentToolRegistryInspection:
+public struct ToolRegistryInspection:
     Sendable
 {
     public let totalCount: Int
-    public let tools: [AgentToolRegistryInspectionEntry]
+    public let tools: [ToolRegistryInspectionEntry]
 
     public init(
         totalCount: Int,
-        tools: [AgentToolRegistryInspectionEntry]
+        tools: [ToolRegistryInspectionEntry]
     ) {
         self.totalCount = totalCount
         self.tools = tools
     }
 }
 
-/// Host-facing inspection facts captured from one registered tool capability.
-public struct AgentToolRegistryInspectionEntry:
+/// Host-facing inspection facts captured from one registered tool.
+public struct ToolRegistryInspectionEntry:
     Sendable
 {
     public let identifier: ToolIdentifier
     public let description: String
     public let risk: ActionRisk
     public let isModelFacing: Bool
-    public let workingLocation:
-        AgentToolExecutionContract.WorkingLocation
     public let semanticInputSchema: JSONSchema?
 
     public init(
@@ -33,30 +31,25 @@ public struct AgentToolRegistryInspectionEntry:
         description: String,
         risk: ActionRisk,
         isModelFacing: Bool,
-        workingLocation:
-            AgentToolExecutionContract.WorkingLocation,
         semanticInputSchema: JSONSchema?
     ) {
         self.identifier = identifier
         self.description = description
         self.risk = risk
         self.isModelFacing = isModelFacing
-        self.workingLocation = workingLocation
         self.semanticInputSchema = semanticInputSchema
     }
 
     public init(
-        capability: AgentToolCapability
+        registered: RegisteredTool
     ) {
         self.init(
-            identifier: capability.definition.identifier,
-            description: capability.definition.description,
-            risk: capability.definition.risk,
-            isModelFacing: capability.isModelFacing,
-            workingLocation:
-                capability.execution.workingLocation,
+            identifier: registered.definition.identifier,
+            description: registered.definition.purpose,
+            risk: registered.definition.risk,
+            isModelFacing: registered.isModelFacing,
             semanticInputSchema:
-                capability.semanticInputSchema
+                registered.semanticInputSchema
         )
     }
 }
@@ -64,13 +57,13 @@ public struct AgentToolRegistryInspectionEntry:
 public extension ToolRegistry {
     /// Inspect every currently registered tool without changing model exposure.
     func inspect()
-        -> AgentToolRegistryInspection
+        -> ToolRegistryInspection
     {
         .init(
             totalCount: count,
-            tools: capabilities.map { capability in
-                AgentToolRegistryInspectionEntry(
-                    capability: capability
+            tools: registeredTools.map { registered in
+                ToolRegistryInspectionEntry(
+                    registered: registered
                 )
             }
         )
@@ -79,12 +72,12 @@ public extension ToolRegistry {
     /// Inspect one exact registered tool identifier.
     func inspect(
         identifiedBy identifier: ToolIdentifier
-    ) -> AgentToolRegistryInspectionEntry? {
+    ) -> ToolRegistryInspectionEntry? {
         registeredTool(
             identifiedBy: identifier
         ).map { registered in
-            AgentToolRegistryInspectionEntry(
-                capability: registered.capability
+            ToolRegistryInspectionEntry(
+                registered: registered
             )
         }
     }

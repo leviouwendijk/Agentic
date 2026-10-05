@@ -176,9 +176,8 @@ private func proveReportedFailureResult() async throws {
         call,
         workspace: nil
     )
-    let output = try JSONToolBridge.decode(
-        PhaseFailureOutput.self,
-        from: result.result.output
+    let output = try result.result.output.decode(
+        PhaseFailureOutput.self
     )
     let projection = try Expect.notNil(
         result.result.projection,
@@ -395,7 +394,7 @@ private func phaseCall(
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONToolBridge.encode(
+        input: try JSONValue.encoding(
             PhaseFailureInput(
                 value: "fixture"
             )

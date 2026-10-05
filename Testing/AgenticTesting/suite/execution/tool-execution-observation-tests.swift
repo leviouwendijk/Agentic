@@ -15,13 +15,33 @@ extension ExecutionTesting {
             .init(
                 id: value,
                 tool: ObservationFixtureTool.definition.identifier,
-                input: try JSONToolBridge.encode(ObservationFixtureValue(value: value))
+                input: try JSONValue.encoding(ObservationFixtureValue(value: value))
+            )
+        }
+
+        func invocation(_ call: ToolCall) -> ToolInvocation {
+            .init(
+                id: call.id,
+                tool: call.tool,
+                arguments: call.input
             )
         }
         let firstCall = try call("first")
         let secondCall = try call("second")
-        async let first = invoker.invoke(firstCall)
-        async let second = invoker.invoke(secondCall)
+        let firstInvocation = invocation(
+            firstCall
+        )
+        let secondInvocation = invocation(
+            secondCall
+        )
+        async let first = invoker.invoke(
+            firstInvocation,
+            context: .init()
+        )
+        async let second = invoker.invoke(
+            secondInvocation,
+            context: .init()
+        )
         let pair = try await (first, second)
         for (invocation, expected) in [(pair.0, "first"), (pair.1, "second")] {
             let execution = try Expect.notNil(invocation.execution, "execution exists")
@@ -30,7 +50,13 @@ extension ExecutionTesting {
             let decoded = try JSONDecoder().decode(ToolExecutionResult.self, from: JSONEncoder().encode(execution))
             try Expect.equal(decoded, execution, "execution observations survive persistence")
         }
-        let failed = try await invoker.invoke(call("fail"))
+        let failedCall = try call("fail")
+        let failed = try await invoker.invoke(
+            invocation(
+                failedCall
+            ),
+            context: .init()
+        )
         let failure = try Expect.notNil(failed.execution, "failure produces execution evidence")
         try Expect.equal(failure.result.isError, true, "fixture throws after output")
         try Expect.equal(failure.observations.map(\.content), ["fail", ""], "throwing preserves preceding observations")

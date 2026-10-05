@@ -1,5 +1,5 @@
 {
-  "originHash" : "7caa3600af23e47c6bdb70f03b9c9930324e960df3cf353b40a619179db774c7",
+  "originHash" : "c68a39a11871c8ca44341cced2cc5648c5066b5b0f921227aa0609fc304dff84",
   "pins" : [
     {
       "identity" : "ansi",
@@ -304,7 +304,7 @@
       "location" : "https://github.com/leviouwendijk/Workspace.git",
       "state" : {
         "branch" : "master",
-        "revision" : "0a88d98969ec53c1927293062fe6c4165d99e641"
+        "revision" : "b6f6d8378ec23674dda5a1da1faeb62013b3b4dd"
       }
     }
   ],

@@ -4,8 +4,7 @@ public struct DomainInstallation {
     public protocol Sink: AnyObject {
         func install<T: Tool>(
             _ tool: T,
-            modelContract: AgentToolModelContract?,
-            execution: AgentToolExecutionContract
+            modelContract: ToolModelContract?
         )
 
         func install<P: Program>(
@@ -43,8 +42,7 @@ public extension DomainInstallation.Sink {
     ) {
         install(
             tool,
-            modelContract: nil,
-            execution: T.execution
+            modelContract: nil
         )
     }
 
