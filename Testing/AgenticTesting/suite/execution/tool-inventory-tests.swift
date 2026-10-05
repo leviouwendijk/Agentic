@@ -2,7 +2,6 @@ import Agentic
 import Macros
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runToolInventory()
@@ -262,7 +261,7 @@ private struct ToolInventoryProbeTool<
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         input
     }

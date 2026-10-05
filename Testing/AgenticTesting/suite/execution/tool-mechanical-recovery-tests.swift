@@ -2,7 +2,6 @@ import Agentic
 import Primitives
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runToolMechanicalObserveRetry() async throws -> [TestDiagnostic] {
@@ -531,7 +530,7 @@ private struct MechanicalRecoveryTool: Tool {
 
     func preflight(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolPreflight {
         let scenario = try scenario(
             from: input
@@ -560,7 +559,7 @@ private struct MechanicalRecoveryTool: Tool {
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         let scenario = try scenario(
             from: input
@@ -660,7 +659,7 @@ private struct MechanicalRecoveryTool: Tool {
     func reconcile(
         _ input: Input,
         after failure: ToolCall.Failure,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolCall.Reconciliation<Output>? {
         _ = failure
         await ToolExecutionObservations.emit(.init(kind: .detail, content: "reconcile"))

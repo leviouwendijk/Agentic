@@ -1,5 +1,4 @@
 import Agentic
-import Workspace
 import Foundation
 import Primitives
 import Schema
@@ -75,7 +74,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             ToolPreflight(
                 tool: Self.definition.identifier,
@@ -95,7 +94,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
 
             let prompt = try Self.normalizedPrompt(

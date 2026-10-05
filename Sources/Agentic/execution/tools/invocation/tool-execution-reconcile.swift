@@ -1,4 +1,3 @@
-
 extension ToolExecution {
     func reconcile(
         _ call: ToolCall,
@@ -10,7 +9,7 @@ extension ToolExecution {
             guard let reconciliation = try await registry.reconcile(
                 call,
                 failure: recovery.failure,
-                workspace: workspace
+                context: context
             ) else {
                 let recoveryError =
                     Error.reconciliation_unsupported

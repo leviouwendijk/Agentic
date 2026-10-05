@@ -1,7 +1,6 @@
 import Agentic
 import Macros
 import Schema
-import Workspace
 
 public extension LinkerCatalogFixture.Tools {
     @Tool("linker_fixture_beta")
@@ -37,10 +36,10 @@ public extension LinkerCatalogFixture.Tools {
 
         public func call(
             _ input: Input,
-            workspace: WorkspaceContext?
+            in context: ToolContext
         ) async throws -> Output {
             _ = input
-            _ = workspace
+            _ = context
 
             return Output(
                 value: value

@@ -55,6 +55,19 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "find-capabilities",
+            tags: [
+                "agentic-execution",
+                "capabilities",
+                "discovery",
+                "visibility",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runFindCapabilities()
+        }
+
+        diagnosticTest(
             "tool-inventory",
             tags: [
                 "agentic-execution",
@@ -203,67 +216,12 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
-            "tool-exposure-all",
-            tags: [
-                "agentic-execution",
-                "tools",
-                "exposure",
-                "all",
-            ]
-        ) {
-            try await ExecutionTesting
-                .runToolExposureAll()
-        }
-
-        diagnosticTest(
-            "tool-exposure-explicit",
-            tags: [
-                "agentic-execution",
-                "tools",
-                "exposure",
-                "explicit",
-                "enforcement",
-            ]
-        ) {
-            try await ExecutionTesting
-                .runToolExposureExplicit()
-        }
-
-        diagnosticTest(
-            "tool-exposure-discoverable",
-            tags: [
-                "agentic-execution",
-                "tools",
-                "exposure",
-                "discovery",
-                "activation",
-            ]
-        ) {
-            try await ExecutionTesting
-                .runToolExposureDiscoverable()
-        }
-
-        diagnosticTest(
-            "tool-exposure-registry-preservation",
-            tags: [
-                "agentic-execution",
-                "tools",
-                "exposure",
-                "registry",
-                "host-only",
-            ]
-        ) {
-            try await ExecutionTesting
-                .runToolExposureRegistryPreservation()
-        }
-
-        diagnosticTest(
             "tool-call-resolver",
             tags: [
                 "agentic-execution",
                 "tools",
                 "resolver",
-                "exposure",
+                "visibility",
                 "approval",
             ]
         ) {

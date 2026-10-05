@@ -1,6 +1,5 @@
 import Agentic
 import Schema
-import Workspace
 
 @Domain
 enum SmokeDomain {}
@@ -50,7 +49,7 @@ struct SmokeTool:
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         .init(
             value: input.rawValue
@@ -70,7 +69,7 @@ struct SmokeTool:
     func reconcile(
         _ input: Input,
         after failure: ToolCall.Failure,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolCall.Reconciliation<Output>? {
         _ = input
         _ = failure

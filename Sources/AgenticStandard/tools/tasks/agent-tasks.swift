@@ -1,5 +1,4 @@
 import Agentic
-import Workspace
 import Primitives
 import Schema
 import Macros
@@ -61,7 +60,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -78,7 +77,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let task = try await manager.create(
                 subject: input.subject,
@@ -160,7 +159,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -180,7 +179,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let task = try await manager.update(
                 id: input.id,
@@ -252,7 +251,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -264,7 +263,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let tasks = try await manager.list(
                 statuses: input.statuses,
@@ -320,7 +319,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -332,7 +331,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let task = try await manager.get(
                 input.id
@@ -388,7 +387,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -405,7 +404,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let task = try await manager.claim(
                 id: input.id,
@@ -459,7 +458,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -477,7 +476,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let task = try await manager.complete(
                 id: input.id

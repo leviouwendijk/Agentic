@@ -2,7 +2,6 @@ import Agentic
 import Primitives
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runToolReconciliation() async throws -> [TestDiagnostic] {
@@ -158,7 +157,7 @@ private struct ToolReconciliationFixture: Tool {
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         _ = input
         throw ToolReconciliationFlowError.unexpectedCall
@@ -167,7 +166,7 @@ private struct ToolReconciliationFixture: Tool {
     func reconcile(
         _ input: Input,
         after failure: ToolCall.Failure,
-        workspace _: WorkspaceContext?
+        in context: ToolContext
     ) async throws -> ToolCall.Reconciliation<Output>? {
         try Expect.equal(
             failure.phase,
@@ -178,6 +177,11 @@ private struct ToolReconciliationFixture: Tool {
             failure.toolCallID,
             "reconciliation-call",
             "reconciliation receives canonical call identity in the failure envelope"
+        )
+        try Expect.equal(
+            context.capabilities != nil,
+            true,
+            "reconciliation receives the same invocation ToolContext rather than a workspace-only projection"
         )
 
         switch mode {
@@ -214,7 +218,7 @@ private struct ToolReconciliationUnsupportedFixture: Tool {
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         Output(
             value: input.value
@@ -234,6 +238,9 @@ private func reconciliation(
     let registry = try ToolRegistry {
         tool
     }
+    let capabilities = AgentCapabilityState(
+        installed: AgentCapabilitySet.none
+    )
 
     return try await registry.reconcile(
         call,
@@ -241,7 +248,9 @@ private func reconciliation(
             tool: tool.identifier,
             callID: call.id
         ),
-        workspace: nil
+        context: ToolContext(
+            capabilities: capabilities
+        )
     )
 }
 
@@ -262,7 +271,7 @@ private func unsupportedReconciliation()
             tool: tool.identifier,
             callID: call.id
         ),
-        workspace: nil
+        context: ToolContext()
     )
 }
 

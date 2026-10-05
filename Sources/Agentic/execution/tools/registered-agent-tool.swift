@@ -54,13 +54,13 @@ public struct RegisteredAgentTool: Sendable {
     private let preflightHandler:
         @Sendable (
             ToolCall,
-            WorkspaceContext?
+            ToolContext
         ) async throws -> ToolPreflight
 
     private let callHandler:
         @Sendable (
             ToolCall,
-            WorkspaceContext?
+            ToolContext
         ) async throws -> (
             output: JSONValue,
             projection: ToolCall.ResultProjection?,
@@ -71,7 +71,7 @@ public struct RegisteredAgentTool: Sendable {
         @Sendable (
             ToolCall,
             ToolCall.Failure,
-            WorkspaceContext?
+            ToolContext
         ) async throws -> ReconciliationExecution?
 
     public init<T>(
@@ -118,7 +118,7 @@ public struct RegisteredAgentTool: Sendable {
             }
         }
 
-        self.preflightHandler = { call, workspace in
+        self.preflightHandler = { call, context in
             let input: T.Input
 
             do {
@@ -140,7 +140,7 @@ public struct RegisteredAgentTool: Sendable {
             do {
                 preflight = try await tool.preflight(
                     input,
-                    workspace: workspace
+                    in: context
                 )
             } catch {
                 throw phasedToolCallError(
@@ -155,7 +155,7 @@ public struct RegisteredAgentTool: Sendable {
             return preflight
         }
 
-        self.callHandler = { call, workspace in
+        self.callHandler = { call, context in
             let input: T.Input
 
             do {
@@ -178,7 +178,7 @@ public struct RegisteredAgentTool: Sendable {
             do {
                 output = try await tool.call(
                     input,
-                    workspace: workspace
+                    in: context
                 )
                 isError = false
             } catch let failure as AgentToolReportedFailure<T.Output> {
@@ -234,7 +234,7 @@ public struct RegisteredAgentTool: Sendable {
             )
         }
 
-        self.reconcileHandler = { call, failure, workspace in
+        self.reconcileHandler = { call, failure, context in
             let input: T.Input
 
             do {
@@ -254,7 +254,7 @@ public struct RegisteredAgentTool: Sendable {
             guard let reconciliation = try await tool.reconcile(
                 input,
                 after: failure,
-                workspace: workspace
+                in: context
             ) else {
                 return nil
             }
@@ -334,9 +334,21 @@ public struct RegisteredAgentTool: Sendable {
         _ call: ToolCall,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolPreflight {
+        try await preflight(
+            call,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    public func preflight(
+        _ call: ToolCall,
+        context: ToolContext
+    ) async throws -> ToolPreflight {
         try await preflightHandler(
             call,
-            workspace
+            context
         )
     }
 
@@ -344,8 +356,23 @@ public struct RegisteredAgentTool: Sendable {
         _ call: ToolCall,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolExecutionResult {
+        try await execute(
+            call,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    public func execute(
+        _ call: ToolCall,
+        context: ToolContext
+    ) async throws -> ToolExecutionResult {
         let (value, observations) = try await ToolExecutionObservations.capture(callID: call.id) {
-            try await executeObserved(call, workspace: workspace)
+            try await executeObserved(
+                call,
+                context: context
+            )
         }
         var result = value
         result.observations = observations
@@ -354,11 +381,11 @@ public struct RegisteredAgentTool: Sendable {
 
     private func executeObserved(
         _ call: ToolCall,
-        workspace: WorkspaceContext?
+        context: ToolContext
     ) async throws -> ToolExecutionResult {
         let execution = try await callHandler(
             call,
-            workspace
+            context
         )
 
         return ToolExecutionResult(
@@ -375,13 +402,17 @@ public struct RegisteredAgentTool: Sendable {
     public func reconcile(
         _ call: ToolCall,
         failure: ToolCall.Failure,
-        workspace: WorkspaceContext? = nil
+        context: ToolContext
     ) async throws -> Reconciliation? {
         let (value, observations) = try await ToolExecutionObservations.capture(
             callID: call.id,
             kind: .reconcile
         ) {
-            try await reconcileObserved(call, failure: failure, workspace: workspace)
+            try await reconcileObserved(
+                call,
+                failure: failure,
+                context: context
+            )
         }
         if case .some(.applied(var result)) = value {
             result.observations = observations
@@ -393,7 +424,7 @@ public struct RegisteredAgentTool: Sendable {
     private func reconcileObserved(
         _ call: ToolCall,
         failure: ToolCall.Failure,
-        workspace: WorkspaceContext?
+        context: ToolContext
     ) async throws -> Reconciliation? {
         guard
             failure.tool == capability.definition.identifier,
@@ -409,7 +440,7 @@ public struct RegisteredAgentTool: Sendable {
         guard let reconciliation = try await reconcileHandler(
             call,
             failure,
-            workspace
+            context
         ) else {
             return nil
         }

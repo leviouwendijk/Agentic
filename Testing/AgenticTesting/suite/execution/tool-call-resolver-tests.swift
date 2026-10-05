@@ -2,7 +2,6 @@ import Agentic
 import Primitives
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runToolCallResolver() async throws -> [TestDiagnostic] {
@@ -13,13 +12,9 @@ extension ExecutionTesting {
 
         let observeResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_observe",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_observe",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             )
@@ -53,9 +48,9 @@ extension ExecutionTesting {
 
             throw ToolCallResolverFlowFailure
                 .expectedUnexposedToolRejection
-        } catch AgentToolExposureError.toolNotExposed(let tool) {
+        } catch AgentToolCallResolutionError.toolNotVisible(let tool) {
             try Expect.equal(
-                tool,
+                tool.rawValue,
                 "resolver_mutate",
                 "resolver rejects registered but unexposed model calls"
             )
@@ -69,13 +64,9 @@ extension ExecutionTesting {
 
         let approvedResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_mutate",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_mutate",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             ),
@@ -104,13 +95,9 @@ extension ExecutionTesting {
 
         let unresolvedResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_mutate",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_mutate",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             )
@@ -147,13 +134,9 @@ extension ExecutionTesting {
 
         let deniedResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_mutate",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_mutate",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             ),
@@ -253,7 +236,7 @@ private struct ToolCallResolverProbeTool<
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         await probe.recordInvocation()
         return input

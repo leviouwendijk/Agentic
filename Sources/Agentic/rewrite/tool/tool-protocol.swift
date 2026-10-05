@@ -1,32 +1,26 @@
-import Workspace
-
+/// Canonical authored Tool contract.
+///
+/// `preflight` and `call` receive an immutable `ToolContext` describing the
+/// invocation environment (optional workspace, the application semantic
+/// Catalog, and the live Agent capability state). Tools remain application-
+/// level and reusable; agent/session state is reached only through the
+/// supplied context at invocation time.
 public protocol Tool:
-    // ToolContract,
     Producer,
     ToolRecovery,
     ToolProjection
 {
-    // typealias Arguments = ToolInput
-    // typealias Result = ToolOutput
-
-    // REMOVED: Input and Output are canonically owned by ToolContract.
-    // associatedtype Input: Arguments
-    // associatedtype Output: Result
-
-    // REMOVED: arbitrary per-tool environments recreate the generic construction problem.
-    // associatedtype Environment: Sendable
-
     static var definition: ToolDefinition { get }
     static var execution: AgentToolExecutionContract { get }
 
     func preflight(
         _ input: Input,
-        workspace: WorkspaceContext?
+        in context: ToolContext
     ) async throws -> ToolPreflight
 
     func call(
         _ input: Input,
-        workspace: WorkspaceContext?
+        in context: ToolContext
     ) async throws -> Output
 }
 
@@ -37,10 +31,9 @@ public extension Tool {
 
     func preflight(
         _ input: Input,
-        workspace: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolPreflight {
         _ = input
-        _ = workspace
 
         return ToolPreflight(
             tool: Self.definition.identifier,

@@ -1,5 +1,3 @@
-import Workspace
-
 public protocol ToolRecovery: Producer {
     func classify(
         _ error: any Error,
@@ -10,7 +8,7 @@ public protocol ToolRecovery: Producer {
     func reconcile(
         _ input: Input,
         after failure: ToolCall.Failure,
-        workspace: WorkspaceContext?
+        in context: ToolContext
     ) async throws -> ToolCall.Reconciliation<Output>?
 }
 
@@ -26,9 +24,8 @@ public extension ToolRecovery {
     func reconcile(
         _ input: Input,
         after failure: ToolCall.Failure,
-        workspace: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolCall.Reconciliation<Output>? {
         nil
     }
 }
-

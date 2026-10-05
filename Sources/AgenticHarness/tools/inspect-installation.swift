@@ -1,7 +1,6 @@
 import Agentic
 import Macros
 import Schema
-import Workspace
 
 public extension Harness.Tools {
     @Tool("inspect_installation")
@@ -81,7 +80,7 @@ public extension Harness.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             _ = input
 
@@ -95,7 +94,7 @@ public extension Harness.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             try await source.inspect(
                 input

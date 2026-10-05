@@ -1,11 +1,24 @@
+import Foundation
 import Primitives
 import Workspace
 
 public enum AgentToolCallResolutionError:
     Error,
-    Sendable
+    Sendable,
+    LocalizedError
 {
     case needsHumanReview(ToolInvocation.Review)
+    case toolNotVisible(ToolIdentifier)
+
+    public var errorDescription: String? {
+        switch self {
+        case .needsHumanReview:
+            return "Tool invocation requires human review."
+
+        case .toolNotVisible(let identifier):
+            return "Tool '\(identifier.rawValue)' is not visible to the current Agent."
+        }
+    }
 }
 
 public struct GovernedAgentToolCallResolver:
@@ -13,31 +26,33 @@ public struct GovernedAgentToolCallResolver:
     Sendable
 {
     public let registry: ToolRegistry
-    public let exposure: AgentToolExposure
+    public let visibleToolIdentifiers: Set<ToolIdentifier>
     public let invoker: ToolInvoker
-    public let workspace: WorkspaceContext?
+    public let context: ToolContext
     public let approvalHandler: (any ToolApprovalHandler)?
     public let resolutionObserver:
         (@Sendable (ToolInvocation.Result) async -> Void)?
 
     public init(
         registry: ToolRegistry,
-        exposure: AgentToolExposure,
+        visibleToolIdentifiers: [ToolIdentifier],
         policy: ToolExecutionPolicy,
         recovery: Recovery.Policy? = nil,
-        workspace: WorkspaceContext? = nil,
+        context: ToolContext = .init(),
         approvalHandler: (any ToolApprovalHandler)? = nil,
         resolutionObserver:
             (@Sendable (ToolInvocation.Result) async -> Void)? = nil
     ) {
         self.registry = registry
-        self.exposure = exposure
+        self.visibleToolIdentifiers = Set(
+            visibleToolIdentifiers
+        )
         self.invoker = ToolInvoker(
             registry: registry,
             policy: policy,
             recovery: recovery
         )
-        self.workspace = workspace
+        self.context = context
         self.approvalHandler = approvalHandler
         self.resolutionObserver = resolutionObserver
     }
@@ -45,14 +60,25 @@ public struct GovernedAgentToolCallResolver:
     public func resolve(
         _ call: ToolCall
     ) async throws -> ToolResult {
-        let parsed = try await exposure.parseModelCall(
-            call,
-            registry: registry
-        )
+        guard visibleToolIdentifiers.contains(
+            call.tool
+        ),
+        registry.modelFacingDefinition(
+            identifiedBy: call.tool
+        ) != nil
+        else {
+            throw AgentToolCallResolutionError
+                .toolNotVisible(
+                    call.tool
+                )
+        }
 
+        let parsed = try registry.parseModelCall(
+            call
+        )
         let invocation = try await invoker.invoke(
             parsed.call,
-            workspace: workspace,
+            context: context,
             approvalHandler: approvalHandler
         )
 

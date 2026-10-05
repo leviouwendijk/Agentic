@@ -22,15 +22,31 @@ public struct ToolInvoker: Sendable {
         workspace: WorkspaceContext? = nil,
         references: [Reference] = []
     ) async throws -> ToolInvocation.Review {
-        let workspace = try targetedWorkspace(
+        try await review(
+            call,
+            execution: execution,
+            context: .init(
+                workspace: workspace
+            ),
+            references: references
+        )
+    }
+
+    public func review(
+        _ call: ToolCall,
+        execution: ToolInvocation.Execution? = nil,
+        context: ToolContext,
+        references: [Reference] = []
+    ) async throws -> ToolInvocation.Review {
+        let context = try targetedContext(
             for: call,
             execution: execution,
-            workspace: workspace
+            context: context
         )
 
         let preflight = try await registry.preflight(
             call,
-            workspace: workspace
+            context: context
         )
 
         return .init(
@@ -50,21 +66,39 @@ public struct ToolInvoker: Sendable {
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
-        let workspace = try targetedWorkspace(
+        try await invoke(
+            call,
+            execution: execution,
+            context: .init(
+                workspace: workspace
+            ),
+            references: references,
+            approvalHandler: approvalHandler
+        )
+    }
+
+    public func invoke(
+        _ call: ToolCall,
+        execution: ToolInvocation.Execution? = nil,
+        context: ToolContext,
+        references: [Reference] = [],
+        approvalHandler: (any ToolApprovalHandler)? = nil
+    ) async throws -> ToolInvocation.Result {
+        let context = try targetedContext(
             for: call,
             execution: execution,
-            workspace: workspace
+            context: context
         )
 
         let review = try await review(
             call,
-            workspace: workspace,
+            context: context,
             references: references
         )
 
         return try await invoke(
             review,
-            workspace: workspace,
+            context: context,
             approvalHandler: approvalHandler
         )
     }
@@ -72,6 +106,20 @@ public struct ToolInvoker: Sendable {
     public func invoke(
         _ review: ToolInvocation.Review,
         workspace: WorkspaceContext? = nil,
+        approvalHandler: (any ToolApprovalHandler)? = nil
+    ) async throws -> ToolInvocation.Result {
+        try await invoke(
+            review,
+            context: .init(
+                workspace: workspace
+            ),
+            approvalHandler: approvalHandler
+        )
+    }
+
+    public func invoke(
+        _ review: ToolInvocation.Review,
+        context: ToolContext,
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
         let decision: ApprovalDecision
@@ -103,7 +151,7 @@ public struct ToolInvoker: Sendable {
             let execution = try await ToolExecution(
                 registry: registry,
                 recovery: recovery,
-                workspace: workspace
+                context: context
             ).execute(
                 review.call,
                 preflight: review.preflight
@@ -156,13 +204,13 @@ public struct ToolInvoker: Sendable {
 }
 
 private extension ToolInvoker {
-    func targetedWorkspace(
+    func targetedContext(
         for call: ToolCall,
         execution: ToolInvocation.Execution?,
-        workspace: WorkspaceContext?
-    ) throws -> WorkspaceContext? {
+        context: ToolContext
+    ) throws -> ToolContext {
         guard let target = execution?.workspace else {
-            return workspace
+            return context
         }
 
         guard let tool = registry.registeredTool(
@@ -182,7 +230,7 @@ private extension ToolInvoker {
             )
         }
 
-        guard let workspace else {
+        guard let workspace = context.workspace else {
             throw WorkspaceToolTargetingError.workspaceRequired(
                 call.tool.rawValue
             )
@@ -196,8 +244,10 @@ private extension ToolInvoker {
             throw WorkspaceToolTargetingError.emptySubpath
         }
 
-        return try workspace.context(
-            atRootPath: subpath
+        return context.using(
+            workspace: try workspace.context(
+                atRootPath: subpath
+            )
         )
     }
 }

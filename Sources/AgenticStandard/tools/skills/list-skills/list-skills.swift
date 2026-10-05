@@ -1,5 +1,4 @@
 import Agentic
-import Workspace
 import Primitives
 import Schema
 import Macros
@@ -81,7 +80,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> ToolPreflight {
             let query = input.query?.trimmingCharacters(
                 in: .whitespacesAndNewlines
@@ -104,7 +103,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            workspace _: WorkspaceContext?
+            in _: ToolContext
         ) async throws -> Output {
             let includeBody = input.includeBody ?? false
             let query = input.query?.trimmingCharacters(

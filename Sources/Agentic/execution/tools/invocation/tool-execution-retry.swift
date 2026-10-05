@@ -1,4 +1,3 @@
-
 extension ToolExecution {
     func retrySameOperation(
         _ call: ToolCall,
@@ -11,7 +10,7 @@ extension ToolExecution {
             do {
                 let refreshed = try await registry.preflight(
                     call,
-                    workspace: workspace
+                    context: context
                 )
 
                 guard refreshed == preflight else {
@@ -66,7 +65,7 @@ extension ToolExecution {
         do {
             var result = try await registry.execute(
                 call,
-                workspace: workspace
+                context: context
             )
             let state = Recovery.State(
                 reconciled:

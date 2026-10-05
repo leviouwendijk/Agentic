@@ -1,7 +1,7 @@
 import Workspace
 import Primitives
 
-public struct ToolRegistry: Sendable, ToolAvailability {
+public struct ToolRegistry: Sendable {
     private var tools:
         [ToolIdentifier: RegisteredAgentTool]
 
@@ -179,6 +179,18 @@ public struct ToolRegistry: Sendable, ToolAvailability {
         _ toolCall: ToolCall,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolPreflight {
+        try await preflight(
+            toolCall,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    public func preflight(
+        _ toolCall: ToolCall,
+        context: ToolContext
+    ) async throws -> ToolPreflight {
         guard let registered =
             registeredTool(
                 named: toolCall.tool.rawValue
@@ -191,7 +203,7 @@ public struct ToolRegistry: Sendable, ToolAvailability {
 
         return try await registered.preflight(
             toolCall,
-            workspace: workspace
+            context: context
         )
     }
 

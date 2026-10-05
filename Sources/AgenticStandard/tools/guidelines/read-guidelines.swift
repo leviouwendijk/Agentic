@@ -1,5 +1,4 @@
 import Agentic
-import Workspace
 import Foundation
 import Guidelines
 import GuidelinesSearch
@@ -42,7 +41,7 @@ public extension Standard.Tools {
 
     public func preflight(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolPreflight {
         let reference =
             try normalizedReference(
@@ -65,7 +64,7 @@ public extension Standard.Tools {
 
     public func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         let reference =
             try normalizedReference(
@@ -168,7 +167,7 @@ public extension Standard.Tools {
 
     public func preflight(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolPreflight {
         let reference =
             try normalizedReference(
@@ -191,7 +190,7 @@ public extension Standard.Tools {
 
     public func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         let reference =
             try normalizedReference(

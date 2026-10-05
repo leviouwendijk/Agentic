@@ -2,7 +2,6 @@ import Agentic
 import Primitives
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runToolCallResolverObserver()
@@ -17,13 +16,9 @@ extension ExecutionTesting {
 
         let observeResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_observer_observe",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_observer_observe",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             ),
@@ -66,13 +61,9 @@ extension ExecutionTesting {
 
         let reviewResolver = GovernedAgentToolCallResolver(
             registry: registry,
-            exposure: AgentToolExposure(
-                policy: .explicit(
-                    [
-                        "resolver_observer_mutate",
-                    ]
-                )
-            ),
+            visibleToolIdentifiers: [
+                "resolver_observer_mutate",
+            ],
             policy: .init(
                 autonomyMode: .auto_observe
             ),
@@ -210,7 +201,7 @@ private struct ToolCallResolverObserverTool<
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         await probe.recordInvocation()
         return input

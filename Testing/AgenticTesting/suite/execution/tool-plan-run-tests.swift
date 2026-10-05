@@ -3,7 +3,6 @@ import Primitives
 import Schema
 import Testing
 import Foundation
-import Workspace
 
 enum ExecutionTesting {
     static func runToolPlanExecutionPolicyModel() throws -> [TestDiagnostic] {
@@ -1002,7 +1001,7 @@ private struct PlanRunFailureEvidenceTool: Tool {
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         try await probe.invoke(
             input
@@ -1220,7 +1219,7 @@ private struct PlanRunProbeTool<
 
     func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
         try await probe.invoke(
             input

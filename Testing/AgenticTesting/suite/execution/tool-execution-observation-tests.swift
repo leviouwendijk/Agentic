@@ -3,7 +3,6 @@ import Foundation
 import Primitives
 import Schema
 import Testing
-import Workspace
 
 extension ExecutionTesting {
     static func runExecutionObservations() async throws -> [TestDiagnostic] {
@@ -64,7 +63,7 @@ private struct ObservationFixtureTool: Tool {
 
     let barrier = ObservationFixtureBarrier()
 
-    func call(_ input: Input, workspace _: WorkspaceContext?) async throws -> Output {
+    func call(_ input: Input, in _: ToolContext) async throws -> Output {
         if input.value == "first" || input.value == "second" {
             await barrier.arrive()
         }

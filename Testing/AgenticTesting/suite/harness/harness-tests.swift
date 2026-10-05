@@ -45,7 +45,7 @@ enum HarnessTestSuite {
                     ],
                     identifier: "fixture.tool"
                 ),
-                workspace: nil
+                in: ToolContext()
             )
 
             try Expect.equal(
@@ -80,7 +80,7 @@ enum HarnessTestSuite {
                 .init(
                     includeHidden: true
                 ),
-                workspace: nil
+                in: ToolContext()
             )
 
             try Expect.equal(

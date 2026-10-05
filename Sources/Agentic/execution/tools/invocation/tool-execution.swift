@@ -1,18 +1,16 @@
-import Workspace
-
 internal struct ToolExecution: Sendable {
     internal let registry: ToolRegistry
     internal let recovery: Recovery.Policy?
-    internal let workspace: WorkspaceContext?
+    internal let context: ToolContext
 
     internal init(
         registry: ToolRegistry,
         recovery: Recovery.Policy? = nil,
-        workspace: WorkspaceContext? = nil
+        context: ToolContext = .init()
     ) {
         self.registry = registry
         self.recovery = recovery
-        self.workspace = workspace
+        self.context = context
     }
 
     internal func execute(
@@ -34,7 +32,7 @@ internal struct ToolExecution: Sendable {
         do {
             return try await registry.execute(
                 call,
-                workspace: workspace
+                context: context
             )
         } catch {
             let propagatedRecovery: Recovery.Record?

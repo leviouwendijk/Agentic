@@ -1,7 +1,6 @@
 import Agentic
 import Macros
 import Schema
-import Workspace
 
 @Tool("unscoped_standard_collision")
 public struct Standard: Tool {
@@ -30,10 +29,10 @@ public struct Standard: Tool {
 
     public func call(
         _ input: Input,
-        workspace: WorkspaceContext?
+        in context: ToolContext
     ) async throws -> Output {
         _ = input
-        _ = workspace
+        _ = context
 
         return Output(
             value: "unscoped"

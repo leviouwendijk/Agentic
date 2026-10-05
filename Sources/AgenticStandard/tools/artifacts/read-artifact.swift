@@ -1,5 +1,4 @@
 import Agentic
-import Workspace
 import Primitives
 import Schema
 import Macros
@@ -75,7 +74,7 @@ public extension Standard.Tools {
 
     public func preflight(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> ToolPreflight {
 
         return .init(
@@ -88,7 +87,7 @@ public extension Standard.Tools {
 
     public func call(
         _ input: Input,
-        workspace _: WorkspaceContext?
+        in _: ToolContext
     ) async throws -> Output {
 
         guard let record = try await store.load(

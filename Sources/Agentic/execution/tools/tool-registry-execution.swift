@@ -17,6 +17,18 @@ public extension ToolRegistry {
         _ call: ToolCall,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolExecutionResult {
+        try await execute(
+            call,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    func execute(
+        _ call: ToolCall,
+        context: ToolContext
+    ) async throws -> ToolExecutionResult {
         guard let registered =
             registeredTool(
                 identifiedBy: call.tool
@@ -29,14 +41,14 @@ public extension ToolRegistry {
 
         return try await registered.execute(
             call,
-            workspace: workspace
+            context: context
         )
     }
 
     func reconcile(
         _ call: ToolCall,
         failure: ToolCall.Failure,
-        workspace: WorkspaceContext? = nil
+        context: ToolContext
     ) async throws -> RegisteredAgentTool.Reconciliation? {
         guard let registered =
             registeredTool(
@@ -51,7 +63,7 @@ public extension ToolRegistry {
         return try await registered.reconcile(
             call,
             failure: failure,
-            workspace: workspace
+            context: context
         )
     }
 }
