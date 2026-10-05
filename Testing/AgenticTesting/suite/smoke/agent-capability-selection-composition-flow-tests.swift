@@ -106,39 +106,62 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
         )
 
         let capabilities = AgentCapabilities(
-            tools: .init(
-                members: [
-                    read,
-                ]
+            available: .init(
+                tools: .init(
+                    members: [
+                        read,
+                    ]
+                ),
+                programs: .init(
+                    members: [
+                        program,
+                    ]
+                )
             ),
-            programs: .init(
-                members: [
-                    program,
-                ]
+            visible: .init(
+                tools: .init(
+                    members: [
+                        read,
+                    ]
+                )
             )
         ) + AgentCapabilities(
-            tools: .init(
-                domains: [
-                    swift,
-                ],
-                members: [
-                    build,
-                ]
+            available: .init(
+                tools: .init(
+                    domains: [
+                        swift,
+                    ],
+                    members: [
+                        build,
+                    ]
+                ),
+                inferences: .init(
+                    members: [
+                        inference,
+                    ]
+                ),
+                agents: .init(
+                    members: [
+                        agent,
+                    ]
+                )
             ),
-            inferences: .init(
-                members: [
-                    inference,
-                ]
-            ),
-            agents: .init(
-                members: [
-                    agent,
-                ]
+            visible: .init(
+                tools: .init(
+                    members: [
+                        build,
+                    ]
+                ),
+                programs: .init(
+                    members: [
+                        program,
+                    ]
+                )
             )
         )
 
         try Expect.equal(
-            capabilities.tools,
+            capabilities.available.tools,
             AgentCapabilitySelection(
                 domains: [
                     swift,
@@ -148,28 +171,57 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
                     build,
                 ]
             ),
-            "AgentCapabilities composes tool selections component-wise"
+            "available capability scope composes Tool selections component-wise"
         )
         try Expect.equal(
-            capabilities.programs.members,
+            capabilities.available.programs.members,
             [
                 program,
             ],
-            "AgentCapabilities preserves program selections"
+            "available capability scope preserves Program selections"
         )
         try Expect.equal(
-            capabilities.inferences.members,
+            capabilities.available.inferences.members,
             [
                 inference,
             ],
-            "AgentCapabilities composes inference selections"
+            "available capability scope composes Inference selections"
         )
         try Expect.equal(
-            capabilities.agents.members,
+            capabilities.available.agents.members,
             [
                 agent,
             ],
-            "AgentCapabilities composes delegated-agent selections"
+            "available capability scope composes delegated-Agent selections"
+        )
+        try Expect.equal(
+            capabilities.visible.tools.members,
+            [
+                read,
+                build,
+            ],
+            "visible capability scope composes independently from availability"
+        )
+        try Expect.equal(
+            capabilities.visible.programs.members,
+            [
+                program,
+            ],
+            "visible capability scope may expose Programs independently"
+        )
+
+        var mutableCapabilities = capabilities
+        mutableCapabilities.visible = .none
+
+        try Expect.equal(
+            mutableCapabilities.visible,
+            .none,
+            "AgentCapabilities visibility is mutable runtime-friendly state"
+        )
+        try Expect.equal(
+            mutableCapabilities.available,
+            capabilities.available,
+            "mutating visibility does not mutate availability"
         )
         try Expect.equal(
             AgentCapabilities.none + capabilities,
@@ -297,7 +349,7 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
         )
 
         let resolved = catalog.resolve(
-            AgentCapabilities(
+            AgentCapabilityScope(
                 tools: .init(
                     domains: [
                         namespace,

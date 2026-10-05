@@ -43,15 +43,15 @@ where
     }
 }
 
-public struct AgentCapabilities:
+public struct AgentCapabilityScope:
     Sendable,
     Codable,
     Hashable
 {
-    public let tools: AgentCapabilitySelection<ToolIdentifier>
-    public let programs: AgentCapabilitySelection<ProgramIdentifier>
-    public let inferences: AgentCapabilitySelection<InferenceIdentifier>
-    public let agents: AgentCapabilitySelection<AgentIdentifier>
+    public var tools: AgentCapabilitySelection<ToolIdentifier>
+    public var programs: AgentCapabilitySelection<ProgramIdentifier>
+    public var inferences: AgentCapabilitySelection<InferenceIdentifier>
+    public var agents: AgentCapabilitySelection<AgentIdentifier>
 
     public init(
         tools: AgentCapabilitySelection<ToolIdentifier> = .none,
@@ -76,6 +76,39 @@ public struct AgentCapabilities:
             programs: lhs.programs + rhs.programs,
             inferences: lhs.inferences + rhs.inferences,
             agents: lhs.agents + rhs.agents
+        )
+    }
+}
+
+public struct AgentCapabilities:
+    Sendable,
+    Codable,
+    Hashable
+{
+    public var available: AgentCapabilityScope
+    public var visible: AgentCapabilityScope
+
+    public init(
+        available: AgentCapabilityScope = .none,
+        visible: AgentCapabilityScope = .none
+    ) {
+        self.available = available
+        self.visible = visible
+    }
+
+    public static let none = Self()
+
+    public static func + (
+        lhs: Self,
+        rhs: Self
+    ) -> Self {
+        .init(
+            available:
+                lhs.available
+                + rhs.available,
+            visible:
+                lhs.visible
+                + rhs.visible
         )
     }
 }

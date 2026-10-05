@@ -24,16 +24,26 @@ extension SmokeDomain.Agents {
         static let purpose =
             "Prove lexical Agent declaration synthesis."
 
+        static let capabilities = AgentCapabilities(
+            available: .init(
+                tools: .init(
+                    members: [
+                        SmokeDomain.Tools.MacroSmokeTool.identifier,
+                    ]
+                )
+            ),
+            visible: .init(
+                tools: .init(
+                    members: [
+                        SmokeDomain.Tools.MacroSmokeTool.identifier,
+                    ]
+                )
+            )
+        )
+
         static let modelSelection = AgentModelSelection(
             purpose: .coder
         )
-
-        static let toolExposure: AgentToolExposurePolicy =
-            .discoverable(
-                [
-                    SmokeDomain.Tools.MacroSmokeTool.identifier,
-                ]
-            )
     }
 }
 
@@ -354,15 +364,32 @@ func runSemanticAuthoringMacroSmoke() throws {
     guard SmokeDomain.Agents
         .MacroSmokeAgent
         .definition
-        .toolExposure
-            == .discoverable(
-                [
-                    SmokeDomain.Tools.MacroSmokeTool.identifier,
-                ]
-            )
+        .capabilities
+        .available
+        .tools
+        .members
+            == [
+                SmokeDomain.Tools.MacroSmokeTool.identifier,
+            ]
     else {
         fatalError(
-            "Expected @Agent to retain authored tool exposure."
+            "Expected @Agent to retain authored available capabilities."
+        )
+    }
+
+    guard SmokeDomain.Agents
+        .MacroSmokeAgent
+        .definition
+        .capabilities
+        .visible
+        .tools
+        .members
+            == [
+                SmokeDomain.Tools.MacroSmokeTool.identifier,
+            ]
+    else {
+        fatalError(
+            "Expected @Agent to retain authored visible capabilities."
         )
     }
 

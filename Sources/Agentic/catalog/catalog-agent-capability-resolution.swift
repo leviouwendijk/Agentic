@@ -4,11 +4,11 @@ public extension Catalog {
     /// semantic Catalog. Runtime must intersect the result with its installed
     /// executable universe before treating it as authority.
     func resolve(
-        _ capabilities: AgentCapabilities
+        _ scope: AgentCapabilityScope
     ) -> AgentCapabilitySet {
         AgentCapabilitySet(
             tools: resolve(
-                capabilities.tools
+                scope.tools
             ) { declaration in
                 guard case .tool(let definition) = declaration else {
                     return nil
@@ -17,7 +17,7 @@ public extension Catalog {
                 return definition.identifier
             },
             programs: resolve(
-                capabilities.programs
+                scope.programs
             ) { declaration in
                 guard case .program(let definition) = declaration else {
                     return nil
@@ -26,7 +26,7 @@ public extension Catalog {
                 return definition.identifier
             },
             inferences: resolve(
-                capabilities.inferences
+                scope.inferences
             ) { declaration in
                 guard case .inference(let definition) = declaration else {
                     return nil
@@ -35,7 +35,7 @@ public extension Catalog {
                 return definition.identifier
             },
             agents: resolve(
-                capabilities.agents
+                scope.agents
             ) { declaration in
                 guard case .agent(let definition) = declaration else {
                     return nil

@@ -253,7 +253,7 @@ private enum AgentMacroSpecification:
         return [
             DeclSyntax(
                 stringLiteral:
-                    "\(access)static let definition: AgentDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, instructions: Self.instructions, capabilities: Self.capabilities, modelSelection: Self.modelSelection, toolExposure: Self.toolExposure, delegation: Self.delegation)"
+                    "\(access)static let definition: AgentDefinition = .init(identifier: .init(rawValue: \"\(identifier)\"), purpose: Self.purpose, instructions: Self.instructions, capabilities: Self.capabilities, modelSelection: Self.modelSelection, delegation: Self.delegation)"
             ),
             catalogFactoryDeclaration(
                 in: context,
