@@ -8,11 +8,22 @@ public extension Standard.Tools {
     struct ClarifyWithUser: Tool {
         @JSONSchema
         public struct Input: HashableSource {
+            /// Question or instruction shown to the user.
             public let prompt: String
+
+            /// Optional explanation of why user input is needed.
             public let reason: String?
+
+            /// Whether the user must answer or may skip the request.
             public let requirement: UserInputRequirement?
+
+            /// The semantic input shape the user should answer. This determines `UserInputSpec.kind`; `presentation.preferredControl` only controls rendering.
             public let input: UserInputSpec
+
+            /// Optional rendering hints. Presentation controls such as `text_field` are not valid `input.kind` values.
             public let presentation: UserInputPresentation?
+
+            /// Additional application-defined metadata.
             public let metadata: [String: String]
 
             public init(

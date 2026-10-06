@@ -9,13 +9,87 @@ public enum UserInputSpec:
     JSONSchemaProviding
 {
     public static var jsonschema: JSONSchema {
-        .any
+        JSONSchema(
+            form: .oneOf([
+                variant(
+                    kind: "text",
+                    payload: "text",
+                    schema: TextUserInput.jsonschema,
+                    description: "Configuration for free-form textual user input."
+                ),
+                variant(
+                    kind: "single_choice",
+                    payload: "single_choice",
+                    schema: SingleChoiceUserInput.jsonschema,
+                    description: "Configuration for choosing exactly one value."
+                ),
+                variant(
+                    kind: "multi_choice",
+                    payload: "multi_choice",
+                    schema: MultiChoiceUserInput.jsonschema,
+                    description: "Configuration for choosing zero or more values."
+                ),
+                variant(
+                    kind: "confirmation",
+                    payload: "confirmation",
+                    schema: ConfirmationUserInput.jsonschema,
+                    description: "Configuration for a boolean confirmation."
+                ),
+                variant(
+                    kind: "form",
+                    payload: "form",
+                    schema: FormUserInput.jsonschema,
+                    description: "Configuration for a structured form."
+                ),
+            ]),
+            description: """
+            Semantic user-input specification. The `kind` discriminator must be one of `text`, `single_choice`, `multi_choice`, `confirmation`, or `form`, and the matching payload must use the same-named property. Presentation controls such as `text_field` and `text_area` belong to `presentation.preferredControl` and are not valid `kind` values.
+            """
+        )
     }
 
+    private static func variant(
+        kind: String,
+        payload: String,
+        schema: JSONSchema,
+        description: String
+    ) -> JSONSchema {
+        .object(
+            properties: [
+                .init(
+                    name: "kind",
+                    schema: .string(
+                        cases: [
+                            kind,
+                        ]
+                    ),
+                    required: true,
+                    description: "Semantic input kind for this branch."
+                ),
+                .init(
+                    name: payload,
+                    schema: schema,
+                    required: true,
+                    description: description
+                ),
+            ],
+            additionalProperties: .disallowed
+        )
+    }
+
+    /// Request free-form textual input. Encode its configuration under `text`.
     case text(TextUserInput)
+
+    /// Request exactly one choice. Encode its configuration under `single_choice`.
     case single_choice(SingleChoiceUserInput)
+
+    /// Request zero or more choices. Encode its configuration under `multi_choice`.
     case multi_choice(MultiChoiceUserInput)
+
+    /// Request a boolean confirmation. Encode its configuration under `confirmation`.
     case confirmation(ConfirmationUserInput)
+
+    /// Request a structured set of textual fields. Encode its configuration under `form`.
     case form(FormUserInput)
 
     private enum CodingKeys: String, CodingKey {
@@ -150,11 +224,52 @@ public enum UserInputSpec:
     }
 }
 
-public struct TextUserInput: Sendable, Codable, Hashable {
+/// Configuration for free-form textual user input.
+public struct TextUserInput:
+    Sendable,
+    Codable,
+    Hashable,
+    JSONSchemaProviding
+{
+    /// Placeholder shown before the user enters text.
     public var placeholder: String?
+
+    /// Initial text offered to the user, if any.
     public var defaultText: String?
+
+    /// Whether the interface should support multiline text entry.
     public var multiline: Bool
+
+    /// Optional validation constraints for the submitted text.
     public var constraint: UserInputTextConstraint?
+
+    public static var jsonschema: JSONSchema {
+        .object(
+            properties: [
+                .init(
+                    name: "placeholder",
+                    schema: String.jsonschema,
+                    description: "Placeholder shown before the user enters text."
+                ),
+                .init(
+                    name: "defaultText",
+                    schema: String.jsonschema,
+                    description: "Initial text offered to the user, if any."
+                ),
+                .init(
+                    name: "multiline",
+                    schema: Bool.jsonschema,
+                    description: "Whether the interface should support multiline text entry. Defaults to false when omitted."
+                ),
+                .init(
+                    name: "validation",
+                    schema: UserInputTextConstraint.jsonschema,
+                    description: "Optional validation constraints for the submitted text."
+                ),
+            ],
+            additionalProperties: .disallowed
+        )
+    }
 
     private enum CodingKeys: String, CodingKey {
         case placeholder
@@ -226,9 +341,16 @@ public struct TextUserInput: Sendable, Codable, Hashable {
     }
 }
 
+/// Configuration for selecting exactly one value from a declared choice set.
+@JSONSchema
 public struct SingleChoiceUserInput: Sendable, Codable, Hashable {
+    /// Choices available to the user.
     public var choices: [UserInputChoice]
+
+    /// Identifier of the initially selected choice, if any.
     public var defaultChoiceID: String?
+
+    /// Whether the user may supply a value not represented by a declared choice.
     public var allowsCustomValue: Bool
 
     public init(
@@ -242,10 +364,19 @@ public struct SingleChoiceUserInput: Sendable, Codable, Hashable {
     }
 }
 
+/// Configuration for selecting multiple values from a declared choice set.
+@JSONSchema
 public struct MultiChoiceUserInput: Sendable, Codable, Hashable {
+    /// Choices available to the user.
     public var choices: [UserInputChoice]
+
+    /// Choice identifiers selected initially.
     public var defaultChoiceIDs: [String]
+
+    /// Minimum number of choices the user must select.
     public var minimumSelectionCount: Int
+
+    /// Maximum number of choices the user may select, or no maximum when omitted.
     public var maximumSelectionCount: Int?
 
     public init(
@@ -261,9 +392,16 @@ public struct MultiChoiceUserInput: Sendable, Codable, Hashable {
     }
 }
 
+/// Configuration for a boolean confirmation request.
+@JSONSchema
 public struct ConfirmationUserInput: Sendable, Codable, Hashable {
+    /// Initially selected confirmation value, if any.
     public var defaultValue: Bool?
+
+    /// Label shown for the affirmative action.
     public var confirmLabel: String
+
+    /// Label shown for the negative action.
     public var cancelLabel: String
 
     public init(
@@ -277,8 +415,13 @@ public struct ConfirmationUserInput: Sendable, Codable, Hashable {
     }
 }
 
+/// Configuration for a structured form composed of textual fields.
+@JSONSchema
 public struct FormUserInput: Sendable, Codable, Hashable {
+    /// Fields presented to the user in the form.
     public var fields: [UserInputField]
+
+    /// Optional label for the form submission action.
     public var submitLabel: String?
 
     public init(
@@ -290,13 +433,28 @@ public struct FormUserInput: Sendable, Codable, Hashable {
     }
 }
 
+/// One semantic choice that may be presented to the user.
+@JSONSchema
 public struct UserInputChoice: Sendable, Codable, Hashable, Identifiable {
+    /// Stable identifier used when returning this choice.
     public var id: String
+
+    /// Human-readable label shown to the user.
     public var label: String
+
+    /// Semantic value represented by the choice.
     public var value: String
+
+    /// Additional explanation associated with the choice.
     public var description: String?
+
+    /// Whether this choice should initially be selected.
     public var isDefault: Bool
+
+    /// Whether selecting this choice represents a destructive action.
     public var isDestructive: Bool
+
+    /// Additional application-defined metadata.
     public var metadata: [String: String]
 
     public init(
@@ -318,15 +476,87 @@ public struct UserInputChoice: Sendable, Codable, Hashable, Identifiable {
     }
 }
 
-public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
+/// One textual field in a structured user-input form.
+public struct UserInputField:
+    Sendable,
+    Codable,
+    Hashable,
+    Identifiable,
+    JSONSchemaProviding
+{
+    /// Stable identifier used to associate the returned value with this field.
     public var id: String
+
+    /// Human-readable label shown for this field.
     public var label: String
+
+    /// Placeholder shown before the user enters text.
     public var placeholder: String?
+
+    /// Initial text offered for this field, if any.
     public var defaultText: String?
+
+    /// Whether this field should support multiline text entry.
     public var multiline: Bool
+
+    /// Whether the user must provide this field.
     public var requirement: UserInputRequirement
+
+    /// Optional validation constraints for the field value.
     public var constraint: UserInputTextConstraint?
+
+    /// Additional application-defined metadata.
     public var metadata: [String: String]
+
+    public static var jsonschema: JSONSchema {
+        .object(
+            properties: [
+                .init(
+                    name: "id",
+                    schema: String.jsonschema,
+                    required: true,
+                    description: "Stable identifier used to associate the returned value with this field."
+                ),
+                .init(
+                    name: "label",
+                    schema: String.jsonschema,
+                    required: true,
+                    description: "Human-readable label shown for this field."
+                ),
+                .init(
+                    name: "placeholder",
+                    schema: String.jsonschema,
+                    description: "Placeholder shown before the user enters text."
+                ),
+                .init(
+                    name: "defaultText",
+                    schema: String.jsonschema,
+                    description: "Initial text offered for this field, if any."
+                ),
+                .init(
+                    name: "multiline",
+                    schema: Bool.jsonschema,
+                    description: "Whether this field should support multiline text entry. Defaults to false when omitted."
+                ),
+                .init(
+                    name: "requirement",
+                    schema: UserInputRequirement.jsonschema,
+                    description: "Whether the user must provide this field. Defaults to required when omitted."
+                ),
+                .init(
+                    name: "validation",
+                    schema: UserInputTextConstraint.jsonschema,
+                    description: "Optional validation constraints for the field value."
+                ),
+                .init(
+                    name: "metadata",
+                    schema: [String: String].jsonschema,
+                    description: "Additional application-defined metadata."
+                ),
+            ],
+            additionalProperties: .disallowed
+        )
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id
@@ -452,11 +682,52 @@ public struct UserInputField: Sendable, Codable, Hashable, Identifiable {
     }
 }
 
-public struct UserInputTextConstraint: Sendable, Codable, Hashable {
+/// Validation constraints applied to textual user input.
+public struct UserInputTextConstraint:
+    Sendable,
+    Codable,
+    Hashable,
+    JSONSchemaProviding
+{
+    /// Whether an empty textual value is accepted.
     public var allowsEmpty: Bool
+
+    /// Minimum accepted character count, if constrained.
     public var minimumLength: Int?
+
+    /// Maximum accepted character count, if constrained.
     public var maximumLength: Int?
+
+    /// Human-readable description of any content pattern the value should satisfy.
     public var patternDescription: String?
+
+    public static var jsonschema: JSONSchema {
+        .object(
+            properties: [
+                .init(
+                    name: "allowsEmpty",
+                    schema: Bool.jsonschema,
+                    description: "Whether an empty textual value is accepted. Defaults to false when omitted."
+                ),
+                .init(
+                    name: "minimumLength",
+                    schema: Int.jsonschema,
+                    description: "Minimum accepted character count, if constrained."
+                ),
+                .init(
+                    name: "maximumLength",
+                    schema: Int.jsonschema,
+                    description: "Maximum accepted character count, if constrained."
+                ),
+                .init(
+                    name: "patternDescription",
+                    schema: String.jsonschema,
+                    description: "Human-readable description of any content pattern the value should satisfy."
+                ),
+            ],
+            additionalProperties: .disallowed
+        )
+    }
 
     private enum CodingKeys: String, CodingKey {
         case allowsEmpty
@@ -539,11 +810,20 @@ public struct UserInputTextConstraint: Sendable, Codable, Hashable {
     }
 }
 
+/// Optional presentation hints for rendering a semantic user-input request.
+/// Presentation does not determine `UserInputSpec.kind`.
 @JSONSchema
 public struct UserInputPresentation: Sendable, Codable, Hashable {
+    /// Optional title shown with the request.
     public var title: String?
+
+    /// Optional explanatory help shown with the request.
     public var help: String?
+
+    /// Preferred visual control. This is presentation-only and does not determine `UserInputSpec.kind`.
     public var preferredControl: UserInputControl?
+
+    /// Preferred ordering for choices or form elements.
     public var ordering: UserInputOrdering
 
     public init(
@@ -559,6 +839,8 @@ public struct UserInputPresentation: Sendable, Codable, Hashable {
     }
 }
 
+/// Presentation-only control hint for rendering user input.
+/// Values such as `text_field` and `text_area` are not semantic `UserInputSpec.kind` values.
 @JSONSchema
 public enum UserInputControl: String, Sendable, Codable, Hashable, CaseIterable {
     case text_field
@@ -569,6 +851,7 @@ public enum UserInputControl: String, Sendable, Codable, Hashable, CaseIterable 
     case form
 }
 
+/// Presentation ordering applied without changing the semantic input kind.
 @JSONSchema
 public enum UserInputOrdering: String, Sendable, Codable, Hashable, CaseIterable {
     case provided
