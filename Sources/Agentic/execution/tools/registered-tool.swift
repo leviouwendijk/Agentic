@@ -57,6 +57,16 @@ public struct RegisteredTool: Sendable {
         modelContract.isModelFacing
     }
 
+    /// Final model-facing `{ arguments, execution? }` envelope schema.
+    ///
+    /// This is the schema advertised to the model surface, distinct from the
+    /// authored semantic `T.Input` schema. The host may consume this directly
+    /// instead of reconstructing the model envelope from semantic input or
+    /// re-deriving it from a lowered `ToolDescriptor.inputSchema`.
+    public var modelFacingInputSchema: JSONSchema? {
+        modelContract.modelFacingInputSchema
+    }
+
     public var modelFacingDescriptor: ToolDescriptor? {
         guard let inputSchema = modelContract.modelFacingInputSchema else {
             return nil

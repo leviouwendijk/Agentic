@@ -226,7 +226,8 @@ private func proveToolPlanFailurePersistence() async throws {
         invoker: invoker
     ).start(
         plan,
-        executionPolicy: .single_step
+        executionPolicy: .single_step,
+        in: .init()
     )
     let persisted = try JSONDecoder().decode(
         ToolPlan.Run.self,

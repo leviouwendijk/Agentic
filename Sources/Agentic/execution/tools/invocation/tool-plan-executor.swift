@@ -1,5 +1,4 @@
 import Foundation
-import Workspace
 
 public struct ToolPlanExecutor:
     Sendable
@@ -14,7 +13,7 @@ public struct ToolPlanExecutor:
 
     public func execute(
         _ plan: ToolPlan,
-        workspace: WorkspaceContext? = nil,
+        in context: ToolContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Result {
@@ -33,7 +32,7 @@ public struct ToolPlanExecutor:
             plan.root,
             path: navigator.rootPath,
             navigator: navigator,
-            workspace: workspace,
+            context: context,
             references: references,
             approvalHandler: approvalHandler
         )
@@ -58,7 +57,7 @@ private extension ToolPlanExecutor {
         _ node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        workspace: WorkspaceContext?,
+        context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -68,7 +67,7 @@ private extension ToolPlanExecutor {
                 node,
                 path: path,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -78,7 +77,7 @@ private extension ToolPlanExecutor {
                 node.children,
                 path: path,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -88,7 +87,7 @@ private extension ToolPlanExecutor {
                 node.children,
                 path: path,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -99,7 +98,7 @@ private extension ToolPlanExecutor {
         _ node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        workspace: WorkspaceContext?,
+        context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -120,9 +119,7 @@ private extension ToolPlanExecutor {
                     arguments: call.input,
                     execution: node.execution
                 ),
-                context: .init(
-                    workspace: workspace
-                ),
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -144,7 +141,7 @@ private extension ToolPlanExecutor {
                 node: node,
                 path: path,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -176,7 +173,7 @@ private extension ToolPlanExecutor {
             node: node,
             path: path,
             navigator: navigator,
-            workspace: workspace,
+            context: context,
             references: references,
             approvalHandler: approvalHandler
         )
@@ -197,7 +194,7 @@ private extension ToolPlanExecutor {
         path: String,
         pathComponent: String? = "sequence",
         navigator: ToolPlan.Navigator,
-        workspace: WorkspaceContext?,
+        context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -216,7 +213,7 @@ private extension ToolPlanExecutor {
                 node,
                 path: childPath,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -259,7 +256,7 @@ private extension ToolPlanExecutor {
         _ nodes: [ToolPlan.Node],
         path: String,
         navigator: ToolPlan.Navigator,
-        workspace: WorkspaceContext?,
+        context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -279,7 +276,7 @@ private extension ToolPlanExecutor {
                 node,
                 path: childPath,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -328,7 +325,7 @@ private extension ToolPlanExecutor {
         node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        workspace: WorkspaceContext?,
+        context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> (
@@ -349,7 +346,7 @@ private extension ToolPlanExecutor {
                 path: "\(path).\(selectedBranch.label.rawValue)",
                 pathComponent: nil,
                 navigator: navigator,
-                workspace: workspace,
+                context: context,
                 references: references,
                 approvalHandler: approvalHandler
             )

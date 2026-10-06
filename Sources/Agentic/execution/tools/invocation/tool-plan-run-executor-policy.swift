@@ -1,5 +1,4 @@
 import Foundation
-import Workspace
 
 public extension ToolPlan.RunExecutor {
     func start(
@@ -7,7 +6,7 @@ public extension ToolPlan.RunExecutor {
         runID: String = UUID().uuidString,
         relationship: ToolPlan.Run.Relationship = .root,
         executionPolicy: ToolPlan.ExecutionPolicy,
-        workspace: WorkspaceContext? = nil,
+        in context: ToolContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Run {
@@ -17,7 +16,7 @@ public extension ToolPlan.RunExecutor {
                 plan,
                 runID: runID,
                 relationship: relationship,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -27,7 +26,7 @@ public extension ToolPlan.RunExecutor {
                 plan,
                 runID: runID,
                 relationship: relationship,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -37,7 +36,7 @@ public extension ToolPlan.RunExecutor {
     func resume(
         _ run: ToolPlan.Run,
         executionPolicy: ToolPlan.ExecutionPolicy,
-        workspace: WorkspaceContext? = nil,
+        in context: ToolContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Run {
@@ -55,7 +54,7 @@ public extension ToolPlan.RunExecutor {
                 current = try await resume(
                     current,
                     executionPolicy: .single_step,
-                    workspace: workspace,
+                    in: context,
                     references: references,
                     approvalHandler: approvalHandler
                 )
@@ -67,7 +66,7 @@ public extension ToolPlan.RunExecutor {
             return try await resumeSingleStep(
                 run,
                 interruption: interruption,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -80,7 +79,7 @@ private extension ToolPlan.RunExecutor {
         _ plan: ToolPlan,
         runID: String,
         relationship: ToolPlan.Run.Relationship,
-        workspace: WorkspaceContext?,
+        in context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Run {
@@ -96,7 +95,7 @@ private extension ToolPlan.RunExecutor {
                 plan,
                 runID: runID,
                 relationship: relationship,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -112,7 +111,7 @@ private extension ToolPlan.RunExecutor {
             isolatedPlan,
             runID: "\(runID).single-step.\(attemptNumber)",
             relationship: relationship,
-            workspace: workspace,
+            in: context,
             references: references,
             approvalHandler: approvalHandler
         )
@@ -196,7 +195,7 @@ private extension ToolPlan.RunExecutor {
     func resumeSingleStep(
         _ run: ToolPlan.Run,
         interruption: ToolPlan.Run.Interruption,
-        workspace: WorkspaceContext?,
+        in context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Run {
@@ -261,7 +260,7 @@ private extension ToolPlan.RunExecutor {
             isolatedPlan,
             runID: "\(run.id).single-step.\(attemptNumber)",
             relationship: run.relationship,
-            workspace: workspace,
+            in: context,
             references: references,
             approvalHandler: approvalHandler
         )

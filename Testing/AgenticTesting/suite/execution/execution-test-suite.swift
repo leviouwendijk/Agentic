@@ -81,6 +81,22 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "tool-plan-context-propagation",
+            tags: [
+                "agentic-execution",
+                "tool-plan",
+                "context",
+                "catalog",
+                "capabilities",
+                "retry",
+                "resume",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runToolPlanContextPropagation()
+        }
+
+        diagnosticTest(
             "tool-plan-run-retry-resume",
             tags: [
                 "agentic-execution",

@@ -25,19 +25,22 @@ public struct ToolRegistryInspectionEntry:
     public let risk: ActionRisk
     public let isModelFacing: Bool
     public let semanticInputSchema: JSONSchema?
+    public let modelFacingInputSchema: JSONSchema?
 
     public init(
         identifier: ToolIdentifier,
         description: String,
         risk: ActionRisk,
         isModelFacing: Bool,
-        semanticInputSchema: JSONSchema?
+        semanticInputSchema: JSONSchema?,
+        modelFacingInputSchema: JSONSchema?
     ) {
         self.identifier = identifier
         self.description = description
         self.risk = risk
         self.isModelFacing = isModelFacing
         self.semanticInputSchema = semanticInputSchema
+        self.modelFacingInputSchema = modelFacingInputSchema
     }
 
     public init(
@@ -49,7 +52,9 @@ public struct ToolRegistryInspectionEntry:
             risk: registered.definition.risk,
             isModelFacing: registered.isModelFacing,
             semanticInputSchema:
-                registered.semanticInputSchema
+                registered.semanticInputSchema,
+            modelFacingInputSchema:
+                registered.modelFacingInputSchema
         )
     }
 }

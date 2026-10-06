@@ -56,7 +56,8 @@ enum ExecutionTesting {
         let run = try await fixture.executor.start(
             fixture.plan,
             runID: "single-step-start",
-            executionPolicy: .single_step
+            executionPolicy: .single_step,
+            in: .init()
         )
 
         guard case .interrupted(let interruption) = run.state,
@@ -175,7 +176,8 @@ enum ExecutionTesting {
         let started = try await fixture.executor.start(
             plan,
             runID: "single-step-resume",
-            executionPolicy: .single_step
+            executionPolicy: .single_step,
+            in: .init()
         )
 
         guard case .interrupted(let firstInterruption) = started.state,
@@ -194,7 +196,8 @@ enum ExecutionTesting {
 
         let stepped = try await fixture.executor.resume(
             started,
-            executionPolicy: .single_step
+            executionPolicy: .single_step,
+            in: .init()
         )
 
         guard case .interrupted(let secondInterruption) = stepped.state,
@@ -227,7 +230,8 @@ enum ExecutionTesting {
 
         let terminalRun = try await fixture.executor.resume(
             stepped,
-            executionPolicy: .continuous
+            executionPolicy: .continuous,
+            in: .init()
         )
 
         guard case .terminal(.succeeded) = terminalRun.state else {
@@ -287,7 +291,8 @@ enum ExecutionTesting {
         let fixture = try makeFixture()
         let initial = try await fixture.executor.start(
             fixture.plan,
-            runID: "retry-resume-run"
+            runID: "retry-resume-run",
+            in: .init()
         )
 
         guard case .interrupted(let initialInterruption) = initial.state else {
@@ -317,7 +322,8 @@ enum ExecutionTesting {
         )
 
         let retried = try await fixture.executor.retry(
-            initial
+            initial,
+            in: .init()
         )
 
         guard case .interrupted(let retryInterruption) = retried.state else {
@@ -369,7 +375,8 @@ enum ExecutionTesting {
         )
 
         let resumed = try await fixture.executor.resume(
-            retried
+            retried,
+            in: .init()
         )
 
         guard case .terminal(.succeeded) = resumed.state else {
@@ -436,7 +443,8 @@ enum ExecutionTesting {
         )
         let run = try await fixture.executor.start(
             fixture.plan,
-            runID: "failure-evidence-run"
+            runID: "failure-evidence-run",
+            in: .init()
         )
 
         guard case .interrupted(let interruption) = run.state,
@@ -527,7 +535,8 @@ enum ExecutionTesting {
             )
             let run = try await fixture.executor.start(
                 fixture.plan,
-                runID: "retry-safety-\(retrySafety.rawValue)"
+                runID: "retry-safety-\(retrySafety.rawValue)",
+                in: .init()
             )
 
             guard case .interrupted(let interruption) = run.state,
@@ -538,7 +547,8 @@ enum ExecutionTesting {
 
             do {
                 _ = try await fixture.executor.retry(
-                    run
+                    run,
+                    in: .init()
                 )
                 throw AgenticExecutionFlowError.unexpectedRetry
             } catch let error as ToolPlan.Run.Error {
@@ -639,7 +649,8 @@ enum ExecutionTesting {
 
         let initial = try await fixture.executor.start(
             plan,
-            runID: "failure-branch-retry-resume"
+            runID: "failure-branch-retry-resume",
+            in: .init()
         )
 
         guard case .interrupted(let initialInterruption) = initial.state,
@@ -673,7 +684,8 @@ enum ExecutionTesting {
         )
 
         let retried = try await fixture.executor.retry(
-            initial
+            initial,
+            in: .init()
         )
 
         guard case .interrupted(let retryInterruption) = retried.state,
@@ -693,7 +705,8 @@ enum ExecutionTesting {
         )
 
         let resumed = try await fixture.executor.resume(
-            retried
+            retried,
+            in: .init()
         )
 
         guard case .terminal(.succeeded) = resumed.state else {
@@ -741,7 +754,8 @@ enum ExecutionTesting {
         let fixture = try makeFixture()
         let initial = try await fixture.executor.start(
             fixture.plan,
-            runID: "skip-resume-run"
+            runID: "skip-resume-run",
+            in: .init()
         )
 
         guard case .interrupted = initial.state else {
@@ -789,7 +803,8 @@ enum ExecutionTesting {
         )
 
         let resumed = try await fixture.executor.resume(
-            skipped
+            skipped,
+            in: .init()
         )
 
         guard case .terminal(.succeeded) = resumed.state else {
@@ -904,6 +919,7 @@ enum ExecutionTesting {
         let run = try await executor.start(
             plan,
             runID: "approval-skip-run",
+            in: .init(),
             approvalHandler: SelectiveSkipApprovalHandler(
                 skippedCallID: "approval-skip"
             )
@@ -1285,4 +1301,327 @@ private enum AgenticExecutionFlowError: Error {
     case unexpectedFailureEvidence
     case unexpectedRetry
     case unexpectedRetrySafety
+}
+
+
+extension ExecutionTesting {
+    static func runToolPlanContextPropagation()
+        async throws
+        -> [TestDiagnostic]
+    {
+        let capabilitySet = AgentCapabilitySet(
+            tools: [
+                ToolPlanContextPropagationTool
+                    .definition
+                    .identifier,
+            ]
+        )
+        let capabilities = AgentCapabilityState(
+            installed: capabilitySet
+        )
+        let catalog = Catalog(
+            declarations: [
+                .tool(
+                    ToolPlanContextPropagationTool.definition
+                ),
+            ]
+        )
+        let context = ToolContext(
+            catalog: catalog,
+            capabilities: capabilities
+        )
+        let probe = ToolPlanContextPropagationProbe()
+        let tool = ToolPlanContextPropagationTool(
+            probe: probe,
+            expectedCatalog: catalog,
+            expectedCapabilities: capabilities
+        )
+        let invoker = ToolInvoker(
+            registry: try ToolRegistry {
+                tool
+            },
+            policy: ToolExecutionPolicy(
+                autonomyMode: .auto_observe
+            )
+        )
+        let executor = ToolPlan.RunExecutor(
+            invoker: invoker
+        )
+
+        let ordinary = ToolCall(
+            id: "context-ordinary",
+            tool: ToolPlanContextPropagationTool
+                .definition
+                .identifier,
+            input: try JSONValue.encoding(
+                ToolPlanContextPropagationInput(
+                    marker: "ordinary"
+                )
+            )
+        )
+        let retry = ToolCall(
+            id: "context-retry",
+            tool: ToolPlanContextPropagationTool
+                .definition
+                .identifier,
+            input: try JSONValue.encoding(
+                ToolPlanContextPropagationInput(
+                    marker: "retry"
+                )
+            )
+        )
+        let suffix = ToolCall(
+            id: "context-suffix",
+            tool: ToolPlanContextPropagationTool
+                .definition
+                .identifier,
+            input: try JSONValue.encoding(
+                ToolPlanContextPropagationInput(
+                    marker: "suffix"
+                )
+            )
+        )
+        let plan = try ToolPlan(
+            id: "tool-plan-context-propagation",
+            root: .sequence(
+                [
+                    .call(ordinary),
+                    .call(retry),
+                    .call(suffix),
+                ]
+            )
+        )
+
+        let initial = try await executor.start(
+            plan,
+            runID: "tool-plan-context-propagation-run",
+            in: context
+        )
+
+        guard case .interrupted(let initialInterruption) =
+            initial.state,
+            case .failure = initialInterruption.reason
+        else {
+            throw ToolPlanContextPropagationError
+                .unexpectedRunState
+        }
+
+        try Expect.equal(
+            initialInterruption.point.callID,
+            "context-retry",
+            "initial run reaches ordinary execution before the intentional retry failure"
+        )
+        try Expect.equal(
+            await probe.invocationLog(),
+            "ordinary,retry",
+            "ordinary execution and the failed call both receive the full ToolContext"
+        )
+
+        let retried = try await executor.retry(
+            initial,
+            in: context
+        )
+
+        guard case .interrupted(let retryInterruption) =
+            retried.state,
+            case .continuation_required =
+                retryInterruption.reason
+        else {
+            throw ToolPlanContextPropagationError
+                .unexpectedRunState
+        }
+
+        try Expect.equal(
+            await probe.invocationLog(),
+            "ordinary,retry,retry",
+            "retry receives the same Catalog and live capability state"
+        )
+
+        let resumed = try await executor.resume(
+            retried,
+            in: context
+        )
+
+        guard case .terminal(.succeeded) = resumed.state else {
+            throw ToolPlanContextPropagationError
+                .unexpectedRunState
+        }
+
+        try Expect.equal(
+            await probe.invocationLog(),
+            "ordinary,retry,retry,suffix",
+            "resume preserves the full ToolContext into the untouched continuation"
+        )
+
+        let finalCapabilities = await capabilities.snapshot()
+
+        try Expect.equal(
+            finalCapabilities.installed,
+            capabilitySet,
+            "ToolPlan execution retains the original live AgentCapabilityState"
+        )
+        try Expect.equal(
+            finalCapabilities.available,
+            capabilitySet,
+            "available capabilities remain intact across start, retry, and resume"
+        )
+        try Expect.equal(
+            finalCapabilities.visible,
+            capabilitySet,
+            "visible capabilities remain intact across start, retry, and resume"
+        )
+
+        return [
+            .field(
+                "invocations",
+                await probe.invocationLog()
+            ),
+            .field(
+                "catalog_preserved",
+                "true"
+            ),
+            .field(
+                "capability_state_identity_preserved",
+                "true"
+            ),
+        ]
+    }
+}
+
+private struct ToolPlanContextPropagationTool: Tool {
+    typealias Input = ToolPlanContextPropagationInput
+    typealias Output = ToolPlanContextPropagationInput
+
+    static let definition = ToolDefinition(
+        identifier: "tool_plan_context_propagation_probe",
+        purpose:
+            "Proves ToolPlan preserves the complete ToolContext across execution boundaries.",
+        risk: .observe
+    )
+
+    let probe: ToolPlanContextPropagationProbe
+    let expectedCatalog: Catalog
+    let expectedCapabilities: AgentCapabilityState
+
+    func preflight(
+        _ input: Input,
+        in context: ToolContext
+    ) async throws -> ToolPreflight {
+        _ = input
+
+        try await validate(
+            context
+        )
+
+        return ToolPreflight(
+            tool: Self.definition.identifier,
+            risk: Self.definition.risk,
+            summary: Self.definition.purpose,
+            sideEffects:
+                Self.definition.risk.defaultSideEffects
+        )
+    }
+
+    func call(
+        _ input: Input,
+        in context: ToolContext
+    ) async throws -> Output {
+        try await validate(
+            context
+        )
+
+        try await probe.invoke(
+            input
+        )
+
+        return input
+    }
+
+    private func validate(
+        _ context: ToolContext
+    ) async throws {
+        guard context.catalog == expectedCatalog else {
+            throw ToolPlanContextPropagationError
+                .catalogLost
+        }
+
+        guard
+            let capabilities = context.capabilities,
+            ObjectIdentifier(capabilities)
+                == ObjectIdentifier(expectedCapabilities)
+        else {
+            throw ToolPlanContextPropagationError
+                .capabilityStateLost
+        }
+
+        let snapshot = await capabilities.snapshot()
+        let expected = AgentCapabilitySet(
+            tools: [
+                Self.definition.identifier,
+            ]
+        )
+
+        guard
+            snapshot.installed == expected,
+            snapshot.available == expected,
+            snapshot.visible == expected
+        else {
+            throw ToolPlanContextPropagationError
+                .capabilityStateChanged
+        }
+    }
+}
+
+private actor ToolPlanContextPropagationProbe {
+    private var invocations: [String] = []
+    private var retryFailed = false
+
+    func invoke(
+        _ input: ToolPlanContextPropagationInput
+    ) throws {
+        invocations.append(
+            input.marker
+        )
+
+        if input.marker == "retry",
+           !retryFailed
+        {
+            retryFailed = true
+
+            throw ToolPlanContextPropagationError
+                .firstRetryAttempt
+        }
+    }
+
+    func invocationLog() -> String {
+        invocations.joined(
+            separator: ","
+        )
+    }
+}
+
+private struct ToolPlanContextPropagationInput:
+    Sendable,
+    Codable,
+    JSONSchemaProviding,
+    Hashable
+{
+    let marker: String
+
+    static var jsonschema: JSONSchema {
+        JSONSchema.object {
+            JSONSchema.string(
+                "marker",
+                required: true
+            )
+        }
+    }
+}
+
+private enum ToolPlanContextPropagationError: Error {
+    case firstRetryAttempt
+    case catalogLost
+    case capabilityStateLost
+    case capabilityStateChanged
+    case unexpectedRunState
 }

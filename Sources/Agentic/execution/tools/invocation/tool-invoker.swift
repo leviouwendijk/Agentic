@@ -143,7 +143,7 @@ public struct ToolInvoker: Sendable {
 
     public func invoke(
         _ plan: ToolPlan,
-        workspace: WorkspaceContext? = nil,
+        in context: ToolContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Result {
@@ -151,7 +151,7 @@ public struct ToolInvoker: Sendable {
             invoker: self
         ).execute(
             plan,
-            workspace: workspace,
+            in: context,
             references: references,
             approvalHandler: approvalHandler
         )

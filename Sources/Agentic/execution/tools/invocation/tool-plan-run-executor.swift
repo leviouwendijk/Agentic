@@ -1,5 +1,4 @@
 import Foundation
-import Workspace
 
 /// Durable ToolPlan orchestration above ToolPlanExecutor.
 ///
@@ -23,13 +22,13 @@ public extension ToolPlan {
             _ plan: ToolPlan,
             runID: String = UUID().uuidString,
             relationship: ToolPlan.Run.Relationship = .root,
-            workspace: WorkspaceContext? = nil,
+            in context: ToolContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
             let result = try await planExecutor.execute(
                 plan,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -61,7 +60,7 @@ public extension ToolPlan {
         /// operation when that evidence is available.
         public func retry(
             _ run: ToolPlan.Run,
-            workspace: WorkspaceContext? = nil,
+            in context: ToolContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
@@ -93,7 +92,7 @@ public extension ToolPlan {
             )
             let rawResult = try await planExecutor.execute(
                 retryPlan,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -199,7 +198,7 @@ public extension ToolPlan {
         /// Resume only the untouched serial continuation after a resolved node.
         public func resume(
             _ run: ToolPlan.Run,
-            workspace: WorkspaceContext? = nil,
+            in context: ToolContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
@@ -215,7 +214,7 @@ public extension ToolPlan {
                 run,
                 afterPath: interruption.point.path,
                 afterCallID: interruption.point.callID,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -225,7 +224,7 @@ public extension ToolPlan {
             _ run: ToolPlan.Run,
             afterPath: String,
             afterCallID: String,
-            workspace: WorkspaceContext?,
+            in context: ToolContext,
             references: [Reference],
             approvalHandler: (any ToolApprovalHandler)?
         ) async throws -> ToolPlan.Run {
@@ -262,7 +261,7 @@ public extension ToolPlan {
                 continuation,
                 plan: run.plan,
                 attemptNumber: attemptNumber,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )
@@ -440,7 +439,7 @@ private extension ToolPlan.RunExecutor {
         _ continuation: [ToolPlan.Navigator.ContinuationStep],
         plan: ToolPlan,
         attemptNumber: Int,
-        workspace: WorkspaceContext?,
+        in context: ToolContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Result {
@@ -460,7 +459,7 @@ private extension ToolPlan.RunExecutor {
             )
             let rawResult = try await planExecutor.execute(
                 continuationPlan,
-                workspace: workspace,
+                in: context,
                 references: references,
                 approvalHandler: approvalHandler
             )

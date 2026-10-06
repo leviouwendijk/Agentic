@@ -65,6 +65,16 @@ public struct ToolRegistry: Sendable {
         }
     }
 
+    /// The final model-facing `{ arguments, execution? }` envelope schema,
+    /// when this registered tool is model-facing.
+    public func modelFacingSchema(
+        identifiedBy identifier: ToolIdentifier
+    ) -> JSONSchema? {
+        registeredTool(
+            identifiedBy: identifier
+        )?.modelFacingInputSchema
+    }
+
     var registeredTools: [RegisteredTool] {
         tools.values.sorted { lhs, rhs in
             lhs.definition.identifier.rawValue

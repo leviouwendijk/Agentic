@@ -268,7 +268,8 @@ extension ExecutionTesting {
                 root: .call(
                     fixture.call
                 )
-            )
+            ),
+            in: .init()
         )
         let record = try Expect.notNil(
             result.records.first,
