@@ -22,6 +22,7 @@ enum UnifiedAgenticTestSuite {
             )
         }
         ModelRoutingFlowSuite.testSuite
+        ModelRoutingImplementationTestSuite.testSuite
         AgenticInferenceFlowSuite.testSuite
         ProgramsFlowSuite.testSuite
         OptimizerFlowSuite.testSuite

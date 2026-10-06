@@ -171,6 +171,45 @@ public struct AgentModelSelection: Sendable, Codable, Hashable {
 }
 
 public extension AgentModelSelection {
+    static func exactModel(
+        _ modelID: AgentModelID,
+        purpose: AgentModelRoutePurpose = .executor,
+        through gateway: AgentModelGatewayIdentifier? = nil
+    ) -> Self {
+        .init(
+            purpose: purpose,
+            preferences: .init(
+                preferredModelID: modelID,
+                gateway: gateway
+            ),
+            constraints: .init(
+                allowedGatewayIdentifiers: gateway.map {
+                    Set([$0])
+                },
+                allowedModelIDs: [
+                    modelID,
+                ]
+            )
+        )
+    }
+
+    static func exactProfile(
+        _ profileIdentifier: AgentModelProfileIdentifier,
+        purpose: AgentModelRoutePurpose = .executor
+    ) -> Self {
+        .init(
+            purpose: purpose,
+            preferences: .init(
+                preferredProfileIdentifier: profileIdentifier
+            ),
+            constraints: .init(
+                allowedProfileIdentifiers: [
+                    profileIdentifier,
+                ]
+            )
+        )
+    }
+
     static let executor = Self(
         purpose: .executor
     )

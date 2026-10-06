@@ -1,3 +1,5 @@
+import Agentic
+
 public enum KnownModel {}
 
 public extension KnownModel {
@@ -39,6 +41,9 @@ public extension KnownModel {
         "apple:foundation-models"
 
     enum qwen {
+        public static let v3_5_397b_a17b: AgentModelID =
+            "qwen:qwen3-5-397b-a17b"
+
         public static let coder_3_next: AgentModelID =
             "qwen:qwen3-coder-next"
         public static let coder_3_30b_a3b: AgentModelID =
@@ -75,6 +80,9 @@ public extension KnownModel {
     }
 
     enum kimi {
+        public static let k3: AgentModelID =
+            "moonshot:kimi-k3"
+
         public static let k2_thinking: AgentModelID =
             "moonshot:kimi-k2-thinking"
         public static let k2_5: AgentModelID =
@@ -82,6 +90,11 @@ public extension KnownModel {
     }
 
     enum deepseek {
+        public static let v4_flash: AgentModelID =
+            "deepseek:v4-flash"
+        public static let v4_pro: AgentModelID =
+            "deepseek:v4-pro"
+
         public static let v3_2: AgentModelID =
             "deepseek:v3-2"
         public static let r1: AgentModelID =
@@ -91,6 +104,9 @@ public extension KnownModel {
     }
 
     enum glm {
+        public static let v5_3_flash: AgentModelID =
+            "zai:glm-5-3-flash"
+
         public static let v5: AgentModelID =
             "zai:glm-5"
         public static let v4_7: AgentModelID =
@@ -134,11 +150,13 @@ public extension KnownModel {
     }
 
     enum moonshot {
+        public static let kimi_k3 = KnownModel.kimi.k3
         public static let kimi_k2_thinking = KnownModel.kimi.k2_thinking
         public static let `kimi_k2.5` = KnownModel.kimi.k2_5
     }
 
     enum zai {
+        public static let glm_5_3_flash = KnownModel.glm.v5_3_flash
         public static let glm_5 = KnownModel.glm.v5
         public static let `glm_4.7` = KnownModel.glm.v4_7
         public static let `glm_4.7_flash` = KnownModel.glm.v4_7_flash

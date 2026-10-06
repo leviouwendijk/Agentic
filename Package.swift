@@ -16,6 +16,12 @@ let package = Package(
             ]
         ),
         .library(
+            name: "AgenticModels",
+            targets: [
+                "AgenticModels",
+            ]
+        ),
+        .library(
             name: "AgenticStandard",
             targets: [
                 "AgenticStandard",
@@ -135,6 +141,12 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticModels",
+            dependencies: [
+                "Agentic",
+            ]
+        ),
+        .target(
             name: "AgenticStandard",
             dependencies: [
                 "Agentic",
@@ -209,6 +221,7 @@ let package = Package(
             name: "AgenticTesting",
             dependencies: [
                 "Agentic",
+                "AgenticModels",
                 "AgenticStandard",
                 "AgenticHarness",
                 "AgenticLinkerCatalogFixture",
