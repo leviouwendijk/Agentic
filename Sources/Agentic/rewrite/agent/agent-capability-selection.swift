@@ -43,6 +43,25 @@ where
     }
 }
 
+public extension AgentCapabilitySelection
+where Identifier == ToolIdentifier {
+    init(
+        domains: [Namespace] = [],
+        members: [any Tool.Type],
+        excluding: [any Tool.Type] = []
+    ) {
+        self.init(
+            domains: domains,
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+}
+
 public struct AgentCapabilityScope:
     Sendable,
     Codable,

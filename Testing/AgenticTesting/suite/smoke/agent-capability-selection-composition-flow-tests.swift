@@ -95,6 +95,42 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
             "none is the right identity for capability selections"
         )
 
+        let typedTools = AgentCapabilitySelection<ToolIdentifier>(
+            domains: [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            members: [
+                LinkerCatalogFixture.Tools.Alpha.self,
+                LinkerCatalogFixture.Tools.Beta.self,
+            ],
+            excluding: [
+                LinkerCatalogFixture.Tools.Beta.self,
+            ]
+        )
+
+        try Expect.equal(
+            typedTools.domains,
+            [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            "typed Tool selection preserves explicit domains"
+        )
+        try Expect.equal(
+            typedTools.members,
+            [
+                LinkerCatalogFixture.Tools.Alpha.definition.identifier,
+                LinkerCatalogFixture.Tools.Beta.definition.identifier,
+            ],
+            "typed Tool members lower to canonical Tool identifiers"
+        )
+        try Expect.equal(
+            typedTools.excluding,
+            [
+                LinkerCatalogFixture.Tools.Beta.definition.identifier,
+            ],
+            "typed Tool exclusions lower to canonical Tool identifiers"
+        )
+
         let program = ProgramIdentifier(
             rawValue: "fixture.program"
         )
