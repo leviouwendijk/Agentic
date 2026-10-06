@@ -15,12 +15,8 @@ let package = Package(
                 "Agentic",
             ]
         ),
-        .library(
-            name: "AgenticModels",
-            targets: [
-                "AgenticModels",
-            ]
-        ),
+
+        // available domains
         .library(
             name: "AgenticStandard",
             targets: [
@@ -31,6 +27,14 @@ let package = Package(
             name: "AgenticHarness",
             targets: [
                 "AgenticHarness",
+            ]
+        ),
+
+        // known model library 
+        .library(
+            name: "AgenticModels",
+            targets: [
+                "AgenticModels",
             ]
         ),
 
@@ -98,7 +102,6 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Version.git",
             branch: "master"
         ),
-
     ],
     targets: [
         .target(
