@@ -40,6 +40,8 @@ public struct GovernedAgentToolCallResolver:
         recovery: Recovery.Policy? = nil,
         context: ToolContext = .init(),
         approvalHandler: (any ToolApprovalHandler)? = nil,
+        observationHandler:
+            ToolExecutionObservations.Observer? = nil,
         resolutionObserver:
             (@Sendable (ToolInvocation.Result) async -> Void)? = nil
     ) {
@@ -50,7 +52,8 @@ public struct GovernedAgentToolCallResolver:
         self.invoker = ToolInvoker(
             registry: registry,
             policy: policy,
-            recovery: recovery
+            recovery: recovery,
+            observationHandler: observationHandler
         )
         self.context = context
         self.approvalHandler = approvalHandler

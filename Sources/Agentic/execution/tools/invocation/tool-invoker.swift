@@ -5,15 +5,20 @@ public struct ToolInvoker: Sendable {
     public let registry: ToolRegistry
     public let policy: ToolExecutionPolicy
     public let recovery: Recovery.Policy?
+    public let observationHandler:
+        ToolExecutionObservations.Observer?
 
     public init(
         registry: ToolRegistry,
         policy: ToolExecutionPolicy,
-        recovery: Recovery.Policy? = nil
+        recovery: Recovery.Policy? = nil,
+        observationHandler:
+            ToolExecutionObservations.Observer? = nil
     ) {
         self.registry = registry
         self.policy = policy
         self.recovery = recovery
+        self.observationHandler = observationHandler
     }
 
     public func review(
@@ -102,7 +107,8 @@ public struct ToolInvoker: Sendable {
             let execution = try await ToolExecution(
                 registry: registry,
                 recovery: recovery,
-                context: context
+                context: context,
+                observationHandler: observationHandler
             ).execute(
                 ToolCall(
                     id: invocation.id,

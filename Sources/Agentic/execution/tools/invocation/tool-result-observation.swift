@@ -51,6 +51,9 @@ public struct ToolResultObservation: Sendable, Codable, Hashable {
 /// Emit explicitly from a tool or its process-output adapter. This does not
 /// redirect process-global stdout/stderr. Await producers before returning.
 public enum ToolExecutionObservations {
+    public typealias Observer =
+        @Sendable (ToolResultObservation) async -> Void
+
     @TaskLocal private static var current: Buffer?
 
     public static func emit(_ observation: ToolResultObservation) async {
@@ -62,9 +65,17 @@ public enum ToolExecutionObservations {
     internal static func capture<Value: Sendable>(
         call: ToolCall.Reference? = nil,
         kind: ToolResultObservation.Operation = .call,
+        observer: Observer? = nil,
         operation: @Sendable () async throws -> Value
     ) async rethrows -> (Value, [ToolResultObservation]) {
         let parent = call == nil ? nil : current
+        let inheritedObserver: Observer?
+        if let observer {
+            inheritedObserver = observer
+        } else {
+            inheritedObserver = await current?.currentObserver()
+        }
+
         let origin: ToolResultObservation.Origin?
         if let call {
             let ordinal = await parent?.nextOrdinal() ?? 1
@@ -72,7 +83,10 @@ public enum ToolExecutionObservations {
         } else {
             origin = nil
         }
-        let buffer = Buffer(origin: origin)
+        let buffer = Buffer(
+            origin: origin,
+            observer: inheritedObserver
+        )
         do {
             let value = try await $current.withValue(buffer, operation: operation)
             let observations = await buffer.finish()
@@ -87,12 +101,17 @@ public enum ToolExecutionObservations {
 
     private actor Buffer {
         let origin: ToolResultObservation.Origin?
+        let observer: Observer?
         var observations: [ToolResultObservation] = []
         var ordinal = 0
         var finished = false
 
-        init(origin: ToolResultObservation.Origin?) {
+        init(
+            origin: ToolResultObservation.Origin?,
+            observer: Observer?
+        ) {
             self.origin = origin
+            self.observer = observer
         }
 
         func nextOrdinal() -> Int {
@@ -100,11 +119,16 @@ public enum ToolExecutionObservations {
             return ordinal
         }
 
-        func append(_ observation: ToolResultObservation) {
+        func append(_ observation: ToolResultObservation) async {
             guard !finished else { return }
             var observation = observation
             observation.origin = origin
             observations.append(observation)
+            await observer?(observation)
+        }
+
+        func currentObserver() -> Observer? {
+            observer
         }
 
         func append(contentsOf values: [ToolResultObservation]) {

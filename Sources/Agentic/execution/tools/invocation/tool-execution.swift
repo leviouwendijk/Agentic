@@ -2,24 +2,35 @@ internal struct ToolExecution: Sendable {
     internal let registry: ToolRegistry
     internal let recovery: Recovery.Policy?
     internal let context: ToolContext
+    internal let observationHandler:
+        ToolExecutionObservations.Observer?
 
     internal init(
         registry: ToolRegistry,
         recovery: Recovery.Policy? = nil,
-        context: ToolContext = .init()
+        context: ToolContext = .init(),
+        observationHandler:
+            ToolExecutionObservations.Observer? = nil
     ) {
         self.registry = registry
         self.recovery = recovery
         self.context = context
+        self.observationHandler = observationHandler
     }
 
     internal func execute(
         _ call: ToolCall,
         preflight: ToolPreflight
     ) async throws -> ToolExecutionResult {
-        let (value, observations) = try await ToolExecutionObservations.capture {
-            try await executeObserved(call, preflight: preflight)
-        }
+        let (value, observations) =
+            try await ToolExecutionObservations.capture(
+                observer: observationHandler
+            ) {
+                try await executeObserved(
+                    call,
+                    preflight: preflight
+                )
+            }
         var result = value
         result.observations = observations
         return result
