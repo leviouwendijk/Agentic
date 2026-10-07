@@ -60,6 +60,135 @@ where Identifier == ToolIdentifier {
             }
         )
     }
+
+    init(
+        domains: [any Domain.Type],
+        members: [any Tool.Type] = [],
+        excluding: [any Tool.Type] = []
+    ) {
+        self.init(
+            domains: domains.map {
+                $0.definition.namespace
+            },
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+}
+
+public extension AgentCapabilitySelection
+where Identifier == ProgramIdentifier {
+    init(
+        domains: [Namespace] = [],
+        members: [any Program.Type],
+        excluding: [any Program.Type] = []
+    ) {
+        self.init(
+            domains: domains,
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+
+    init(
+        domains: [any Domain.Type],
+        members: [any Program.Type] = [],
+        excluding: [any Program.Type] = []
+    ) {
+        self.init(
+            domains: domains.map {
+                $0.definition.namespace
+            },
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+}
+
+public extension AgentCapabilitySelection
+where Identifier == InferenceIdentifier {
+    init(
+        domains: [Namespace] = [],
+        members: [any Inference.Type],
+        excluding: [any Inference.Type] = []
+    ) {
+        self.init(
+            domains: domains,
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+
+    init(
+        domains: [any Domain.Type],
+        members: [any Inference.Type] = [],
+        excluding: [any Inference.Type] = []
+    ) {
+        self.init(
+            domains: domains.map {
+                $0.definition.namespace
+            },
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+}
+
+public extension AgentCapabilitySelection
+where Identifier == AgentIdentifier {
+    init(
+        domains: [Namespace] = [],
+        members: [any Agent.Type],
+        excluding: [any Agent.Type] = []
+    ) {
+        self.init(
+            domains: domains,
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
+
+    init(
+        domains: [any Domain.Type],
+        members: [any Agent.Type] = [],
+        excluding: [any Agent.Type] = []
+    ) {
+        self.init(
+            domains: domains.map {
+                $0.definition.namespace
+            },
+            members: members.map {
+                $0.definition.identifier
+            },
+            excluding: excluding.map {
+                $0.definition.identifier
+            }
+        )
+    }
 }
 
 public struct AgentCapabilityScope:
@@ -95,6 +224,35 @@ public struct AgentCapabilityScope:
             programs: lhs.programs + rhs.programs,
             inferences: lhs.inferences + rhs.inferences,
             agents: lhs.agents + rhs.agents
+        )
+    }
+}
+
+public extension AgentCapabilityScope {
+    init(
+        domains: [any Domain.Type],
+        tools: AgentCapabilitySelection<ToolIdentifier> = .none,
+        programs: AgentCapabilitySelection<ProgramIdentifier> = .none,
+        inferences: AgentCapabilitySelection<InferenceIdentifier> = .none,
+        agents: AgentCapabilitySelection<AgentIdentifier> = .none
+    ) {
+        let namespaces = domains.map {
+            $0.definition.namespace
+        }
+
+        self.init(
+            tools:
+                .init(domains: namespaces)
+                + tools,
+            programs:
+                .init(domains: namespaces)
+                + programs,
+            inferences:
+                .init(domains: namespaces)
+                + inferences,
+            agents:
+                .init(domains: namespaces)
+                + agents
         )
     }
 }

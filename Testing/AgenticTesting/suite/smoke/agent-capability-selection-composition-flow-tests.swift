@@ -2,6 +2,52 @@ import Agentic
 import AgenticLinkerCatalogFixture
 import Testing
 
+private struct TypedCapabilityProgramFixture: Program {
+    typealias Input = String
+    typealias Output = String
+
+    static let definition = ProgramDefinition(
+        identifier: .init(
+            rawValue: "fixture.typed_program"
+        ),
+        purpose: "Prove typed Program capability selection authoring."
+    )
+
+    func run(
+        _ input: Input,
+        in _: ProgramContext
+    ) async throws -> Output {
+        input
+    }
+}
+
+private enum TypedCapabilityInferenceFixture: Inference {
+    typealias Input = String
+    typealias Output = String
+
+    static let definition = InferenceDefinition(
+        identifier: .init(
+            rawValue: "fixture.typed_inference"
+        ),
+        purpose: "Prove typed Inference capability selection authoring."
+    )
+}
+
+private enum TypedCapabilityAgentFixture: Agent {
+    typealias Input = String
+    typealias Output = String
+
+    static let purpose =
+        "Prove typed Agent capability selection authoring."
+
+    static let definition = AgentDefinition(
+        identifier: .init(
+            rawValue: "fixture.typed_agent"
+        ),
+        purpose: purpose
+    )
+}
+
 let capabilitySelectionCompositionFlows: [TestFlow] = [
     TestFlow(
         "agent-capability-selection-composition",
@@ -129,6 +175,184 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
                 LinkerCatalogFixture.Tools.Beta.definition.identifier,
             ],
             "typed Tool exclusions lower to canonical Tool identifiers"
+        )
+
+        let typedProgram = AgentCapabilitySelection<ProgramIdentifier>(
+            members: [
+                TypedCapabilityProgramFixture.self,
+            ],
+            excluding: [
+                TypedCapabilityProgramFixture.self,
+            ]
+        )
+
+        try Expect.equal(
+            typedProgram.members,
+            [
+                TypedCapabilityProgramFixture.definition.identifier,
+            ],
+            "typed Program members lower to canonical Program identifiers"
+        )
+        try Expect.equal(
+            typedProgram.excluding,
+            [
+                TypedCapabilityProgramFixture.definition.identifier,
+            ],
+            "typed Program exclusions lower to canonical Program identifiers"
+        )
+
+        let typedInference = AgentCapabilitySelection<InferenceIdentifier>(
+            members: [
+                TypedCapabilityInferenceFixture.self,
+            ],
+            excluding: [
+                TypedCapabilityInferenceFixture.self,
+            ]
+        )
+
+        try Expect.equal(
+            typedInference.members,
+            [
+                TypedCapabilityInferenceFixture.definition.identifier,
+            ],
+            "typed Inference members lower to canonical Inference identifiers"
+        )
+        try Expect.equal(
+            typedInference.excluding,
+            [
+                TypedCapabilityInferenceFixture.definition.identifier,
+            ],
+            "typed Inference exclusions lower to canonical Inference identifiers"
+        )
+
+        let typedAgent = AgentCapabilitySelection<AgentIdentifier>(
+            members: [
+                TypedCapabilityAgentFixture.self,
+            ],
+            excluding: [
+                TypedCapabilityAgentFixture.self,
+            ]
+        )
+
+        try Expect.equal(
+            typedAgent.members,
+            [
+                TypedCapabilityAgentFixture.definition.identifier,
+            ],
+            "typed Agent members lower to canonical Agent identifiers"
+        )
+        try Expect.equal(
+            typedAgent.excluding,
+            [
+                TypedCapabilityAgentFixture.definition.identifier,
+            ],
+            "typed Agent exclusions lower to canonical Agent identifiers"
+        )
+
+        let typedPerKindDomainScope = AgentCapabilityScope(
+            tools: .init(
+                domains: [
+                    LinkerCatalogFixture.self,
+                ]
+            ),
+            programs: .init(
+                domains: [
+                    LinkerCatalogFixture.self,
+                ]
+            ),
+            inferences: .init(
+                domains: [
+                    LinkerCatalogFixture.self,
+                ]
+            ),
+            agents: .init(
+                domains: [
+                    LinkerCatalogFixture.self,
+                ]
+            )
+        )
+
+        let typedWholeDomainScope = AgentCapabilityScope(
+            domains: [
+                LinkerCatalogFixture.self,
+            ]
+        )
+
+        try Expect.equal(
+            typedWholeDomainScope,
+            typedPerKindDomainScope,
+            "whole-Domain capability scope lowers equivalently across Tool, Program, Inference, and Agent selections"
+        )
+
+        let typedWholeDomainWithMembers = AgentCapabilityScope(
+            domains: [
+                LinkerCatalogFixture.self,
+            ],
+            programs: .init(
+                members: [
+                    TypedCapabilityProgramFixture.self,
+                ]
+            ),
+            inferences: .init(
+                members: [
+                    TypedCapabilityInferenceFixture.self,
+                ]
+            ),
+            agents: .init(
+                members: [
+                    TypedCapabilityAgentFixture.self,
+                ]
+            )
+        )
+
+        try Expect.equal(
+            typedWholeDomainWithMembers.tools.domains,
+            [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            "whole-Domain scope applies its namespace to Tool selection"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.programs.domains,
+            [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            "whole-Domain scope applies its namespace to Program selection"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.inferences.domains,
+            [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            "whole-Domain scope applies its namespace to Inference selection"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.agents.domains,
+            [
+                LinkerCatalogFixture.definition.namespace,
+            ],
+            "whole-Domain scope applies its namespace to Agent selection"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.programs.members,
+            [
+                TypedCapabilityProgramFixture.definition.identifier,
+            ],
+            "whole-Domain scope preserves explicit typed Program members"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.inferences.members,
+            [
+                TypedCapabilityInferenceFixture.definition.identifier,
+            ],
+            "whole-Domain scope preserves explicit typed Inference members"
+        )
+        try Expect.equal(
+            typedWholeDomainWithMembers.agents.members,
+            [
+                TypedCapabilityAgentFixture.definition.identifier,
+            ],
+            "whole-Domain scope preserves explicit typed Agent members"
         )
 
         let program = ProgramIdentifier(
