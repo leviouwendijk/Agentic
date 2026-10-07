@@ -127,8 +127,7 @@ private extension GovernedAgentToolCallResolver {
         review: ToolInvocation.Review
     ) throws -> ToolResult {
         ToolResult(
-            toolCallID: call.id,
-            tool: call.tool,
+            call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(
                     kind: "tool_denied",
@@ -147,8 +146,7 @@ private extension GovernedAgentToolCallResolver {
         review: ToolInvocation.Review
     ) throws -> ToolResult {
         ToolResult(
-            toolCallID: call.id,
-            tool: call.tool,
+            call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(
                     kind: "tool_skipped",

@@ -50,8 +50,7 @@ extension ToolExecution {
         )
 
         return ToolResult(
-            toolCallID: call.id,
-            tool: call.tool,
+            call: call.reference,
             output: try JSONValue.encoding(
                 payload
             ),

@@ -47,7 +47,7 @@ extension ExecutionTesting {
             "resolver observer sees approved invocation"
         )
         try Expect.equal(
-            observedExecution.execution?.result.toolCallID,
+            observedExecution.execution?.result.call.id,
             "resolver-observer-observe-call",
             "resolver observer sees the exact executed result"
         )

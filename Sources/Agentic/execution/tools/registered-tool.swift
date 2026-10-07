@@ -416,8 +416,7 @@ public struct RegisteredTool: Sendable {
 
         return ToolExecutionResult(
             result: ToolResult(
-                toolCallID: call.id,
-                tool: definition.identifier,
+                call: call.reference,
                 output: execution.output,
                 projection: execution.projection,
                 isError: execution.isError
@@ -476,8 +475,7 @@ public struct RegisteredTool: Sendable {
             return .applied(
                 ToolExecutionResult(
                     result: ToolResult(
-                        toolCallID: call.id,
-                        tool: definition.identifier,
+                        call: call.reference,
                         output: output,
                         projection: projection,
                         isError: false

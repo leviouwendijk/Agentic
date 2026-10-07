@@ -31,8 +31,10 @@ extension ProgramsFlowTesting {
         let identifier: ToolIdentifier =
             "fixture.program_tool_failure"
         let result = ToolResult(
-            toolCallID: "fixture-program-tool-failure-call",
-            tool: identifier,
+            call: .init(
+                id: "fixture-program-tool-failure-call",
+                tool: identifier
+            ),
             output: .null,
             isError: true
         )
@@ -52,8 +54,8 @@ extension ProgramsFlowTesting {
         ) { failure in
             guard
                 failure.tool == identifier,
-                failure.result.toolCallID == result.toolCallID,
-                failure.result.tool == result.tool,
+                failure.result.call.id == result.call.id,
+                failure.result.call.tool == result.call.tool,
                 failure.result.isError
             else {
                 throw failure
@@ -69,8 +71,8 @@ extension ProgramsFlowTesting {
         ) { failure in
             guard
                 failure.tool == identifier,
-                failure.result.toolCallID == result.toolCallID,
-                failure.result.tool == result.tool,
+                failure.result.call.id == result.call.id,
+                failure.result.call.tool == result.call.tool,
                 failure.result.isError
             else {
                 return .propagate
@@ -92,8 +94,8 @@ extension ProgramsFlowTesting {
         } catch let failure as ProgramToolFailure {
             propagated =
                 failure.tool == identifier
-                && failure.result.toolCallID == result.toolCallID
-                && failure.result.tool == result.tool
+                && failure.result.call.id == result.call.id
+                && failure.result.call.tool == result.call.tool
                 && failure.result.isError
         }
 
@@ -119,7 +121,7 @@ extension ProgramsFlowTesting {
             .field("propagated", String(propagated)),
             .field(
                 "failed_result",
-                result.tool?.rawValue ?? "<none>"
+                result.call.tool.rawValue
             ),
         ]
     }

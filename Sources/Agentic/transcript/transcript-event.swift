@@ -299,7 +299,7 @@ public enum TranscriptEvent:
             return call.id
 
         case .tool_result(let result):
-            return result.toolCallID
+            return result.call.id
 
         case .session_branch(let event):
             return event.id
@@ -318,7 +318,7 @@ public enum TranscriptEvent:
             return call.tool.rawValue
 
         case .tool_result(let result):
-            return result.tool?.rawValue ?? result.toolCallID
+            return result.call.tool.rawValue
 
         case .session_branch(let event):
             return event.summaryText
