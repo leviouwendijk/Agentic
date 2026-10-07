@@ -26,6 +26,40 @@ public struct ToolCall:
 }
 
 extension ToolCall {
+    // convenience: drops full input for purely reference purposes
+    public struct Reference:
+        Sendable,
+        Codable,
+        Hashable,
+        Identifiable
+    {
+        public let id: String
+        public let tool: ToolIdentifier
+
+        public init(
+            id: String,
+            tool: ToolIdentifier
+        ) {
+            self.id = id
+            self.tool = tool
+        }
+
+        public init(
+            _ call: ToolCall
+        ) {
+            self.init(
+                id: call.id,
+                tool: call.tool
+            )
+        }
+    }
+
+    public var reference: Reference {
+        Reference(self)
+    }
+}
+
+extension ToolCall {
     public enum Phase:
         String,
         Sendable,
@@ -47,23 +81,20 @@ extension ToolCall {
         Codable,
         Hashable
     {
-        public let tool: ToolIdentifier
-        public let toolCallID: String
+        public let call: Reference
         public let phase: Phase
         public let message: String
         public let errorType: String
         public let incident: Recovery.Incident?
 
         public init(
-            tool: ToolIdentifier,
-            toolCallID: String,
+            call: Reference,
             phase: Phase,
             message: String,
             errorType: String,
             incident: Recovery.Incident? = nil
         ) {
-            self.tool = tool
-            self.toolCallID = toolCallID
+            self.call = call
             self.phase = phase
             self.message = message
             self.errorType = errorType
@@ -85,16 +116,14 @@ extension ToolCall {
         }
 
         public init(
-            tool: ToolIdentifier,
-            toolCallID: String,
+            call: Reference,
             phase: Phase,
             underlying error: any Swift.Error,
             incident: Recovery.Incident? = nil
         ) {
             self.init(
                 failure: .init(
-                    tool: tool,
-                    toolCallID: toolCallID,
+                    call: call,
                     phase: phase,
                     message: Self.message(
                         for: error
@@ -110,7 +139,7 @@ extension ToolCall {
         }
 
         public var errorDescription: String? {
-            "Tool '\(failure.tool.rawValue)' failed during \(failure.phase.rawValue) for call '\(failure.toolCallID)': \(failure.message)"
+            "Tool '\(failure.call.tool.rawValue)' failed during \(failure.phase.rawValue) for call '\(failure.call.id)': \(failure.message)"
         }
 
         private static func message(
