@@ -453,8 +453,8 @@ public struct RegisteredTool: Sendable {
         context: ToolContext
     ) async throws -> Reconciliation? {
         guard
-            failure.tool == definition.identifier,
-            failure.toolCallID == call.id,
+            failure.call.tool == definition.identifier,
+            failure.call.id == call.id,
             failure.phase == .call
         else {
             throw RegisteredToolError.invalidFailure(
@@ -579,8 +579,10 @@ private func phasedToolCallError<T: Tool>(
     }
 
     return ToolCall.Error(
-        tool: T.definition.identifier,
-        toolCallID: call.id,
+        call: .init(
+            id: call.id,
+            tool: T.definition.identifier
+        ),
         phase: phase,
         underlying: error,
         incident: incident

@@ -50,8 +50,10 @@ func runAgenticTestingToolLifecycleSmoke()
     )
 
     let failure = ToolCall.Failure(
-        tool: SmokeTool.definition.identifier,
-        toolCallID: "tool-lifecycle-smoke",
+        call: .init(
+            id: "tool-lifecycle-smoke",
+            tool: SmokeTool.definition.identifier
+        ),
         phase: .call,
         message: "fixture failure",
         errorType: "AgenticTestingSmokeError"

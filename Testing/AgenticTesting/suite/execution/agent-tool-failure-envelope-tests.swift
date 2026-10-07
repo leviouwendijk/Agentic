@@ -123,12 +123,12 @@ private func provePhase<T: Tool>(
         "\(expectedPhase.rawValue) failure retains its execution phase"
     )
     try Expect.equal(
-        failure.tool,
+        failure.call.tool,
         tool.identifier,
         "\(expectedPhase.rawValue) failure retains the registered tool"
     )
     try Expect.equal(
-        failure.toolCallID,
+        failure.call.id,
         call.id,
         "\(expectedPhase.rawValue) failure retains the tool call id"
     )
@@ -156,7 +156,7 @@ private func proveEncodePhase() async throws {
         "output encoding failures retain the encode phase"
     )
     try Expect.equal(
-        failure.toolCallID,
+        failure.call.id,
         call.id,
         "encode failure retains the tool call id"
     )
@@ -260,7 +260,7 @@ private func proveToolPlanFailurePersistence() async throws {
         "single-step remapping preserves the typed tool failure"
     )
     try Expect.equal(
-        failure.toolCallID,
+        failure.call.id,
         call.id,
         "durable ToolPlan history preserves the failed call id"
     )
@@ -329,7 +329,7 @@ private func proveRecoveryErrorEvidence() async throws -> Bool {
         "operational recovery message remains distinct from the underlying diagnostic message"
     )
     try Expect.equal(
-        failure.toolCallID,
+        failure.call.id,
         call.id,
         "canonical failure envelope carries the tool call identity independently of classification"
     )

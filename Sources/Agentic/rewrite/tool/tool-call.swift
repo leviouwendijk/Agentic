@@ -100,6 +100,49 @@ extension ToolCall {
             self.errorType = errorType
             self.incident = incident
         }
+
+        @available(
+            *,
+            deprecated,
+            message: "Use init(call:phase:message:errorType:incident:) with a ToolCall.Reference instead."
+        )
+        public init(
+            tool: ToolIdentifier,
+            toolCallID: String,
+            phase: Phase,
+            message: String,
+            errorType: String,
+            incident: Recovery.Incident? = nil
+        ) {
+            self.init(
+                call: .init(
+                    id: toolCallID,
+                    tool: tool
+                ),
+                phase: phase,
+                message: message,
+                errorType: errorType,
+                incident: incident
+            )
+        }
+
+        @available(
+            *,
+            deprecated,
+            message: "Use call.tool instead."
+        )
+        public var tool: ToolIdentifier {
+            call.tool
+        }
+
+        @available(
+            *,
+            deprecated,
+            message: "Use call.id instead."
+        )
+        public var toolCallID: String {
+            call.id
+        }
     }
 
     public struct Error:
@@ -113,6 +156,29 @@ extension ToolCall {
             failure: Failure
         ) {
             self.failure = failure
+        }
+
+        @available(
+            *,
+            deprecated,
+            message: "Use init(call:phase:underlying:incident:) with a ToolCall.Reference instead."
+        )
+        public init(
+            tool: ToolIdentifier,
+            toolCallID: String,
+            phase: Phase,
+            underlying error: any Swift.Error,
+            incident: Recovery.Incident? = nil
+        ) {
+            self.init(
+                call: .init(
+                    id: toolCallID,
+                    tool: tool
+                ),
+                phase: phase,
+                underlying: error,
+                incident: incident
+            )
         }
 
         public init(

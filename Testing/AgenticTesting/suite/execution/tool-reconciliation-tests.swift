@@ -173,7 +173,7 @@ private struct ToolReconciliationFixture: Tool {
             "reconciliation receives the durable original call failure"
         )
         try Expect.equal(
-            failure.toolCallID,
+            failure.call.id,
             "reconciliation-call",
             "reconciliation receives canonical call identity in the failure envelope"
         )
@@ -295,8 +295,10 @@ private func reconciliationFailure(
     callID: String
 ) -> ToolCall.Failure {
     .init(
-        tool: tool,
-        toolCallID: callID,
+        call: .init(
+            id: callID,
+            tool: tool
+        ),
         phase: .call,
         message: "mutation outcome unknown",
         errorType: "ToolReconciliationFixtureError",

@@ -467,12 +467,12 @@ enum ExecutionTesting {
             "failure interruption retains exact call id"
         )
         try Expect.equal(
-            toolFailure.tool.rawValue,
+            toolFailure.call.tool.rawValue,
             "tool_plan_failure_evidence_probe",
             "run failure retains typed tool identifier"
         )
         try Expect.equal(
-            toolFailure.toolCallID,
+            toolFailure.call.id,
             "failure-evidence",
             "run failure retains typed tool call id"
         )
