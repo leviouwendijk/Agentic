@@ -10,10 +10,29 @@ public struct ToolResultObservation: Sendable, Codable, Hashable {
     }
 
     public struct Origin: Sendable, Codable, Hashable {
-        public let toolCallID: String
+        public let call: ToolCall.Reference
         public let operation: Operation
         /// Ordered operation within one execution, including reconciliation.
         public let ordinal: Int
+
+        public init(
+            call: ToolCall.Reference,
+            operation: Operation,
+            ordinal: Int
+        ) {
+            self.call = call
+            self.operation = operation
+            self.ordinal = ordinal
+        }
+
+        @available(
+            *,
+            deprecated,
+            message: "Use call.id instead."
+        )
+        public var toolCallID: String {
+            call.id
+        }
     }
 
     public let kind: Kind
@@ -41,15 +60,15 @@ public enum ToolExecutionObservations {
     /// An execution owns a fresh scope. Registered operations forward their
     /// evidence to that scope even when they throw; nested executions stay isolated.
     internal static func capture<Value: Sendable>(
-        callID: String? = nil,
+        call: ToolCall.Reference? = nil,
         kind: ToolResultObservation.Operation = .call,
         operation: @Sendable () async throws -> Value
     ) async rethrows -> (Value, [ToolResultObservation]) {
-        let parent = callID == nil ? nil : current
+        let parent = call == nil ? nil : current
         let origin: ToolResultObservation.Origin?
-        if let callID {
+        if let call {
             let ordinal = await parent?.nextOrdinal() ?? 1
-            origin = .init(toolCallID: callID, operation: kind, ordinal: ordinal)
+            origin = .init(call: call, operation: kind, ordinal: ordinal)
         } else {
             origin = nil
         }

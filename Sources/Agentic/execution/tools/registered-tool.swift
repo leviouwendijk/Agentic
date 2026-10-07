@@ -394,7 +394,7 @@ public struct RegisteredTool: Sendable {
         _ call: ToolCall,
         context: ToolContext
     ) async throws -> ToolExecutionResult {
-        let (value, observations) = try await ToolExecutionObservations.capture(callID: call.id) {
+        let (value, observations) = try await ToolExecutionObservations.capture(call: call.reference) {
             try await executeObserved(
                 call,
                 context: context
@@ -430,7 +430,7 @@ public struct RegisteredTool: Sendable {
         context: ToolContext
     ) async throws -> Reconciliation? {
         let (value, observations) = try await ToolExecutionObservations.capture(
-            callID: call.id,
+            call: call.reference,
             kind: .reconcile
         ) {
             try await reconcileObserved(

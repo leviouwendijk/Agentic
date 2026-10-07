@@ -46,7 +46,7 @@ extension ExecutionTesting {
         for (invocation, expected) in [(pair.0, "first"), (pair.1, "second")] {
             let execution = try Expect.notNil(invocation.execution, "execution exists")
             try Expect.equal(execution.observations.map(\.content), [expected, ""], "concurrent observations stay scoped and ordered")
-            try Expect.equal(execution.observations.first?.origin?.toolCallID, expected, "observations retain call identity")
+            try Expect.equal(execution.observations.first?.origin?.call.id, expected, "observations retain call identity")
             let decoded = try JSONDecoder().decode(ToolExecutionResult.self, from: JSONEncoder().encode(execution))
             try Expect.equal(decoded, execution, "execution observations survive persistence")
         }
