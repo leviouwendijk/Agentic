@@ -6,11 +6,11 @@
 /// level and reusable; agent/session state is reached only through the
 /// supplied context at invocation time.
 public protocol Tool:
-    Producer,
+    Capability,
     ToolRecovery,
     ToolProjection
+where DefinitionType == ToolDefinition
 {
-    static var definition: ToolDefinition { get }
 
     func preflight(
         _ input: Input,

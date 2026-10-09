@@ -200,7 +200,7 @@ private struct StrategyRecoveryFixtureModelInvoker:
 
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         await state.record(
             invocation: invocation
         )
@@ -276,7 +276,7 @@ private struct StrategyRecoveryFixtureModelInvoker:
             profile: profile
         )
 
-        return AgentModelInvocationResult(
+        return AgentModelInvocation.Result(
             response: response,
             route: AgentModelRouteRecord(
                 route: route,
@@ -288,7 +288,7 @@ private struct StrategyRecoveryFixtureModelInvoker:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(
                 throwing: StrategyRecoveryFixtureError

@@ -9,7 +9,7 @@ public enum TranscriptEvent:
 {
     case message(Message)
     case tool_call(ToolCall)
-    case tool_result(ToolResult)
+    case tool_result(ToolCall.Response)
     case session_branch(SessionBranchEvent)
     case note(id: String, text: String)
 
@@ -94,7 +94,7 @@ public enum TranscriptEvent:
         case .tool_result:
             self = .tool_result(
                 try container.decode(
-                    ToolResult.self,
+                    ToolCall.Response.self,
                     forKey: .tool_result
                 )
             )

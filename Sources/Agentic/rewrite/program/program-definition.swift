@@ -1,5 +1,5 @@
 public struct ProgramDefinition:
-    Definition,
+    CapabilityDefinition,
     Codable,
     Hashable
 {

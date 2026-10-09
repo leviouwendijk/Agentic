@@ -88,7 +88,7 @@ private struct NativeStructuredRecoveryFixtureModelInvoker:
 
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         let invocationIndex = await state.record(
             invocation: invocation
         )
@@ -136,7 +136,7 @@ private struct NativeStructuredRecoveryFixtureModelInvoker:
             profile: profile
         )
 
-        return AgentModelInvocationResult(
+        return AgentModelInvocation.Result(
             response: response,
             route: AgentModelRouteRecord(
                 route: route,
@@ -148,7 +148,7 @@ private struct NativeStructuredRecoveryFixtureModelInvoker:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(
                 throwing: NativeStructuredRecoveryFixtureError

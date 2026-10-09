@@ -8,7 +8,7 @@ struct CrossFileCompilerReproducerExecutor:
 {
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         fatalError("compile-only cross-file reproducer")
     }
 }

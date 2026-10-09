@@ -103,7 +103,7 @@ private struct DecisionTransportFixture:
 {
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         throw TestFlowAssertionFailure(
             label: "decision transport guard",
             message: "A decision inference reached the generative model invoker."
@@ -112,7 +112,7 @@ private struct DecisionTransportFixture:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(
                 throwing: Decision.Error.modelExecutionUnavailable

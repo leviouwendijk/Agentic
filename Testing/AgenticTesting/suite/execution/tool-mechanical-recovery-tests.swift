@@ -340,7 +340,7 @@ extension ExecutionTesting {
 private extension ExecutionTesting {
     static func mechanicalRecoveryExecution(
         scenario: MechanicalRecoveryScenario
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         let fixture = try mechanicalRecoveryFixture(
             scenario: scenario
         )

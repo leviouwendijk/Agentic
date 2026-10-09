@@ -499,15 +499,21 @@ public struct InferenceAttemptResult<Output: Sendable>: Sendable {
     }
 }
 
-public struct InferenceExecutionResult<Output: Sendable>: Sendable {
-    public var output: Output
-    public var record: InferenceExecutionRecord
+public enum InferenceExecution {}
 
-    public init(
-        output: Output,
-        record: InferenceExecutionRecord
-    ) {
-        self.output = output
-        self.record = record
+public extension InferenceExecution {
+    struct Result<Output: Sendable>: Sendable {
+        public var output: Output
+        public var record: InferenceExecutionRecord
+
+        public init(
+            output: Output,
+            record: InferenceExecutionRecord
+        ) {
+            self.output = output
+            self.record = record
+        }
     }
+
 }
+

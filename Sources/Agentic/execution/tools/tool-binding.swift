@@ -8,9 +8,12 @@ import Workspace
 /// Registration captures every operation that requires the concrete
 /// Self/Input/Output types. The registry never needs to reopen a Tool
 /// existential afterward.
-public struct RegisteredTool: Sendable {
+public struct ToolBinding: CapabilityBinding {
+    public var reference: CapabilityReference {
+        .tool(definition.identifier)
+    }
     public enum Reconciliation: Sendable {
-        case applied(ToolExecutionResult)
+        case applied(ToolExecution.Result)
         case applied_without_output
         case not_applied
         case unknown
@@ -47,6 +50,8 @@ public struct RegisteredTool: Sendable {
     }
 
     public let definition: ToolDefinition
+    /// Always retains the typed contract, even for a host-only Tool.
+    public let capabilityContract: CapabilityContract
     public let modelContract: ToolModelContract
 
     public var semanticInputSchema: JSONSchema? {
@@ -62,7 +67,7 @@ public struct RegisteredTool: Sendable {
     /// This is the schema advertised to the model surface, distinct from the
     /// authored semantic `T.Input` schema. The host may consume this directly
     /// instead of reconstructing the model envelope from semantic input or
-    /// re-deriving it from a lowered `ToolDescriptor.inputSchema`.
+    /// re-deriving it from a lowered `ToolDescriptor.input`.
     public var modelFacingInputSchema: JSONSchema? {
         modelContract.modelFacingInputSchema
     }
@@ -75,7 +80,7 @@ public struct RegisteredTool: Sendable {
         return ToolDescriptor(
             identifier: definition.identifier,
             description: definition.purpose,
-            inputSchema: inputSchema.jsonvalue,
+            input: inputSchema.jsonvalue,
             risk: definition.risk
         )
     }
@@ -114,6 +119,7 @@ public struct RegisteredTool: Sendable {
                 )
 
         self.definition = T.definition
+        self.capabilityContract = T.contract
         self.modelContract = resolvedModelContract
 
         self.preflightHandler = { call, context in
@@ -314,7 +320,7 @@ public struct RegisteredTool: Sendable {
         for call: ToolCall
     ) throws -> ToolInvocation {
         guard isModelFacing else {
-            throw RegisteredToolError.hostOnly(
+            throw ToolBindingError.hostOnly(
                 definition.identifier.rawValue
             )
         }
@@ -340,7 +346,7 @@ public struct RegisteredTool: Sendable {
         let object = try input.objectValue
 
         guard let arguments = object["arguments"] else {
-            throw RegisteredToolError.invalidModelCall(
+            throw ToolBindingError.invalidModelCall(
                 tool: definition.identifier.rawValue,
                 reason: "Model call is missing required 'arguments'."
             )
@@ -381,7 +387,7 @@ public struct RegisteredTool: Sendable {
     public func execute(
         _ call: ToolCall,
         workspace: WorkspaceContext? = nil
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         try await execute(
             call,
             context: .init(
@@ -393,7 +399,7 @@ public struct RegisteredTool: Sendable {
     public func execute(
         _ call: ToolCall,
         context: ToolContext
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         let (value, observations) = try await ToolExecutionObservations.capture(call: call.reference) {
             try await executeObserved(
                 call,
@@ -408,14 +414,14 @@ public struct RegisteredTool: Sendable {
     private func executeObserved(
         _ call: ToolCall,
         context: ToolContext
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         let execution = try await callHandler(
             call,
             context
         )
 
-        return ToolExecutionResult(
-            result: ToolResult(
+        return ToolExecution.Result(
+            result: ToolCall.Response(
                 call: call.reference,
                 output: execution.output,
                 projection: execution.projection,
@@ -456,7 +462,7 @@ public struct RegisteredTool: Sendable {
             failure.call.id == call.id,
             failure.phase == .call
         else {
-            throw RegisteredToolError.invalidFailure(
+            throw ToolBindingError.invalidFailure(
                 tool: definition.identifier.rawValue,
                 callID: call.id
             )
@@ -473,8 +479,8 @@ public struct RegisteredTool: Sendable {
         switch reconciliation {
         case .applied(let output, let projection):
             return .applied(
-                ToolExecutionResult(
-                    result: ToolResult(
+                ToolExecution.Result(
+                    result: ToolCall.Response(
                         call: call.reference,
                         output: output,
                         projection: projection,
@@ -496,7 +502,7 @@ public struct RegisteredTool: Sendable {
 }
 
 
-public enum RegisteredToolError:
+public enum ToolBindingError:
     Error,
     Sendable,
     LocalizedError

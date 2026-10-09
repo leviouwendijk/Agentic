@@ -73,7 +73,7 @@ private struct ProgramInferenceFailureFixtureExecutor:
 {
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         _ = invocation
         throw ProgramInferenceFailureFixtureError.failed
     }
@@ -87,7 +87,7 @@ private struct ProgramInferenceCanonicalFailureFixtureExecutor:
 
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         _ = invocation
         throw failure
     }

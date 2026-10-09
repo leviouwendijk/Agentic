@@ -1,5 +1,5 @@
 
-extension ToolExecution {
+extension ToolExecutionEngine {
     struct RecoveryState {
         let incident: Recovery.Incident
         let plan: Recovery.Plan

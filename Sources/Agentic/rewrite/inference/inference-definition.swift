@@ -1,5 +1,5 @@
 public struct InferenceDefinition:
-    Definition,
+    CapabilityDefinition,
     Codable,
     Hashable
 {

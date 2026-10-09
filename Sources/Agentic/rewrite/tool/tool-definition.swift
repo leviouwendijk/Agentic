@@ -1,5 +1,5 @@
 public struct ToolDefinition:
-    Definition,
+    CapabilityDefinition,
     Codable,
     Hashable,
     Identifiable

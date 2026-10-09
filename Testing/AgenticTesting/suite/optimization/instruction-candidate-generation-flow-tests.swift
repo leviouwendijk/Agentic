@@ -19,7 +19,7 @@ private struct GeneratedCandidateFixtureExecutor:
 {
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         let inference = invocation
         let realization = invocation.realization
         let inputData = invocation.input
@@ -50,7 +50,7 @@ private struct GeneratedCandidateFixtureExecutor:
         let outputData = try JSONEncoder().encode(
             outputText
         )
-        return InferenceInvocationResult(
+        return InferenceInvocation.Response(
             output: outputData,
             record: InferenceExecutionRecord(
                 inference: inference.definition.identifier,
@@ -72,7 +72,7 @@ private struct GeneratedCandidateExactObjective:
     func score<InferenceType: Inference>(
         _ inference: InferenceType.Type,
         example: InferenceOptimizationExample<InferenceType>,
-        result: InferenceExecutionResult<InferenceType.Output>
+        result: InferenceExecution.Result<InferenceType.Output>
     ) async throws -> InferenceOptimizationScore {
         let expectedData = try JSONEncoder().encode(
             example.expectedOutput

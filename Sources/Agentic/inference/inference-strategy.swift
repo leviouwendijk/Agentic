@@ -8,7 +8,7 @@ public protocol InferenceStrategy: Sendable {
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext,
         attempts: any InferenceAttemptExecuting
-    ) async throws -> InferenceExecutionResult<InferenceType.Output>
+    ) async throws -> InferenceExecution.Result<InferenceType.Output>
 }
 
 public protocol InferenceStrategyResolving: Sendable {

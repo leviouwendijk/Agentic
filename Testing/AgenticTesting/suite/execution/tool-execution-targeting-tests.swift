@@ -1,4 +1,5 @@
 import Agentic
+import Foundation
 import Primitives
 import Schema
 import Testing
@@ -15,8 +16,14 @@ extension ExecutionTesting {
             ),
             "tool is model facing"
         )
+        let encoded = try JSONEncoder().encode(descriptor)
+        try Expect.equal(
+            String(decoding: encoded, as: UTF8.self).contains("\"inputSchema\""),
+            true,
+            "Descriptor retains its pre-rename Codable key."
+        )
         let schema = try Expect.notNil(
-            descriptor.inputSchema?.valueOrNil.object,
+            descriptor.input?.valueOrNil.object,
             "tool advertises an object schema"
         )
         let properties = try Expect.notNil(

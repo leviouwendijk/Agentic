@@ -44,7 +44,7 @@ public struct ProgramInferenceInvocation<
         input: InferenceType.Input,
         using executor: any InferenceExecuting
     ) async throws
-        -> InferenceExecutionResult<InferenceType.Output>
+        -> InferenceExecution.Result<InferenceType.Output>
     {
         do {
             return try await site.execute(

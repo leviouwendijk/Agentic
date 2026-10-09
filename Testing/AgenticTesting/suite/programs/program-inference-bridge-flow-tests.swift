@@ -104,7 +104,7 @@ private struct BridgeInferenceExecutor:
 
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         await recorder.append(
             BridgeExecutionObservation(
                 inference: invocation.definition.identifier,
@@ -116,7 +116,7 @@ private struct BridgeInferenceExecutor:
             "BRIDGED"
         )
 
-        return InferenceInvocationResult(
+        return InferenceInvocation.Response(
             output: encoded,
             record: InferenceExecutionRecord(
                 inference: invocation.definition.identifier,

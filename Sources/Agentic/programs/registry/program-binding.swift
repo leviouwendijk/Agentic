@@ -5,8 +5,12 @@ import Primitives
 /// Registration captures the concrete Program/Input/Output types once. Dynamic
 /// registry storage thereafter operates on JSONValue only at this explicit
 /// lowering boundary while authored Programs remain typed.
-public struct RegisteredProgram: Sendable {
+public struct ProgramBinding: CapabilityBinding {
+    public var reference: CapabilityReference {
+        .program(definition.identifier)
+    }
     public let definition: ProgramDefinition
+    public let capabilityContract: CapabilityContract
 
     private let runHandler:
         @Sendable (
@@ -18,6 +22,7 @@ public struct RegisteredProgram: Sendable {
         _ program: ProgramType
     ) {
         self.definition = ProgramType.definition
+        self.capabilityContract = ProgramType.contract
         self.runHandler = { input, context in
             let decoded = try input.decode(
                 ProgramType.Input.self

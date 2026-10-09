@@ -227,7 +227,7 @@ private struct ToolReconciliationUnsupportedFixture: Tool {
 
 private func reconciliation(
     _ mode: ToolReconciliationFixtureMode
-) async throws -> RegisteredTool.Reconciliation? {
+) async throws -> ToolBinding.Reconciliation? {
     let tool = ToolReconciliationFixture(
         mode: mode
     )
@@ -254,7 +254,7 @@ private func reconciliation(
 }
 
 private func unsupportedReconciliation()
-    async throws -> RegisteredTool.Reconciliation?
+    async throws -> ToolBinding.Reconciliation?
 {
     let tool = ToolReconciliationUnsupportedFixture()
     let call = try reconciliationCall(

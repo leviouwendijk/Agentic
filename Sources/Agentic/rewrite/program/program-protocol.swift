@@ -1,5 +1,6 @@
-public protocol Program: Producer {
-    static var definition: ProgramDefinition { get }
+public protocol Program: Capability
+where DefinitionType == ProgramDefinition
+{
 
     func run(
         _ input: Input,

@@ -1,4 +1,4 @@
-internal struct ToolExecution: Sendable {
+internal struct ToolExecutionEngine: Sendable {
     internal let registry: ToolRegistry
     internal let recovery: Recovery.Policy?
     internal let context: ToolContext
@@ -21,7 +21,7 @@ internal struct ToolExecution: Sendable {
     internal func execute(
         _ call: ToolCall,
         preflight: ToolPreflight
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         let (value, observations) =
             try await ToolExecutionObservations.capture(
                 observer: observationHandler
@@ -39,7 +39,7 @@ internal struct ToolExecution: Sendable {
     private func executeObserved(
         _ call: ToolCall,
         preflight: ToolPreflight
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         do {
             return try await registry.execute(
                 call,
@@ -65,7 +65,7 @@ internal struct ToolExecution: Sendable {
                 error: error,
                 policy: recovery
             ) else {
-                return ToolExecutionResult(
+                return ToolExecution.Result(
                     result: try makeErrorResult(
                         for: call,
                         error: error
@@ -87,7 +87,7 @@ internal struct ToolExecution: Sendable {
                             decision.action
                         )
 
-                    return ToolExecutionResult(
+                    return ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: recoveryError
@@ -104,7 +104,7 @@ internal struct ToolExecution: Sendable {
                     let recoveryError =
                         Error.recovery_exhausted
 
-                    return ToolExecutionResult(
+                    return ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: recoveryError
@@ -153,7 +153,7 @@ internal struct ToolExecution: Sendable {
                     )
 
                     outcome = .complete(
-                        ToolExecutionResult(
+                        ToolExecution.Result(
                             result: try makeErrorResult(
                                 for: call,
                                 error: recoveryError
@@ -177,7 +177,7 @@ internal struct ToolExecution: Sendable {
             let recoveryError =
                 Error.recovery_exhausted
 
-            return ToolExecutionResult(
+            return ToolExecution.Result(
                 result: try makeErrorResult(
                     for: call,
                     error: recoveryError
@@ -190,9 +190,9 @@ internal struct ToolExecution: Sendable {
     }
 }
 
-extension ToolExecution {
+extension ToolExecutionEngine {
     enum ActionOutcome {
-        case complete(ToolExecutionResult)
+        case complete(ToolExecution.Result)
         case continueRecovery
     }
 }

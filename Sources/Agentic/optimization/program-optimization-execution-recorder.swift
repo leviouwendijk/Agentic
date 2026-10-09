@@ -24,7 +24,7 @@ struct ProgramOptimizationRecordingInferenceExecutor:
 
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         let result = try await base.execute(
             invocation
         )

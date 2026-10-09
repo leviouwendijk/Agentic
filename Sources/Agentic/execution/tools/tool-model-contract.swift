@@ -37,17 +37,9 @@ public enum ToolModelContract: Sendable {
             return nil
         }
 
-        return .object {
-            JSONSchema.property(
-                "arguments",
-                schema: semantic,
-                required: true
-            )
-            JSONSchema.property(
-                "execution",
-                schema: ToolInvocation.Execution.jsonschema,
-                required: false
-            )
-        }
+        return CapabilityModelInputSchema.envelope(
+            semanticInput: semantic,
+            execution: ToolInvocation.Execution.jsonschema
+        )
     }
 }

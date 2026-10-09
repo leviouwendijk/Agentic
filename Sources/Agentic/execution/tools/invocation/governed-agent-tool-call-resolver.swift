@@ -62,7 +62,7 @@ public struct GovernedAgentToolCallResolver:
 
     public func resolve(
         _ call: ToolCall
-    ) async throws -> ToolResult {
+    ) async throws -> ToolCall.Response {
         guard visibleToolIdentifiers.contains(
             call.tool
         ),
@@ -128,8 +128,8 @@ private extension GovernedAgentToolCallResolver {
     func deniedResult(
         for call: ToolCall,
         review: ToolInvocation.Review
-    ) throws -> ToolResult {
-        ToolResult(
+    ) throws -> ToolCall.Response {
+        ToolCall.Response(
             call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(
@@ -147,8 +147,8 @@ private extension GovernedAgentToolCallResolver {
     func skippedResult(
         for call: ToolCall,
         review: ToolInvocation.Review
-    ) throws -> ToolResult {
-        ToolResult(
+    ) throws -> ToolCall.Response {
+        ToolCall.Response(
             call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(

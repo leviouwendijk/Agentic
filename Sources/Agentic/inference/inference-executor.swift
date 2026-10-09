@@ -34,7 +34,7 @@ public struct InferenceExecutor:
 
     public func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         try await invocation.execute(
             strategies: strategies,
             attempts: attempts

@@ -19,7 +19,7 @@ public struct AgentIdentifier:
 }
 
 public struct AgentDefinition:
-    Definition,
+    CapabilityDefinition,
     Codable,
     Hashable
 {
@@ -50,9 +50,9 @@ public struct AgentDefinition:
 }
 
 public protocol Agent:
-    Producer
+    Capability
+where DefinitionType == AgentDefinition
 {
-    static var definition: AgentDefinition { get }
     static var purpose: String { get }
     static var instructions: String? { get }
     static var capabilities: AgentCapabilities { get }

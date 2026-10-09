@@ -1,4 +1,4 @@
-extension ToolExecution {
+extension ToolExecutionEngine {
     func retrySameOperation(
         _ call: ToolCall,
         preflight: ToolPreflight,
@@ -27,7 +27,7 @@ extension ToolExecution {
                     )
 
                     return .complete(
-                        ToolExecutionResult(
+                        ToolExecution.Result(
                             result: try makeErrorResult(
                                 for: call,
                                 error: recoveryError
@@ -49,7 +49,7 @@ extension ToolExecution {
                 )
 
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: error
@@ -106,7 +106,7 @@ extension ToolExecution {
 
             guard accepted else {
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: error
@@ -123,7 +123,7 @@ extension ToolExecution {
                 state: recovery.state
             ) else {
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: error
@@ -142,7 +142,7 @@ extension ToolExecution {
             }
 
             return .complete(
-                ToolExecutionResult(
+                ToolExecution.Result(
                     result: try makeErrorResult(
                         for: call,
                         error: error

@@ -104,7 +104,7 @@ private struct CoordinateFixtureExecutor:
 
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         let inference = invocation
         let realization = invocation.realization
         let inputData = invocation.input
@@ -139,7 +139,7 @@ private struct CoordinateFixtureExecutor:
         let outputData = try JSONEncoder().encode(
             outputText
         )
-        return InferenceInvocationResult(
+        return InferenceInvocation.Response(
             output: outputData,
             record: InferenceExecutionRecord(
                 inference: inference.definition.identifier,

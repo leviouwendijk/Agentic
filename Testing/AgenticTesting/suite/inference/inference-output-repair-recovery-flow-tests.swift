@@ -176,7 +176,7 @@ private struct OutputRepairFixtureModelInvoker:
 
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         let index = await state.record(
             invocation: invocation
         )
@@ -223,7 +223,7 @@ private struct OutputRepairFixtureModelInvoker:
             profile: profile
         )
 
-        return AgentModelInvocationResult(
+        return AgentModelInvocation.Result(
             response: response,
             route: AgentModelRouteRecord(
                 route: route,
@@ -235,7 +235,7 @@ private struct OutputRepairFixtureModelInvoker:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {

@@ -104,7 +104,7 @@ public struct ToolInvoker: Sendable {
                 for: invocation,
                 context: context
             )
-            let execution = try await ToolExecution(
+            let execution = try await ToolExecutionEngine(
                 registry: registry,
                 recovery: recovery,
                 context: context,

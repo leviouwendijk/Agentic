@@ -13,7 +13,7 @@ public struct NativeReasoningInferenceStrategy:
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext,
         attempts: any InferenceAttemptExecuting
-    ) async throws -> InferenceExecutionResult<InferenceType.Output> {
+    ) async throws -> InferenceExecution.Result<InferenceType.Output> {
         let attempt: InferenceAttemptResult<InferenceType.Output>
 
         do {
@@ -39,7 +39,7 @@ public struct NativeReasoningInferenceStrategy:
             )
         }
 
-        return InferenceExecutionResult(
+        return InferenceExecution.Result(
             output: attempt.output,
             record: InferenceExecutionRecord(
                 inference: inference.definition.identifier,

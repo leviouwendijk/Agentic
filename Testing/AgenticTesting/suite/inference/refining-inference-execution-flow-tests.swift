@@ -123,7 +123,7 @@ private struct RefiningFixtureModelInvoker:
 
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         let output = try await state.nextOutput(
             instructions: invocation.request.metadata[
                 "fixture.instructions"
@@ -167,7 +167,7 @@ private struct RefiningFixtureModelInvoker:
             profile: profile
         )
 
-        return AgentModelInvocationResult(
+        return AgentModelInvocation.Result(
             response: response,
             route: AgentModelRouteRecord(
                 route: route,
@@ -180,7 +180,7 @@ private struct RefiningFixtureModelInvoker:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(
                 throwing: RefiningFixtureError.streamingUnsupported

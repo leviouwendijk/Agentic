@@ -1,4 +1,4 @@
-extension ToolExecution {
+extension ToolExecutionEngine {
     func reconcile(
         _ call: ToolCall,
         decision: Recovery.Decision,
@@ -24,7 +24,7 @@ extension ToolExecution {
                 )
 
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: recoveryError
@@ -62,7 +62,7 @@ extension ToolExecution {
                     Error.applied_without_output
 
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: recoveryError
@@ -90,7 +90,7 @@ extension ToolExecution {
                     Error.reconciliation_unresolved
 
                 return .complete(
-                    ToolExecutionResult(
+                    ToolExecution.Result(
                         result: try makeErrorResult(
                             for: call,
                             error: recoveryError
@@ -118,7 +118,7 @@ extension ToolExecution {
             }
 
             return .complete(
-                ToolExecutionResult(
+                ToolExecution.Result(
                     result: try makeErrorResult(
                         for: call,
                         error: error

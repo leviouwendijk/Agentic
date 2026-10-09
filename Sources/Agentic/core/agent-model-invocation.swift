@@ -21,31 +21,35 @@ public struct AgentModelInvocation: Sendable {
 ///
 /// `route` is the exact route record produced for `response` and, when a
 /// route ledger is configured, the same value appended to that ledger.
-public struct AgentModelInvocationResult: Sendable {
-    public let response: AgentResponse
-    public let route: AgentModelRouteRecord
+public extension AgentModelInvocation {
+    struct Result: Sendable {
+        public let response: AgentResponse
+        public let route: AgentModelRouteRecord
 
-    public init(
-        response: AgentResponse,
-        route: AgentModelRouteRecord
-    ) {
-        self.response = response
-        self.route = route
+        public init(
+            response: AgentResponse,
+            route: AgentModelRouteRecord
+        ) {
+            self.response = response
+            self.route = route
+        }
     }
-}
 
-public enum AgentModelInvocationEvent: Sendable {
-    case routed(AgentModelRouteResult)
-    case model(AgentStreamEvent)
-    case completed(AgentModelInvocationResult)
+    enum Event: Sendable {
+        case routed(AgentModelRouteResult)
+        case model(AgentStreamEvent)
+        case completed(AgentModelInvocation.Result)
+    }
 }
 
 public protocol AgentModelInvoking: Sendable {
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult
+    ) async throws -> AgentModelInvocation.Result
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error>
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error>
 }
+
+

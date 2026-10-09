@@ -26,7 +26,7 @@ public struct ModelBroker: Sendable, AgentModelInvoking {
 
     public func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         let prepared = try prepare(
             invocation
         )
@@ -52,7 +52,7 @@ public struct ModelBroker: Sendable, AgentModelInvoking {
 
     public func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {

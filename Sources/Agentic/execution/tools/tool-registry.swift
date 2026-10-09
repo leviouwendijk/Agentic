@@ -3,7 +3,7 @@ import Schema
 
 public struct ToolRegistry: Sendable {
     private var tools:
-        [ToolIdentifier: RegisteredTool]
+        [ToolIdentifier: ToolBinding]
 
     public init() {
         self.tools = [:]
@@ -75,7 +75,7 @@ public struct ToolRegistry: Sendable {
         )?.modelFacingInputSchema
     }
 
-    var registeredTools: [RegisteredTool] {
+    var registeredTools: [ToolBinding] {
         tools.values.sorted { lhs, rhs in
             lhs.definition.identifier.rawValue
                 < rhs.definition.identifier.rawValue
@@ -95,7 +95,7 @@ public struct ToolRegistry: Sendable {
         modelContract: ToolModelContract? = nil
     ) throws where T: Tool {
         try register(
-            RegisteredTool(
+            ToolBinding(
                 tool,
                 modelContract: modelContract
             )
@@ -103,7 +103,7 @@ public struct ToolRegistry: Sendable {
     }
 
     public mutating func register(
-        _ registered: RegisteredTool
+        _ registered: ToolBinding
     ) throws {
         let identifier =
             registered.definition.identifier
@@ -127,13 +127,13 @@ public struct ToolRegistry: Sendable {
 
     public func registeredTool(
         identifiedBy identifier: ToolIdentifier
-    ) -> RegisteredTool? {
+    ) -> ToolBinding? {
         tools[identifier]
     }
 
     public func registeredTool(
         named name: String
-    ) -> RegisteredTool? {
+    ) -> ToolBinding? {
         registeredTool(
             identifiedBy:
                 .init(
@@ -150,7 +150,7 @@ public struct ToolRegistry: Sendable {
                 named: call.tool.rawValue
             )
         else {
-            throw RegisteredToolError
+            throw ToolBindingError
                 .invalidModelCall(
                     tool: call.tool.rawValue,
                     reason:
@@ -198,7 +198,7 @@ public struct ToolRegistry: Sendable {
     public func call(
         _ toolCall: ToolCall,
         workspace: WorkspaceContext?
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         try await execute(
             toolCall,
             workspace: workspace

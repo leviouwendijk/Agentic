@@ -2,7 +2,7 @@ public enum MessageContentBlock: Sendable, Codable, Hashable {
     case text(String)
     case resource(AgentResource)
     case tool_call(ToolCall)
-    case tool_result(ToolResult)
+    case tool_result(ToolCall.Response)
 
     private enum CodingKeys: String, CodingKey {
         case kind
@@ -81,7 +81,7 @@ public enum MessageContentBlock: Sendable, Codable, Hashable {
         case .tool_result:
             self = .tool_result(
                 try container.decode(
-                    ToolResult.self,
+                    ToolCall.Response.self,
                     forKey: .tool_result
                 )
             )

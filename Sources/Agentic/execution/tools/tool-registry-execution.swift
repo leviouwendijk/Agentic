@@ -16,7 +16,7 @@ public extension ToolRegistry {
     func execute(
         _ call: ToolCall,
         workspace: WorkspaceContext? = nil
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         try await execute(
             call,
             context: .init(
@@ -28,7 +28,7 @@ public extension ToolRegistry {
     func execute(
         _ call: ToolCall,
         context: ToolContext
-    ) async throws -> ToolExecutionResult {
+    ) async throws -> ToolExecution.Result {
         guard let registered =
             registeredTool(
                 identifiedBy: call.tool
@@ -49,7 +49,7 @@ public extension ToolRegistry {
         _ call: ToolCall,
         failure: ToolCall.Failure,
         context: ToolContext
-    ) async throws -> RegisteredTool.Reconciliation? {
+    ) async throws -> ToolBinding.Reconciliation? {
         guard let registered =
             registeredTool(
                 identifiedBy: call.tool

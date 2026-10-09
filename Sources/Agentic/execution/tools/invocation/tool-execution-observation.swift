@@ -1,5 +1,5 @@
 
-/// Execution evidence; never part of a model-facing semantic ToolResult.
+/// Execution evidence; never part of a model-facing semantic ToolCall.Response.
 public struct ToolResultObservation: Sendable, Codable, Hashable {
     public enum Kind: String, Sendable, Codable, Hashable {
         case standard_output, standard_error, diagnostic, log, detail
@@ -25,14 +25,6 @@ public struct ToolResultObservation: Sendable, Codable, Hashable {
             self.ordinal = ordinal
         }
 
-        @available(
-            *,
-            deprecated,
-            message: "Use call.id instead."
-        )
-        public var toolCallID: String {
-            call.id
-        }
     }
 
     public let kind: Kind

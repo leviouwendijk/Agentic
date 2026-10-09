@@ -5,6 +5,30 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
 
     static let flows: [TestFlow] = [
         TestFlow(
+            "capability-kind-bindings",
+            tags: ["agentic", "smoke", "capability", "inference", "agent"],
+            operation: {
+                try runCapabilityKindBindingsSmoke()
+                return []
+            }
+        ),
+        TestFlow(
+            "capability-binding-resolution",
+            tags: ["agentic", "smoke", "capability", "binding"],
+            operation: {
+                try runCapabilityBindingSmoke()
+                return []
+            }
+        ),
+        TestFlow(
+            "capability-contract-lifecycle",
+            tags: ["agentic", "smoke", "capability", "typed"],
+            operation: {
+                try runCapabilityContractSmoke()
+                return []
+            }
+        ),
+        TestFlow(
             "semantic-authoring-macros",
             tags: [
                 "agentic",

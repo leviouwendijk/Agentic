@@ -34,7 +34,7 @@ public extension Tool {
         .init(
             identifier: Self.definition.identifier,
             description: Self.definition.purpose,
-            inputSchema: inputSchema,
+            input: inputSchema,
             risk: Self.definition.risk
         )
     }

@@ -35,7 +35,7 @@ private struct ReviewedActionFixtureExecutor:
 
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         await recorder.append(
             ReviewedActionObservation(
                 inference: invocation.definition.identifier,
@@ -67,7 +67,7 @@ private struct ReviewedActionFixtureExecutor:
             )
         }
 
-        return InferenceInvocationResult(
+        return InferenceInvocation.Response(
             output: encoded,
             record: InferenceExecutionRecord(
                 inference: invocation.definition.identifier,

@@ -27,12 +27,13 @@ public actor AgentCapabilityState {
         }
     }
 
-    private let installedCapabilities:
+    private var installedCapabilities:
         AgentCapabilitySet
     private var availableCapabilities:
         AgentCapabilitySet
     private var visibleCapabilities:
         AgentCapabilitySet
+    private var hasLiveMutations = false
 
     public init(
         installed: AgentCapabilitySet,
@@ -81,6 +82,7 @@ public actor AgentCapabilityState {
     public func restore(
         _ snapshot: Snapshot
     ) -> Snapshot {
+        if hasLiveMutations { return self.snapshot() }
         availableCapabilities =
             snapshot.available.intersecting(
                 installedCapabilities
@@ -91,6 +93,65 @@ public actor AgentCapabilityState {
             )
 
         return self.snapshot()
+    }
+
+    /// Installation grows this Agent's executable universe. It does not enable
+    /// or expose the newly installed capabilities.
+    @discardableResult
+    public func install(
+        _ capabilities: AgentCapabilitySet
+    ) -> Snapshot {
+        installedCapabilities = installedCapabilities.union(capabilities)
+        hasLiveMutations = true
+        return snapshot()
+    }
+
+    /// Strict enablement: a missing implementation is a programming/configuration
+    /// error rather than a silently reduced authority set.
+    @discardableResult
+    public func enable(
+        _ capabilities: AgentCapabilitySet
+    ) throws -> Snapshot {
+        let missing = capabilities.subtracting(installedCapabilities)
+        guard missing == .none else {
+            throw AgentCapabilityMutationError.notInstalled(missing)
+        }
+        availableCapabilities = availableCapabilities.union(capabilities)
+        hasLiveMutations = true
+        return snapshot()
+    }
+
+    /// Strict exposure: only enabled capabilities can be shown to the model.
+    @discardableResult
+    public func expose(
+        _ capabilities: AgentCapabilitySet
+    ) throws -> Snapshot {
+        let missing = capabilities.subtracting(availableCapabilities)
+        guard missing == .none else {
+            throw AgentCapabilityMutationError.notEnabled(missing)
+        }
+        visibleCapabilities = visibleCapabilities.union(capabilities)
+        hasLiveMutations = true
+        return snapshot()
+    }
+
+    @discardableResult
+    public func disable(
+        _ capabilities: AgentCapabilitySet
+    ) -> Snapshot {
+        availableCapabilities = availableCapabilities.subtracting(capabilities)
+        hasLiveMutations = true
+        visibleCapabilities = visibleCapabilities.intersecting(availableCapabilities)
+        return snapshot()
+    }
+
+    @discardableResult
+    public func unexpose(
+        _ capabilities: AgentCapabilitySet
+    ) -> Snapshot {
+        visibleCapabilities = visibleCapabilities.subtracting(capabilities)
+        hasLiveMutations = true
+        return snapshot()
     }
 
     @discardableResult
@@ -158,4 +219,9 @@ public actor AgentCapabilityState {
 
         return hidden
     }
+}
+
+public enum AgentCapabilityMutationError: Error, Sendable {
+    case notInstalled(AgentCapabilitySet)
+    case notEnabled(AgentCapabilitySet)
 }

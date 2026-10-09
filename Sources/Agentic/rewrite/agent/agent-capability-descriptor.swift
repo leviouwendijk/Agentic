@@ -8,19 +8,25 @@ public struct AgentDescriptor:
 {
     public let identifier: AgentIdentifier
     public let description: String
-    public let inputSchema: JSONValue
-    public let outputSchema: JSONValue
+    public let input: JSONValue
+    public let output: JSONValue
 
     public init(
         identifier: AgentIdentifier,
         description: String,
-        inputSchema: JSONValue,
-        outputSchema: JSONValue
+        input: JSONValue,
+        output: JSONValue
     ) {
         self.identifier = identifier
         self.description = description
-        self.inputSchema = inputSchema
-        self.outputSchema = outputSchema
+        self.input = input
+        self.output = output
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case identifier, description
+        case input = "inputSchema"
+        case output = "outputSchema"
     }
 
     public var id: AgentIdentifier {
@@ -33,8 +39,9 @@ public extension Agent {
         .init(
             identifier: definition.identifier,
             description: definition.purpose,
-            inputSchema: Input.jsonschema.jsonvalue,
-            outputSchema: Output.jsonschema.jsonvalue
+            input: contract.input.jsonvalue,
+            output: contract.output.jsonvalue
         )
     }
 }
+

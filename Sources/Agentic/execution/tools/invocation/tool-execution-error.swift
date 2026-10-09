@@ -1,7 +1,7 @@
 import Foundation
 import Primitives
 
-extension ToolExecution {
+extension ToolExecutionEngine {
     enum Error:
         Swift.Error,
         LocalizedError
@@ -39,7 +39,7 @@ extension ToolExecution {
     func makeErrorResult(
         for call: ToolCall,
         error: any Swift.Error
-    ) throws -> ToolResult {
+    ) throws -> ToolCall.Response {
         let payload = Error.Payload(
             kind: "tool_error",
             toolCallID: call.id,
@@ -49,7 +49,7 @@ extension ToolExecution {
             )
         )
 
-        return ToolResult(
+        return ToolCall.Response(
             call: call.reference,
             output: try JSONValue.encoding(
                 payload
@@ -74,7 +74,7 @@ extension ToolExecution {
     }
 }
 
-extension ToolExecution.Error {
+extension ToolExecutionEngine.Error {
     struct Payload:
         Encodable,
         Sendable

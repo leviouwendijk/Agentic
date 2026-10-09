@@ -2,7 +2,7 @@ import Primitives
 
 public struct ProgramRegistry: Sendable {
     private var programs:
-        [ProgramIdentifier: RegisteredProgram]
+        [ProgramIdentifier: ProgramBinding]
 
     public init() {
         self.programs = [:]
@@ -42,14 +42,14 @@ public struct ProgramRegistry: Sendable {
         _ program: ProgramType
     ) throws {
         try register(
-            RegisteredProgram(
+            ProgramBinding(
                 program
             )
         )
     }
 
     public mutating func register(
-        _ registered: RegisteredProgram
+        _ registered: ProgramBinding
     ) throws {
         let identifier = registered.identifier
 
@@ -80,13 +80,13 @@ public struct ProgramRegistry: Sendable {
 
     public func registeredProgram(
         identifiedBy identifier: ProgramIdentifier
-    ) -> RegisteredProgram? {
+    ) -> ProgramBinding? {
         programs[identifier]
     }
 
     public func registeredProgram(
         named name: String
-    ) -> RegisteredProgram? {
+    ) -> ProgramBinding? {
         registeredProgram(
             identifiedBy: .init(
                 rawValue: name
@@ -96,7 +96,7 @@ public struct ProgramRegistry: Sendable {
 
     public func requireProgram(
         identifiedBy identifier: ProgramIdentifier
-    ) throws -> RegisteredProgram {
+    ) throws -> ProgramBinding {
         guard let program = registeredProgram(
             identifiedBy: identifier
         ) else {

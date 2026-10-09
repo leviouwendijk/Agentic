@@ -23,26 +23,28 @@ public struct AgentCall:
     }
 }
 
-public struct AgentResult:
-    Sendable,
-    Codable,
-    Hashable
-{
-    public let agentCallID: String
-    public let agent: AgentIdentifier
-    public let output: JSONValue
-    public let isError: Bool
+public extension AgentCall {
+    struct Response:
+        Sendable,
+        Codable,
+        Hashable
+    {
+        public let agentCallID: String
+        public let agent: AgentIdentifier
+        public let output: JSONValue
+        public let isError: Bool
 
-    public init(
-        agentCallID: String,
-        agent: AgentIdentifier,
-        output: JSONValue,
-        isError: Bool = false
-    ) {
-        self.agentCallID = agentCallID
-        self.agent = agent
-        self.output = output
-        self.isError = isError
+        public init(
+            agentCallID: String,
+            agent: AgentIdentifier,
+            output: JSONValue,
+            isError: Bool = false
+        ) {
+            self.agentCallID = agentCallID
+            self.agent = agent
+            self.output = output
+            self.isError = isError
+        }
     }
 }
 
@@ -79,3 +81,4 @@ public struct AgentDelegationRequest<AgentType: Agent>:
         AgentType.Input.jsonschema
     }
 }
+

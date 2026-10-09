@@ -30,7 +30,7 @@ extension ProgramsFlowTesting {
     {
         let identifier: ToolIdentifier =
             "fixture.program_tool_failure"
-        let result = ToolResult(
+        let result = ToolCall.Response(
             call: .init(
                 id: "fixture-program-tool-failure-call",
                 tool: identifier

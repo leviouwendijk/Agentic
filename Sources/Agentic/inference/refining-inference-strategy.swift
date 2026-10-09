@@ -35,7 +35,7 @@ public struct RefiningInferenceStrategy:
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext,
         attempts: any InferenceAttemptExecuting
-    ) async throws -> InferenceExecutionResult<InferenceType.Output> {
+    ) async throws -> InferenceExecution.Result<InferenceType.Output> {
         var attemptRecords: [InferenceAttemptRecord] = []
         var refinementSteps: [InferenceRefinementStep] = []
         var currentRealization = realization
@@ -223,7 +223,7 @@ public struct RefiningInferenceStrategy:
             throw RefiningInferenceStrategyError.noCandidatesProduced
         }
 
-        return InferenceExecutionResult(
+        return InferenceExecution.Result(
             output: selectedOutput,
             record: InferenceExecutionRecord(
                 inference: inference.definition.identifier,

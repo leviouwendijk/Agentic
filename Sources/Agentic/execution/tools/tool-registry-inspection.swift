@@ -44,7 +44,7 @@ public struct ToolRegistryInspectionEntry:
     }
 
     public init(
-        registered: RegisteredTool
+        registered: ToolBinding
     ) {
         self.init(
             identifier: registered.definition.identifier,

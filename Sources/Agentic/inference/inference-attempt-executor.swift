@@ -288,7 +288,7 @@ public struct InferenceAttemptExecutor:
                 String(invocationIndex)
             lastMetadata = metadata
 
-            let result: AgentModelInvocationResult
+            let result: AgentModelInvocation.Result
 
             do {
                 result = try await modelInvoker.buffered(

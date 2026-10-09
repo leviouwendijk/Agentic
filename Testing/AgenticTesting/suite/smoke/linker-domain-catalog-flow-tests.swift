@@ -8,6 +8,7 @@ private final class DomainInstallationProbe:
 {
     var tools: [ToolIdentifier] = []
     var programs: [ProgramIdentifier] = []
+    var inferences: [InferenceIdentifier] = []
     var agents: [AgentIdentifier] = []
 
     func install<T: Tool>(
@@ -30,12 +31,16 @@ private final class DomainInstallationProbe:
         )
     }
 
-    func install(
-        _ agent: AgentDefinition
+    func install<I: Inference>(
+        _ inference: I.Type
     ) {
-        agents.append(
-            agent.identifier
-        )
+        inferences.append(I.definition.identifier)
+    }
+
+    func install<A: Agent>(
+        _ agent: A.Type
+    ) {
+        agents.append(A.definition.identifier)
     }
 }
 
@@ -99,6 +104,38 @@ let linkerDomainCatalogFlows: [TestFlow] = [
             ),
             false,
             "Domain.installation leaves a non-default-constructible Tool semantic-only without author installation boilerplate"
+        )
+
+        let smokeInstallation = DomainInstallationProbe()
+        SmokeDomain.installation.install(into: smokeInstallation)
+
+        try Expect.equal(
+            smokeInstallation.tools.contains(
+                SmokeDomain.Tools.MacroSmokeTool.definition.identifier
+            ),
+            true,
+            "Derived Tool installation retains a concrete implementation"
+        )
+        try Expect.equal(
+            smokeInstallation.programs.contains(
+                SmokeDomain.Programs.MacroSmokeProgram.definition.identifier
+            ),
+            true,
+            "Derived Program installation retains a concrete implementation"
+        )
+        try Expect.equal(
+            smokeInstallation.inferences.contains(
+                SmokeDomain.Inferences.MacroSmokeInference.definition.identifier
+            ),
+            true,
+            "Derived Inference installation carries its typed implementation, not just catalog metadata"
+        )
+        try Expect.equal(
+            smokeInstallation.agents.contains(
+                SmokeDomain.Agents.MacroSmokeAgent.definition.identifier
+            ),
+            true,
+            "Derived Agent installation carries its authored type, not only its definition"
         )
 
         return [

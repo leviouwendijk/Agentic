@@ -128,7 +128,7 @@ private struct TransportRecoveryFixtureModelInvoker:
 
     func buffered(
         _ invocation: AgentModelInvocation
-    ) async throws -> AgentModelInvocationResult {
+    ) async throws -> AgentModelInvocation.Result {
         let index = await state.nextInvocationIndex()
 
         if index < failureCount {
@@ -169,7 +169,7 @@ private struct TransportRecoveryFixtureModelInvoker:
             profile: profile
         )
 
-        return AgentModelInvocationResult(
+        return AgentModelInvocation.Result(
             response: response,
             route: AgentModelRouteRecord(
                 route: route,
@@ -181,7 +181,7 @@ private struct TransportRecoveryFixtureModelInvoker:
 
     func stream(
         _ invocation: AgentModelInvocation
-    ) -> AsyncThrowingStream<AgentModelInvocationEvent, Error> {
+    ) -> AsyncThrowingStream<AgentModelInvocation.Event, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {

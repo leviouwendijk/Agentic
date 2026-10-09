@@ -47,7 +47,7 @@ extension ExecutionTesting {
             let execution = try Expect.notNil(invocation.execution, "execution exists")
             try Expect.equal(execution.observations.map(\.content), [expected, ""], "concurrent observations stay scoped and ordered")
             try Expect.equal(execution.observations.first?.origin?.call.id, expected, "observations retain call identity")
-            let decoded = try JSONDecoder().decode(ToolExecutionResult.self, from: JSONEncoder().encode(execution))
+            let decoded = try JSONDecoder().decode(ToolExecution.Result.self, from: JSONEncoder().encode(execution))
             try Expect.equal(decoded, execution, "execution observations survive persistence")
         }
         let failedCall = try call("fail")
@@ -63,14 +63,14 @@ extension ExecutionTesting {
         let direct = try await registry.execute(call("direct"))
         try Expect.equal(direct.observations.map(\.content), ["direct", ""], "direct registry execution captures observations")
         let legacy = LegacyObservationExecution(result: direct.result)
-        let decoded = try JSONDecoder().decode(ToolExecutionResult.self, from: JSONEncoder().encode(legacy))
+        let decoded = try JSONDecoder().decode(ToolExecution.Result.self, from: JSONEncoder().encode(legacy))
         try Expect.equal(decoded.observations, [], "older execution records decode without observations")
         return [.field("observations", "concurrency, failure, direct execution, persistence")]
     }
 }
 
 private struct LegacyObservationExecution: Encodable {
-    let result: ToolResult
+    let result: ToolCall.Response
 }
 
 private struct ObservationFixtureValue: Sendable, Codable, Hashable, JSONSchemaProviding {

@@ -130,7 +130,7 @@ public extension ToolInvocation {
         Codable,
         Hashable
     {
-        case executed(ToolExecutionResult)
+        case executed(ToolExecution.Result)
         case denied
         case skipped
         case interrupted(Interruption)
@@ -152,7 +152,7 @@ public extension ToolInvocation {
             self.outcome = outcome
         }
 
-        public var execution: ToolExecutionResult? {
+        public var execution: ToolExecution.Result? {
             guard case .executed(let execution) = outcome else {
                 return nil
             }

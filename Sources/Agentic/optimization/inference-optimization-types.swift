@@ -355,7 +355,7 @@ public protocol InferenceOptimizationObjective: Sendable {
     func score<InferenceType: Inference>(
         _ inference: InferenceType.Type,
         example: InferenceOptimizationExample<InferenceType>,
-        result: InferenceExecutionResult<InferenceType.Output>
+        result: InferenceExecution.Result<InferenceType.Output>
     ) async throws -> InferenceOptimizationScore
 }
 

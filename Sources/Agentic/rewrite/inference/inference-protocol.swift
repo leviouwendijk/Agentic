@@ -1,5 +1,6 @@
-public protocol Inference: Producer {
-    static var definition: InferenceDefinition { get }
+public protocol Inference: Capability
+where DefinitionType == InferenceDefinition
+{
 
     static func specification(
         for input: Input

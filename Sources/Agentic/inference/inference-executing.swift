@@ -9,7 +9,7 @@ public struct InferenceInvocation: Sendable {
     private let operation: @Sendable (
         any InferenceStrategyResolving,
         InferenceAttemptExecutor
-    ) async throws -> InferenceInvocationResult
+    ) async throws -> InferenceInvocation.Response
 
     init(
         definition: InferenceDefinition,
@@ -19,7 +19,7 @@ public struct InferenceInvocation: Sendable {
         operation: @escaping @Sendable (
             any InferenceStrategyResolving,
             InferenceAttemptExecutor
-        ) async throws -> InferenceInvocationResult
+        ) async throws -> InferenceInvocation.Response
     ) {
         self.definition = definition
         self.input = input
@@ -31,7 +31,7 @@ public struct InferenceInvocation: Sendable {
     func execute(
         strategies: any InferenceStrategyResolving,
         attempts: InferenceAttemptExecutor
-    ) async throws -> InferenceInvocationResult {
+    ) async throws -> InferenceInvocation.Response {
         try await operation(
             strategies,
             attempts
@@ -39,23 +39,25 @@ public struct InferenceInvocation: Sendable {
     }
 }
 
-public struct InferenceInvocationResult: Sendable {
-    public let output: Data
-    public let record: InferenceExecutionRecord
+public extension InferenceInvocation {
+    struct Response: Sendable {
+        public let output: Data
+        public let record: InferenceExecutionRecord
 
-    public init(
-        output: Data,
-        record: InferenceExecutionRecord
-    ) {
-        self.output = output
-        self.record = record
+        public init(
+            output: Data,
+            record: InferenceExecutionRecord
+        ) {
+            self.output = output
+            self.record = record
+        }
     }
 }
 
 public protocol InferenceExecuting: Sendable {
     func execute(
         _ invocation: InferenceInvocation
-    ) async throws -> InferenceInvocationResult
+    ) async throws -> InferenceInvocation.Response
 }
 
 public extension Inference {
@@ -85,7 +87,7 @@ public extension Inference {
                     attempts: attempts
                 )
 
-                return InferenceInvocationResult(
+                return InferenceInvocation.Response(
                     output: try JSONEncoder().encode(
                         execution.output
                     ),
@@ -100,7 +102,7 @@ public extension Inference {
         input: Input,
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext = .default
-    ) async throws -> InferenceExecutionResult<Output> {
+    ) async throws -> InferenceExecution.Result<Output> {
         let invocation = try invocation(
             input: input,
             realization: realization,
@@ -110,7 +112,7 @@ public extension Inference {
             invocation
         )
 
-        return InferenceExecutionResult(
+        return InferenceExecution.Result(
             output: try JSONDecoder().decode(
                 Output.self,
                 from: execution.output
@@ -138,7 +140,7 @@ public extension InferenceSite {
         input: InferenceType.Input,
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext = .default
-    ) async throws -> InferenceExecutionResult<InferenceType.Output> {
+    ) async throws -> InferenceExecution.Result<InferenceType.Output> {
         try await InferenceType.execute(
             using: executor,
             input: input,
@@ -147,3 +149,4 @@ public extension InferenceSite {
         )
     }
 }
+

@@ -35,7 +35,7 @@ public struct SampledInferenceStrategy:
         realization: InferenceRealizationConfiguration,
         context: InferenceExecutionContext,
         attempts: any InferenceAttemptExecuting
-    ) async throws -> InferenceExecutionResult<InferenceType.Output> {
+    ) async throws -> InferenceExecution.Result<InferenceType.Output> {
         var attemptRecords: [InferenceAttemptRecord] = []
         var evaluations: [InferenceSampleEvaluation] = []
         var selectedOutput: InferenceType.Output?
@@ -142,7 +142,7 @@ public struct SampledInferenceStrategy:
             throw SampledInferenceStrategyError.noSamplesProduced
         }
 
-        return InferenceExecutionResult(
+        return InferenceExecution.Result(
             output: selectedOutput,
             record: InferenceExecutionRecord(
                 inference: inference.definition.identifier,

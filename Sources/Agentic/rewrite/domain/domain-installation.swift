@@ -12,8 +12,12 @@ public struct DomainInstallation {
             realization: ProgramRealization<P>?
         )
 
-        func install(
-            _ agent: AgentDefinition
+        func install<I: Inference>(
+            _ inference: I.Type
+        )
+
+        func install<A: Agent>(
+            _ agent: A.Type
         )
     }
 

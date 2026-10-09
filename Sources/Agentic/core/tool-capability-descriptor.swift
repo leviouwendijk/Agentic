@@ -8,19 +8,24 @@ public struct ToolDescriptor:
 {
     public let identifier: ToolIdentifier
     public let description: String
-    public let inputSchema: JSONValue?
+    public let input: JSONValue?
     public let risk: ActionRisk
 
     public init(
         identifier: ToolIdentifier,
         description: String,
-        inputSchema: JSONValue? = nil,
+        input: JSONValue? = nil,
         risk: ActionRisk = .observe
     ) {
         self.identifier = identifier
         self.description = description
-        self.inputSchema = inputSchema
+        self.input = input
         self.risk = risk
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case identifier, description, risk
+        case input = "inputSchema"
     }
 }
 
@@ -33,17 +38,27 @@ public extension ToolDescriptor {
         identifier.rawValue
     }
 
+    /// Strip Tool-only governance metadata at the model transport boundary.
+    var modelFunction: ModelFunctionDescriptor {
+        .init(
+            name: name,
+            description: description,
+            input: input
+        )
+    }
+
     init(
         name: String,
         description: String,
-        inputSchema: JSONValue? = nil,
+        input: JSONValue? = nil,
         risk: ActionRisk = .observe
     ) {
         self.init(
             identifier: .init(name),
             description: description,
-            inputSchema: inputSchema,
+            input: input,
             risk: risk
         )
     }
+
 }

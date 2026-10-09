@@ -8,12 +8,12 @@ public struct ProgramToolFailure:
         ProgramFailureDisposition<Output>
 
     public let tool: ToolIdentifier
-    public let result: ToolResult
+    public let result: ToolCall.Response
     public let recovery: Recovery.Record?
 
     public init(
         tool: ToolIdentifier,
-        result: ToolResult,
+        result: ToolCall.Response,
         recovery: Recovery.Record? = nil
     ) {
         self.tool = tool

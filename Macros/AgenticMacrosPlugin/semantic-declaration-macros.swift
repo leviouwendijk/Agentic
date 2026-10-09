@@ -260,7 +260,7 @@ private enum AgentMacroSpecification:
                 category: "Agents",
                 declaration: ".agent(Self.definition)",
                 installer:
-                    "{ sink in sink.install(Self.definition) }"
+                    "{ sink in sink.install(Self.self) }"
             ),
         ]
     }
@@ -292,7 +292,8 @@ private enum InferenceMacroSpecification:
             catalogFactoryDeclaration(
                 in: context,
                 category: "Inferences",
-                declaration: ".inference(Self.definition)"
+                declaration: ".inference(Self.definition)",
+                installer: "{ sink in sink.install(Self.self) }"
             ),
         ]
     }
