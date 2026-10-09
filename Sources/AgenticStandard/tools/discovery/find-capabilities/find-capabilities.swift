@@ -35,10 +35,7 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Input:
-            Sendable,
-            Codable,
-            Hashable
+        public struct Input: HashableSource
         {
             public let query: String?
             public let kind: Kind?
@@ -73,40 +70,31 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Entry:
-            Sendable,
-            Codable,
-            Hashable
+        public struct Entry: HashableProduct
         {
             public let kind: Kind
             public let identifier: String
             public let namespace: String?
             public let purpose: String
             public let wasVisible: Bool
-            public let revealed: Bool
 
             public init(
                 kind: Kind,
                 identifier: String,
                 namespace: String?,
                 purpose: String,
-                wasVisible: Bool,
-                revealed: Bool
+                wasVisible: Bool
             ) {
                 self.kind = kind
                 self.identifier = identifier
                 self.namespace = namespace
                 self.purpose = purpose
                 self.wasVisible = wasVisible
-                self.revealed = revealed
             }
         }
 
         @JSONSchema
-        public struct Output:
-            Sendable,
-            Codable,
-            Hashable
+        public struct Output: HashableResult
         {
             public let totalMatches: Int
             public let returnedCount: Int
@@ -124,7 +112,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Search capabilities already available to the current Agent and reveal the selected matches without granting new authority."
+            "Find capabilities already available to this Agent without changing authorization or model projection."
 
         public static let risk: ActionRisk = .observe
 
@@ -146,11 +134,11 @@ public extension Standard.Tools {
             let domain = normalized(
                 input.domain
             )
-            let candidates = context.catalog.entries
-                .compactMap { entry in
+            let candidates = context.inspections
+                .compactMap { inspection in
                     candidate(
-                        entry,
-                        available: before.available,
+                        inspection,
+                        available: before.available.intersecting(before.installed),
                         kind: input.resolvedKind,
                         domain: domain,
                         query: query
@@ -162,13 +150,6 @@ public extension Standard.Tools {
                     input.resolvedMaximumResults
                 )
             )
-            let requested = capabilitySet(
-                for: selected
-            )
-            let revealed = await capabilities.reveal(
-                requested
-            )
-
             return Output(
                 totalMatches: candidates.count,
                 returnedCount: selected.count,
@@ -181,10 +162,6 @@ public extension Standard.Tools {
                         wasVisible: contains(
                             candidate,
                             in: before.visible
-                        ),
-                        revealed: contains(
-                            candidate,
-                            in: revealed
                         )
                     )
                 }
@@ -203,97 +180,35 @@ private extension Standard.Tools.FindCapabilities {
     }
 
     func candidate(
-        _ entry: Catalog.Entry,
+        _ inspection: CapabilityInspection,
         available: AgentCapabilitySet,
         kind: Kind,
         domain: String?,
         query: String?
     ) -> Candidate? {
-        guard let candidate = candidate(
-            entry
-        ) else {
+        guard let resolvedKind = Kind(rawValue: inspection.kind),
+              kind == .all || resolvedKind == kind else { return nil }
+        if let domain, inspection.namespace?.lowercased() != domain {
             return nil
         }
-
-        guard kind == .all || candidate.kind == kind else {
+        guard CapabilityDiscovery.contains(inspection.reference, in: available) else {
             return nil
         }
-
-        if let domain,
-           candidate.namespace?.lowercased() != domain {
-            return nil
-        }
-
-        guard contains(
-            candidate,
-            in: available
-        ) else {
-            return nil
-        }
-
-        guard let score = matchScore(
-            candidate,
-            query: query
-        ) else {
-            return nil
-        }
-
+        let candidate = Candidate(
+            kind: resolvedKind,
+            identifier: inspection.identifier,
+            namespace: inspection.namespace,
+            purpose: inspection.purpose,
+            score: 0
+        )
+        guard let score = matchScore(candidate, query: query) else { return nil }
         return Candidate(
-            kind: candidate.kind,
-            identifier: candidate.identifier,
-            namespace: candidate.namespace,
-            purpose: candidate.purpose,
+            kind: resolvedKind,
+            identifier: inspection.identifier,
+            namespace: inspection.namespace,
+            purpose: inspection.purpose,
             score: score
         )
-    }
-
-    func candidate(
-        _ entry: Catalog.Entry
-    ) -> Candidate? {
-        let namespace =
-            entry.namespace?.rawValue
-
-        switch entry.declaration {
-        case .tool(let definition):
-            return .init(
-                kind: .tool,
-                identifier: definition.identifier.rawValue,
-                namespace: namespace,
-                purpose: definition.purpose,
-                score: 0
-            )
-
-        case .program(let definition):
-            return .init(
-                kind: .program,
-                identifier: definition.identifier.rawValue,
-                namespace: namespace,
-                purpose: definition.purpose,
-                score: 0
-            )
-
-        case .inference(let definition):
-            return .init(
-                kind: .inference,
-                identifier: definition.identifier.rawValue,
-                namespace: namespace,
-                purpose: definition.purpose,
-                score: 0
-            )
-
-        case .agent(let definition):
-            return .init(
-                kind: .agent,
-                identifier: definition.identifier.rawValue,
-                namespace: namespace,
-                purpose: definition.purpose,
-                score: 0
-            )
-
-        case .adapter:
-            // Adapters are inference infrastructure, not Agent capabilities.
-            return nil
-        }
     }
 
     func matchScore(
@@ -417,49 +332,6 @@ private extension Standard.Tools.FindCapabilities {
                 )
             )
         }
-    }
-
-    func capabilitySet(
-        for candidates: [Candidate]
-    ) -> AgentCapabilitySet {
-        .init(
-            tools: candidates.compactMap { candidate in
-                guard candidate.kind == .tool else {
-                    return nil
-                }
-
-                return ToolIdentifier(
-                    rawValue: candidate.identifier
-                )
-            },
-            programs: candidates.compactMap { candidate in
-                guard candidate.kind == .program else {
-                    return nil
-                }
-
-                return ProgramIdentifier(
-                    rawValue: candidate.identifier
-                )
-            },
-            inferences: candidates.compactMap { candidate in
-                guard candidate.kind == .inference else {
-                    return nil
-                }
-
-                return InferenceIdentifier(
-                    rawValue: candidate.identifier
-                )
-            },
-            agents: candidates.compactMap { candidate in
-                guard candidate.kind == .agent else {
-                    return nil
-                }
-
-                return AgentIdentifier(
-                    rawValue: candidate.identifier
-                )
-            }
-        )
     }
 
     func normalized(

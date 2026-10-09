@@ -9,15 +9,18 @@ public struct ToolContext: Sendable {
     public let workspace: WorkspaceContext?
     public let catalog: Catalog
     public let capabilities: AgentCapabilityState?
+    public let inspections: [CapabilityInspection]
 
     public init(
         workspace: WorkspaceContext? = nil,
         catalog: Catalog = .none,
-        capabilities: AgentCapabilityState? = nil
+        capabilities: AgentCapabilityState? = nil,
+        inspections: [CapabilityInspection] = []
     ) {
         self.workspace = workspace
         self.catalog = catalog
         self.capabilities = capabilities
+        self.inspections = inspections
     }
 
     public func using(
@@ -26,7 +29,8 @@ public struct ToolContext: Sendable {
         .init(
             workspace: workspace,
             catalog: catalog,
-            capabilities: capabilities
+            capabilities: capabilities,
+            inspections: inspections
         )
     }
 }

@@ -107,7 +107,19 @@ extension ExecutionTesting {
             Standard.Tools.FindCapabilities()
         let context = ToolContext(
             catalog: catalog,
-            capabilities: state
+            capabilities: state,
+            inspections: [
+                .init(reference: .tool(hiddenTool.identifier), namespace: namespace.rawValue,
+                      purpose: hiddenTool.purpose, input: .string("tool-input"), output: .null),
+                .init(reference: .tool(unavailableTool.identifier), namespace: namespace.rawValue,
+                      purpose: unavailableTool.purpose, input: .null, output: .null),
+                .init(reference: .program(hiddenProgram.identifier), namespace: namespace.rawValue,
+                      purpose: hiddenProgram.purpose, input: .string("program-input"), output: .string("program-output")),
+                .init(reference: .inference(hiddenInference.identifier), namespace: namespace.rawValue,
+                      purpose: hiddenInference.purpose, input: .null, output: .null),
+                .init(reference: .agent(hiddenAgent.identifier), namespace: namespace.rawValue,
+                      purpose: hiddenAgent.purpose, input: .null, output: .null)
+            ]
         )
 
         let programOnly = try await tool.call(
@@ -170,9 +182,25 @@ extension ExecutionTesting {
         )
         try Expect.equal(
             snapshot.visible,
-            available,
-            "matching available capabilities become visible"
+            .none,
+            "find_capabilities must not modify direct model visibility"
         )
+
+        let listed = try await Standard.Tools.ListCapabilities().call(
+            .init(kind: .tool, maximumResults: 1), in: context
+        )
+        try Expect.equal(listed.total, 1,
+            "list enumerates only available installed Tool bindings")
+        let inspected = try await Standard.Tools.InspectCapability().call(
+            .init(kind: .program, identifier: hiddenProgram.identifier.rawValue),
+            in: context
+        )
+        try Expect.equal(inspected.input, .string("program-input"),
+            "inspection returns the exact binding-provided input contract")
+        try Expect.equal(inspected.output, .string("program-output"),
+            "inspection returns the exact binding-provided output contract")
+        try Expect.equal((await state.snapshot()).visible, .none,
+            "list/find/inspect leave visibility unchanged")
 
         return [
             .field(
