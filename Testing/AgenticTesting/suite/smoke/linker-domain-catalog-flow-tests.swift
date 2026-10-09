@@ -42,6 +42,9 @@ private final class DomainInstallationProbe:
     ) {
         agents.append(A.definition.identifier)
     }
+
+    func install<A: InferenceAdapter>(_ adapter: A) { _ = adapter }
+    func install<A: InferenceAdapterFor>(_ adapter: A) { _ = adapter }
 }
 
 let linkerDomainCatalogFlows: [TestFlow] = [

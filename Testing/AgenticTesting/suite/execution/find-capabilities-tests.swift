@@ -30,6 +30,9 @@ extension ExecutionTesting {
             identifier: "fixture.hidden_agent",
             purpose: "Hidden Agent capability"
         )
+        let hiddenAdapter = InferenceAdapterDefinition(
+            identifier: "fixture.hidden_adapter"
+        )
         let catalog = Catalog(
             domains: [
                 DomainDefinition(
@@ -65,6 +68,12 @@ extension ExecutionTesting {
                     namespace: namespace,
                     declaration: .agent(
                         hiddenAgent
+                    )
+                ),
+                .init(
+                    namespace: namespace,
+                    declaration: .adapter(
+                        hiddenAdapter
                     )
                 ),
             ]
@@ -132,6 +141,13 @@ extension ExecutionTesting {
             ),
             false,
             "discovery never returns installed-but-unavailable capabilities"
+        )
+        try Expect.equal(
+            discovered.entries.map(\.identifier).contains(
+                hiddenAdapter.identifier.rawValue
+            ),
+            false,
+            "inference adapters cannot be discovered as Agent capabilities"
         )
         try Expect.equal(
             Set(

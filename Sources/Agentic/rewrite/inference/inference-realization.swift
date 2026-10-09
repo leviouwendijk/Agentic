@@ -213,7 +213,14 @@ public struct InferenceRealizationConfiguration:
 {
     public var strategy: InferenceStrategyIdentifier
     public var adapter: InferenceAdapterIdentifier?
-    public var instructions: String
+    /// Replacing instructions invalidates the provenance of the previous text.
+    public var instructions: String {
+        didSet { source = nil }
+    }
+    private var source: Instructions?
+    public var instructionSnapshot: InstructionSnapshot {
+        .init(content: instructions, composition: source)
+    }
     public var demonstrations: [InferenceDemonstration]
     public var generation: AgentGenerationConfiguration
     public var budget: InferenceBudget
@@ -233,12 +240,36 @@ public struct InferenceRealizationConfiguration:
         self.strategy = strategy
         self.adapter = adapter
         self.instructions = instructions
+        self.source = nil
         self.demonstrations = demonstrations
         self.generation = generation
         self.budget = budget
         self.recovery = recovery
         self.metadata = metadata
     }
+
+    public init<Source: InstructionSource>(
+        strategy: InferenceStrategyIdentifier,
+        instructions: Source,
+        budget: InferenceBudget,
+        recovery: Recovery.Policy? = nil,
+        adapter: InferenceAdapterIdentifier? = nil,
+        demonstrations: [InferenceDemonstration] = [],
+        generation: AgentGenerationConfiguration = .default,
+        metadata: [String: String] = [:]
+    ) {
+        let snapshot = instructions.instructionSnapshot
+        self.strategy = strategy
+        self.adapter = adapter
+        self.instructions = snapshot?.content ?? ""
+        self.source = snapshot?.composition
+        self.demonstrations = demonstrations
+        self.generation = generation
+        self.budget = budget
+        self.recovery = recovery
+        self.metadata = metadata
+    }
+
 }
 
 public struct InferenceRealizationDefinition<
@@ -268,7 +299,8 @@ public protocol InferenceRealization:
 
     static var strategy: InferenceStrategyIdentifier { get }
     static var adapter: InferenceAdapterIdentifier? { get }
-    static var instructions: String { get }
+    associatedtype InstructionSourceType: InstructionSource = String
+    static var instructions: InstructionSourceType { get }
     static var demonstrations: [InferenceDemonstration] { get }
     static var generation: AgentGenerationConfiguration { get }
     static var budget: InferenceBudget { get }

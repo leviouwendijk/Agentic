@@ -19,6 +19,9 @@ public struct DomainInstallation {
         func install<A: Agent>(
             _ agent: A.Type
         )
+
+        func install<A: InferenceAdapter>(_ adapter: A)
+        func install<A: InferenceAdapterFor>(_ adapter: A)
     }
 
     let installers: [Installer]

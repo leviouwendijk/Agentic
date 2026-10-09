@@ -183,11 +183,12 @@ public struct InferenceAttemptExecutor:
         let adapter = try adapters.require(
             adapterIdentifier
         )
-        var adaptation = try adapter.prepare(
+        var prepared = try adapter.prepareInvocation(
             inference,
             input: input,
             realization: realization
         )
+        var adaptation = prepared.adaptation
 
         var invocations: [InferenceInvocationRecord] = []
         var recoveries: [Recovery.Record] = []
@@ -453,10 +454,7 @@ public struct InferenceAttemptExecutor:
             let output: InferenceType.Output
 
             do {
-                output = try adapter.decode(
-                    inference,
-                    response: result.response
-                )
+                output = try prepared.decode(result.response)
             } catch {
                 let message = error.localizedDescription
                 let incident = classifyInferenceRecoveryIncident(
@@ -533,6 +531,7 @@ public struct InferenceAttemptExecutor:
                             error: error,
                             realization: realization
                         )
+                        prepared.adaptation = adaptation
                     } catch {
                         let recoveryRecord = recovery.record(
                             outcome: .failed

@@ -44,6 +44,14 @@ extension SmokeDomain.Agents {
         static let modelSelection = AgentModelSelection(
             purpose: .coder
         )
+
+        static let instructions: Instructions = [
+            .instruction(.init(
+                identifier: "smoke.authoring",
+                content: "Respect observed evidence."
+            )),
+            .text("Investigate the fixture."),
+        ]
     }
 }
 
@@ -259,8 +267,13 @@ extension SmokeDomain.Realizations {
         static let strategy:
             InferenceStrategyIdentifier = .direct
 
-        static let instructions =
-            "Use the direct smoke realization."
+        static let instructions: Instructions = [
+            .instruction(.init(
+                identifier: "smoke.authoring",
+                content: "Respect observed evidence."
+            )),
+            .text("Use the direct smoke realization."),
+        ]
     }
 }
 

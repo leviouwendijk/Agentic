@@ -85,6 +85,7 @@ public extension Catalog {
         case program(ProgramDefinition)
         case inference(InferenceDefinition)
         case agent(AgentDefinition)
+        case adapter(InferenceAdapterDefinition)
     }
 
     var tools: [ToolDefinition] {
@@ -113,6 +114,13 @@ public extension Catalog {
                 return nil
             }
 
+            return definition
+        }
+    }
+
+    var adapters: [InferenceAdapterDefinition] {
+        declarations.compactMap { declaration in
+            guard case .adapter(let definition) = declaration else { return nil }
             return definition
         }
     }

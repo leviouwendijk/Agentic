@@ -52,6 +52,12 @@ public struct InferenceAdapterCatalog:
         adapters[identifier] = adapter
     }
 
+    public mutating func register<A: InferenceAdapterFor>(
+        _ adapter: A
+    ) throws {
+        try register(TypedInferenceAdapter(adapter))
+    }
+
     public func adapter(
         for identifier: InferenceAdapterIdentifier
     ) -> (any InferenceAdapter)? {

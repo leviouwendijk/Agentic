@@ -289,6 +289,10 @@ private extension Standard.Tools.FindCapabilities {
                 purpose: definition.purpose,
                 score: 0
             )
+
+        case .adapter:
+            // Adapters are inference infrastructure, not Agent capabilities.
+            return nil
         }
     }
 

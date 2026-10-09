@@ -68,6 +68,14 @@ public macro Tool(_ identifier: String? = nil) = #externalMacro(
     type: "ToolMacro"
 )
 
+/// Declares a discoverable inference adapter. Conform explicitly to either
+/// InferenceAdapter (generic) or InferenceAdapterFor (typed).
+@attached(member, names: named(definition), named(identifier), named(_agentic_catalog_factory))
+public macro Adapter() = #externalMacro(
+    module: "AgenticMacrosPlugin",
+    type: "AdapterMacro"
+)
+
 @attached(
     member,
     names: named(definition)

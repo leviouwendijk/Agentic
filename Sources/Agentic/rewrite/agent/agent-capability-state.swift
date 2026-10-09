@@ -80,9 +80,12 @@ public actor AgentCapabilityState {
 
     @discardableResult
     public func restore(
-        _ snapshot: Snapshot
+        _ snapshot: Snapshot,
+        overwritingLiveChanges: Bool = false
     ) -> Snapshot {
-        if hasLiveMutations { return self.snapshot() }
+        if hasLiveMutations && !overwritingLiveChanges {
+            return self.snapshot()
+        }
         availableCapabilities =
             snapshot.available.intersecting(
                 installedCapabilities
@@ -91,6 +94,7 @@ public actor AgentCapabilityState {
             snapshot.visible.intersecting(
                 availableCapabilities
             )
+        hasLiveMutations = true
 
         return self.snapshot()
     }
@@ -166,6 +170,7 @@ public actor AgentCapabilityState {
             visibleCapabilities.intersecting(
                 availableCapabilities
             )
+        hasLiveMutations = true
 
         return snapshot()
     }
@@ -178,6 +183,7 @@ public actor AgentCapabilityState {
             capabilities.intersecting(
                 availableCapabilities
             )
+        hasLiveMutations = true
 
         return snapshot()
     }
@@ -199,6 +205,9 @@ public actor AgentCapabilityState {
             visibleCapabilities.union(
                 revealed
             )
+        if revealed != .none {
+            hasLiveMutations = true
+        }
 
         return revealed
     }
@@ -216,6 +225,9 @@ public actor AgentCapabilityState {
             visibleCapabilities.subtracting(
                 capabilities
             )
+        if hidden != .none {
+            hasLiveMutations = true
+        }
 
         return hidden
     }

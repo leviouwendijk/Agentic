@@ -5,6 +5,7 @@ enum InferenceAdapterFlowSuite: TestFlowRegistry {
 
     static let flows: [TestFlow] =
         InferenceAdapterSubstrateFlowTests.all
+            + TypedInferenceAdapterFlowTests.all
             + NativeStructuredAdapterFlowTests.all
             + nativeStructuredAdapterRecoveryFlows
             + DecisionAuthoringFlowTests.all

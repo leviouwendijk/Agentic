@@ -26,6 +26,12 @@ public struct AgentDefinition:
     public let identifier: AgentIdentifier
     public let purpose: String
     public let instructions: String?
+    private let source: Instructions?
+    public var instructionSnapshot: InstructionSnapshot? {
+        instructions.map {
+            InstructionSnapshot(content: $0, composition: source)
+        }
+    }
     public let capabilities: AgentCapabilities
     public let modelSelection: AgentModelSelection
     public let delegation: AgentDelegationPolicy
@@ -43,10 +49,30 @@ public struct AgentDefinition:
         self.identifier = identifier
         self.purpose = purpose
         self.instructions = instructions
+        self.source = nil
         self.capabilities = capabilities
         self.modelSelection = modelSelection
         self.delegation = delegation
     }
+
+    public init<Source: InstructionSource>(
+        identifier: AgentIdentifier,
+        purpose: String,
+        instructions: Source,
+        capabilities: AgentCapabilities = .none,
+        modelSelection: AgentModelSelection = .init(purpose: .executor),
+        delegation: AgentDelegationPolicy = .disabled
+    ) {
+        let snapshot = instructions.instructionSnapshot
+        self.identifier = identifier
+        self.purpose = purpose
+        self.instructions = snapshot?.content
+        self.source = snapshot?.composition
+        self.capabilities = capabilities
+        self.modelSelection = modelSelection
+        self.delegation = delegation
+    }
+
 }
 
 public protocol Agent:
@@ -54,17 +80,20 @@ public protocol Agent:
 where DefinitionType == AgentDefinition
 {
     static var purpose: String { get }
-    static var instructions: String? { get }
+    associatedtype InstructionSourceType: InstructionSource = String?
+    static var instructions: InstructionSourceType { get }
     static var capabilities: AgentCapabilities { get }
     static var modelSelection: AgentModelSelection { get }
     static var delegation: AgentDelegationPolicy { get }
 }
 
-public extension Agent {
+public extension Agent where InstructionSourceType == String? {
     static var instructions: String? {
         nil
     }
+}
 
+public extension Agent {
     static var capabilities: AgentCapabilities {
         .none
     }

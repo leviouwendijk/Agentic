@@ -29,6 +29,14 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
             }
         ),
         TestFlow(
+            "instruction-value-composition-and-provenance",
+            tags: ["agentic", "smoke", "instructions", "optimization"],
+            operation: {
+                try runInstructionValueSmoke()
+                return []
+            }
+        ),
+        TestFlow(
             "semantic-authoring-macros",
             tags: [
                 "agentic",

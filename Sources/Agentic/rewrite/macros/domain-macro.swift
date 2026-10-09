@@ -3,6 +3,7 @@
     names:
         named(definition),
         named(Agents),
+        named(Adapters),
         named(Inferences),
         named(Programs),
         named(Tools),
