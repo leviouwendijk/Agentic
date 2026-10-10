@@ -32,7 +32,7 @@ public struct Mode: Sendable, Codable, Hashable, Identifiable {
     public var routeDefaults: ModeRouteDefaults
     public var autonomyMode: AutonomyMode
     public var exposedToolIdentifiers: [ToolIdentifier]
-    public var loadedSkillIdentifiers: [AgentSkillIdentifier]
+    public var loadedInstructionIdentifiers: [InstructionIdentifier]
     public var budgetPosture: BudgetPosture
     public var approvalStrictness: ApprovalStrictness
     public var metadata: [String: String]
@@ -43,7 +43,7 @@ public struct Mode: Sendable, Codable, Hashable, Identifiable {
         routeDefaults: ModeRouteDefaults,
         autonomyMode: AutonomyMode,
         exposedToolIdentifiers: [ToolIdentifier] = [],
-        loadedSkillIdentifiers: [AgentSkillIdentifier] = [],
+        loadedInstructionIdentifiers: [InstructionIdentifier] = [],
         budgetPosture: BudgetPosture = .balanced,
         approvalStrictness: ApprovalStrictness = .review_privileged,
         metadata: [String: String] = [:]
@@ -53,9 +53,31 @@ public struct Mode: Sendable, Codable, Hashable, Identifiable {
         self.routeDefaults = routeDefaults
         self.autonomyMode = autonomyMode
         self.exposedToolIdentifiers = exposedToolIdentifiers
-        self.loadedSkillIdentifiers = loadedSkillIdentifiers
+        self.loadedInstructionIdentifiers = loadedInstructionIdentifiers
         self.budgetPosture = budgetPosture
         self.approvalStrictness = approvalStrictness
         self.metadata = metadata
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, routeDefaults, autonomyMode, exposedToolIdentifiers
+        case loadedInstructionIdentifiers
+        case budgetPosture, approvalStrictness, metadata
+    }
+
+    /// Preserve decoding of Modes serialized before Instruction selection existed.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(ModeIdentifier.self, forKey: .id),
+            title: try container.decode(String.self, forKey: .title),
+            routeDefaults: try container.decode(ModeRouteDefaults.self, forKey: .routeDefaults),
+            autonomyMode: try container.decode(AutonomyMode.self, forKey: .autonomyMode),
+            exposedToolIdentifiers: try container.decodeIfPresent([ToolIdentifier].self, forKey: .exposedToolIdentifiers) ?? [],
+            loadedInstructionIdentifiers: try container.decodeIfPresent([InstructionIdentifier].self, forKey: .loadedInstructionIdentifiers) ?? [],
+            budgetPosture: try container.decodeIfPresent(BudgetPosture.self, forKey: .budgetPosture) ?? .balanced,
+            approvalStrictness: try container.decodeIfPresent(ApprovalStrictness.self, forKey: .approvalStrictness) ?? .review_privileged,
+            metadata: try container.decodeIfPresent([String: String].self, forKey: .metadata) ?? [:]
+        )
     }
 }

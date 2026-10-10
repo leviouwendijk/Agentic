@@ -48,7 +48,6 @@ AgenticCLI
 - [Agentic](https://github.com/leviouwendijk/Agentic) — Semantic core and built-in `AgenticStandard` declarations.
 - [AgenticModels](https://github.com/leviouwendijk/AgenticModels) — Model identity, capabilities, routing vocabulary, and model-facing substrate.
 - [AgenticProviders](https://github.com/leviouwendijk/AgenticProviders) — Provider installation and provider/gateway implementations.
-- [AgenticSkills](https://github.com/leviouwendijk/AgenticSkills) — Skills, skill metadata, loading, and skill infrastructure.
 - [Workspace](https://github.com/leviouwendijk/Workspace) — Scoped workspace roots, authority, grants, and capabilities.
 - [AgenticIO](https://github.com/leviouwendijk/AgenticIO) — Agent-facing IO and source/context operations.
 - [AgenticExecution](https://github.com/leviouwendijk/AgenticExecution) — Mechanical tool execution, approval, exposure, prepared execution state, and ToolPlan execution.

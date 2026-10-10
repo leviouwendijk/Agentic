@@ -2,7 +2,7 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
     public var routeDefaults: ModeRouteDefaults?
     public var autonomyMode: AutonomyMode?
     public var exposedToolIdentifiers: [ToolIdentifier]?
-    public var loadedSkillIdentifiers: [AgentSkillIdentifier]?
+    public var loadedInstructionIdentifiers: [InstructionIdentifier]?
     public var budgetPosture: BudgetPosture?
     public var approvalStrictness: ApprovalStrictness?
     public var metadata: [String: String]
@@ -11,7 +11,7 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
         routeDefaults: ModeRouteDefaults? = nil,
         autonomyMode: AutonomyMode? = nil,
         exposedToolIdentifiers: [ToolIdentifier]? = nil,
-        loadedSkillIdentifiers: [AgentSkillIdentifier]? = nil,
+        loadedInstructionIdentifiers: [InstructionIdentifier]? = nil,
         budgetPosture: BudgetPosture? = nil,
         approvalStrictness: ApprovalStrictness? = nil,
         metadata: [String: String] = [:]
@@ -19,7 +19,7 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
         self.routeDefaults = routeDefaults
         self.autonomyMode = autonomyMode
         self.exposedToolIdentifiers = exposedToolIdentifiers
-        self.loadedSkillIdentifiers = loadedSkillIdentifiers
+        self.loadedInstructionIdentifiers = loadedInstructionIdentifiers
         self.budgetPosture = budgetPosture
         self.approvalStrictness = approvalStrictness
         self.metadata = metadata
@@ -42,8 +42,8 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
             copy.exposedToolIdentifiers = exposedToolIdentifiers
         }
 
-        if let loadedSkillIdentifiers {
-            copy.loadedSkillIdentifiers = loadedSkillIdentifiers
+        if let loadedInstructionIdentifiers {
+            copy.loadedInstructionIdentifiers = loadedInstructionIdentifiers
         }
 
         if let budgetPosture {
@@ -92,8 +92,8 @@ public struct ModeSelection: Sendable, Codable, Hashable {
         mode.exposedToolIdentifiers
     }
 
-    public var loadedSkillIdentifiers: [AgentSkillIdentifier] {
-        mode.loadedSkillIdentifiers
+    public var loadedInstructionIdentifiers: [InstructionIdentifier] {
+        mode.loadedInstructionIdentifiers
     }
 
     public var budgetPosture: BudgetPosture {

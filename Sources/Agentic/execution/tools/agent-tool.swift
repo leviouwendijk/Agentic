@@ -40,16 +40,3 @@ public extension Tool {
     }
 }
 
-public extension ToolReference {
-    static func tool<T>(
-        _ tool: T,
-        owner: String? = nil
-    ) -> Self where T: Tool {
-        _ = tool
-
-        return .init(
-            identifier: T.definition.identifier,
-            owner: owner
-        )
-    }
-}

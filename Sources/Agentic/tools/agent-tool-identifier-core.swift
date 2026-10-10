@@ -24,9 +24,6 @@ public extension ToolIdentifier {
     static var list_artifacts: Self
     static var read_artifact: Self
 
-    static var list_skills: Self
-    static var load_skill: Self
-
     static var search_transcript: Self
     static var read_transcript_events: Self
     static var summarize_transcript_window: Self

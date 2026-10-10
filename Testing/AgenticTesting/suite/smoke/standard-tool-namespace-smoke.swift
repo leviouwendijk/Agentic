@@ -93,24 +93,6 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ClarifyWithUser.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.ListSkills.self
-    )
-    ContractProof.source(
-        Standard.Tools.ListSkills.Input.self
-    )
-    ContractProof.result(
-        Standard.Tools.ListSkills.Output.self
-    )
-    ContractProof.tool(
-        Standard.Tools.LoadSkill.self
-    )
-    ContractProof.source(
-        Standard.Tools.LoadSkill.Input.self
-    )
-    ContractProof.result(
-        Standard.Tools.LoadSkill.Output.self
-    )
-    ContractProof.tool(
         Standard.Tools.CreateTask.self
     )
     ContractProof.source(
@@ -227,14 +209,6 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.ClarifyWithUser.definition.identifier.rawValue,
         expected: "clarify_with_user"
-    )
-    try ContractProof.identifier(
-        Standard.Tools.ListSkills.definition.identifier.rawValue,
-        expected: "list_skills"
-    )
-    try ContractProof.identifier(
-        Standard.Tools.LoadSkill.definition.identifier.rawValue,
-        expected: "load_skill"
     )
     try ContractProof.identifier(
         Standard.Tools.CreateTask.definition.identifier.rawValue,

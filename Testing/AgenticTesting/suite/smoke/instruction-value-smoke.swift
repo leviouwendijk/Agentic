@@ -70,21 +70,26 @@ func runInstructionValueSmoke() throws {
     try Expect.equal(roundTrip, composition)
     try Expect.equal(roundTrip.snapshot, composition.snapshot)
 
-    let skill = AgentSkill(
-        identifier: "diagnostics",
-        name: "Diagnostics",
-        summary: "Diagnose failures",
-        body: "Inspect the earliest divergence.",
-        metadata: .init(attributes: ["skill_file": "project/skills/diagnostics/SKILL.md"])
+    // Selected Instruction IDs must survive Mode persistence, not merely decode.
+    let mode = Mode(
+        id: .debugging,
+        title: "Debugging",
+        routeDefaults: .init(primaryPurpose: .executor),
+        autonomyMode: .auto_observe,
+        loadedInstructionIdentifiers: [method.identifier]
     )
-    let skillInstruction = skill.instruction
-    try Expect.equal(skillInstruction.identifier.rawValue, "skill.diagnostics")
-    try Expect.equal(skillInstruction.source, "project/skills/diagnostics/SKILL.md")
-    try Expect.equal(skillInstruction.content, skill.contextText)
-    try Expect.equal(
-        skill.instructionSnapshot?.references.first?.revision,
-        skillInstruction.revision
-    )
+    let modeData = try JSONEncoder().encode(mode)
+    let decodedMode = try JSONDecoder().decode(Mode.self, from: modeData)
+    try Expect.equal(decodedMode, mode)
+    try Expect.equal(decodedMode.loadedInstructionIdentifiers, [method.identifier])
+
+    // Old stored Modes without an Instruction selection remain decodable.
+    let oldModeDictionary = (try JSONSerialization.jsonObject(with: modeData) as? [String: Any] ?? [:])
+        .filter { $0.key != "loadedInstructionIdentifiers" }
+    let oldModeData = try JSONSerialization.data(withJSONObject: oldModeDictionary)
+    let oldMode = try JSONDecoder().decode(Mode.self, from: oldModeData)
+    try Expect.equal(oldMode.loadedInstructionIdentifiers, [])
+
     let plain: Instructions = "Plain instruction text."
     try Expect.equal(plain.resolved, "Plain instruction text.")
     try Expect.equal(plain.snapshot.references.isEmpty, true)
