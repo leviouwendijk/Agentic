@@ -29,6 +29,12 @@ let package = Package(
                 "AgenticHarness",
             ]
         ),
+        .library(
+            name: "AgenticContext",
+            targets: [
+                "AgenticContext",
+            ]
+        ),
 
         // known model library 
         .library(
@@ -43,6 +49,12 @@ let package = Package(
             name: "t_agentic",
             targets: [
                 "AgenticTesting",
+            ]
+        ),
+        .executable(
+            name: "t_agentic_ctx",
+            targets: [
+                "AgenticContextTesting",
             ]
         ),
     ],
@@ -100,6 +112,10 @@ let package = Package(
 
         .package(
             url: "https://github.com/leviouwendijk/Version.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Tokens.git",
             branch: "master"
         ),
     ],
@@ -200,6 +216,22 @@ let package = Package(
                     package: "Workspace"
                 ),
             ]
+        ),
+        .target(
+            name: "AgenticContext",
+            dependencies: [
+                "Agentic",
+                .product(name: "Tokens", package: "Tokens"),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticContextTesting",
+            dependencies: [
+                "Agentic",
+                "AgenticContext",
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticContextTesting"
         ),
         .target(
             name: "AgenticLinkerCatalogFixture",
