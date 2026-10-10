@@ -52,7 +52,6 @@ AgenticCLI
 - [AgenticIO](https://github.com/leviouwendijk/AgenticIO) — Agent-facing IO and source/context operations.
 - [AgenticExecution](https://github.com/leviouwendijk/AgenticExecution) — Mechanical tool execution, approval, exposure, prepared execution state, and ToolPlan execution.
 - [AgenticRuntime](https://github.com/leviouwendijk/AgenticRuntime) — Runtime lifecycle, tool loop, suspension/resume, interaction boundaries, and program execution.
-- [AgenticUsage](https://github.com/leviouwendijk/AgenticUsage) — Usage, token, cost, and related accounting infrastructure.
 - [AgenticMedia](https://github.com/leviouwendijk/AgenticMedia) — Media and multimodal capabilities.
 - [AgenticInterfaces](https://github.com/leviouwendijk/AgenticInterfaces) — Human-facing interaction and presentation contracts.
 - [AgenticHost](https://github.com/leviouwendijk/AgenticHost) — Host orchestration across runtime and interfaces.
@@ -70,6 +69,7 @@ Several earlier repositories have been folded into simpler ownership boundaries 
 - `AgenticRecovery` → recovery vocabulary and policy semantics now live in `Agentic`.
 - `AgenticWorkspace` → replaced by the standalone `Workspace` package.
 - `AgenticTools` → generic tool semantics live in `Agentic`; built-in concrete tools live in `AgenticStandard`.
+- `AgenticUsage` → pricing and cost contracts remain in `Agentic`; token estimation and cost tracking now live in `AgenticRuntime`.
 - `AgenticTestFlows` → removed as a separate target; the canonical test target is `AgenticTesting`.
 
 This repository also consumes `Testing` directly. `TestFlows` is no longer part of the Agentic test dependency path.
