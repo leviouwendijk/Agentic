@@ -1,6 +1,7 @@
 import Foundation
 
 /// Context is an addressable view over records; it does not own their storage.
+@Domain
 public enum Context {}
 
 public extension Context {

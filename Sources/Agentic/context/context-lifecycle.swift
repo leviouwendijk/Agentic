@@ -79,22 +79,42 @@ public extension Context {
         }
     }
 
+    /// Boundaries for recent complete user-originating turns in dynamic mode.
+    /// A current user turn is mandatory; it is never silently truncated.
+    struct HistoryPolicy: Sendable, Codable, Hashable {
+        public let maximumTurns: Int
+        public let maximumTokens: Int
+
+        public init(maximumTurns: Int = 4, maximumTokens: Int = 4_000) {
+            self.maximumTurns = maximumTurns
+            self.maximumTokens = maximumTokens
+        }
+    }
+
+    enum Mode: String, Sendable, Codable, Hashable {
+        case accumulating
+        case dynamic
+    }
+
     struct Policy: Sendable, Codable, Hashable {
         public let preferredInputTokens: Int
         public let maximumInputTokens: Int
         public let reservedOutputTokens: Int
         public let maximumResolutions: Int
+        public let history: HistoryPolicy
 
         public init(
             preferredInputTokens: Int = 12_000,
             maximumInputTokens: Int = 48_000,
             reservedOutputTokens: Int = 4_000,
-            maximumResolutions: Int = 32
+            maximumResolutions: Int = 32,
+            history: HistoryPolicy = .init()
         ) {
             self.preferredInputTokens = preferredInputTokens
             self.maximumInputTokens = maximumInputTokens
             self.reservedOutputTokens = reservedOutputTokens
             self.maximumResolutions = maximumResolutions
+            self.history = history
         }
     }
 
