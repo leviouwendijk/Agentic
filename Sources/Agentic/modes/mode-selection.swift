@@ -1,7 +1,6 @@
 public struct ModeOverlay: Sendable, Codable, Hashable {
     public var routeDefaults: ModeRouteDefaults?
     public var autonomyMode: AutonomyMode?
-    public var exposedToolIdentifiers: [ToolIdentifier]?
     public var loadedInstructionIdentifiers: [InstructionIdentifier]?
     public var budgetPosture: BudgetPosture?
     public var approvalStrictness: ApprovalStrictness?
@@ -10,7 +9,6 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
     public init(
         routeDefaults: ModeRouteDefaults? = nil,
         autonomyMode: AutonomyMode? = nil,
-        exposedToolIdentifiers: [ToolIdentifier]? = nil,
         loadedInstructionIdentifiers: [InstructionIdentifier]? = nil,
         budgetPosture: BudgetPosture? = nil,
         approvalStrictness: ApprovalStrictness? = nil,
@@ -18,7 +16,6 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
     ) {
         self.routeDefaults = routeDefaults
         self.autonomyMode = autonomyMode
-        self.exposedToolIdentifiers = exposedToolIdentifiers
         self.loadedInstructionIdentifiers = loadedInstructionIdentifiers
         self.budgetPosture = budgetPosture
         self.approvalStrictness = approvalStrictness
@@ -36,10 +33,6 @@ public struct ModeOverlay: Sendable, Codable, Hashable {
 
         if let autonomyMode {
             copy.autonomyMode = autonomyMode
-        }
-
-        if let exposedToolIdentifiers {
-            copy.exposedToolIdentifiers = exposedToolIdentifiers
         }
 
         if let loadedInstructionIdentifiers {
@@ -86,10 +79,6 @@ public struct ModeSelection: Sendable, Codable, Hashable {
 
     public var modelSelection: AgentModelSelection {
         mode.routeDefaults.primarySelection
-    }
-
-    public var exposedToolIdentifiers: [ToolIdentifier] {
-        mode.exposedToolIdentifiers
     }
 
     public var loadedInstructionIdentifiers: [InstructionIdentifier] {
