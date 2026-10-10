@@ -3,6 +3,11 @@ public struct ModeSkillSelection: Sendable {
     public var loadedSkills: [AgentSkill]
     public var missingIdentifiers: [AgentSkillIdentifier]
 
+    /// Preserve the selected order, rather than dictionary/registry order.
+    public var instructions: Instructions {
+        Instructions(loadedSkills.map { .instruction($0.instruction) })
+    }
+
     public init(
         registry: SkillRegistry,
         loadedSkills: [AgentSkill],

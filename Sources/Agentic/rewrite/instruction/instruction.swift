@@ -19,8 +19,21 @@ public enum InstructionRevision {
     }
 }
 
-/// An authored, immutable piece of guidance. An Instruction is not executable.
-public struct Instruction: Sendable, Codable, Hashable {
+/// A reusable authored declaration, independent from executable capabilities.
+/// @Instruction derives its identity and immutable definition from its lexical path.
+public protocol Instruction: Sendable {
+    static var content: String { get }
+    static var source: String? { get }
+    static var definition: InstructionDefinition { get }
+}
+
+public extension Instruction {
+    static var source: String? { nil }
+}
+
+/// Immutable text, author identity and provenance consumed by a run.
+/// Values can also originate from external documents or dynamic composition.
+public struct InstructionDefinition: Definition, Codable, Hashable {
     public let identifier: InstructionIdentifier
     public let content: String
     public let source: String?
@@ -64,7 +77,7 @@ public struct Instruction: Sendable, Codable, Hashable {
 /// Values are retained, so a snapshot does not depend on mutable source files.
 public struct Instructions: Sendable, Codable, Hashable, ExpressibleByArrayLiteral, ExpressibleByStringLiteral {
     public enum Part: Sendable, Codable, Hashable {
-        case instruction(Instruction)
+        case instruction(InstructionDefinition)
         case text(String)
 
         public var content: String {
@@ -88,6 +101,17 @@ public struct Instructions: Sendable, Codable, Hashable, ExpressibleByArrayLiter
     public init(_ text: String) {
         self.init([.text(text)])
     }
+
+    /// Direct ordered composition without an intermediate array literal.
+    public init(_ parts: Part...) {
+        self.init(parts)
+    }
+
+    /// Variadic composition with an explicit joining separator.
+    public init(separator: String, _ parts: Part...) {
+        self.init(parts, separator: separator)
+    }
+
     public let separator: String
 
     public init(
@@ -105,7 +129,7 @@ public struct Instructions: Sendable, Codable, Hashable, ExpressibleByArrayLiter
     }
 
     /// Preserve occurrence order, including repeated Instructions.
-    public var references: [Instruction.Reference] {
+    public var references: [InstructionDefinition.Reference] {
         parts.compactMap { part in
             guard case .instruction(let instruction) = part else {
                 return nil
@@ -136,7 +160,7 @@ public struct InstructionSnapshot: Sendable, Codable, Hashable {
         InstructionRevision.of(content)
     }
 
-    public var references: [Instruction.Reference] {
+    public var references: [InstructionDefinition.Reference] {
         composition?.references ?? []
     }
 }
@@ -159,7 +183,7 @@ extension Optional: InstructionSource where Wrapped == String {
     }
 }
 
-extension Instruction: InstructionSource {
+extension InstructionDefinition: InstructionSource {
     public var instructionSnapshot: InstructionSnapshot? {
         Instructions([.instruction(self)]).snapshot
     }

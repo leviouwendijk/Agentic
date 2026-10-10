@@ -1,3 +1,19 @@
+/// A non-executable, catalog-discoverable authored Instruction.
+@attached(
+    member,
+    names:
+        named(definition),
+        named(_agentic_catalog_factory)
+)
+@attached(
+    extension,
+    conformances: Instruction
+)
+public macro Instruction() = #externalMacro(
+    module: "AgenticMacrosPlugin",
+    type: "InstructionMacro"
+)
+
 @attached(
     member,
     names:

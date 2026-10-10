@@ -2,6 +2,14 @@ import Agentic
 import Schema
 import Workspace
 
+extension SmokeDomain.Instructions {
+    @Instruction
+    enum Debugging {
+        static let content = "Respect observed evidence."
+        static let source: String? = "guidance/debugging.md"
+    }
+}
+
 extension SmokeDomain.Agents {
     @Agent
     enum MacroSmokeAgent {
@@ -46,10 +54,7 @@ extension SmokeDomain.Agents {
         )
 
         static let instructions: Instructions = [
-            .instruction(.init(
-                identifier: "smoke.authoring",
-                content: "Respect observed evidence."
-            )),
+            .instruction(SmokeDomain.Instructions.Debugging.definition),
             .text("Investigate the fixture."),
         ]
     }
@@ -290,6 +295,15 @@ private func requireDecisionInference<InferenceType: DecisionInference>(
 ) {}
 
 func runSemanticAuthoringMacroSmoke() throws {
+    let debugging = SmokeDomain.Instructions.Debugging.definition
+    try ContractProof.identifier(
+        debugging.identifier.rawValue,
+        expected: "smoke_domain.instructions.debugging"
+    )
+    guard debugging.content == "Respect observed evidence.",
+          debugging.source == "guidance/debugging.md" else {
+        fatalError("@Instruction must retain authored content and provenance")
+    }
     ContractProof.agent(
         SmokeDomain.Agents.MacroSmokeAgent.self
     )

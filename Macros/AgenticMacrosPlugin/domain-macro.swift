@@ -69,6 +69,9 @@ private enum DomainMacroSpecification:
                 stringLiteral: "\(access)enum Agents {}"
             ),
             DeclSyntax(
+                stringLiteral: "\(access)enum Instructions {}"
+            ),
+            DeclSyntax(
                 stringLiteral: "\(access)enum Adapters {}"
             ),
             DeclSyntax(

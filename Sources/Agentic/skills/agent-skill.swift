@@ -20,7 +20,23 @@ public struct AgentSkill: Sendable, Codable, Hashable, Identifiable {
     }
 }
 
+extension AgentSkill: InstructionSource {
+    public var instructionSnapshot: InstructionSnapshot? {
+        instruction.instructionSnapshot
+    }
+}
+
 public extension AgentSkill {
+    /// Transitional authored-content view; the Skill registry does not own
+    /// another copy of the instruction or its revision.
+    var instruction: InstructionDefinition {
+        InstructionDefinition(
+            identifier: .init(rawValue: "skill.\(identifier.rawValue)"),
+            content: contextText,
+            source: metadata.attributes["skill_file"]
+        )
+    }
+
     var id: AgentSkillIdentifier {
         identifier
     }

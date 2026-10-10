@@ -109,6 +109,12 @@ let linkerDomainCatalogFlows: [TestFlow] = [
             "Domain.installation leaves a non-default-constructible Tool semantic-only without author installation boilerplate"
         )
 
+        let authoredInstruction = SmokeDomain.Instructions.Debugging.definition
+        try Expect.equal(
+            SmokeDomain.catalog.instructions.contains(authoredInstruction),
+            true,
+            "@Instruction is discoverable in its derived Domain catalog"
+        )
         let smokeInstallation = DomainInstallationProbe()
         SmokeDomain.installation.install(into: smokeInstallation)
 

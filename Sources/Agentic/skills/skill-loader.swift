@@ -58,7 +58,9 @@ public struct SkillLoader: Sendable {
                     summary: summary,
                     body: document.body,
                     metadata: .init(
-                        attributes: document.metadata
+                        attributes: document.metadata.merging(
+                            ["skill_file": fileURL.path]
+                        ) { _, path in path }
                     )
                 )
             )

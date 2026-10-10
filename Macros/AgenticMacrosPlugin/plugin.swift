@@ -6,6 +6,7 @@ struct AgenticMacrosPlugin: CompilerPlugin  {
     let providingMacros: [Macro.Type] = [
         DomainMacro.self,
         AgentMacro.self,
+        InstructionMacro.self,
         InferenceMacro.self,
         ProgramMacro.self,
         InferenceSiteMacro.self,

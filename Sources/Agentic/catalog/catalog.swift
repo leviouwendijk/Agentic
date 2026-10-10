@@ -86,6 +86,17 @@ public extension Catalog {
         case inference(InferenceDefinition)
         case agent(AgentDefinition)
         case adapter(InferenceAdapterDefinition)
+        case instruction(InstructionDefinition)
+    }
+
+    /// Metadata-only authored Instructions, not installed executable capabilities.
+    var instructions: [InstructionDefinition] {
+        declarations.compactMap { declaration in
+            guard case .instruction(let definition) = declaration else {
+                return nil
+            }
+            return definition
+        }
     }
 
     var tools: [ToolDefinition] {
