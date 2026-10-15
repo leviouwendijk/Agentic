@@ -1,0 +1,17 @@
+uuid = "D3CC2983-1B58-4E2A-8CD5-46C4888D40B2"
+name = "Agentic"
+types { "library" }
+versions {
+    release {
+        major = 0
+        minor = 1
+        patch = 0
+    }
+}
+compile {
+    use = false
+    arguments { }
+}
+details = ""
+author = "levi"
+update = "https://raw.githubusercontent.com/leviouwendijk/Agentic/master/build-object.pkl"

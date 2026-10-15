@@ -1,6 +1,8 @@
 
 public struct AgentToolRegistration: Sendable {
     public let collection: AgentToolCollectionMetadata?
+    /// Known for typed Tools; opaque providers cannot participate in Domain replacement.
+    public let reference: CapabilityReference?
 
     private let applyHandler: @Sendable (
         inout ToolRegistry
@@ -8,11 +10,13 @@ public struct AgentToolRegistration: Sendable {
 
     public init(
         collection: AgentToolCollectionMetadata? = nil,
+        reference: CapabilityReference? = nil,
         apply: @escaping @Sendable (
             inout ToolRegistry
         ) throws -> Void
     ) {
         self.collection = collection
+        self.reference = reference
         self.applyHandler = apply
     }
 
@@ -29,6 +33,7 @@ public struct AgentToolRegistration: Sendable {
     ) -> Self {
         .init(
             collection: collection,
+            reference: reference,
             apply: applyHandler
         )
     }
@@ -39,7 +44,7 @@ public extension AgentToolRegistration {
         _ tool: T,
         modelContract: ToolModelContract? = nil
     ) -> Self where T: Tool {
-        .init { registry in
+        .init(reference: T.reference) { registry in
             try registry.register(
                 tool,
                 modelContract: modelContract

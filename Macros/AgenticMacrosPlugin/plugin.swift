@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 struct AgenticMacrosPlugin: CompilerPlugin  {
     let providingMacros: [Macro.Type] = [
         DomainMacro.self,
+        DomainMemberMacro.self,
         AgentMacro.self,
         InstructionMacro.self,
         InferenceMacro.self,

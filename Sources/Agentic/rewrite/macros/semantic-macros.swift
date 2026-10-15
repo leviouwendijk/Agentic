@@ -62,6 +62,17 @@ public macro Program() = #externalMacro(
     type: "ProgramMacro"
 )
 
+/// Attach an existing, top-level Tool or @Program declaration to a typed Domain.
+/// The authored definition remains the only identifier and implementation.
+/// Prefer lexical nesting when authoring new capabilities.
+@attached(member, names: named(_agentic_catalog_factory))
+public macro DomainMember<DomainType: Domain>(
+    _ domain: DomainType.Type
+) = #externalMacro(
+    module: "AgenticMacrosPlugin",
+    type: "DomainMemberMacro"
+)
+
 @attached(accessor)
 public macro InferenceSite() = #externalMacro(
     module: "AgenticMacrosPlugin",

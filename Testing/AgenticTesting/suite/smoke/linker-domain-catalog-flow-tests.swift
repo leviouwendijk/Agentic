@@ -95,6 +95,16 @@ let linkerDomainCatalogFlows: [TestFlow] = [
         )
 
         try Expect.equal(
+            identifiers.contains("linker_fixture_top_level"),
+            true,
+            "Typed DomainMember links top-level Tool metadata into its Domain"
+        )
+        try Expect.equal(
+            installation.tools.contains(LinkerCatalogTopLevelTool.identifier),
+            true,
+            "Typed DomainMember automatically installs its default-constructible Tool"
+        )
+        try Expect.equal(
             installation.tools.contains(
                 LinkerCatalogFixture.Tools.Alpha.definition.identifier
             ),
@@ -107,6 +117,22 @@ let linkerDomainCatalogFlows: [TestFlow] = [
             ),
             false,
             "Domain.installation leaves a non-default-constructible Tool semantic-only without author installation boilerplate"
+        )
+
+        try Expect.equal(
+            catalog.programs.contains { $0.identifier == LinkerCatalogTopLevelProgram.definition.identifier },
+            true,
+            "@DomainMember links the top-level Program into its typed Domain"
+        )
+        try Expect.equal(
+            installation.programs.contains(LinkerCatalogTopLevelProgram.definition.identifier),
+            true,
+            "@DomainMember installs the top-level Program without a ProgramSet"
+        )
+        try Expect.equal(
+            Catalog.unscoped.programs.contains { $0.identifier == LinkerCatalogTopLevelProgram.definition.identifier },
+            false,
+            "Scoped top-level Program does not duplicate its declaration in the unscoped catalog"
         )
 
         let authoredInstruction = SmokeDomain.Instructions.Debugging.definition

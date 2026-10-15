@@ -130,9 +130,19 @@ public struct ProgramMacro:
             macroName: "Program",
             lexicalContext: context.lexicalContext
         ) { declarationContext in
-            try ProgramMacroSpecification.members(
+            let members = try ProgramMacroSpecification.members(
                 in: declarationContext
-            ) + [
+            )
+            let scoped = declaration.attributes.contains { item in
+                guard let attribute = item.as(AttributeSyntax.self) else {
+                    return false
+                }
+                return attribute.attributeName.trimmedDescription == "DomainMember"
+            }
+            if scoped {
+                return members
+            }
+            return members + [
                 catalogFactoryDeclaration(
                     in: declarationContext,
                     category: "Programs",
