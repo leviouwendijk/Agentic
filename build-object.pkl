@@ -12,6 +12,13 @@ compile {
     use = false
     arguments { }
 }
+tests {
+    primary = "t_agentic"
+
+    groups {
+        context { "t_agentic_ctx" }
+    }
+}
 details = ""
 author = "levi"
 update = "https://raw.githubusercontent.com/leviouwendijk/Agentic/master/build-object.pkl"
