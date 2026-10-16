@@ -50,5 +50,14 @@ enum ContextDeterministicTestSuite {
                 contentsOf: try await ContextDeterministicFlowTesting.runHistoryPolicies()
             )
         }
+
+        Test(
+            "finding-provenance-and-invalidation",
+            tags: ["context", "evidence", "revision"]
+        ) { context in
+            await context.record(
+                contentsOf: try await ContextDeterministicFlowTesting.runFindingLifecycle()
+            )
+        }
     }
 }

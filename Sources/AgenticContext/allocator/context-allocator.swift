@@ -182,15 +182,45 @@ public extension Context {
             var used = 0
             var resolutions = 0
             let encoder = JSONEncoder()
-            for allocation in ordered {
-                guard resolutions < policy.maximumResolutions else {
+            allocationLoop: for allocation in ordered {
+                guard resolutions + 1 + allocation.dependencies.count <= policy.maximumResolutions else {
                     if allocation.required {
                         throw ContextAllocatorError.requiredEvidenceExceedsResolutionLimit(allocation.id)
                     }
                     skipped.append(allocation.id)
                     continue
                 }
-                resolutions += 1
+                resolutions += 1 + allocation.dependencies.count
+                var staleDependency = false
+                for dependency in allocation.dependencies {
+                    guard case .recorded = dependency.revision else {
+                        throw ContextAllocatorError.invalidResolution(allocation.id)
+                    }
+                    let latest = Pointer(
+                        source: dependency.source,
+                        record: dependency.record,
+                        selection: dependency.selection,
+                        revision: .latest
+                    )
+                    let observedDependency = try await resolver.resolve(latest)
+                    guard observedDependency.pointer.source == dependency.source,
+                          observedDependency.pointer.record == dependency.record,
+                          observedDependency.pointer.selection == dependency.selection,
+                          case .recorded = observedDependency.pointer.revision else {
+                        throw ContextAllocatorError.invalidResolution(allocation.id)
+                    }
+                    if observedDependency.pointer.revision != dependency.revision {
+                        staleDependency = true
+                        break
+                    }
+                }
+                if staleDependency {
+                    if allocation.required {
+                        throw ContextAllocatorError.invalidResolution(allocation.id)
+                    }
+                    skipped.append(allocation.id)
+                    continue allocationLoop
+                }
                 let observation = try await resolver.resolve(allocation.pointer)
                 guard observation.pointer.source == allocation.pointer.source,
                       observation.pointer.record == allocation.pointer.record,
