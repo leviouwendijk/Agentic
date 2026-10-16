@@ -221,6 +221,7 @@ let package = Package(
             name: "AgenticContext",
             dependencies: [
                 "Agentic",
+                .product(name: "Schema", package: "Schema"),
                 .product(name: "Tokens", package: "Tokens"),
             ]
         ),

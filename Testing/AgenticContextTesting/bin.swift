@@ -59,5 +59,13 @@ enum ContextDeterministicTestSuite {
                 contentsOf: try await ContextDeterministicFlowTesting.runFindingLifecycle()
             )
         }
+        Test(
+            "bounded-preparation-program",
+            tags: ["context", "program", "budget"]
+        ) { context in
+            await context.record(
+                contentsOf: try await ContextDeterministicFlowTesting.runBoundedPreparation()
+            )
+        }
     }
 }
