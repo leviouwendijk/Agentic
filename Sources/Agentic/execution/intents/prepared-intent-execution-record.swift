@@ -24,6 +24,7 @@ public extension PreparedIntentExecutionStatus {
 public struct PreparedIntentExecutionRecord: Sendable, Codable, Hashable, Identifiable {
     public let id: String
     public let intentID: PreparedIntentIdentifier
+    public let attemptID: String?
     public let operation: PreparedOperation.Schema
     public let status: PreparedIntentExecutionStatus
     public let summary: String
@@ -36,6 +37,7 @@ public struct PreparedIntentExecutionRecord: Sendable, Codable, Hashable, Identi
     public init(
         id: String = UUID().uuidString,
         intentID: PreparedIntentIdentifier,
+        attemptID: String? = nil,
         operation: PreparedOperation.Schema,
         status: PreparedIntentExecutionStatus,
         summary: String,
@@ -47,6 +49,7 @@ public struct PreparedIntentExecutionRecord: Sendable, Codable, Hashable, Identi
     ) {
         self.id = id
         self.intentID = intentID
+        self.attemptID = attemptID
         self.operation = operation
         self.status = status
         self.summary = summary

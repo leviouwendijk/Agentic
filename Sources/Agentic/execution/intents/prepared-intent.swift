@@ -16,6 +16,7 @@ public struct PreparedIntent: Sendable, Codable, Hashable, Identifiable {
     public var reviewedAt: Date?
     public var reviewedBy: String?
     public var reviewNote: String?
+    public var executionAttempt: PreparedIntentExecutionAttempt?
     public var executionRecord: PreparedIntentExecutionRecord?
     public var metadata: [String: String]
 
@@ -31,6 +32,7 @@ public struct PreparedIntent: Sendable, Codable, Hashable, Identifiable {
         reviewedAt: Date? = nil,
         reviewedBy: String? = nil,
         reviewNote: String? = nil,
+        executionAttempt: PreparedIntentExecutionAttempt? = nil,
         executionRecord: PreparedIntentExecutionRecord? = nil,
         metadata: [String: String] = [:]
     ) {
@@ -45,6 +47,7 @@ public struct PreparedIntent: Sendable, Codable, Hashable, Identifiable {
         self.reviewedAt = reviewedAt
         self.reviewedBy = reviewedBy
         self.reviewNote = reviewNote
+        self.executionAttempt = executionAttempt
         self.executionRecord = executionRecord
         self.metadata = metadata
     }

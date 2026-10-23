@@ -24,9 +24,9 @@ public actor PreparedIntentManager {
             metadata: draft.metadata
         )
 
-        try await store.save(
-            intent
-        )
+        guard try await store.insert(intent) else {
+            throw PreparedIntentError.intentAlreadyExists(intent.id)
+        }
 
         return intent
     }
@@ -99,6 +99,7 @@ public actor PreparedIntentManager {
         }
 
         let reviewedAt = Date()
+        let original = intent
 
         if intent.isExpired(
             at: reviewedAt
@@ -114,13 +115,11 @@ public actor PreparedIntentManager {
                 note
             )
 
-            try await store.save(
-                intent
-            )
+            guard try await store.replace(intent, matching: original) else {
+                throw PreparedIntentError.concurrentModification(id)
+            }
 
-            throw PreparedIntentError.expired(
-                id
-            )
+            throw PreparedIntentError.expired(id)
         }
 
         intent.status = decision.resolvedStatus
@@ -133,9 +132,9 @@ public actor PreparedIntentManager {
             note
         )
 
-        try await store.save(
-            intent
-        )
+        guard try await store.replace(intent, matching: original) else {
+            throw PreparedIntentError.concurrentModification(id)
+        }
 
         return intent
     }
@@ -144,32 +143,22 @@ public actor PreparedIntentManager {
         id: PreparedIntentIdentifier,
         now: Date = Date()
     ) async throws -> PreparedIntent {
-        var intent = try await get(
-            id
-        )
+        let intent = try await get(id)
 
-        if intent.isExpired(
-            at: now
-        ) {
-            intent.status = .expired
-            intent.updatedAt = now
-
-            try await store.save(
-                intent
-            )
-
-            throw PreparedIntentError.expired(
-                id
-            )
+        if intent.isExpired(at: now),
+           intent.status == .pending_review || intent.status == .approved {
+            var expired = intent
+            expired.status = .expired
+            expired.updatedAt = now
+            guard try await store.replace(expired, matching: intent) else {
+                throw PreparedIntentError.concurrentModification(id)
+            }
+            throw PreparedIntentError.expired(id)
         }
 
         guard intent.status == .approved else {
-            throw PreparedIntentError.notApproved(
-                id,
-                intent.status
-            )
+            throw PreparedIntentError.notApproved(id, intent.status)
         }
-
         return intent
     }
 
@@ -214,6 +203,7 @@ public actor PreparedIntentManager {
                 id: intent.id,
                 record: .init(
                     intentID: intent.id,
+                    attemptID: intent.executionAttempt?.id,
                     operation: intent.operation.schema,
                     status: .failed,
                     summary: "Prepared operation '\(intent.operation.schema.identifier.rawValue)' failed.",
@@ -235,6 +225,7 @@ public actor PreparedIntentManager {
             id: intent.id,
             record: .init(
                 intentID: intent.id,
+                attemptID: intent.executionAttempt?.id,
                 operation: intent.operation.schema,
                 status: .succeeded,
                 summary: "Executed prepared operation '\(intent.operation.schema.identifier.rawValue)'.",
@@ -352,18 +343,17 @@ private extension PreparedIntentManager {
         id: PreparedIntentIdentifier,
         startedAt: Date
     ) async throws -> PreparedIntent {
-        var intent = try await executableIntent(
-            id: id,
-            now: startedAt
-        )
-
+        let original = try await executableIntent(id: id, now: startedAt)
+        var intent = original
         intent.status = .executing
         intent.updatedAt = startedAt
-
-        try await store.save(
-            intent
+        intent.executionAttempt = .init(
+            startedAt: startedAt,
+            operation: intent.operation.schema
         )
-
+        guard try await store.replace(intent, matching: original) else {
+            throw PreparedIntentError.concurrentModification(id)
+        }
         return intent
     }
 
@@ -376,6 +366,13 @@ private extension PreparedIntentManager {
             throw PreparedIntentError.executionRecordIntentMismatch(
                 expected: id,
                 actual: record.intentID
+            )
+        }
+
+        guard record.attemptID == intent.executionAttempt?.id else {
+            throw PreparedIntentError.executionAttemptMismatch(
+                expected: intent.executionAttempt?.id,
+                actual: record.attemptID
             )
         }
 
@@ -396,15 +393,15 @@ private extension PreparedIntentManager {
             )
         }
 
+        let original = intent
         var intent = intent
         intent.status = record.status.resolvedIntentStatus
         intent.updatedAt = record.completedAt
         intent.executionRecord = record
 
-        try await store.save(
-            intent
-        )
-
+        guard try await store.replace(intent, matching: original) else {
+            throw PreparedIntentError.concurrentModification(id)
+        }
         return intent
     }
 

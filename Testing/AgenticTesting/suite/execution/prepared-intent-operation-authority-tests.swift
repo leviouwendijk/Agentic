@@ -73,22 +73,28 @@ private actor PreparedIntentOperationStore:
         )
     }
 
-    func save(
-        _ intent: PreparedIntent
-    ) async throws {
-        if intent.status == rejectedSaveStatus {
-            throw PreparedIntentOperationFlowError.rejectedSave(
-                intent.status
-            )
-        }
+    func insert(_ intent: PreparedIntent) async throws -> Bool {
+        guard intents[intent.id] == nil else { return false }
+        try store(intent)
+        return true
+    }
 
+    func replace(
+        _ intent: PreparedIntent,
+        matching expected: PreparedIntent
+    ) async throws -> Bool {
+        guard intent.id == expected.id,
+              intents[intent.id] == expected else { return false }
+        try store(intent)
+        return true
+    }
+
+    private func store(_ intent: PreparedIntent) throws {
+        if intent.status == rejectedSaveStatus {
+            throw PreparedIntentOperationFlowError.rejectedSave(intent.status)
+        }
         intents[intent.id] = intent
-        statusHistory[
-            intent.id,
-            default: []
-        ].append(
-            intent.status
-        )
+        statusHistory[intent.id, default: []].append(intent.status)
     }
 
     func delete(
@@ -291,6 +297,11 @@ extension ExecutionTesting {
             "PreparedIntentManager executes the exact stored prepared operation through the Execution registry"
         )
         try Expect.equal(
+            executed.executionAttempt?.id,
+            executed.executionRecord?.attemptID,
+            "terminal execution evidence refers to the durable exclusive claim"
+        )
+        try Expect.equal(
             executed.status,
             .executed,
             "successful prepared invocation execution resolves the intent lifecycle"
@@ -321,6 +332,40 @@ extension ExecutionTesting {
                 .executed,
             ],
             "execution persists an executing claim before the external operation and final evidence"
+        )
+
+        // Two independent managers sharing a store must not both claim work.
+        let concurrent_intent = try await manager.create(.init(invocation: prepared))
+        _ = try await manager.review(
+            id: concurrent_intent.id,
+            decision: .approve
+        )
+        let other_manager = PreparedIntentManager(store: store)
+        let claim_registry = registry
+        let winners = await withTaskGroup(of: Bool.self) { group in
+            for attempt in 0..<2 {
+                group.addTask {
+                    let owner = attempt == 0 ? manager : other_manager
+                    return (try? await owner.execute(
+                        id: concurrent_intent.id,
+                        using: claim_registry
+                    )) != nil
+                }
+            }
+            var count = 0
+            for await won in group where won { count += 1 }
+            return count
+        }
+        try Expect.equal(
+            winners,
+            1,
+            "only one caller can claim and execute an approved intent"
+        )
+        let claims = await store.statuses(for: concurrent_intent.id)
+        try Expect.equal(
+            claims.filter { $0 == .executing }.count,
+            1,
+            "exactly one durable execution claim was persisted"
         )
 
         let mismatchIntent = try await manager.create(

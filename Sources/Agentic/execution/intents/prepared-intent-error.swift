@@ -5,6 +5,10 @@ public enum PreparedIntentError: Error, Sendable, LocalizedError {
     case durableStorageRequired
     case intentNotFound(PreparedIntentIdentifier)
     case emptyExecutionSummary
+    case intentAlreadyExists(PreparedIntentIdentifier)
+    case concurrentModification(PreparedIntentIdentifier)
+    case executionAttemptMismatch(expected: String?, actual: String?)
+    case notDeletable(PreparedIntentIdentifier, PreparedIntentStatus)
     case notReviewable(PreparedIntentIdentifier, PreparedIntentStatus)
     case expired(PreparedIntentIdentifier)
     case notApproved(PreparedIntentIdentifier, PreparedIntentStatus)
@@ -28,6 +32,18 @@ public enum PreparedIntentError: Error, Sendable, LocalizedError {
 
         case .intentNotFound(let id):
             return "No prepared intent exists for id '\(id.rawValue)'."
+
+        case .intentAlreadyExists(let id):
+            return "Prepared intent '\(id.rawValue)' already exists."
+
+        case .notDeletable(let id, let status):
+            return "Prepared intent '\(id.rawValue)' cannot be deleted in state '\(status.rawValue)'."
+
+        case .concurrentModification(let id):
+            return "Prepared intent '\(id.rawValue)' changed concurrently; reload before transitioning."
+
+        case .executionAttemptMismatch(let expected, let actual):
+            return "Execution attempt '\(actual ?? "none")' does not match claimed attempt '\(expected ?? "none")'."
 
         case .emptyExecutionSummary:
             return "Prepared intent execution summary cannot be empty."
