@@ -20,7 +20,8 @@ internal struct ToolExecutionEngine: Sendable {
 
     internal func execute(
         _ call: ToolCall,
-        preflight: ToolPreflight
+        preflight: ToolPreflight,
+        preparedOperation: PreparedOperation.Envelope? = nil
     ) async throws -> ToolExecution.Result {
         let (value, observations) =
             try await ToolExecutionObservations.capture(
@@ -28,7 +29,8 @@ internal struct ToolExecutionEngine: Sendable {
             ) {
                 try await executeObserved(
                     call,
-                    preflight: preflight
+                    preflight: preflight,
+                    preparedOperation: preparedOperation
                 )
             }
         var result = value
@@ -38,12 +40,14 @@ internal struct ToolExecutionEngine: Sendable {
 
     private func executeObserved(
         _ call: ToolCall,
-        preflight: ToolPreflight
+        preflight: ToolPreflight,
+        preparedOperation: PreparedOperation.Envelope?
     ) async throws -> ToolExecution.Result {
         do {
             return try await registry.execute(
                 call,
-                context: context.using(approvedPreflight: preflight)
+                context: context,
+                preparedOperation: preparedOperation
             )
         } catch {
             let propagatedRecovery: Recovery.Record?
@@ -132,6 +136,7 @@ internal struct ToolExecutionEngine: Sendable {
                     outcome = try await retrySameOperation(
                         call,
                         preflight: preflight,
+                        preparedOperation: preparedOperation,
                         decision: decision,
                         attemptNumber: permit.number,
                         recovery: &recovery

@@ -21,9 +21,46 @@ where DefinitionType == ToolDefinition
         _ input: Input,
         in context: ToolContext
     ) async throws -> Output
+
+    /// The canonical preparation seam for Tools with inspectable effects.
+    func prepare(
+        _ input: Input,
+        in context: ToolContext
+    ) async throws -> CapabilityPreparation<ToolPreflight>
+
+    /// Execute exactly the prepared operation (if supplied). A prepared Tool
+    /// must reject a missing operation, not reconstruct from the input.
+    func call(
+        _ input: Input,
+        prepared operation: PreparedOperation.Envelope?,
+        in context: ToolContext
+    ) async throws -> Output
+}
+
+public enum ToolPreparationError: Error, Sendable {
+    case unexpected_prepared_operation
+    case prepared_operation_required
 }
 
 public extension Tool {
+    func prepare(
+        _ input: Input,
+        in context: ToolContext
+    ) async throws -> CapabilityPreparation<ToolPreflight> {
+        .init(review: try await preflight(input, in: context))
+    }
+
+    func call(
+        _ input: Input,
+        prepared operation: PreparedOperation.Envelope?,
+        in context: ToolContext
+    ) async throws -> Output {
+        guard operation == nil else {
+            throw ToolPreparationError.unexpected_prepared_operation
+        }
+        return try await call(input, in: context)
+    }
+
     func preflight(
         _ input: Input,
         in _: ToolContext

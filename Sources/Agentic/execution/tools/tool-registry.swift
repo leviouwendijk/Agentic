@@ -175,6 +175,16 @@ public struct ToolRegistry: Sendable {
         )
     }
 
+    public func prepare(
+        _ toolCall: ToolCall,
+        context: ToolContext
+    ) async throws -> CapabilityPreparation<ToolPreflight> {
+        guard let registered = registeredTool(identifiedBy: toolCall.tool) else {
+            throw ToolRegistryExecutionError.missingTool(toolCall.tool.rawValue)
+        }
+        return try await registered.prepare(toolCall, context: context)
+    }
+
     public func preflight(
         _ toolCall: ToolCall,
         context: ToolContext

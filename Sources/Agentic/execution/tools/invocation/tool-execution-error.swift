@@ -10,6 +10,7 @@ extension ToolExecutionEngine {
         case reconciliation_unresolved
         case applied_without_output
         case preflight_changed
+        case prepared_retry_requires_reconciliation
         case recovery_exhausted
         case action_unsupported(Recovery.Action)
 
@@ -26,6 +27,8 @@ extension ToolExecutionEngine {
 
             case .preflight_changed:
                 return "Tool preflight changed after reconciliation; retry requires fresh approval."
+            case .prepared_retry_requires_reconciliation:
+                return "A prepared operation cannot be automatically replayed; reconcile its original attempt."
 
             case .recovery_exhausted:
                 return "Tool recovery exhausted its authored mechanical recovery plan."

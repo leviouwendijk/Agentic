@@ -84,15 +84,16 @@ public struct ToolBinding: CapabilityBinding {
             risk: definition.risk
         )
     }
-    private let preflightHandler:
+    private let preparationHandler:
         @Sendable (
             ToolCall,
             ToolContext
-        ) async throws -> ToolPreflight
+        ) async throws -> CapabilityPreparation<ToolPreflight>
 
     private let callHandler:
         @Sendable (
             ToolCall,
+            PreparedOperation.Envelope?,
             ToolContext
         ) async throws -> (
             output: JSONValue,
@@ -122,7 +123,7 @@ public struct ToolBinding: CapabilityBinding {
         self.capabilityContract = T.contract
         self.modelContract = resolvedModelContract
 
-        self.preflightHandler = { call, context in
+        self.preparationHandler = { call, context in
             let input: T.Input
 
             do {
@@ -138,10 +139,10 @@ public struct ToolBinding: CapabilityBinding {
                 )
             }
 
-            let preflight: ToolPreflight
+            let preparation: CapabilityPreparation<ToolPreflight>
 
             do {
-                preflight = try await tool.preflight(
+                preparation = try await tool.prepare(
                     input,
                     in: context
                 )
@@ -155,10 +156,10 @@ public struct ToolBinding: CapabilityBinding {
                 )
             }
 
-            return preflight
+            return preparation
         }
 
-        self.callHandler = { call, context in
+        self.callHandler = { call, preparedOperation, context in
             let input: T.Input
 
             do {
@@ -180,6 +181,7 @@ public struct ToolBinding: CapabilityBinding {
             do {
                 output = try await tool.call(
                     input,
+                    prepared: preparedOperation,
                     in: context
                 )
                 isError = false
@@ -374,14 +376,18 @@ public struct ToolBinding: CapabilityBinding {
         )
     }
 
+    public func prepare(
+        _ call: ToolCall,
+        context: ToolContext
+    ) async throws -> CapabilityPreparation<ToolPreflight> {
+        try await preparationHandler(call, context)
+    }
+
     public func preflight(
         _ call: ToolCall,
         context: ToolContext
     ) async throws -> ToolPreflight {
-        try await preflightHandler(
-            call,
-            context
-        )
+        try await prepare(call, context: context).review
     }
 
     public func execute(
@@ -398,12 +404,14 @@ public struct ToolBinding: CapabilityBinding {
 
     public func execute(
         _ call: ToolCall,
-        context: ToolContext
+        context: ToolContext,
+        preparedOperation: PreparedOperation.Envelope? = nil
     ) async throws -> ToolExecution.Result {
         let (value, observations) = try await ToolExecutionObservations.capture(call: call.reference) {
             try await executeObserved(
                 call,
-                context: context
+                context: context,
+                preparedOperation: preparedOperation
             )
         }
         var result = value
@@ -413,10 +421,12 @@ public struct ToolBinding: CapabilityBinding {
 
     private func executeObserved(
         _ call: ToolCall,
-        context: ToolContext
+        context: ToolContext,
+        preparedOperation: PreparedOperation.Envelope?
     ) async throws -> ToolExecution.Result {
         let execution = try await callHandler(
             call,
+            preparedOperation,
             context
         )
 

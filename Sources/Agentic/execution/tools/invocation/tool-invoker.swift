@@ -1,6 +1,13 @@
 import Foundation
 import Workspace
 
+/// A reviewed invocation is not an authorization credential. Its policy and
+/// target must still be consistent when a trusted caller resolves approval.
+public enum ToolInvocationReviewError: Error, Sendable {
+    case mismatched_tool
+    case policy_changed
+}
+
 public struct ToolInvoker: Sendable {
     public let registry: ToolRegistry
     public let policy: ToolExecutionPolicy
@@ -30,7 +37,7 @@ public struct ToolInvoker: Sendable {
             for: invocation,
             context: context
         )
-        let preflight = try await registry.preflight(
+        let preparation = try await registry.prepare(
             ToolCall(
                 id: invocation.id,
                 tool: invocation.tool,
@@ -41,11 +48,12 @@ public struct ToolInvoker: Sendable {
 
         return .init(
             invocation: invocation,
-            preflight: preflight,
+            preflight: preparation.review,
             requirement: policy.evaluate(
-                preflight
+                preparation.review
             ),
-            references: references
+            references: references,
+            preparedOperation: preparation.operation
         )
     }
 
@@ -73,6 +81,12 @@ public struct ToolInvoker: Sendable {
         context: ToolContext,
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
+        guard review.preflight.tool == review.invocation.tool else {
+            throw ToolInvocationReviewError.mismatched_tool
+        }
+        guard policy.evaluate(review.preflight) == review.requirement else {
+            throw ToolInvocationReviewError.policy_changed
+        }
         let decision: ApprovalDecision
 
         switch review.requirement {
@@ -115,7 +129,8 @@ public struct ToolInvoker: Sendable {
                     tool: invocation.tool,
                     input: invocation.arguments
                 ),
-                preflight: review.preflight
+                preflight: review.preflight,
+                preparedOperation: review.preparedOperation
             )
 
             return .init(

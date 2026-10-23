@@ -19,6 +19,21 @@ public protocol Capability: Producer {
     static var reference: CapabilityReference { get }
 }
 
+/// One prepared capability execution retains the exact, versioned operation
+/// alongside its review projection. It is data, not an authorization grant.
+/// The executor is responsible for an authoritative approval/claim transition.
+public struct CapabilityPreparation<Review: Sendable & Codable & Hashable>:
+    Sendable, Codable, Hashable
+{
+    public let review: Review
+    public let operation: PreparedOperation.Envelope?
+
+    public init(review: Review, operation: PreparedOperation.Envelope? = nil) {
+        self.review = review
+        self.operation = operation
+    }
+}
+
 /// Derives both schemas from the authored Swift types, before any JSON
 /// lowering at a dynamic registration or model-transport boundary.
 public struct CapabilityContract: Sendable {

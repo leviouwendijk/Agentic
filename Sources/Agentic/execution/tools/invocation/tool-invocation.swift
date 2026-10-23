@@ -83,17 +83,21 @@ public extension ToolInvocation {
         public let preflight: ToolPreflight
         public let requirement: ApprovalRequirement
         public let references: [Reference]
+        /// Serialized with checkpoints. This is a prepared plan, not approval.
+        public let preparedOperation: PreparedOperation.Envelope?
 
         public init(
             invocation: ToolInvocation,
             preflight: ToolPreflight,
             requirement: ApprovalRequirement,
-            references: [Reference] = []
+            references: [Reference] = [],
+            preparedOperation: PreparedOperation.Envelope? = nil
         ) {
             self.invocation = invocation
             self.preflight = preflight
             self.requirement = requirement
             self.references = references
+            self.preparedOperation = preparedOperation
         }
     }
 
