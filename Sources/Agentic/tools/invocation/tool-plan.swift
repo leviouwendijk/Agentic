@@ -48,10 +48,12 @@ public struct ToolPlan:
                 Node.self,
                 forKey: .root
             ),
-            references: container.decode(
-                [Reference].self,
-                forKey: .references
-            )
+            references: container.contains(.references)
+                ? try container.decode(
+                    [Reference].self,
+                    forKey: .references
+                )
+                : []
         )
     }
 
@@ -255,25 +257,21 @@ public extension ToolPlan.Node {
             forKey: .kind
         )
 
-        let children = try container.decode(
-            [Self].self,
-            forKey: .children
-        )
+        let children = container.contains(.children)
+            ? try container.decode([Self].self, forKey: .children)
+            : []
 
-        let onSuccess = try container.decode(
-            [Self].self,
-            forKey: .onSuccess
-        )
+        let onSuccess = container.contains(.onSuccess)
+            ? try container.decode([Self].self, forKey: .onSuccess)
+            : []
 
-        let onFailure = try container.decode(
-            [Self].self,
-            forKey: .onFailure
-        )
+        let onFailure = container.contains(.onFailure)
+            ? try container.decode([Self].self, forKey: .onFailure)
+            : []
 
-        let onDenied = try container.decode(
-            [Self].self,
-            forKey: .onDenied
-        )
+        let onDenied = container.contains(.onDenied)
+            ? try container.decode([Self].self, forKey: .onDenied)
+            : []
 
         switch kind {
         case .call:

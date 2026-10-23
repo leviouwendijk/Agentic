@@ -83,6 +83,13 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "tool-plan-sparse-wire-defaults",
+            tags: ["agentic-execution", "tool-plan", "codable", "wire-format"]
+        ) {
+            try ExecutionTesting.runToolPlanSparseWireDefaults()
+        }
+
+        diagnosticTest(
             "tool-plan-context-propagation",
             tags: [
                 "agentic-execution",

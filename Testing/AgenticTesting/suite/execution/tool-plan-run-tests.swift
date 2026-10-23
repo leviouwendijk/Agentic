@@ -5,6 +5,81 @@ import Testing
 import Foundation
 
 enum ExecutionTesting {
+    static func runToolPlanSparseWireDefaults() throws -> [TestDiagnostic] {
+        let firstCall = ToolCall(
+            id: "sparse-wire-first",
+            tool: ToolIdentifier(rawValue: "sparse_wire_probe"),
+            input: .object([:])
+        )
+        let branchCall = ToolCall(
+            id: "sparse-wire-branch",
+            tool: ToolIdentifier(rawValue: "sparse_wire_probe"),
+            input: .object([:])
+        )
+        let encoder = JSONEncoder()
+        let firstJSON = String(
+            decoding: try encoder.encode(firstCall),
+            as: UTF8.self
+        )
+        let branchJSON = String(
+            decoding: try encoder.encode(branchCall),
+            as: UTF8.self
+        )
+
+        // Omitted arrays default recursively; absent references default to [].
+        let compact = """
+        {"id":"sparse-wire-plan","root":{"kind":"sequence","children":[{"kind":"call","call":\(firstJSON),"onSuccess":[{"kind":"call","call":\(branchJSON)}]},{"kind":"batch"}]}}
+        """
+        let decoded = try JSONDecoder().decode(
+            ToolPlan.self,
+            from: Data(compact.utf8)
+        )
+        guard decoded.references.isEmpty,
+              case .sequence(let nodes) = decoded.root,
+              nodes.count == 2,
+              case .call(let first, let execution, let success, let failure, let denied) = nodes[0],
+              first == firstCall,
+              execution == nil,
+              success.count == 1,
+              failure.isEmpty,
+              denied.isEmpty,
+              case .call(let branch, _, let nestedSuccess, let nestedFailure, let nestedDenied) = success[0],
+              branch == branchCall,
+              nestedSuccess.isEmpty,
+              nestedFailure.isEmpty,
+              nestedDenied.isEmpty,
+              case .batch(let batchChildren) = nodes[1],
+              batchChildren.isEmpty else {
+            throw AgenticExecutionFlowError.unexpectedRunState
+        }
+
+        // Present-but-null values are not omissions; prohibited children stay prohibited.
+        let nullChildren = """
+        {"id":"null-children","root":{"kind":"call","call":\(firstJSON),"children":null}}
+        """
+        let illegalChildren = """
+        {"id":"illegal-children","root":{"kind":"call","call":\(firstJSON),"children":[{"kind":"call","call":\(branchJSON)}]}}
+        """
+        guard (try? JSONDecoder().decode(ToolPlan.self, from: Data(nullChildren.utf8))) == nil,
+              (try? JSONDecoder().decode(ToolPlan.self, from: Data(illegalChildren.utf8))) == nil else {
+            throw AgenticExecutionFlowError.unexpectedRunState
+        }
+
+        // Canonical encoding continues to round-trip the fully materialized tree.
+        let roundTrip = try JSONDecoder().decode(
+            ToolPlan.self,
+            from: encoder.encode(decoded)
+        )
+        guard roundTrip == decoded else {
+            throw AgenticExecutionFlowError.unexpectedRunState
+        }
+
+        return [
+            .field("missing_arrays", "default to empty recursively"),
+            .field("invalid_arrays", "rejected"),
+        ]
+    }
+
     static func runToolPlanExecutionPolicyModel() throws -> [TestDiagnostic] {
         let interruption = ToolPlan.Run.Interruption(
             point: ToolPlan.Run.Point(
