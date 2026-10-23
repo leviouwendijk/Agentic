@@ -22,6 +22,8 @@ public struct ToolPreflight:
     public let sideEffects: [String]
     public let policyChecks: [String]
     public let warnings: [String]
+    /// Plan identity minted by preflight and consumed once by prepared mutation tools.
+    public let approvalBinding: UUID?
 
     public init(
         tool: ToolIdentifier,
@@ -32,7 +34,8 @@ public struct ToolPreflight:
         preview: Preview = .none,
         sideEffects: [String] = [],
         policyChecks: [String] = [],
-        warnings: [String] = []
+        warnings: [String] = [],
+        approvalBinding: UUID? = nil
     ) {
         self.tool = tool
         self.risk = risk
@@ -43,6 +46,7 @@ public struct ToolPreflight:
         self.sideEffects = sideEffects
         self.policyChecks = policyChecks
         self.warnings = warnings
+        self.approvalBinding = approvalBinding
     }
 
     public var description: String {

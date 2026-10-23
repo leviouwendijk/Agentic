@@ -43,7 +43,7 @@ internal struct ToolExecutionEngine: Sendable {
         do {
             return try await registry.execute(
                 call,
-                context: context
+                context: context.using(approvedPreflight: preflight)
             )
         } catch {
             let propagatedRecovery: Recovery.Record?

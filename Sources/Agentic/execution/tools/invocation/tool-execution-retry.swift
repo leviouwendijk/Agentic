@@ -65,7 +65,7 @@ extension ToolExecutionEngine {
         do {
             var result = try await registry.execute(
                 call,
-                context: context
+                context: context.using(approvedPreflight: preflight)
             )
             let state = Recovery.State(
                 reconciled:

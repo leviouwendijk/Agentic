@@ -1,5 +1,5 @@
 {
-  "originHash" : "4c5928acaa4a832d59941d962d32597007c7762716bad79542cff60d353f2387",
+  "originHash" : "ba0a92cee977067517123def2b62f39167e98692dd171d5bd3106de05cab093c",
   "pins" : [
     {
       "identity" : "arguments",
@@ -196,7 +196,7 @@
       "location" : "https://github.com/leviouwendijk/Schema.git",
       "state" : {
         "branch" : "master",
-        "revision" : "6b8f45a73ab92ce083c4848bb520db6d99866a06"
+        "revision" : "324a66baf1feaa93a3b4120727e037bb8d124cb4"
       }
     },
     {
@@ -259,7 +259,16 @@
       "location" : "https://github.com/leviouwendijk/Workspace.git",
       "state" : {
         "branch" : "master",
-        "revision" : "b6f6d8378ec23674dda5a1da1faeb62013b3b4dd"
+        "revision" : "2bfc5c4b032592d316d9349222a7dde92edccc7a"
+      }
+    },
+    {
+      "identity" : "writers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Writers.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "563ed41eff18bc0e9b57e74700786cfeca7e580b"
       }
     }
   ],
