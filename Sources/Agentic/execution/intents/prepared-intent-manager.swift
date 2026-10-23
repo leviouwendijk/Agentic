@@ -1,3 +1,5 @@
+// FROZEN: independent durable prepared-intent queue is not required by the conversation or ToolPlan bridge.
+#if AGENTIC_ENABLE_DEFERRED_INTENTS
 import Foundation
 
 public actor PreparedIntentManager {
@@ -434,3 +436,4 @@ private extension PreparedIntentManager {
         return trimmed
     }
 }
+#endif // AGENTIC_ENABLE_DEFERRED_INTENTS

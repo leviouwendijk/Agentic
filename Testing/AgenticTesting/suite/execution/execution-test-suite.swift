@@ -9,6 +9,7 @@ enum ExecutionTestSuite {
             try await ExecutionTesting.runExecutionObservations()
         }
 
+/* FROZEN: independent durable prepared-intent queue is not required by the conversation or ToolPlan bridge.
         diagnosticTest(
             "prepared-intent-operation-authority",
             tags: [
@@ -24,6 +25,7 @@ enum ExecutionTestSuite {
                 .runPreparedIntentOperationAuthority()
         }
 
+*/
         diagnosticTest(
             "prepared-operation-registry",
             tags: [
