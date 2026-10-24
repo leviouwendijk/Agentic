@@ -361,30 +361,22 @@ public extension ToolPreflight {
             public let layout: DifferenceLayout
             /// Native structural projection, produced by the source difference.
             public let tree: TreeDifferenceLayout?
-            /// Legacy persisted-preview compatibility only; new producers write `tree`.
-            /// Do not remove until historical preflight decoding has been migrated.
-            public let file_mutations: FileMutationDifference?
 
             public init(
                 title: String? = nil,
                 layout: DifferenceLayout,
-                tree: TreeDifferenceLayout? = nil,
-                file_mutations: FileMutationDifference? = nil
+                tree: TreeDifferenceLayout? = nil
             ) {
                 self.title = title
                 self.layout = layout
                 self.tree = tree
-                self.file_mutations = file_mutations
             }
 
-            public var tree_layout: TreeDifferenceLayout? {
-                tree ?? file_mutations?.tree_layout
-            }
+            public var tree_layout: TreeDifferenceLayout? { tree }
 
             public var isEmpty: Bool {
                 layout.isEmpty
                     && (tree?.lines.isEmpty ?? true)
-                    && (file_mutations?.isEmpty ?? true)
             }
         }
     }
