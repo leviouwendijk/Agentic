@@ -1,8 +1,3 @@
-public enum InferenceSpecification<Output: Sendable>: Sendable {
-    case generative
-    case decision(Decision.Specification<Output>)
-}
-
 public protocol DecisionInference: Inference {
     static func decision(
         for input: Input

@@ -105,6 +105,7 @@ public struct ModelSelectionResolver: Sendable {
             }
 
         let purpose = ordered[0].selection.purpose
+        let operation = ordered[ordered.count - 1].selection.operation
         var requirements = AgentModelRequirements(
             capabilities: []
         )
@@ -147,6 +148,7 @@ public struct ModelSelectionResolver: Sendable {
         return .init(
             selection: .init(
                 purpose: purpose,
+                operation: operation,
                 requirements: requirements,
                 preferences: preferences,
                 constraints: constraints,

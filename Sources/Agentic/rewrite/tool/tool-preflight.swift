@@ -357,18 +357,34 @@ public extension ToolPreflight {
             Hashable
         {
             public let title: String?
+            /// Text presentation; the prepared Writers plan is authoritative.
             public let layout: DifferenceLayout
+            /// Native structural projection, produced by the source difference.
+            public let tree: TreeDifferenceLayout?
+            /// Compatibility for existing preflight records. New producers use `tree`.
+            public let file_mutations: FileMutationDifference?
 
             public init(
                 title: String? = nil,
-                layout: DifferenceLayout
+                layout: DifferenceLayout,
+                tree: TreeDifferenceLayout? = nil,
+                file_mutations: FileMutationDifference? = nil
             ) {
                 self.title = title
                 self.layout = layout
+                self.tree = tree
+                self.file_mutations = file_mutations
+            }
+
+            public var text_layout: DifferenceLayout { layout }
+            public var tree_layout: TreeDifferenceLayout? {
+                tree ?? file_mutations?.tree_layout
             }
 
             public var isEmpty: Bool {
                 layout.isEmpty
+                    && (tree?.lines.isEmpty ?? true)
+                    && (file_mutations?.isEmpty ?? true)
             }
         }
     }

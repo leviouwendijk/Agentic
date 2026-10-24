@@ -162,7 +162,8 @@ public struct InferenceAttemptExecutor:
             capabilities: []
         )
     ) async throws -> InferenceAttemptResult<InferenceType.Output> {
-        switch try inference.specification(for: input) {
+        let specification = try inference.specification(for: input)
+        switch specification {
         case .generative:
             break
         case .decision:
@@ -264,6 +265,7 @@ public struct InferenceAttemptExecutor:
             let invocationIndex = invocationPermit.index
 
             var selection = context.modelSelection
+            selection.operation = specification.operation
             selection.requirements = selection.requirements
                 .merging(
                     context.requirements
