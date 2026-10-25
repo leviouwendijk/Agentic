@@ -51,7 +51,7 @@ public struct ToolBinding: CapabilityBinding {
 
     public let definition: ToolDefinition
     /// Always retains the typed contract, even for a host-only Tool.
-    public let capabilityContract: CapabilityContract
+    public let contract: CapabilityContract
     public let modelContract: ToolModelContract
 
     public var semanticInputSchema: JSONSchema? {
@@ -120,7 +120,7 @@ public struct ToolBinding: CapabilityBinding {
                 )
 
         self.definition = T.definition
-        self.capabilityContract = T.contract
+        self.contract = T.contract
         self.modelContract = resolvedModelContract
 
         self.preparationHandler = { call, context in

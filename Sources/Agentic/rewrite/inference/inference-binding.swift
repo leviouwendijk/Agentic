@@ -4,7 +4,7 @@ import Schema
 /// A resolved typed Inference, preparing invocations without performing model calls.
 public struct InferenceBinding: CapabilityBinding {
     public let definition: InferenceDefinition
-    public let capabilityContract: CapabilityContract
+    public let contract: CapabilityContract
     public let defaultRealization: InferenceRealizationConfiguration?
 
     private let prepareHandler: @Sendable (
@@ -18,7 +18,7 @@ public struct InferenceBinding: CapabilityBinding {
         defaultRealization: InferenceRealizationConfiguration? = nil
     ) {
         self.definition = I.definition
-        self.capabilityContract = I.contract
+        self.contract = I.contract
         self.defaultRealization = defaultRealization
         self.prepareHandler = { input, realization, context in
             try I.invocation(
@@ -38,11 +38,11 @@ public struct InferenceBinding: CapabilityBinding {
     }
 
     public var semanticInputSchema: JSONSchema {
-        capabilityContract.input
+        contract.input
     }
 
     public var semanticOutputSchema: JSONSchema {
-        capabilityContract.output
+        contract.output
     }
 
     public var modelFacingInputSchema: JSONSchema {

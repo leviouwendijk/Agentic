@@ -25,7 +25,7 @@
       "location" : "https://github.com/leviouwendijk/Difference.git",
       "state" : {
         "branch" : "master",
-        "revision" : "fefa84199e41c4fc0142d2f8766b290973e488fb"
+        "revision" : "df94b0fb6edef42c9a09d726d2246d5d996cac20"
       }
     },
     {
@@ -160,7 +160,7 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "d9a6c6822a3bd030979451f31835db3f3cd67fa2"
+        "revision" : "74458da6a6262002ea7b006f37844ec7a5aa04f5"
       }
     },
     {

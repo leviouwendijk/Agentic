@@ -5,13 +5,13 @@ import Schema
 /// Launch, looping, child identity, approvals and suspension belong to Runtime.
 public struct AgentBinding: CapabilityBinding {
     public let definition: AgentDefinition
-    public let capabilityContract: CapabilityContract
+    public let contract: CapabilityContract
 
     private let validateInputHandler: @Sendable (JSONValue) throws -> Void
 
     public init<A: Agent>(_ agent: A.Type) {
         self.definition = A.definition
-        self.capabilityContract = A.contract
+        self.contract = A.contract
         self.validateInputHandler = { input in
             _ = try JSONCoding.default.decode(A.Input.self, from: input)
         }

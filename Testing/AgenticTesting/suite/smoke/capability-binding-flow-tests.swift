@@ -13,7 +13,7 @@ func runCapabilityBindingSmoke() throws {
     let tool = try tools.binding(for: toolReference)
     try Expect.equal(tool.reference, toolReference, "tool binding preserves identity")
     try Expect.equal(
-        tool.capabilityContract.input,
+        tool.contract.input,
         SmokeTool.contract.input,
         "tool binding retains typed semantic input schema"
     )
@@ -48,7 +48,7 @@ func runCapabilityBindingSmoke() throws {
     let program = try programs.binding(for: programReference)
     try Expect.equal(program.reference, programReference, "program binding preserves identity")
     try Expect.equal(
-        program.capabilityContract.output,
+        program.contract.output,
         SmokeDomain.Programs.MacroSmokeProgram.contract.output,
         "program binding retains semantic output schema"
     )

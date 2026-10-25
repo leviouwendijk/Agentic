@@ -14,7 +14,7 @@ func runCapabilityKindBindingsSmoke() throws {
     let inference = InferenceBinding(I.self)
     try Expect.equal(inference.reference, I.reference, "inference reference stays typed")
     try Expect.equal(
-        inference.capabilityContract.input,
+        inference.contract.input,
         I.contract.input,
         "inference binding retains the authored input contract"
     )
@@ -57,7 +57,7 @@ func runCapabilityKindBindingsSmoke() throws {
     typealias A = SmokeDomain.Agents.MacroSmokeAgent
     let agent = AgentBinding(A.self)
     try Expect.equal(agent.reference, A.reference, "agent reference stays typed")
-    try Expect.equal(agent.capabilityContract.output, A.contract.output,
+    try Expect.equal(agent.contract.output, A.contract.output,
                      "agent binding retains authored output contract")
     let agentRaw = CapabilityCall.Raw(
         id: "agent-binding-smoke",

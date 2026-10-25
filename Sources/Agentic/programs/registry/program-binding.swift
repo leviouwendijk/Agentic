@@ -10,7 +10,7 @@ public struct ProgramBinding: CapabilityBinding {
         .program(definition.identifier)
     }
     public let definition: ProgramDefinition
-    public let capabilityContract: CapabilityContract
+    public let contract: CapabilityContract
 
     private let runHandler:
         @Sendable (
@@ -22,7 +22,7 @@ public struct ProgramBinding: CapabilityBinding {
         _ program: ProgramType
     ) {
         self.definition = ProgramType.definition
-        self.capabilityContract = ProgramType.contract
+        self.contract = ProgramType.contract
         self.runHandler = { input, context in
             let decoded = try input.decode(
                 ProgramType.Input.self
