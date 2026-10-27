@@ -1,5 +1,5 @@
 {
-  "originHash" : "e09e4c048b0748577c13d630c3629eb0b9f4913a7db568a8f2fbeea5ef17cdc3",
+  "originHash" : "b6b0ac398a6895299160d9875320ba1b2715ebe9b119f1e3b58cfa71ed983066",
   "pins" : [
     {
       "identity" : "arguments",
@@ -116,6 +116,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "5ac7de66e96468fb00a5fb5748fd85101a009968"
+      }
+    },
+    {
+      "identity" : "math",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Math.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "92a41271b1de32c218b45404a2a4640c633c4400"
       }
     },
     {

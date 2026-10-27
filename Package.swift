@@ -130,8 +130,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Tokens.git",
             branch: "master"
         ),
-        // Local sibling while Math is being bootstrapped; switch to its Git URL when published.
-        .package(path: "../Math"),
+        .package(
+            url: "https://github.com/leviouwendijk/Math.git",
+            branch: "master"
+        ),
     ],
     targets: [
         .target(
