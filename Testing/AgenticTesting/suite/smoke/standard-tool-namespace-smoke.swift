@@ -84,6 +84,18 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ReadGuidelineChapter.Output.self
     )
     ContractProof.tool(
+        Standard.Tools.InspectValues.self
+    )
+    ContractProof.source(
+        Standard.Tools.InspectValues.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.InspectValues.Entry.self
+    )
+    ContractProof.result(
+        Standard.Tools.InspectValues.Output.self
+    )
+    ContractProof.tool(
         Standard.Tools.ClarifyWithUser.self
     )
     ContractProof.source(
@@ -205,6 +217,10 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.ReadGuidelineChapter.definition.identifier.rawValue,
         expected: "read_guideline_chapter"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.InspectValues.definition.identifier.rawValue,
+        expected: "inspect_values"
     )
     try ContractProof.identifier(
         Standard.Tools.ClarifyWithUser.definition.identifier.rawValue,
