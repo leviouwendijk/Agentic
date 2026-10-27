@@ -18,7 +18,7 @@ extension Agentic {
 
         public func registry(
             @AgentToolBuilder
-            _ content: () throws -> [AgentToolRegistration]
+            _ content: () throws -> [ToolBinding]
         ) throws -> ToolRegistry {
             var registry = ToolRegistry()
 
@@ -39,7 +39,7 @@ extension Agentic {
 
         public static func registry(
             @AgentToolBuilder
-            _ content: () throws -> [AgentToolRegistration]
+            _ content: () throws -> [ToolBinding]
         ) throws -> ToolRegistry {
             try Self().registry(
                 content

@@ -97,18 +97,18 @@ public struct ToolInventory:
     }
 
     public static func materialize(
-        registrations: [AgentToolRegistration],
+        bindings: [ToolBinding],
         registry: ToolRegistry
     ) throws -> Self {
         var metadataByIdentifier:
             [AgentToolCollectionIdentifier: AgentToolCollectionMetadata] = [:]
-        var registrationGroups:
-            [AgentToolCollectionIdentifier: [AgentToolRegistration]] = [:]
+        var bindingGroups:
+            [AgentToolCollectionIdentifier: [ToolBinding]] = [:]
         var collectionOrder:
             [AgentToolCollectionIdentifier] = []
 
-        for registration in registrations {
-            let metadata = registration.collection
+        for binding in bindings {
+            let metadata = binding.collection
                 ?? .ungrouped
             let identifier = metadata.identifier
 
@@ -126,9 +126,9 @@ public struct ToolInventory:
                 )
             }
 
-            registrationGroups[identifier, default: []]
+            bindingGroups[identifier, default: []]
                 .append(
-                    registration
+                    binding
                 )
         }
 
@@ -157,12 +157,10 @@ public struct ToolInventory:
 
             var isolatedRegistry = ToolRegistry()
 
-            for registration in
-                registrationGroups[collectionIdentifier] ?? []
+            for binding in
+                bindingGroups[collectionIdentifier] ?? []
             {
-                try registration.apply(
-                    into: &isolatedRegistry
-                )
+                try isolatedRegistry.register(binding)
             }
 
             let toolIdentifiers = isolatedRegistry

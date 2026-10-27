@@ -8,7 +8,7 @@ extension ExecutionTesting {
         async throws
         -> [TestDiagnostic]
     {
-        let registrations = tools {
+        let bindings = tools {
             collection(
                 "core",
                 title: "Core"
@@ -33,7 +33,7 @@ extension ExecutionTesting {
         }
 
         var registry = try Agentic.tool.registry {
-            registrations
+            bindings
         }
 
         try registry.register {
@@ -49,7 +49,7 @@ extension ExecutionTesting {
         )
 
         let inventory = try ToolInventory.materialize(
-            registrations: registrations,
+            bindings: bindings,
             registry: registry
         )
 
@@ -149,7 +149,7 @@ extension ExecutionTesting {
 private func proveConflictingToolInventoryCollectionMetadataFails()
     throws
 {
-    let registrations = tools {
+    let bindings = tools {
         collection(
             "shared",
             title: "First"
@@ -170,12 +170,12 @@ private func proveConflictingToolInventoryCollectionMetadataFails()
     }
 
     let registry = try Agentic.tool.registry {
-        registrations
+        bindings
     }
 
     do {
         _ = try ToolInventory.materialize(
-            registrations: registrations,
+            bindings: bindings,
             registry: registry
         )
 

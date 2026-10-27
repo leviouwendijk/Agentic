@@ -53,6 +53,8 @@ public struct ToolBinding: CapabilityBinding {
     /// Always retains the typed contract, even for a host-only Tool.
     public let contract: CapabilityContract
     public let modelContract: ToolModelContract
+    /// Optional DSL/inventory grouping; never changes executable Tool behavior.
+    public private(set) var collection: AgentToolCollectionMetadata?
 
     public var semanticInputSchema: JSONSchema? {
         modelContract.semanticInputSchema
@@ -122,6 +124,7 @@ public struct ToolBinding: CapabilityBinding {
         self.definition = T.definition
         self.contract = T.contract
         self.modelContract = resolvedModelContract
+        self.collection = nil
 
         self.preparationHandler = { call, context in
             let input: T.Input
@@ -312,6 +315,16 @@ public struct ToolBinding: CapabilityBinding {
                 return .unknown
             }
         }
+    }
+
+    /// Returns an independently grouped copy for declarative tool inventories.
+    /// Does not alter the binding's executable contract.
+    public func assigning(
+        collection: AgentToolCollectionMetadata
+    ) -> Self {
+        var binding = self
+        binding.collection = collection
+        return binding
     }
 
     /// Parse one raw model/provider ToolCall into its canonical invocation.

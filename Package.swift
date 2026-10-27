@@ -36,6 +36,12 @@ let package = Package(
             ]
         ),
 
+        // opt-in deterministic calculations
+        .library(
+            name: "AgenticMath",
+            targets: ["AgenticMath"]
+        ),
+
         // known model library 
         .library(
             name: "AgenticModels",
@@ -55,6 +61,12 @@ let package = Package(
             name: "t_agentic_ctx",
             targets: [
                 "AgenticContextTesting",
+            ]
+        ),
+        .executable(
+            name: "t_agentic_math",
+            targets: [
+                "AgenticMathTesting",
             ]
         ),
     ],
@@ -118,6 +130,8 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Tokens.git",
             branch: "master"
         ),
+        // Local sibling while Math is being bootstrapped; switch to its Git URL when published.
+        .package(path: "../Math"),
     ],
     targets: [
         .target(
@@ -163,6 +177,16 @@ let package = Package(
             name: "AgenticModels",
             dependencies: [
                 "Agentic",
+            ]
+        ),
+        .target(
+            name: "AgenticMath",
+            dependencies: [
+                "Agentic",
+                .product(name: "Math", package: "Math"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Schema", package: "Schema"),
             ]
         ),
         .target(
@@ -233,6 +257,14 @@ let package = Package(
                 .product(name: "Testing", package: "Testing"),
             ],
             path: "Testing/AgenticContextTesting"
+        ),
+        .executableTarget(
+            name: "AgenticMathTesting",
+            dependencies: [
+                "AgenticMath",
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticMathTesting"
         ),
         .target(
             name: "AgenticLinkerCatalogFixture",

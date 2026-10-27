@@ -1,29 +1,22 @@
 public extension ToolRegistry {
     init(
-        @AgentToolBuilder _ content: () throws -> [AgentToolRegistration]
+        @AgentToolBuilder _ content: () throws -> [ToolBinding]
     ) throws {
         self.init()
-
-        try register(
-            content
-        )
+        try register(content)
     }
 
     mutating func register(
-        @AgentToolBuilder _ content: () throws -> [AgentToolRegistration]
+        @AgentToolBuilder _ content: () throws -> [ToolBinding]
     ) throws {
-        let registrations = try content()
-
-        for registration in registrations {
-            try registration.apply(
-                into: &self
-            )
+        for binding in try content() {
+            try register(binding)
         }
     }
 }
 
 public func tools(
-    @AgentToolBuilder _ content: () throws -> [AgentToolRegistration]
-) rethrows -> [AgentToolRegistration] {
+    @AgentToolBuilder _ content: () throws -> [ToolBinding]
+) rethrows -> [ToolBinding] {
     try content()
 }
