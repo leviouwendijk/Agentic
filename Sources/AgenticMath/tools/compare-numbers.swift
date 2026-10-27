@@ -31,8 +31,10 @@ public extension Math.Tools {
             }
         }
 
-        public static let purpose =
-            "Compare two base-10 decimal literals without converting through Double; optionally report whether their difference exceeds a tolerance."
+        public static let purpose = """
+        Compare two base-10 decimal literals without converting through Double; optionally report whether their difference exceeds a tolerance.
+        """
+
         public static let risk: ActionRisk = .observe
 
         public init() {}

@@ -45,8 +45,10 @@ public extension Math.Tools {
             }
         }
 
-        public static let purpose =
-            "Evaluate up to 32 ordered decimal operations, including explicit one-operand rounding (scale 0...16; plain, bankers, down, up). Inputs are decimal strings or prior step IDs. Binary operations retain a default intermediate scale of 12."
+        public static let purpose = """
+        Evaluate up to 32 ordered decimal operations, including explicit one-operand rounding (scale 0...16; plain, bankers, down, up). Inputs are decimal strings or prior step IDs. Binary operations retain a default intermediate scale of 12.
+        """
+
         public static let risk: ActionRisk = .observe
 
         public init() {}
