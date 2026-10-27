@@ -69,6 +69,18 @@ enum AssertionTestSuite {
             try Expect.equal(frozen.frozen, true, "Frozen set")
             let previous = try await store.load(id: "acceptance", revision: 1)
             try Expect.equal(previous?.revision, 1, "Old pinned revision remains accessible")
+            let missing = try await store.load(id: "acceptance", revision: 3)
+            try Expect.equal(missing == nil, true, "Unknown pinned revision must not return latest")
+            let latest = try await store.load(id: "acceptance")
+            try Expect.equal(latest?.revision, 2, "Unpinned load still returns latest")
+            do {
+                _ = try await Assertions.Tools.EvaluateSet(store: store).call(
+                    .init(id: "acceptance", revision: 3), in: .init()
+                )
+                throw AssertionTestingFailure.failed
+            } catch AssertionSetStoreError.missing {
+                // An unknown pinned revision must not evaluate a different revision.
+            }
             do {
                 _ = try await store.define(id: "acceptance", expectedRevision: 2, assertions: assertions, freeze: false)
                 throw AssertionTestingFailure.failed

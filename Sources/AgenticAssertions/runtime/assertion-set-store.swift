@@ -25,10 +25,13 @@ public actor AssertionSetStore {
         try validate(id)
         if let revision, let cached = cache[id]?[revision] { return cached }
         guard let directory else {
+            // A pinned revision may only be returned on an exact match.
+            guard revision == nil else { return nil }
             return cache[id]?.values.max(by: { $0.revision < $1.revision })
         }
         let setDirectory = directory.appendingPathComponent(id, isDirectory: true)
         guard FileManager.default.fileExists(atPath: setDirectory.path) else {
+            guard revision == nil else { return nil }
             return cache[id]?.values.max(by: { $0.revision < $1.revision })
         }
         let files = try FileManager.default.contentsOfDirectory(

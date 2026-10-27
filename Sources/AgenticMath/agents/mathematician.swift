@@ -2,7 +2,7 @@ import Agentic
 
 extension Math.Agents {
     @Agent
-    enum Mathematician {
+    public enum Mathematician {
         typealias Input = String
         typealias Output = String
 
