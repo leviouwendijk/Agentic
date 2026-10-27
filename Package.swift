@@ -36,6 +36,12 @@ let package = Package(
             ]
         ),
 
+        // opt-in declarative assertions
+        .library(
+            name: "AgenticAssertions",
+            targets: ["AgenticAssertions"]
+        ),
+
         // opt-in deterministic calculations
         .library(
             name: "AgenticMath",
@@ -68,6 +74,10 @@ let package = Package(
             targets: [
                 "AgenticMathTesting",
             ]
+        ),
+        .executable(
+            name: "t_agentic_assertions",
+            targets: ["AgenticAssertionsTesting"]
         ),
     ],
     dependencies: [
@@ -182,6 +192,16 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticAssertions",
+            dependencies: [
+                "Agentic",
+                .product(name: "Testing", package: "Testing"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Workspace", package: "Workspace"),
+            ]
+        ),
+        .target(
             name: "AgenticMath",
             dependencies: [
                 "Agentic",
@@ -259,6 +279,15 @@ let package = Package(
                 .product(name: "Testing", package: "Testing"),
             ],
             path: "Testing/AgenticContextTesting"
+        ),
+        .executableTarget(
+            name: "AgenticAssertionsTesting",
+            dependencies: [
+                "Agentic",
+                "AgenticAssertions",
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticAssertionsTesting"
         ),
         .executableTarget(
             name: "AgenticMathTesting",
