@@ -1,17 +1,18 @@
+import Schema
 import Agentic
 
 extension Math.Agents {
     @Agent
     public enum Mathematician {
-        typealias Input = String
-        typealias Output = String
+        public typealias Input = String
+        public typealias Output = String
 
-        static let purpose = """
+        public static let purpose = """
         Mathematical computation, numerical analysis,
         and deterministic tool integration testing.
         """
 
-        static let instructions = """
+        public static let instructions = """
         You are a mathematical testing and analysis agent.
 
         Use the installed mathematical tools for calculations,
@@ -46,7 +47,7 @@ extension Math.Agents {
         Do not perform repository operations or unrelated work.
         """
 
-        static let capabilities = AgentCapabilities(
+        public static let capabilities = AgentCapabilities(
             available: .init(
                 domains: [
                     Math.self
