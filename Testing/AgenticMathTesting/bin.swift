@@ -69,6 +69,46 @@ enum AgenticMathTestSuite {
             )
         }
 
+        Test("round-as-chained-unary-step") {
+            let result = try Math.Calculation.Evaluator.evaluate(
+                .init(steps: [
+                    .init(
+                        id: "division", operation: .divide,
+                        operands: [.value("10"), .value("3")]
+                    ),
+                    .init(
+                        id: "money", operation: .round,
+                        operands: [.ref("division")],
+                        rounding: .init(scale: 2, mode: .bankers)
+                    ),
+                ], outputs: ["division", "money"])
+            )
+            try Expect.equal(result.outputs[0].value, "3.333333333333", "Working decimal")
+            try Expect.equal(result.outputs[1].value, "3.33", "Explicit rounding")
+        }
+
+        Test("reject-invalid-rounding-step") {
+            try Expect.throwsError("Unary rounding requires a policy") {
+                _ = try Math.Calculation.Evaluator.evaluate(.init(steps: [
+                    .init(id: "bad", operation: .round, operands: [.value("1.23")])
+                ]))
+            }
+            try Expect.throwsError("Non-rounding step cannot receive rounding policy") {
+                _ = try Math.Calculation.Evaluator.evaluate(.init(steps: [
+                    .init(id: "bad", operation: .add,
+                          operands: [.value("1"), .value("2")],
+                          rounding: .init(scale: 2))
+                ]))
+            }
+        }
+
+        Test("compare-tool-identifier") {
+            try Expect.equal(
+                Math.Tools.CompareNumbers.definition.identifier.rawValue,
+                "compare_numbers", "Compare tool identifier"
+            )
+        }
+
         Test("reject-forward-reference") {
             try Expect.throwsError("Reject future step reference") {
                 _ = try Math.Calculation.Evaluator.evaluate(

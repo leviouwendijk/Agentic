@@ -8,6 +8,7 @@ public extension Math.Calculation {
         case invalidID(String)
         case duplicateID(String)
         case invalidArity(String)
+        case invalidRounding(String)
         case invalidOperand(String)
         case unknownReference(String)
         case invalidOutputs
@@ -36,8 +37,22 @@ public extension Math.Calculation {
                 guard !declared.contains(step.id) else {
                     throw Failure.duplicateID(step.id)
                 }
-                guard step.operands.count == 2 else {
-                    throw Failure.invalidArity(step.id)
+                switch step.operation {
+                case .round:
+                    guard step.operands.count == 1 else {
+                        throw Failure.invalidArity(step.id)
+                    }
+                    guard let rounding = step.rounding,
+                          (0...16).contains(rounding.scale) else {
+                        throw Failure.invalidRounding(step.id)
+                    }
+                case .add, .subtract, .multiply, .divide:
+                    guard step.operands.count == 2 else {
+                        throw Failure.invalidArity(step.id)
+                    }
+                    guard step.rounding == nil else {
+                        throw Failure.invalidRounding(step.id)
+                    }
                 }
 
                 for operand in step.operands {
@@ -75,22 +90,41 @@ public extension Math.Calculation {
 
             for step in input.steps {
                 let lhs = try operand(step.operands[0], in: resolved)
-                let rhs = try operand(step.operands[1], in: resolved)
-                let operation: DecimalArithmetic.Operation
+                let number: Decimal
 
                 switch step.operation {
-                case .add: operation = .add
-                case .subtract: operation = .subtract
-                case .multiply: operation = .multiply
-                case .divide: operation = .divide
+                case .round:
+                    // validate(_:) guarantees presence and scale bounds.
+                    guard let rounding = step.rounding else {
+                        throw Failure.invalidRounding(step.id)
+                    }
+                    let mode: DecimalArithmetic.RoundingMode
+                    switch rounding.mode ?? .plain {
+                    case .plain: mode = .plain
+                    case .bankers: mode = .bankers
+                    case .down: mode = .down
+                    case .up: mode = .up
+                    }
+                    number = try DecimalArithmetic.round(
+                        lhs,
+                        scale: rounding.scale,
+                        mode: mode
+                    )
+                case .add, .subtract, .multiply, .divide:
+                    let rhs = try operand(step.operands[1], in: resolved)
+                    let operation: DecimalArithmetic.Operation
+                    switch step.operation {
+                    case .add: operation = .add
+                    case .subtract: operation = .subtract
+                    case .multiply: operation = .multiply
+                    case .divide: operation = .divide
+                    case .round: preconditionFailure("Handled above")
+                    }
+                    // Retain the existing scale behavior for older callers.
+                    number = try DecimalArithmetic.calculate(
+                        operation, lhs: lhs, rhs: rhs, scale: scale
+                    )
                 }
-
-                let number = try DecimalArithmetic.calculate(
-                    operation,
-                    lhs: lhs,
-                    rhs: rhs,
-                    scale: scale
-                )
                 resolved[step.id] = number
                 results.append(
                     .init(id: step.id, value: DecimalArithmetic.string(number))

@@ -8,7 +8,9 @@ public extension Math.Tools {
     struct Calculate: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// Ordered operations; each reference must point to an earlier step.
+            /// Ordered decimal steps. The unary `round` operation accepts one
+            /// operand and a `rounding` policy; binary arithmetic accepts two.
+            /// Each reference must point to an earlier step.
             public let steps: [Math.Calculation.Step]
             /// Result IDs to return. Defaults to the final step.
             public let outputs: [String]?
@@ -44,7 +46,7 @@ public extension Math.Tools {
         }
 
         public static let purpose =
-            "Evaluate up to 32 deterministic, chained decimal arithmetic steps. Operands accept literal numeric strings or references to prior step IDs."
+            "Evaluate up to 32 ordered decimal operations, including explicit one-operand rounding (scale 0...16; plain, bankers, down, up). Inputs are decimal strings or prior step IDs. Binary operations retain a default intermediate scale of 12."
         public static let risk: ActionRisk = .observe
 
         public init() {}

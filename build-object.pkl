@@ -17,6 +17,7 @@ tests {
 
     groups {
         context { "t_agentic_ctx" }
+        math { "t_agentic_math" }
     }
 }
 details = ""

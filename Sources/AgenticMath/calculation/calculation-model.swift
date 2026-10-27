@@ -11,6 +11,26 @@ public extension Math {
             case subtract
             case multiply
             case divide
+            case round
+        }
+
+        @JSONSchema
+        public enum RoundingMode: String, Sendable, Codable, Hashable, CaseIterable {
+            case plain
+            case bankers
+            case down
+            case up
+        }
+
+        @JSONSchema
+        public struct Rounding: HashableSource {
+            public let scale: Int
+            public let mode: RoundingMode?
+
+            public init(scale: Int, mode: RoundingMode? = nil) {
+                self.scale = scale
+                self.mode = mode
+            }
         }
 
         /// Exactly one of literal/reference must be supplied.
@@ -38,15 +58,19 @@ public extension Math {
             public let id: String
             public let operation: Operation
             public let operands: [Operand]
+            /// Required for unary round; forbidden for arithmetic operations.
+            public let rounding: Rounding?
 
             public init(
                 id: String,
                 operation: Operation,
-                operands: [Operand]
+                operands: [Operand],
+                rounding: Rounding? = nil
             ) {
                 self.id = id
                 self.operation = operation
                 self.operands = operands
+                self.rounding = rounding
             }
         }
 
