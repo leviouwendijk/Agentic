@@ -1,5 +1,5 @@
 {
-  "originHash" : "b6b0ac398a6895299160d9875320ba1b2715ebe9b119f1e3b58cfa71ed983066",
+  "originHash" : "81519782ec6b9bde87d0b69fe693b5972e8a8fa38a782b9b3653af9c19013590",
   "pins" : [
     {
       "identity" : "arguments",
@@ -124,7 +124,7 @@
       "location" : "https://github.com/leviouwendijk/Math.git",
       "state" : {
         "branch" : "master",
-        "revision" : "9afa9549fc174fe6ff453af9fd6c1137db3f8f8a"
+        "revision" : "5a357079d1418897dc525712acd656e520a6250d"
       }
     },
     {
@@ -169,7 +169,7 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "4c3b7d631c4fe942fb6111ae053b4a5001024555"
+        "revision" : "cc5a5cef6cb9aba86ddc0e1767510e467dd6af44"
       }
     },
     {

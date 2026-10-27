@@ -109,6 +109,52 @@ enum AgenticMathTestSuite {
             )
         }
 
+
+        Test("ratio-and-aggregate-tool-contract") {
+            try Expect.equal(Math.Tools.RatioNumbers.definition.identifier.rawValue, "ratio_numbers", "Ratio ID")
+            try Expect.equal(Math.Tools.AggregateNumbers.definition.identifier.rawValue, "aggregate_numbers", "Aggregate ID")
+            let result = try Math.Tools.RatioNumbers.evaluate(.init(
+                operation: .percentage_change, lhs: "100", rhs: "115"
+            ))
+            try Expect.equal(result.value, "15", "Percentage points")
+            let aggregate = try Math.Tools.AggregateNumbers.evaluate(.init(
+                operation: .weighted_mean, values: ["10", "20"], weights: ["1", "3"]
+            ))
+            try Expect.equal(aggregate.value, "17.5", "Weighted mean via tool")
+            try Expect.throwsError("Mismatch weights rejected") {
+                _ = try Math.Tools.AggregateNumbers.evaluate(.init(
+                    operation: .weighted_mean, values: ["10", "20"], weights: ["1"]
+                ))
+            }
+        }
+
+
+        Test("allocation-tool-reconciles") {
+            try Expect.equal(Math.Tools.AllocateNumbers.definition.identifier.rawValue, "allocate_numbers", "Allocation ID")
+            let output = try Math.Tools.AllocateNumbers.evaluate(.init(total: "100", weights: ["1", "1", "1"]))
+            try Expect.equal(output.allocations, ["33.34", "33.33", "33.33"], "Deterministic fair remainder")
+            try Expect.equal(output.reconciled_total, "100", "Exact total")
+        }
+
+
+        Test("plot-ready-series-tool-keeps-x-alignment") {
+            try Expect.equal(Math.Tools.AnalyzeSeries.definition.identifier.rawValue, "analyze_series", "Series ID")
+            let points: [Math.Tools.AnalyzeSeries.Point] = [
+                .init(x: "jan", value: "10"),
+                .init(x: "feb", value: "20"),
+                .init(x: "mar", value: "30")
+            ]
+            let diff = try Math.Tools.AnalyzeSeries.evaluate(.init(operation: .difference, points: points))
+            try Expect.equal(diff.points.map(\.x), ["feb", "mar"], "Difference aligned to later observations")
+            try Expect.equal(diff.points.map(\.value), ["10", "10"], "Differences")
+            let moving = try Math.Tools.AnalyzeSeries.evaluate(.init(operation: .moving_mean, points: points, window: 2))
+            try Expect.equal(moving.points.map(\.x), ["feb", "mar"], "Moving window end alignment")
+            try Expect.equal(moving.points.map(\.value), ["15", "25"], "Rolling means")
+            try Expect.throwsError("Invalid rolling window rejected") {
+                _ = try Math.Tools.AnalyzeSeries.evaluate(.init(operation: .moving_mean, points: points, window: 0))
+            }
+        }
+
         Test("reject-forward-reference") {
             try Expect.throwsError("Reject future step reference") {
                 _ = try Math.Calculation.Evaluator.evaluate(
