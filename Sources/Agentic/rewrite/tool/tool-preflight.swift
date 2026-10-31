@@ -14,6 +14,7 @@ public struct ToolPreflight:
     public let tool: ToolIdentifier
     public let risk: ActionRisk
     public let summary: String
+    public let mayChangeSource: Bool?
 
     public let access: Access
     public let estimates: Estimates
@@ -30,6 +31,7 @@ public struct ToolPreflight:
         access: Access = .none,
         estimates: Estimates = .none,
         preview: Preview = .none,
+        mayChangeSource: Bool? = nil,
         sideEffects: [String] = [],
         policyChecks: [String] = [],
         warnings: [String] = []
@@ -40,9 +42,14 @@ public struct ToolPreflight:
         self.access = access
         self.estimates = estimates
         self.preview = preview
+        self.mayChangeSource = mayChangeSource
         self.sideEffects = sideEffects
         self.policyChecks = policyChecks
         self.warnings = warnings
+    }
+
+    public var mayInvalidateSourceState: Bool {
+        mayChangeSource ?? risk.isMutating
     }
 
     public var description: String {
@@ -51,6 +58,10 @@ public struct ToolPreflight:
             "risk: \(risk.rawValue)",
             "summary: \(summary)",
         ]
+
+        if let mayChangeSource {
+            lines.append("may change source: \(mayChangeSource)")
+        }
 
         if !access.roots.isEmpty {
             lines.append(
