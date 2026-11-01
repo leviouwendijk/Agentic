@@ -29,6 +29,7 @@ extension Math.Agents {
         - \(Math.Tools.AggregateNumbers.identifier.rawValue)
         - \(Math.Tools.AllocateNumbers.identifier.rawValue)
         - \(Math.Tools.AnalyzeSeries.identifier.rawValue)
+        - \(Math.Tools.VerifyNumbers.identifier.rawValue)
 
         Rules:
         1. Use actual tool invocations for requested computations.
@@ -62,6 +63,7 @@ extension Math.Agents {
                         Math.Tools.AggregateNumbers.self,
                         Math.Tools.AllocateNumbers.self,
                         Math.Tools.AnalyzeSeries.self,
+                        Math.Tools.VerifyNumbers.self,
                     ]
                 )
             )

@@ -155,6 +155,70 @@ enum AgenticMathTestSuite {
             }
         }
 
+        Test("verify-numbers-exact-and-tolerance") {
+            try Expect.equal(Math.Tools.VerifyNumbers.definition.identifier.rawValue, "verify_numbers", "Tool ID")
+            let exact = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .expected, observed: "21", expected: "21"
+            ))
+            try Expect.equal(exact.matches, true, "Exact result")
+            try Expect.equal(exact.difference, "0", "No discrepancy")
+
+            let mismatch = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .expected, observed: "20.99", expected: "21"
+            ))
+            try Expect.equal(mismatch.matches, false, "Mismatch detected")
+            try Expect.equal(mismatch.difference, "-0.01", "Signed difference")
+
+            let tolerated = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .expected, observed: "20.99", expected: "21", tolerance: "0.01"
+            ))
+            try Expect.equal(tolerated.matches, true, "Inclusive tolerance")
+        }
+
+        Test("verify-numbers-percentage-rounding") {
+            let fraction = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .percentage, observed: "0.10", base: "80", rate: "0.125", scale: 2
+            ))
+            try Expect.equal(fraction.expected, "0.1", "Fractional percentage points")
+            try Expect.equal(fraction.matches, true, "Fractional percentage matches")
+
+            let plain = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .percentage, observed: "0.33", base: "1", rate: "32.5", scale: 2
+            ))
+            let bankers = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .percentage, observed: "0.32", base: "1", rate: "32.5", scale: 2, rounding: .bankers
+            ))
+            try Expect.equal(plain.expected, "0.33", "Plain half-up rounding")
+            try Expect.equal(bankers.expected, "0.32", "Bankers tie-to-even rounding")
+            let aggregated = try Math.Tools.VerifyNumbers.evaluate(.init(
+                operation: .percentage, observed: "0.67", base: "2", rate: "33.5", scale: 2
+            ))
+            try Expect.equal(aggregated.expected, "0.67", "Aggregate rounds at final boundary")
+        }
+
+        Test("verify-numbers-reject-invalid-contracts") {
+            try Expect.throwsError("Expected operation forbids percentage fields") {
+                _ = try Math.Tools.VerifyNumbers.evaluate(.init(
+                    operation: .expected, observed: "1", expected: "1", rate: "2"
+                ))
+            }
+            try Expect.throwsError("Percentage requires explicit scale") {
+                _ = try Math.Tools.VerifyNumbers.evaluate(.init(
+                    operation: .percentage, observed: "1", base: "10", rate: "10"
+                ))
+            }
+            try Expect.throwsError("Negative tolerance is invalid") {
+                _ = try Math.Tools.VerifyNumbers.evaluate(.init(
+                    operation: .expected, observed: "1", expected: "1", tolerance: "-0.01"
+                ))
+            }
+            try Expect.throwsError("Invalid decimal literal rejected") {
+                _ = try Math.Tools.VerifyNumbers.evaluate(.init(
+                    operation: .percentage, observed: "1", base: "garbage", rate: "10", scale: 2
+                ))
+            }
+        }
+
         Test("reject-forward-reference") {
             try Expect.throwsError("Reject future step reference") {
                 _ = try Math.Calculation.Evaluator.evaluate(
