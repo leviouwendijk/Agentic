@@ -43,6 +43,12 @@ public extension KnownModel {
     enum qwen {
         public static let v3_5_397b_a17b: AgentModelID =
             "qwen:qwen3-5-397b-a17b"
+        public static let v3_8_27b: AgentModelID =
+            "qwen:qwen3-8-27b"
+        public static let v3_8_flash_next: AgentModelID =
+            "qwen:qwen3-8-flash-next"
+        public static let v3_235b_a22b_instruct_2507: AgentModelID =
+            "qwen:qwen3-235b-a22b-instruct-2507"
 
         public static let coder_3_next: AgentModelID =
             "qwen:qwen3-coder-next"
@@ -87,6 +93,10 @@ public extension KnownModel {
             "moonshot:kimi-k2-thinking"
         public static let k2_5: AgentModelID =
             "moonshot:kimi-k2-5"
+        public static let k2_6: AgentModelID =
+            "moonshot:kimi-k2-6"
+        public static let k2_7_code: AgentModelID =
+            "moonshot:kimi-k2-7-code"
     }
 
     enum deepseek {
@@ -94,6 +104,12 @@ public extension KnownModel {
             "deepseek:v4-flash"
         public static let v4_pro: AgentModelID =
             "deepseek:v4-pro"
+        public static let v4_pro_0813: AgentModelID =
+            "deepseek:v4-pro-0813"
+        public static let v4_1_flash: AgentModelID =
+            "deepseek:v4-1-flash"
+        public static let v4_1_flash_1017: AgentModelID =
+            "deepseek:v4-1-flash-1017"
 
         public static let v3_2: AgentModelID =
             "deepseek:v3-2"
@@ -106,6 +122,10 @@ public extension KnownModel {
     enum glm {
         public static let v5_3_flash: AgentModelID =
             "zai:glm-5-3-flash"
+        public static let v5_3: AgentModelID =
+            "zai:glm-5-3"
+        public static let v5_1: AgentModelID =
+            "zai:glm-5-1"
 
         public static let v5: AgentModelID =
             "zai:glm-5"
