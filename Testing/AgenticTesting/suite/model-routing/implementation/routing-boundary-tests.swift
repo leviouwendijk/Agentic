@@ -91,6 +91,33 @@ extension ModelRoutingImplementationTesting {
                                  "streaming invocation rejects invalid router output")
             }
         }
+        let earlier = try ModelPricingSnapshot.tokenPricing(
+            provider: "fixture.pricing",
+            model: "same-model",
+            currencyCode: "EUR",
+            inputMicrosPerMillionTokens: 100000,
+            outputMicrosPerMillionTokens: 200000
+        )
+        let later = try ModelPricingSnapshot.tokenPricing(
+            provider: "fixture.pricing",
+            model: "same-model",
+            currencyCode: "EUR",
+            inputMicrosPerMillionTokens: 300000,
+            outputMicrosPerMillionTokens: 400000
+        )
+        let prices = try await ModelCatalogs(
+            modelProviders: [
+                BoundaryIntegration(gateways: [], pricing: [earlier]),
+                BoundaryIntegration(gateways: [], pricing: [later]),
+            ]
+        )
+        let effective = try prices.pricing.pricing(for: later.key)
+        try Expect.equal(
+            effective,
+            later,
+            "Later provider contributions win for identical pricing keys"
+        )
+
         return [.field("rejection_cases", String(cases.count))]
     }
 }
@@ -103,8 +130,14 @@ private enum BoundaryFailure: Error {
 
 private struct BoundaryIntegration: AgentModelProvider {
     let gateways: [AgentModelGatewayFactory]
+    var pricing: [ModelPricingSnapshot] = []
+
     var descriptor: AgentModelProviderDescriptor {
         .init(source: "fixture.boundary", displayName: "Boundary")
+    }
+
+    func pricingSnapshots() throws -> [ModelPricingSnapshot] {
+        pricing
     }
 }
 

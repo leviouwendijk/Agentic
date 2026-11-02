@@ -31,6 +31,9 @@ public protocol AgentModelProvider: Sendable {
     var profileProviders: [any AgentModelProfileProvider] { get }
 
     var discoveries: [any AgentModelProfileDiscovery] { get }
+
+    /// Provider-supplied pricing, independent of gateway availability.
+    func pricingSnapshots() throws -> [ModelPricingSnapshot]
 }
 
 public extension AgentModelProvider {
@@ -43,6 +46,10 @@ public extension AgentModelProvider {
     }
 
     var discoveries: [any AgentModelProfileDiscovery] {
+        []
+    }
+
+    func pricingSnapshots() throws -> [ModelPricingSnapshot] {
         []
     }
 }

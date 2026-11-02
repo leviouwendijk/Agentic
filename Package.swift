@@ -47,6 +47,10 @@ let package = Package(
             name: "AgenticMath",
             targets: ["AgenticMath"]
         ),
+        .executable(
+            name: "t_agentic_structures",
+            targets: ["AgenticStructuresTesting"]
+        ),
 
         // known model library 
         .library(
@@ -144,6 +148,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Math.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/Reporting.git",
+            branch: "master"
+        ),
     ],
     targets: [
         .target(
@@ -215,6 +223,8 @@ let package = Package(
             name: "AgenticStandard",
             dependencies: [
                 "Agentic",
+                .product(name: "Math", package: "Math"),
+                .product(name: "Reporting", package: "Reporting"),
                 .product(
                     name: "Primitives",
                     package: "Primitives"
@@ -244,6 +254,16 @@ let package = Package(
                     package: "Search"
                 ),
             ]
+        ),
+        .executableTarget(
+            name: "AgenticStructuresTesting",
+            dependencies: [
+                "AgenticStandard",
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Reporting", package: "Reporting"),
+                .product(name: "Search", package: "Search"),
+            ],
+            path: "Testing/AgenticStructuresTesting"
         ),
         .target(
             name: "AgenticHarness",

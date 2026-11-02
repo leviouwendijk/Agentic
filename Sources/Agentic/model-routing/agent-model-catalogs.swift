@@ -5,6 +5,7 @@ public struct ModelCatalogs:
     public let profiles: ProfileCatalog
     public let routableProfiles: ProfileCatalog
     public let gateways: GatewayCatalog
+    public let pricing: StaticModelPricingCatalog
 
     public init(
         modelProviders: [any AgentModelProvider],
@@ -36,6 +37,15 @@ public struct ModelCatalogs:
         }
 
         let profiles = try ProfileCatalog(modelProviders: modelProviders)
+        var pricing = StaticModelPricingCatalog()
+
+        // The existing provider ordering applies: later contributions win.
+        for provider in modelProviders {
+            for snapshot in try provider.pricingSnapshots() {
+                pricing.insert(snapshot)
+            }
+        }
+
         var realized: [any AgentModelGateway] = []
         var unavailable: [AgentModelGatewayIdentifier: AgentModelGatewayUnavailability] = [:]
 
@@ -60,6 +70,7 @@ public struct ModelCatalogs:
 
         self.profiles = profiles
         self.gateways = gateways
+        self.pricing = pricing
         self.routableProfiles = profiles.routable(
             using: gateways
         )
