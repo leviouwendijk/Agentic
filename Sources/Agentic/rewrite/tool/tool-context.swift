@@ -3,18 +3,19 @@ import Workspace
 /// Execution-scoped context supplied to one Tool call.
 ///
 /// The context is an immutable description of the invocation environment.
-/// Agent owned mutable state is reached through the reference stored here
-/// (capabilities), never mutated on this envelope itself.
+/// Capability state is exposed through an observation-only interface.
+/// Installation, enablement and exposure remain trusted control-plane
+/// operations, not ToolContext operations.
 public struct ToolContext: Sendable {
     public let workspace: WorkspaceContext?
     public let catalog: Catalog
-    public let capabilities: AgentCapabilityState?
+    public let capabilities: (any AgentCapabilityObserving)?
     public let inspections: [CapabilityInspection]
 
     public init(
         workspace: WorkspaceContext? = nil,
         catalog: Catalog = .none,
-        capabilities: AgentCapabilityState? = nil,
+        capabilities: (any AgentCapabilityObserving)? = nil,
         inspections: [CapabilityInspection] = []
     ) {
         self.workspace = workspace
