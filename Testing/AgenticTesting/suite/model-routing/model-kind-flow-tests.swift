@@ -17,7 +17,45 @@ enum ModelRoutingFlowSuite: TestFlowRegistry {
         ) {
             try modelOperationCompositionDiagnostics()
         },
+        TestFlow(
+            "model-selection-precedence",
+            tags: ["model-routing", "precedence"]
+        ) {
+            try modelSelectionPrecedenceDiagnostics()
+        },
     ]
+
+    private static func modelSelectionPrecedenceDiagnostics() throws -> [TestDiagnostic] {
+        let application = AgentModelSelection(
+            purpose: .executor,
+            preferences: .init(preferredModelID: "application.model", gateway: "application.gateway")
+        )
+        let agent = AgentModelSelection(
+            purpose: .executor,
+            preferences: .init(preferredProfileIdentifier: "agent.profile")
+        )
+        let contributions: [ModelSelectionResolver.Contribution] = [
+            .init(source: .agent, selection: agent),
+            .init(source: .application_default, selection: application)
+        ]
+        let normal = try ModelSelectionResolver().resolve(contributions).selection
+        try Expect.equal(normal.preferences.preferredProfileIdentifier, AgentModelProfileIdentifier("agent.profile"), "agent wins by default")
+        try Expect.equal(normal.preferences.preferredModelID, nil, "lower-priority model identifier cleared")
+        try Expect.equal(normal.preferences.gateway, nil, "lower-priority gateway cleared")
+
+        var reversed = ModelSelectionPrecedence.default.sources
+        guard let agentPosition = reversed.firstIndex(of: .agent),
+              let applicationPosition = reversed.firstIndex(of: .application_default)
+        else {
+            throw ModelSelectionPrecedence.Failure.incomplete_or_duplicate_sources
+        }
+        reversed.swapAt(agentPosition, applicationPosition)
+        let custom = try ModelSelectionPrecedence(sources: reversed)
+        let changed = try ModelSelectionResolver(precedence: custom).resolve(contributions).selection
+        try Expect.equal(changed.preferences.preferredModelID, AgentModelID("application.model"), "custom ordering changes winner")
+        try Expect.equal(changed.preferences.preferredProfileIdentifier, nil, "application model clears agent profile")
+        return [.field("winner", changed.preferences.preferredModelID?.rawValue ?? "missing")]
+    }
 
     private static func modelOperationDiagnostics() throws -> [TestDiagnostic] {
         let generative = AgentModelProfile(

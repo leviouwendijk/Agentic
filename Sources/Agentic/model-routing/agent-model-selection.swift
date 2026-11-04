@@ -59,26 +59,28 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
         self.latency = latency
     }
 
-    /// Apply a higher-precedence preference contribution.
+    /// A model target (profile, model, or gateway) is one coherent choice.
+    /// A higher-priority target clears lower-priority target fields.
     public func overriding(
         with higherPriority: Self
     ) -> Self {
-        .init(
-            preferredProfileIdentifier:
-                higherPriority.preferredProfileIdentifier
-                    ?? preferredProfileIdentifier,
-            preferredModelID:
-                higherPriority.preferredModelID
-                    ?? preferredModelID,
-            gateway:
-                higherPriority.gateway
-                    ?? gateway,
-            cost:
-                higherPriority.cost
-                    ?? cost,
-            latency:
-                higherPriority.latency
-                    ?? latency
+        let overridesTarget =
+            higherPriority.preferredProfileIdentifier != nil
+            || higherPriority.preferredModelID != nil
+            || higherPriority.gateway != nil
+
+        return .init(
+            preferredProfileIdentifier: overridesTarget
+                ? higherPriority.preferredProfileIdentifier
+                : preferredProfileIdentifier,
+            preferredModelID: overridesTarget
+                ? higherPriority.preferredModelID
+                : preferredModelID,
+            gateway: overridesTarget
+                ? higherPriority.gateway
+                : gateway,
+            cost: higherPriority.cost ?? cost,
+            latency: higherPriority.latency ?? latency
         )
     }
 }

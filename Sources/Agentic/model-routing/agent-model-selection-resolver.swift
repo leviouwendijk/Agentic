@@ -7,7 +7,9 @@ extension ModelSelectionResolver {
         Hashable,
         CaseIterable
     {
+        case application_default
         case mode_default
+        case agent
         case optimized_realization
         case session
         case task
@@ -66,7 +68,13 @@ extension ModelSelectionResolver {
 }
 
 public struct ModelSelectionResolver: Sendable {
-    public init() {}
+    public let precedence: ModelSelectionPrecedence
+
+    public init(
+        precedence: ModelSelectionPrecedence = .default
+    ) {
+        self.precedence = precedence
+    }
 
     public func resolve(
         _ selection: AgentModelSelection
@@ -87,11 +95,11 @@ public struct ModelSelectionResolver: Sendable {
         let ordered = contributions
             .enumerated()
             .sorted { lhs, rhs in
-                let lhsPrecedence = precedence(
-                    lhs.element.source
+                let lhsPrecedence = precedence.rank(
+                    of: lhs.element.source
                 )
-                let rhsPrecedence = precedence(
-                    rhs.element.source
+                let rhsPrecedence = precedence.rank(
+                    of: rhs.element.source
                 )
 
                 if lhsPrecedence != rhsPrecedence {
@@ -158,23 +166,3 @@ public struct ModelSelectionResolver: Sendable {
     }
 }
 
-private extension ModelSelectionResolver {
-    func precedence(
-        _ source: ModelSelectionResolver.Source
-    ) -> Int {
-        switch source {
-        case .mode_default:
-            0
-
-        case .optimized_realization:
-            100
-
-        case .session,
-             .task:
-            200
-
-        case .user:
-            300
-        }
-    }
-}
