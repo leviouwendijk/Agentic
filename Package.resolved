@@ -1,5 +1,5 @@
 {
-  "originHash" : "695405dbc666654b7a3259bfb2ad01bc468586efcd4542886d6a29bc5a912584",
+  "originHash" : "6767b0cc00f9c272e87fbba8ae81c06781bbb153f71d1b11894ed7a33d0615cb",
   "pins" : [
     {
       "identity" : "arguments",
@@ -25,7 +25,7 @@
       "location" : "https://github.com/leviouwendijk/Difference.git",
       "state" : {
         "branch" : "master",
-        "revision" : "df94b0fb6edef42c9a09d726d2246d5d996cac20"
+        "revision" : "3fd921a0e430d604a270826f6978f3f3c8358b7f"
       }
     },
     {

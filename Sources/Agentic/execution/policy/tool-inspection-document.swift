@@ -303,7 +303,7 @@ private extension ToolPreflight {
             items.append(
                 .field(
                     label: "diff",
-                    value: "\(difference.layout.changes.insertions.count) insertions, \(difference.layout.changes.deletions.count) deletions"
+                    value: difference.changeSummary
                 )
             )
         }

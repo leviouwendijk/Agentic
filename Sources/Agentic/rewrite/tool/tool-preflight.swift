@@ -101,7 +101,7 @@ public struct ToolPreflight:
 
         if let difference = preview.difference {
             lines.append(
-                "diff preview: \(difference.layout.changes.insertions.count) insertions, \(difference.layout.changes.deletions.count) deletions"
+                "diff preview: \(difference.changeSummary)"
             )
         }
 
@@ -372,22 +372,35 @@ public extension ToolPreflight {
             public let layout: DifferenceLayout
             /// Native structural projection, produced by the source difference.
             public let tree: TreeDifferenceLayout?
+            /// Native graph projection; never authoritative for execution.
+            public let graph: GraphDifferenceLayout?
 
             public init(
                 title: String? = nil,
-                layout: DifferenceLayout,
-                tree: TreeDifferenceLayout? = nil
+                layout: DifferenceLayout = .init(lines: []),
+                tree: TreeDifferenceLayout? = nil,
+                graph: GraphDifferenceLayout? = nil
             ) {
                 self.title = title
                 self.layout = layout
                 self.tree = tree
+                self.graph = graph
             }
 
             public var tree_layout: TreeDifferenceLayout? { tree }
+            public var graph_layout: GraphDifferenceLayout? { graph }
+
+            /// Canonical presentation aggregation belongs to Difference.
+            public var presentation: DifferencePresentation {
+                .init(text: layout, tree: tree, graph: graph)
+            }
+
+            public var changeSummary: String {
+                presentation.changeSummary
+            }
 
             public var isEmpty: Bool {
-                layout.isEmpty
-                    && (tree?.lines.isEmpty ?? true)
+                presentation.isEmpty
             }
         }
     }

@@ -258,9 +258,12 @@ let package = Package(
         .executableTarget(
             name: "AgenticStructuresTesting",
             dependencies: [
+                "Agentic",
                 "AgenticStandard",
+                .product(name: "Difference", package: "Difference"),
                 .product(name: "Primitives", package: "Primitives"),
                 .product(name: "Reporting", package: "Reporting"),
+                .product(name: "Schema", package: "Schema"),
                 .product(name: "Search", package: "Search"),
             ],
             path: "Testing/AgenticStructuresTesting"
