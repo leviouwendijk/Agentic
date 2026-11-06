@@ -11,17 +11,20 @@ public struct ToolContext: Sendable {
     public let catalog: Catalog
     public let capabilities: (any AgentCapabilityObserving)?
     public let inspections: [CapabilityInspection]
+    public let services: ToolServices
 
     public init(
         workspace: WorkspaceContext? = nil,
         catalog: Catalog = .none,
         capabilities: (any AgentCapabilityObserving)? = nil,
-        inspections: [CapabilityInspection] = []
+        inspections: [CapabilityInspection] = [],
+        services: ToolServices = .init()
     ) {
         self.workspace = workspace
         self.catalog = catalog
         self.capabilities = capabilities
         self.inspections = inspections
+        self.services = services
     }
 
     public func using(
@@ -31,8 +34,16 @@ public struct ToolContext: Sendable {
             workspace: workspace,
             catalog: catalog,
             capabilities: capabilities,
-            inspections: inspections
+            inspections: inspections,
+            services: services
         )
+    }
+
+    /// Resolve a trusted dependency for this invocation.
+    public func require<Service: Sendable>(
+        _ type: Service.Type
+    ) throws -> Service {
+        try services.require(type)
     }
 
 }
