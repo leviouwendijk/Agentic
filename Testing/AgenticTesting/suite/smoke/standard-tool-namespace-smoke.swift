@@ -86,6 +86,15 @@ func runStandardToolNamespaceSmoke() throws {
     ContractProof.tool(
         Standard.Tools.InspectValues.self
     )
+    ContractProof.tool(
+        Standard.Tools.ConvertCase.self
+    )
+    ContractProof.source(
+        Standard.Tools.ConvertCase.Input.self
+    )
+    ContractProof.result(
+        Standard.Tools.ConvertCase.Output.self
+    )
     ContractProof.source(
         Standard.Tools.InspectValues.Input.self
     )
@@ -221,6 +230,28 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.InspectValues.definition.identifier.rawValue,
         expected: "inspect_values"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ConvertCase.definition.identifier.rawValue,
+        expected: "convert_case"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ConvertCase.transform(
+            .init(value: "Annual Report", to: .snake)
+        ).converted,
+        expected: "annual_report"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ConvertCase.transform(
+            .init(value: "Annual Report", to: .kebab)
+        ).converted,
+        expected: "annual-report"
+    )
+    try ContractProof.identifier(
+        Standard.Tools.ConvertCase.transform(
+            .init(value: "already_snake", to: .snake)
+        ).converted,
+        expected: "already_snake"
     )
     try ContractProof.identifier(
         Standard.Tools.ClarifyWithUser.definition.identifier.rawValue,
