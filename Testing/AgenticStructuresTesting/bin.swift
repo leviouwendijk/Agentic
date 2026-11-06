@@ -98,6 +98,7 @@ struct AgenticStructuresSmoke {
             ))
             throw SmokeFailure.expected_rejection
         } catch ReportDocument.Failure.invalidChartMeasure {}
+        try CallTreeSmoke.run()
         try AgenticPreflightTests.run()
         try ToolServicesSmoke.run()
         print("AgenticStructures smoke: passed")
