@@ -4,9 +4,29 @@ import Schema
 public struct ToolRegistry: Sendable {
     private var tools:
         [ToolIdentifier: ToolBinding]
+    private var services: ToolServices?
 
     public init() {
         self.tools = [:]
+        self.services = nil
+    }
+
+    /// Scope existing macro-installed bindings without registering new tools.
+    /// The resulting registry is a value copy; all bindings are preserved.
+    public func using(services: ToolServices) -> Self {
+        guard !services.isEmpty else {
+            return self
+        }
+        var copy = self
+        copy.services = services
+        return copy
+    }
+
+    func executionContext(_ context: ToolContext) -> ToolContext {
+        guard let services else {
+            return context
+        }
+        return context.using(services: services)
     }
 
     public var definitions: [ToolDefinition] {
@@ -182,7 +202,10 @@ public struct ToolRegistry: Sendable {
         guard let registered = registeredTool(identifiedBy: toolCall.tool) else {
             throw ToolRegistryExecutionError.missingTool(toolCall.tool.rawValue)
         }
-        return try await registered.prepare(toolCall, context: context)
+        return try await registered.prepare(
+            toolCall,
+            context: executionContext(context)
+        )
     }
 
     public func preflight(
@@ -201,7 +224,7 @@ public struct ToolRegistry: Sendable {
 
         return try await registered.preflight(
             toolCall,
-            context: context
+            context: executionContext(context)
         )
     }
 

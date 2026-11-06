@@ -15,6 +15,10 @@ public struct ToolServices: Sendable {
         values = [:]
     }
 
+    public var isEmpty: Bool {
+        values.isEmpty
+    }
+
     /// Return a new scope containing one additional, uniquely typed service.
     public func inserting<Service: Sendable>(
         _ service: Service

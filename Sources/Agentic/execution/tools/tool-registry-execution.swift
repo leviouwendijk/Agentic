@@ -42,7 +42,7 @@ public extension ToolRegistry {
 
         return try await registered.execute(
             call,
-            context: context,
+            context: executionContext(context),
             preparedOperation: preparedOperation
         )
     }
@@ -65,7 +65,7 @@ public extension ToolRegistry {
         return try await registered.reconcile(
             call,
             failure: failure,
-            context: context
+            context: executionContext(context)
         )
     }
 }

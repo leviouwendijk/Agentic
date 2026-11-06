@@ -46,4 +46,15 @@ public struct ToolContext: Sendable {
         try services.require(type)
     }
 
+    /// A trusted execution host may replace the dependency scope.
+    public func using(services: ToolServices) -> Self {
+        .init(
+            workspace: workspace,
+            catalog: catalog,
+            capabilities: capabilities,
+            inspections: inspections,
+            services: services
+        )
+    }
+
 }
