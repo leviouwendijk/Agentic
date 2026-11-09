@@ -150,6 +150,40 @@ enum AgenticPreflightTests {
         let schemaText = String(decoding: schemaData, as: UTF8.self)
         try check(schemaText.contains("\"graph\""), "preflight difference schema includes graph")
 
+        // Source-backed previews preserve both their original semantic diff
+        // and the legacy layout used by existing inspection consumers.
+        let sourceDifference = TextDiffer.diff(
+            old: "let timeout = 30\n",
+            new: "let timeout = 45\n"
+        )
+        let sourcePreview = ToolPreflight.Preview.Difference(
+            title: "Source review",
+            source: sourceDifference
+        )
+        try check(sourcePreview.source == sourceDifference, "source diff identity")
+        try check(!sourcePreview.isEmpty, "source preview is not empty")
+        try check(
+            sourcePreview.layout.changes.deletions.count == 1 &&
+                sourcePreview.layout.changes.insertions.count == 1,
+            "source-backed layout has the same change counts"
+        )
+        try check(
+            sourcePreview.changeSummary == "1 insertions, 1 deletions",
+            "source-backed summary preserves existing format"
+        )
+        let sourceRestored = try JSONDecoder().decode(
+            ToolPreflight.Preview.Difference.self,
+            from: JSONEncoder().encode(sourcePreview)
+        )
+        try check(sourceRestored == sourcePreview, "source preview Codable roundtrip")
+        try check(legacyRestored.source == nil, "legacy preview has no source")
+        let sourceSchema = String(
+            decoding: try JSONEncoder().encode(
+                ToolPreflight.Preview.Difference.jsonschema.jsonvalue
+            ),
+            as: UTF8.self
+        )
+        try check(sourceSchema.contains("\"source\""), "source preview schema field")
         print("PASS Agentic graph preflight: text, tree, graph, inspection, Codable, schema")
     }
 

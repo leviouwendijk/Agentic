@@ -370,6 +370,9 @@ public extension ToolPreflight {
             public let title: String?
             /// Text presentation; the prepared Writers plan is authoritative.
             public let layout: DifferenceLayout
+            /// Source-backed text difference for richer review rendering.
+            /// Presentation-only; prepared operations remain authoritative.
+            public let source: TextDifference?
             /// Native structural projection, produced by the source difference.
             public let tree: TreeDifferenceLayout?
             /// Native graph projection; never authoritative for execution.
@@ -383,6 +386,22 @@ public extension ToolPreflight {
             ) {
                 self.title = title
                 self.layout = layout
+                self.source = nil
+                self.tree = tree
+                self.graph = graph
+            }
+
+            /// Construct both representations from the same text difference.
+            /// Avoid independently supplied layouts that could contradict it.
+            public init(
+                title: String? = nil,
+                source: TextDifference,
+                tree: TreeDifferenceLayout? = nil,
+                graph: GraphDifferenceLayout? = nil
+            ) {
+                self.title = title
+                self.layout = DifferenceLayout.make(source, options: .full)
+                self.source = source
                 self.tree = tree
                 self.graph = graph
             }
