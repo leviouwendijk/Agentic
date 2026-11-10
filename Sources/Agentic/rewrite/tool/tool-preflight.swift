@@ -373,6 +373,8 @@ public extension ToolPreflight {
             /// Source-backed text difference for richer review rendering.
             /// Presentation-only; prepared operations remain authoritative.
             public let source: TextDifference?
+            /// Ordered, bounded semantic sections for multi-file review.
+            public let sections: [Section]?
             /// Native structural projection, produced by the source difference.
             public let tree: TreeDifferenceLayout?
             /// Native graph projection; never authoritative for execution.
@@ -387,6 +389,7 @@ public extension ToolPreflight {
                 self.title = title
                 self.layout = layout
                 self.source = nil
+                self.sections = nil
                 self.tree = tree
                 self.graph = graph
             }
@@ -402,6 +405,46 @@ public extension ToolPreflight {
                 self.title = title
                 self.layout = DifferenceLayout.make(source, options: .full)
                 self.source = source
+                self.sections = nil
+                self.tree = tree
+                self.graph = graph
+            }
+
+            @JSONSchema
+            public struct Section: Sendable, Codable, Hashable {
+                /// Stable prepared-operation identity, not a row index.
+                public let id: String
+                /// Stable source node identity from the prepared difference.
+                public let nodeID: String
+                /// Authorized presentation path, never a canonical filesystem URL.
+                public let path: String
+                /// Contains only permitted review rows and their coordinates.
+                public let projection: DifferenceLayout.Projection
+
+                public init(
+                    id: String,
+                    nodeID: String,
+                    path: String,
+                    projection: DifferenceLayout.Projection
+                ) {
+                    self.id = id
+                    self.nodeID = nodeID
+                    self.path = path
+                    self.projection = projection
+                }
+            }
+
+            public init(
+                title: String? = nil,
+                layout: DifferenceLayout,
+                sections: [Section],
+                tree: TreeDifferenceLayout? = nil,
+                graph: GraphDifferenceLayout? = nil
+            ) {
+                self.title = title
+                self.layout = layout
+                self.source = nil
+                self.sections = sections
                 self.tree = tree
                 self.graph = graph
             }
@@ -419,7 +462,8 @@ public extension ToolPreflight {
             }
 
             public var isEmpty: Bool {
-                presentation.isEmpty
+                presentation.isEmpty &&
+                    (sections?.allSatisfy { $0.projection.rows.isEmpty } ?? true)
             }
         }
     }

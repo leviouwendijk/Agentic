@@ -359,12 +359,54 @@ public struct ToolBinding: CapabilityBinding {
         execution: ToolInvocation.Execution?
     ) {
         let object = try input.objectValue
+        let unexpected = object.keys
+            .filter { $0 != "arguments" && $0 != "execution" }
+            .sorted()
+
+        guard unexpected.isEmpty else {
+            throw ToolBindingError.invalidModelCall(
+                tool: definition.identifier.rawValue,
+                reason: "Unexpected outer envelope field(s): \(unexpected.joined(separator: ", ")). Put semantic fields inside 'arguments'."
+            )
+        }
 
         guard let arguments = object["arguments"] else {
             throw ToolBindingError.invalidModelCall(
                 tool: definition.identifier.rawValue,
                 reason: "Model call is missing required 'arguments'."
             )
+        }
+
+        if case .object(let fields) = arguments {
+            let declared: [String: JSONValue]
+            if let schema = semanticInputSchema?.jsonvalue,
+               case .object(let schemaFields) = schema,
+               let properties = schemaFields["properties"],
+               case .object(let semanticProperties) = properties {
+                declared = semanticProperties
+            } else {
+                declared = [:]
+            }
+
+            if declared["execution"] == nil,
+               let nested = fields["execution"],
+               case .object(let nestedFields) = nested,
+               nestedFields["workspace"] != nil {
+                throw ToolBindingError.invalidModelCall(
+                    tool: definition.identifier.rawValue,
+                    reason: "Misplaced arguments.execution.workspace. Put 'execution' beside 'arguments', not inside it."
+                )
+            }
+
+            if declared["arguments"] == nil,
+               let nested = fields["arguments"],
+               case .object = nested,
+               fields.keys.allSatisfy({ $0 == "arguments" || $0 == "execution" }) {
+                throw ToolBindingError.invalidModelCall(
+                    tool: definition.identifier.rawValue,
+                    reason: "Misplaced arguments.arguments. Put semantic input fields directly inside the outer 'arguments'."
+                )
+            }
         }
 
         let execution = try object["execution"]?.decode(

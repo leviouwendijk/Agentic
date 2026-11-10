@@ -177,13 +177,45 @@ enum AgenticPreflightTests {
         )
         try check(sourceRestored == sourcePreview, "source preview Codable roundtrip")
         try check(legacyRestored.source == nil, "legacy preview has no source")
+        let encoded_obj = try JSONEncoder().encode(
+            ToolPreflight.Preview.Difference.jsonschema.jsonvalue
+        )
         let sourceSchema = String(
-            decoding: try JSONEncoder().encode(
-                ToolPreflight.Preview.Difference.jsonschema.jsonvalue
-            ),
+            decoding: encoded_obj,
             as: UTF8.self
         )
         try check(sourceSchema.contains("\"source\""), "source preview schema field")
+
+        let section = ToolPreflight.Preview.Difference.Section(
+            id: "prepared-file-1",
+            nodeID: "node-file-1",
+            path: "Sources/example.swift",
+            projection: DifferenceLayout.project(
+                sourceDifference.analyze(), mode: .split, options: .full
+            )
+        )
+        let sectionPreview = ToolPreflight.Preview.Difference(
+            title: "Semantic sections",
+            layout: sourcePreview.layout,
+            sections: [section]
+        )
+        let sectionRestored = try JSONDecoder().decode(
+            ToolPreflight.Preview.Difference.self,
+            from: JSONEncoder().encode(sectionPreview)
+        )
+        try check(sectionRestored == sectionPreview, "semantic section Codable roundtrip")
+        try check(sectionRestored.sections?.first?.id == section.id, "stable section identity")
+        try check(sectionRestored.sections?.first?.path == section.path, "authorized path")
+        try check(legacyRestored.sections == nil, "legacy preview has no sections")
+        try check(sourceRestored.sections == nil, "single-source preview has no sections")
+        try check(
+            String(
+                decoding: encoded_obj, 
+                as: UTF8.self
+            )
+            .contains("\"sections\""),
+            "semantic section schema field"
+        )
         print("PASS Agentic graph preflight: text, tree, graph, inspection, Codable, schema")
     }
 

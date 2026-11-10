@@ -47,10 +47,6 @@ let package = Package(
             name: "AgenticMath",
             targets: ["AgenticMath"]
         ),
-        .executable(
-            name: "t_agentic_structures",
-            targets: ["AgenticStructuresTesting"]
-        ),
 
         // known model library 
         .library(
@@ -82,6 +78,10 @@ let package = Package(
         .executable(
             name: "t_agentic_assertions",
             targets: ["AgenticAssertionsTesting"]
+        ),
+        .executable(
+            name: "t_agentic_structures",
+            targets: ["AgenticStructuresTesting"]
         ),
     ],
     dependencies: [

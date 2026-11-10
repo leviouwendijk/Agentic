@@ -28,7 +28,8 @@ public extension Assertions.Tools {
         public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
             try runner.validate(input.assertions)
             let paths = input.assertions.filter { $0.subject.kind == "workspace_file" }
-                .map { $0.subject.value }
+            .map { $0.subject.value }
+
             return .init(
                 tool: Self.identifier,
                 risk: paths.isEmpty ? .observe : .privileged,

@@ -75,6 +75,73 @@ extension ExecutionTesting {
             "model invocation unwraps semantic arguments"
         )
 
+        func expectInvalidEnvelope(
+            _ input: JSONValue,
+            containing fragment: String
+        ) throws {
+            let malformed = ToolCall(
+                id: "malformed-envelope",
+                tool: TargetingTool.definition.identifier,
+                input: input
+            )
+            do {
+                _ = try registry.invocation(for: malformed)
+                throw TargetingFlowFailure.expectedInvalidModelCall
+            } catch ToolBindingError.invalidModelCall(_, let reason) {
+                try Expect.equal(
+                    reason.contains(fragment),
+                    true,
+                    "Malformed model invocation should explain the envelope error."
+                )
+            }
+        }
+
+        try expectInvalidEnvelope(
+            .object([
+                "arguments": .object([
+                    "value": .string("hello"),
+                    "execution": .object([
+                        "workspace": .object([
+                            "subpath": .string("Tokens")
+                        ])
+                    ])
+                ])
+            ]),
+            containing: "arguments.execution.workspace"
+        )
+
+        try expectInvalidEnvelope(
+            .object([
+                "arguments": .object([
+                    "arguments": .object([
+                        "value": .string("hello")
+                    ])
+                ])
+            ]),
+            containing: "arguments.arguments"
+        )
+
+        try expectInvalidEnvelope(
+            .object([
+                "arguments": .object([
+                    "value": .string("hello")
+                ]),
+                "startLine": .string("2")
+            ]),
+            containing: "Unexpected outer envelope field(s): startLine"
+        )
+
+        try expectInvalidEnvelope(
+            .object([
+                "execution": .object([
+                    "workspace": .object([
+                        "subpath": .string("Tokens")
+                    ])
+                ])
+            ]),
+            containing: "missing required 'arguments'"
+        )
+
         let plainCall = ToolCall(
             id: "plain-call",
             tool: TargetingTool.definition.identifier,
@@ -102,6 +169,16 @@ extension ExecutionTesting {
                 autonomyMode: .auto_observe
             )
         )
+
+        do {
+            _ = try await invoker.review(
+                resolved,
+                context: .init()
+            )
+
+            throw TargetingFlowFailure.expectedWorkspaceRequirement
+        } catch WorkspaceToolTargetingError.workspaceRequired {
+        }
 
         do {
             _ = try await invoker.invoke(
@@ -168,4 +245,5 @@ private struct TargetingTool: Tool {
 
 private enum TargetingFlowFailure: Error {
     case expectedWorkspaceRequirement
+    case expectedInvalidModelCall
 }

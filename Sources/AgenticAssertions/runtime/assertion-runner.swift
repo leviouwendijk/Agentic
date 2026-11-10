@@ -36,7 +36,9 @@ public struct AssertionRunner: Sendable {
         self.providers = providers
     }
 
-    public func validate(_ assertions: [Assertion]) throws {
+    public func validate(
+        _ assertions: [Assertion]
+    ) throws {
         guard !assertions.isEmpty else { throw AssertionRunnerError.empty_assertions }
         guard assertions.count <= 32 else { throw AssertionRunnerError.excessive_assertions }
         var seen = Set<String>()
@@ -60,13 +62,15 @@ public struct AssertionRunner: Sendable {
                 }
             case .match_count:
                 guard let value = expectation.value, !value.isEmpty,
-                      let count = expectation.count, count >= 0 else {
+                    let count = expectation.count, count >= 0
+                else {
                     throw AssertionRunnerError.invalid_expectation(assertion.id)
                 }
             case .line_range_exists:
                 guard assertion.subject.kind == "workspace_file",
-                      let start = expectation.startLine, start > 0,
-                      let end = expectation.endLine, end >= start else {
+                    let start = expectation.startLine, start > 0,
+                    let end = expectation.endLine, end >= start
+                else {
                     throw AssertionRunnerError.invalid_expectation(assertion.id)
                 }
             }
