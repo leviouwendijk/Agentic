@@ -4,6 +4,8 @@ public enum AgentCostProjectionIssueKind: String, Sendable, Codable, Hashable, C
     case zeroUsage
     case currencyMismatch
     case pricingUnavailable
+    /// A component without its own price was charged at a fallback component's rate.
+    case fallbackPricingComponent
 }
 
 public struct AgentCostProjectionIssue: Sendable, Codable, Hashable {

@@ -78,6 +78,7 @@ private extension AgentCostCalculator {
             kind: .cachedInputReadTokens,
             quantity: usage.cachedInputReadTokens,
             pricing: pricing,
+            fallback: .inputTokens,
             lineItems: &lineItems,
             issues: &issues
         )
@@ -86,6 +87,7 @@ private extension AgentCostCalculator {
             kind: .cachedInputWriteTokens,
             quantity: usage.cachedInputWriteTokens,
             pricing: pricing,
+            fallback: .inputTokens,
             lineItems: &lineItems,
             issues: &issues
         )
@@ -144,6 +146,7 @@ private extension AgentCostCalculator {
         kind: PricingComponentKind,
         quantity: Int,
         pricing: ModelPricingSnapshot,
+        fallback: PricingComponentKind? = nil,
         lineItems: inout [AgentCostLineItem],
         issues: inout [AgentCostProjectionIssue]
     ) {
@@ -151,9 +154,21 @@ private extension AgentCostCalculator {
             return
         }
 
-        guard let component = pricing.component(
-            kind
-        ) else {
+        let resolved = pricing.component(kind)
+            ?? fallback.flatMap { fallback in
+                pricing.component(fallback).map { component in
+                    issues.append(
+                        .init(
+                            kind: .fallbackPricingComponent,
+                            message: "No \(kind.rawValue) price; charged at the \(fallback.rawValue) rate.",
+                            componentKind: kind
+                        )
+                    )
+                    return component
+                }
+            }
+
+        guard let component = resolved else {
             issues.append(
                 .init(
                     kind: .missingPricingComponent,

@@ -36,13 +36,13 @@ public struct ToolProjectionTestResult<ToolType: Tool>: Sendable {
     public let definition: ToolDefinition
     public let input: ToolType.Input
     public let output: ToolType.Output
-    public let projection: ToolCall.ResultProjection?
+    public let projection: ToolExecution.Projection?
 
     public init(
         definition: ToolDefinition,
         input: ToolType.Input,
         output: ToolType.Output,
-        projection: ToolCall.ResultProjection?
+        projection: ToolExecution.Projection?
     ) {
         self.definition = definition
         self.input = input
@@ -53,13 +53,13 @@ public struct ToolProjectionTestResult<ToolType: Tool>: Sendable {
 
 public struct ToolClassificationTestResult<ToolType: Tool>: Sendable {
     public let definition: ToolDefinition
-    public let phase: ToolCall.Phase
+    public let phase: ToolExecution.Phase
     public let input: ToolType.Input?
     public let incident: Recovery.Incident?
 
     public init(
         definition: ToolDefinition,
-        phase: ToolCall.Phase,
+        phase: ToolExecution.Phase,
         input: ToolType.Input?,
         incident: Recovery.Incident?
     ) {
@@ -73,14 +73,14 @@ public struct ToolClassificationTestResult<ToolType: Tool>: Sendable {
 public struct ToolReconciliationTestResult<ToolType: Tool>: Sendable {
     public let definition: ToolDefinition
     public let input: ToolType.Input
-    public let failure: ToolCall.Failure
-    public let reconciliation: ToolCall.Reconciliation<ToolType.Output>?
+    public let failure: ToolExecution.Failure
+    public let reconciliation: ToolExecution.Reconciliation<ToolType.Output>?
 
     public init(
         definition: ToolDefinition,
         input: ToolType.Input,
-        failure: ToolCall.Failure,
-        reconciliation: ToolCall.Reconciliation<ToolType.Output>?
+        failure: ToolExecution.Failure,
+        reconciliation: ToolExecution.Reconciliation<ToolType.Output>?
     ) {
         self.definition = definition
         self.input = input
@@ -94,14 +94,14 @@ public struct ToolTestResult<ToolType: Tool>: Sendable {
     public let input: ToolType.Input
     public let preflight: ToolPreflight
     public let output: ToolType.Output
-    public let projection: ToolCall.ResultProjection?
+    public let projection: ToolExecution.Projection?
 
     public init(
         definition: ToolDefinition,
         input: ToolType.Input,
         preflight: ToolPreflight,
         output: ToolType.Output,
-        projection: ToolCall.ResultProjection?
+        projection: ToolExecution.Projection?
     ) {
         self.definition = definition
         self.input = input

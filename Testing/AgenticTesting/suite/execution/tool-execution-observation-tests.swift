@@ -7,22 +7,22 @@ import Testing
 extension ExecutionTesting {
     static func runExecutionObservations() async throws -> [TestDiagnostic] {
         let registry = try ToolRegistry { ObservationFixtureTool() }
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: registry,
             policy: .init(autonomyMode: .auto_observe)
         )
-        func call(_ value: String) throws -> ToolCall {
+        func call(_ value: String) throws -> FunctionCall {
             .init(
                 id: value,
-                tool: ObservationFixtureTool.definition.identifier,
+                name: ObservationFixtureTool.definition.identifier.rawValue,
                 input: try JSONValue.encoding(ObservationFixtureValue(value: value))
             )
         }
 
-        func invocation(_ call: ToolCall) -> ToolInvocation {
+        func invocation(_ call: FunctionCall) -> ToolInvocation {
             .init(
                 id: call.id,
-                tool: call.tool,
+                tool: ToolIdentifier(call.name),
                 arguments: call.input
             )
         }
@@ -60,7 +60,7 @@ extension ExecutionTesting {
         let failure = try Expect.notNil(failed.execution, "failure produces execution evidence")
         try Expect.equal(failure.result.isError, true, "fixture throws after output")
         try Expect.equal(failure.observations.map(\.content), ["fail", ""], "throwing preserves preceding observations")
-        let direct = try await registry.execute(call("direct"))
+        let direct = try await registry.execute(invocation(call("direct")))
         try Expect.equal(direct.observations.map(\.content), ["direct", ""], "direct registry execution captures observations")
         let legacy = LegacyObservationExecution(result: direct.result)
         let decoded = try JSONDecoder().decode(ToolExecution.Result.self, from: JSONEncoder().encode(legacy))
@@ -70,7 +70,7 @@ extension ExecutionTesting {
 }
 
 private struct LegacyObservationExecution: Encodable {
-    let result: ToolCall.Response
+    let result: ToolExecution.Response
 }
 
 private struct ObservationFixtureValue: Sendable, Codable, Hashable, JSONSchemaProviding {

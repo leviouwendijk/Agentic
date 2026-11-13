@@ -36,7 +36,7 @@ public enum ContractProof {
         _: Value.Type
     ) {}
 
-    public static func result<Value: Result>(
+    public static func result<Value: Contract.Result>(
         _: Value.Type
     ) {}
 

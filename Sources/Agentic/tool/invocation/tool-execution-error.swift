@@ -1,0 +1,90 @@
+import Foundation
+import Primitives
+
+extension ToolExecutionEngine {
+    enum Error:
+        Swift.Error,
+        LocalizedError
+    {
+        case reconciliation_unsupported
+        case reconciliation_unresolved
+        case applied_without_output
+        case preflight_changed
+        case prepared_retry_requires_reconciliation
+        case recovery_exhausted
+        case action_unsupported(Recovery.Action)
+
+        var errorDescription: String? {
+            switch self {
+            case .reconciliation_unsupported:
+                return "Tool does not support reconciliation for the classified failure."
+
+            case .reconciliation_unresolved:
+                return "Tool reconciliation could not determine whether the operation was applied."
+
+            case .applied_without_output:
+                return "Tool reconciliation confirmed the operation was applied but could not reconstruct the tool output."
+
+            case .preflight_changed:
+                return "Tool preflight changed after reconciliation; retry requires fresh approval."
+            case .prepared_retry_requires_reconciliation:
+                return "A prepared operation cannot be automatically replayed; reconcile its original attempt."
+
+            case .recovery_exhausted:
+                return "Tool recovery exhausted its authored mechanical recovery plan."
+
+            case .action_unsupported(let action):
+                return "Tool execution does not mechanically execute recovery action '\(action.rawValue)'."
+            }
+        }
+    }
+
+    func makeErrorResult(
+        for call: ToolInvocation,
+        error: any Swift.Error
+    ) throws -> ToolExecution.Response {
+        let payload = Error.Payload(
+            kind: "tool_error",
+            callID: call.id,
+            toolName: call.tool.rawValue,
+            message: localizedDescription(
+                for: error
+            )
+        )
+
+        return ToolExecution.Response(
+            call: call.reference,
+            output: try JSONValue.encoding(
+                payload
+            ),
+            isError: true
+        )
+    }
+
+    func localizedDescription(
+        for error: any Swift.Error
+    ) -> String {
+        if let localizedError = error as? LocalizedError,
+           let description = localizedError.errorDescription,
+           !description.isEmpty
+        {
+            return description
+        }
+
+        return String(
+            describing: error
+        )
+    }
+}
+
+extension ToolExecutionEngine.Error {
+    struct Payload:
+        Encodable,
+        Sendable
+    {
+        let kind: String
+        let callID: String
+        let toolName: String
+        let message: String
+    }
+}

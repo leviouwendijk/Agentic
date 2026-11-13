@@ -6,37 +6,57 @@ import Macros
 public extension Standard.Tools {
     @Tool
     struct ListArtifacts: Tool {
-        @JSONSchema
-        public struct Input: HashableSource {
-            /// Artifact kinds to include. An empty array includes every kind.
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                /// Artifact kinds to include. An empty array includes every kind.
+                public var kinds: [AgentArtifactKind]
+                /// Whether to list newest artifacts first. Defaults to true when omitted.
+                public var latestFirst: Bool?
+                /// Optional maximum number of artifacts to return.
+                public var limit: Int?
+
+                public init(
+                    kinds: [AgentArtifactKind] = [],
+                    latestFirst: Bool? = nil,
+                    limit: Int? = nil
+                ) {
+                    self.kinds = kinds
+                    self.latestFirst = latestFirst
+                    self.limit = limit
+                }
+            }
+
             public let kinds: [AgentArtifactKind]
-            /// Whether to list newest artifacts first. Defaults to true when omitted.
-            public let latestFirst: Bool?
-            /// Optional maximum number of artifacts to return.
+            public let latestFirst: Bool
+            /// Never negative; nil means unlimited.
             public let limit: Int?
+
+            public init(_ raw: Raw) {
+                self.kinds = raw.kinds
+                self.latestFirst = raw.latestFirst ?? true
+                self.limit = raw.limit.map { max(0, $0) }
+            }
 
             public init(
                 kinds: [AgentArtifactKind] = [],
                 latestFirst: Bool? = nil,
                 limit: Int? = nil
             ) {
-                self.kinds = kinds
-                self.latestFirst = latestFirst
-                self.limit = limit
+                self.init(
+                    Raw(
+                        kinds: kinds,
+                        latestFirst: latestFirst,
+                        limit: limit
+                    )
+                )
             }
 
-            public var resolvedLatestFirst: Bool {
-                latestFirst ?? true
-            }
-
-            public var resolvedLimit: Int? {
-                guard let limit else {
-                    return nil
-                }
-
-                return max(
-                    0,
-                    limit
+            public var raw: Raw {
+                Raw(
+                    kinds: kinds,
+                    latestFirst: latestFirst,
+                    limit: limit
                 )
             }
         }
@@ -90,8 +110,8 @@ public extension Standard.Tools {
 
         let artifacts = try await store.list(
             kinds: input.kinds,
-            latestFirst: input.resolvedLatestFirst,
-            limit: input.resolvedLimit
+            latestFirst: input.latestFirst,
+            limit: input.limit
         )
 
         return Output(

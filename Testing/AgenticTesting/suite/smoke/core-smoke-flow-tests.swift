@@ -28,7 +28,7 @@ struct SmokeToolInput:
     }
 }
 
-struct SmokeToolOutput: Result {
+struct SmokeToolOutput: Contract.Result {
     let value: String
 
     static var jsonschema: JSONSchema {
@@ -59,7 +59,7 @@ struct SmokeTool:
     func process(
         _ output: Output,
         input: Input
-    ) throws -> ToolCall.ResultProjection? {
+    ) throws -> ToolExecution.Projection? {
         .init(
             status: "smoke",
             summary: "\(input.rawValue):\(output.value)"
@@ -68,9 +68,9 @@ struct SmokeTool:
 
     func reconcile(
         _ input: Input,
-        after failure: ToolCall.Failure,
+        after failure: ToolExecution.Failure,
         in _: ToolContext
-    ) async throws -> ToolCall.Reconciliation<Output>? {
+    ) async throws -> ToolExecution.Reconciliation<Output>? {
         _ = input
         _ = failure
         return .not_applied

@@ -143,7 +143,7 @@ extension ProgramsFlowTesting {
                 ReviewedAssessmentRealization.self
             )
         }
-        let invoker = ProgramInferenceInvoker(
+        let invoker = ProgramInferenceExecutor(
             realization: realization,
             executor: executor
         )
@@ -205,7 +205,7 @@ extension ProgramsFlowTesting {
             assessment: "Publishing is not appropriate yet.",
             recorder: rejectedRecorder
         )
-        let rejectedInvoker = ProgramInferenceInvoker(
+        let rejectedInvoker = ProgramInferenceExecutor(
             realization: realization,
             executor: rejectedExecutor
         )

@@ -11,12 +11,12 @@ extension ExecutionTesting {
             tool: PhaseFailureTool<PhaseFailureDecodeIdentity>(
                 failurePhase: .call
             ),
-            call: ToolCall(
+            call: ToolInvocation(
                 id: "phase-failure-decode-call",
                 tool: ToolIdentifier(
                     rawValue: "phase_failure_decode"
                 ),
-                input: .object([:])
+                arguments: .object([:])
             ),
             operation: .execute
         )
@@ -66,7 +66,7 @@ extension ExecutionTesting {
         return [
             .field(
                 "phases",
-                ToolCall.Phase.allCases
+                ToolExecution.Phase.allCases
                     .map(\.rawValue)
                     .joined(separator: ",")
             ),
@@ -92,9 +92,9 @@ private enum PhaseFailureOperation {
 }
 
 private func provePhase<T: Tool>(
-    _ expectedPhase: ToolCall.Phase,
+    _ expectedPhase: ToolExecution.Phase,
     tool: T,
-    call: ToolCall,
+    call: ToolInvocation,
     operation: PhaseFailureOperation
 ) async throws {
     let registry = try ToolRegistry {
@@ -204,7 +204,7 @@ private func proveToolPlanFailurePersistence() async throws {
     let tool = PhaseFailureTool<PhaseFailurePlanIdentity>(
         failurePhase: .call
     )
-    let invoker = ToolInvoker(
+    let invoker = ToolExecutor(
         registry: try ToolRegistry {
             tool
         },
@@ -219,11 +219,15 @@ private func proveToolPlanFailurePersistence() async throws {
     let plan = try ToolPlan(
         id: "phase-failure-plan",
         root: .call(
-            call
+            FunctionCall(
+                id: call.id,
+                name: call.tool.rawValue,
+                input: call.arguments
+            )
         )
     )
-    let run = try await ToolPlan.RunExecutor(
-        invoker: invoker
+    let run = try await ToolPlan.Executor(
+        tools: invoker
     ).start(
         plan,
         executionPolicy: .single_step,
@@ -351,24 +355,24 @@ private func proveRecoveryErrorEvidence() async throws -> Bool {
     )
 
     let persisted = try JSONDecoder().decode(
-        ToolCall.Failure.self,
+        ToolExecution.Failure.self,
         from: JSONEncoder().encode(
             failure
         )
     )
     let persistedIncident = try Expect.notNil(
         persisted.incident,
-        "ToolCall.Failure Codable round trip retains the recovery incident"
+        "ToolExecution.Failure Codable round trip retains the recovery incident"
     )
 
     try Expect.equal(
         persisted,
         failure,
-        "ToolCall.Failure Codable round trip preserves structured recovery evidence"
+        "ToolExecution.Failure Codable round trip preserves structured recovery evidence"
     )
     _ = try Expect.notNil(
         persistedIncident.report,
-        "ToolCall.Failure persistence retains the incident ErrorReport"
+        "ToolExecution.Failure persistence retains the incident ErrorReport"
     )
 
     return true
@@ -376,10 +380,10 @@ private func proveRecoveryErrorEvidence() async throws -> Bool {
 
 private func capturedFailure(
     _ operation: () async throws -> Void
-) async throws -> ToolCall.Failure {
+) async throws -> ToolExecution.Failure {
     do {
         try await operation()
-    } catch let error as ToolCall.Error {
+    } catch let error as ToolExecution.Error {
         return error.failure
     }
 
@@ -389,13 +393,13 @@ private func capturedFailure(
 private func phaseCall(
     id: String,
     name: String
-) throws -> ToolCall {
-    ToolCall(
+) throws -> ToolInvocation {
+    ToolInvocation(
         id: id,
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONValue.encoding(
+        arguments: try JSONValue.encoding(
             PhaseFailureInput(
                 value: "fixture"
             )
@@ -483,7 +487,7 @@ private struct PhaseFailureTool<
         )
     }
 
-    let failurePhase: ToolCall.Phase
+    let failurePhase: ToolExecution.Phase
 
     func preflight(
         _ input: Input,
@@ -516,7 +520,7 @@ private struct PhaseFailureTool<
     func process(
         _ output: Output,
         input _: Input
-    ) throws -> ToolCall.ResultProjection? {
+    ) throws -> ToolExecution.Projection? {
         if failurePhase == .process {
             throw PhaseFailureProbeError.process
         }
@@ -560,7 +564,7 @@ private struct RecoveryFailureTool: Tool {
 
     func classify(
         _ error: any Error,
-        phase: ToolCall.Phase,
+        phase: ToolExecution.Phase,
         input: Input?
     ) -> Recovery.Incident? {
         guard
@@ -660,7 +664,7 @@ private struct ReportedFailureTool: Tool {
     func process(
         _ output: Output,
         input _: Input
-    ) -> ToolCall.ResultProjection? {
+    ) -> ToolExecution.Projection? {
         .init(
             status: "failed",
             summary: output.value

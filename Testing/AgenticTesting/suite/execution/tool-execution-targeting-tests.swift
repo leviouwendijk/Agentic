@@ -42,9 +42,9 @@ extension ExecutionTesting {
             "model invocation exposes optional execution metadata"
         )
 
-        let call = ToolCall(
+        let call = FunctionCall(
             id: "targeted-call",
-            tool: TargetingTool.definition.identifier,
+            name: TargetingTool.definition.identifier.rawValue,
             input: .object([
                 "arguments": try JSONValue.encoding(
                     TargetingPlaceholderInput(
@@ -79,9 +79,9 @@ extension ExecutionTesting {
             _ input: JSONValue,
             containing fragment: String
         ) throws {
-            let malformed = ToolCall(
+            let malformed = FunctionCall(
                 id: "malformed-envelope",
-                tool: TargetingTool.definition.identifier,
+                name: TargetingTool.definition.identifier.rawValue,
                 input: input
             )
             do {
@@ -142,9 +142,9 @@ extension ExecutionTesting {
             containing: "missing required 'arguments'"
         )
 
-        let plainCall = ToolCall(
+        let plainCall = FunctionCall(
             id: "plain-call",
-            tool: TargetingTool.definition.identifier,
+            name: TargetingTool.definition.identifier.rawValue,
             input: .object([
                 "arguments": try JSONValue.encoding(
                     TargetingPlaceholderInput(
@@ -163,7 +163,7 @@ extension ExecutionTesting {
             "omitting execution preserves the current workspace"
         )
 
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: registry,
             policy: .init(
                 autonomyMode: .auto_observe

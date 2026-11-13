@@ -29,7 +29,7 @@ private struct CompilerReproducerManualInference:
 
     @JSONSchema
     struct Output:
-        Result,
+        Contract.Result,
         Hashable
     {
         let value: String
@@ -53,7 +53,7 @@ private struct CompilerReproducerMacroExplicitInference {
 
     @JSONSchema
     struct Output:
-        Result,
+        Contract.Result,
         Hashable
     {
         let value: String
@@ -74,7 +74,7 @@ private struct CompilerReproducerMacroImplicitInference {
 
     @JSONSchema
     struct Output:
-        Result,
+        Contract.Result,
         Hashable
     {
         let value: String
@@ -275,7 +275,7 @@ extension Standard.Inferences {
 
         @JSONSchema
         public struct Output:
-            Result,
+            Contract.Result,
             Hashable
         {
             public var proposals: [CompilerReproducerProposal]

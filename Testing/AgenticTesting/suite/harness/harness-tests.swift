@@ -147,7 +147,7 @@ private struct HarnessExposureInspectionSource:
             ),
         ]
 
-        if input.resolvedIncludeHidden {
+        if input.includeHidden {
             entries.append(
                 .init(
                     kind: "tool",

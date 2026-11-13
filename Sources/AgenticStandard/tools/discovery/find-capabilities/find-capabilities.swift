@@ -2,6 +2,7 @@ import Agentic
 import Foundation
 import Macros
 import Schema
+import Primitives
 
 public enum FindCapabilitiesError:
     Error,
@@ -34,13 +35,40 @@ public extension Standard.Tools {
             }
         }
 
-        @JSONSchema
-        public struct Input: HashableSource
-        {
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                public var query: String?
+                /// Defaults to `all`.
+                public var kind: Kind?
+                public var domain: String?
+                /// Defaults to 5; clamped to 1...8.
+                public var maximumResults: Int?
+
+                public init(
+                    query: String? = nil,
+                    kind: Kind? = nil,
+                    domain: String? = nil,
+                    maximumResults: Int? = nil
+                ) {
+                    self.query = query
+                    self.kind = kind
+                    self.domain = domain
+                    self.maximumResults = maximumResults
+                }
+            }
+
             public let query: String?
-            public let kind: Kind?
+            public let kind: Kind
             public let domain: String?
-            public let maximumResults: Int?
+            public let maximumResults: Int
+
+            public init(_ raw: Raw) {
+                self.query = raw.query
+                self.kind = raw.kind ?? .all
+                self.domain = raw.domain
+                self.maximumResults = min(8, max(1, raw.maximumResults ?? 5))
+            }
 
             public init(
                 query: String? = nil,
@@ -48,23 +76,22 @@ public extension Standard.Tools {
                 domain: String? = nil,
                 maximumResults: Int? = nil
             ) {
-                self.query = query
-                self.kind = kind
-                self.domain = domain
-                self.maximumResults = maximumResults
-            }
-
-            var resolvedKind: Kind {
-                kind ?? .all
-            }
-
-            var resolvedMaximumResults: Int {
-                min(
-                    8,
-                    max(
-                        1,
-                        maximumResults ?? 5
+                self.init(
+                    Raw(
+                        query: query,
+                        kind: kind,
+                        domain: domain,
+                        maximumResults: maximumResults
                     )
+                )
+            }
+
+            public var raw: Raw {
+                Raw(
+                    query: query,
+                    kind: kind,
+                    domain: domain,
+                    maximumResults: maximumResults
                 )
             }
         }
@@ -139,7 +166,7 @@ public extension Standard.Tools {
                     candidate(
                         inspection,
                         available: before.available.intersecting(before.installed),
-                        kind: input.resolvedKind,
+                        kind: input.kind,
                         domain: domain,
                         query: query
                     )
@@ -147,7 +174,7 @@ public extension Standard.Tools {
                 .sorted(by: candidatePrecedes)
             let selected = Array(
                 candidates.prefix(
-                    input.resolvedMaximumResults
+                    input.maximumResults
                 )
             )
             return Output(

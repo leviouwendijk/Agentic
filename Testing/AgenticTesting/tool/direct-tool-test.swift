@@ -61,7 +61,7 @@ public enum DirectToolTest {
     public static func classify<ToolType: Tool>(
         _ tool: ToolType,
         error: any Error,
-        phase: ToolCall.Phase,
+        phase: ToolExecution.Phase,
         input: ToolType.Input? = nil
     ) -> ToolClassificationTestResult<ToolType> {
         let incident = tool.classify(
@@ -81,7 +81,7 @@ public enum DirectToolTest {
     public static func reconcile<ToolType: Tool>(
         _ tool: ToolType,
         input: ToolType.Input,
-        after failure: ToolCall.Failure,
+        after failure: ToolExecution.Failure,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolReconciliationTestResult<ToolType> {
         let reconciliation = try await tool.reconcile(

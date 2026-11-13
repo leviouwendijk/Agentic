@@ -6,14 +6,14 @@ import Foundation
 
 enum ExecutionTesting {
     static func runToolPlanSparseWireDefaults() throws -> [TestDiagnostic] {
-        let firstCall = ToolCall(
+        let firstCall = FunctionCall(
             id: "sparse-wire-first",
-            tool: ToolIdentifier(rawValue: "sparse_wire_probe"),
+            name: "sparse_wire_probe",
             input: .object([:])
         )
-        let branchCall = ToolCall(
+        let branchCall = FunctionCall(
             id: "sparse-wire-branch",
-            tool: ToolIdentifier(rawValue: "sparse_wire_probe"),
+            name: "sparse_wire_probe",
             input: .object([:])
         )
         let encoder = JSONEncoder()
@@ -180,44 +180,36 @@ enum ExecutionTesting {
 
     static func runToolPlanSingleStepResume() async throws -> [TestDiagnostic] {
         let fixture = try makeFixture()
-        let first = ToolCall(
+        let first = FunctionCall(
             id: "first",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "first"
                 )
             )
         )
-        let second = ToolCall(
+        let second = FunctionCall(
             id: "second",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "second"
                 )
             )
         )
-        let third = ToolCall(
+        let third = FunctionCall(
             id: "third",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "third"
                 )
             )
         )
-        let fourth = ToolCall(
+        let fourth = FunctionCall(
             id: "fourth",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "fourth"
@@ -660,44 +652,36 @@ enum ExecutionTesting {
 
     static func runToolPlanFailureBranchRetryResume() async throws -> [TestDiagnostic] {
         let fixture = try makeFixture()
-        let prefix = ToolCall(
+        let prefix = FunctionCall(
             id: "failure-branch-prefix",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "prefix"
                 )
             )
         )
-        let repair = ToolCall(
+        let repair = FunctionCall(
             id: "failure-branch-repair",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "repair"
                 )
             )
         )
-        let branchFix = ToolCall(
+        let branchFix = FunctionCall(
             id: "failure-branch-fix",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "branch-fix"
                 )
             )
         )
-        let suffix = ToolCall(
+        let suffix = FunctionCall(
             id: "failure-branch-suffix",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "suffix"
@@ -933,7 +917,7 @@ enum ExecutionTesting {
         >(
             probe: probe
         )
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: try ToolRegistry {
                 tool
             },
@@ -941,19 +925,17 @@ enum ExecutionTesting {
                 autonomyMode: .auto_observe
             )
         )
-        let executor = ToolPlan.RunExecutor(
-            invoker: invoker
+        let executor = ToolPlan.Executor(
+            tools: invoker
         )
         let plan = try ToolPlan(
             id: "approval-skip-plan",
             root: .sequence(
                 [
                     .call(
-                        ToolCall(
+                        FunctionCall(
                             id: "approval-prefix",
-                            tool: ToolIdentifier(
-                                rawValue: "tool_plan_approval_skip_probe"
-                            ),
+                            name: "tool_plan_approval_skip_probe",
                             input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-prefix"
@@ -962,11 +944,9 @@ enum ExecutionTesting {
                         )
                     ),
                     .call(
-                        ToolCall(
+                        FunctionCall(
                             id: "approval-skip",
-                            tool: ToolIdentifier(
-                                rawValue: "tool_plan_approval_skip_probe"
-                            ),
+                            name: "tool_plan_approval_skip_probe",
                             input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-skip"
@@ -975,11 +955,9 @@ enum ExecutionTesting {
                         )
                     ),
                     .call(
-                        ToolCall(
+                        FunctionCall(
                             id: "approval-suffix",
-                            tool: ToolIdentifier(
-                                rawValue: "tool_plan_approval_skip_probe"
-                            ),
+                            name: "tool_plan_approval_skip_probe",
                             input: try JSONValue.encoding(
                                 RunProbeInput(
                                     marker: "approval-suffix"
@@ -1101,7 +1079,7 @@ private struct PlanRunFailureEvidenceTool: Tool {
 
     func classify(
         _ error: any Error,
-        phase: ToolCall.Phase,
+        phase: ToolExecution.Phase,
         input _: Input?
     ) -> Recovery.Incident? {
         guard phase == .call,
@@ -1144,7 +1122,7 @@ private struct PlanRunFailureEvidenceTool: Tool {
 
 private extension ExecutionTesting {
     struct FailureEvidenceFixture {
-        let executor: ToolPlan.RunExecutor
+        let executor: ToolPlan.Executor
         let plan: ToolPlan
         let probe: PlanRunFailureEvidenceProbe
     }
@@ -1157,7 +1135,7 @@ private extension ExecutionTesting {
             probe: probe,
             retrySafety: retrySafety
         )
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: try ToolRegistry {
                 tool
             },
@@ -1165,12 +1143,9 @@ private extension ExecutionTesting {
                 autonomyMode: .auto_observe
             )
         )
-        let call = ToolCall(
+        let call = FunctionCall(
             id: "failure-evidence",
-            tool: ToolIdentifier(
-                rawValue:
-                    "tool_plan_failure_evidence_probe"
-            ),
+            name: "tool_plan_failure_evidence_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: retrySafety.rawValue
@@ -1185,8 +1160,8 @@ private extension ExecutionTesting {
         )
 
         return FailureEvidenceFixture(
-            executor: ToolPlan.RunExecutor(
-                invoker: invoker
+            executor: ToolPlan.Executor(
+                tools: invoker
             ),
             plan: plan,
             probe: probe
@@ -1196,7 +1171,7 @@ private extension ExecutionTesting {
 
 private extension ExecutionTesting {
     struct Fixture {
-        let executor: ToolPlan.RunExecutor
+        let executor: ToolPlan.Executor
         let plan: ToolPlan
         let probe: PlanRunProbe
     }
@@ -1208,7 +1183,7 @@ private extension ExecutionTesting {
         >(
             probe: probe
         )
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: try ToolRegistry {
                 tool
             },
@@ -1216,33 +1191,27 @@ private extension ExecutionTesting {
                 autonomyMode: .auto_observe
             )
         )
-        let prefix = ToolCall(
+        let prefix = FunctionCall(
             id: "prefix",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "prefix"
                 )
             )
         )
-        let repair = ToolCall(
+        let repair = FunctionCall(
             id: "repair",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "repair"
                 )
             )
         )
-        let suffix = ToolCall(
+        let suffix = FunctionCall(
             id: "suffix",
-            tool: ToolIdentifier(
-                rawValue: "tool_plan_run_probe"
-            ),
+            name: "tool_plan_run_probe",
             input: try JSONValue.encoding(
                 RunProbeInput(
                     marker: "suffix"
@@ -1261,8 +1230,8 @@ private extension ExecutionTesting {
         )
 
         return Fixture(
-            executor: ToolPlan.RunExecutor(
-                invoker: invoker
+            executor: ToolPlan.Executor(
+                tools: invoker
             ),
             plan: plan,
             probe: probe
@@ -1411,7 +1380,7 @@ extension ExecutionTesting {
             expectedCatalog: catalog,
             expectedCapabilities: capabilities
         )
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: try ToolRegistry {
                 tool
             },
@@ -1419,37 +1388,37 @@ extension ExecutionTesting {
                 autonomyMode: .auto_observe
             )
         )
-        let executor = ToolPlan.RunExecutor(
-            invoker: invoker
+        let executor = ToolPlan.Executor(
+            tools: invoker
         )
 
-        let ordinary = ToolCall(
+        let ordinary = FunctionCall(
             id: "context-ordinary",
-            tool: ToolPlanContextPropagationTool
+            name: ToolPlanContextPropagationTool
                 .definition
-                .identifier,
+                .identifier.rawValue,
             input: try JSONValue.encoding(
                 ToolPlanContextPropagationInput(
                     marker: "ordinary"
                 )
             )
         )
-        let retry = ToolCall(
+        let retry = FunctionCall(
             id: "context-retry",
-            tool: ToolPlanContextPropagationTool
+            name: ToolPlanContextPropagationTool
                 .definition
-                .identifier,
+                .identifier.rawValue,
             input: try JSONValue.encoding(
                 ToolPlanContextPropagationInput(
                     marker: "retry"
                 )
             )
         )
-        let suffix = ToolCall(
+        let suffix = FunctionCall(
             id: "context-suffix",
-            tool: ToolPlanContextPropagationTool
+            name: ToolPlanContextPropagationTool
                 .definition
-                .identifier,
+                .identifier.rawValue,
             input: try JSONValue.encoding(
                 ToolPlanContextPropagationInput(
                     marker: "suffix"

@@ -6,18 +6,49 @@ import Macros
 public extension Standard.Tools {
     @Tool
     struct SummarizeTranscriptWindow: Tool {
-        @JSONSchema
-        public struct Input: HashableSource {
-            /// Optional first transcript event index for the summary window.
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                /// Optional first transcript event index for the summary window.
+                public var startIndex: Int?
+                /// Optional maximum number of transcript events in the summary window.
+                public var limit: Int?
+                /// Transcript event kinds to include. An empty array includes all kinds.
+                public var kinds: [TranscriptEventKind]
+                /// Whether to traverse the selected transcript window newest first.
+                public var latestFirst: Bool
+                /// Optional maximum excerpt characters retained per summarized event.
+                public var maxExcerptCharacters: Int?
+
+                public init(
+                    startIndex: Int? = nil,
+                    limit: Int? = nil,
+                    kinds: [TranscriptEventKind] = [],
+                    latestFirst: Bool = false,
+                    maxExcerptCharacters: Int? = nil
+                ) {
+                    self.startIndex = startIndex
+                    self.limit = limit
+                    self.kinds = kinds
+                    self.latestFirst = latestFirst
+                    self.maxExcerptCharacters = maxExcerptCharacters
+                }
+            }
+
             public let startIndex: Int?
-            /// Optional maximum number of transcript events in the summary window.
             public let limit: Int?
-            /// Transcript event kinds to include. An empty array includes all kinds.
             public let kinds: [TranscriptEventKind]
-            /// Whether to traverse the selected transcript window newest first.
             public let latestFirst: Bool
-            /// Optional maximum excerpt characters retained per summarized event.
-            public let maxExcerptCharacters: Int?
+            /// Defaults to 220; clamped to 32...2000.
+            public let maxExcerptCharacters: Int
+
+            public init(_ raw: Raw) {
+                self.startIndex = raw.startIndex
+                self.limit = raw.limit
+                self.kinds = raw.kinds
+                self.latestFirst = raw.latestFirst
+                self.maxExcerptCharacters = max(32, min(raw.maxExcerptCharacters ?? 220, 2_000))
+            }
 
             public init(
                 startIndex: Int? = nil,
@@ -26,20 +57,24 @@ public extension Standard.Tools {
                 latestFirst: Bool = false,
                 maxExcerptCharacters: Int? = nil
             ) {
-                self.startIndex = startIndex
-                self.limit = limit
-                self.kinds = kinds
-                self.latestFirst = latestFirst
-                self.maxExcerptCharacters = maxExcerptCharacters
+                self.init(
+                    Raw(
+                        startIndex: startIndex,
+                        limit: limit,
+                        kinds: kinds,
+                        latestFirst: latestFirst,
+                        maxExcerptCharacters: maxExcerptCharacters
+                    )
+                )
             }
 
-            public var clampedMaxExcerptCharacters: Int {
-                max(
-                    32,
-                    min(
-                        maxExcerptCharacters ?? 220,
-                        2_000
-                    )
+            public var raw: Raw {
+                Raw(
+                    startIndex: startIndex,
+                    limit: limit,
+                    kinds: kinds,
+                    latestFirst: latestFirst,
+                    maxExcerptCharacters: maxExcerptCharacters
                 )
             }
         }
@@ -99,7 +134,7 @@ public extension Standard.Tools {
             let window = TranscriptSupport.summarize(
                 events: selected,
                 totalEventCount: events.count,
-                maxExcerptCharacters: input.clampedMaxExcerptCharacters
+                maxExcerptCharacters: input.maxExcerptCharacters
             )
 
             return Output(

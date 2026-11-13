@@ -102,7 +102,7 @@ extension ProgramsFlowTesting {
                 SelectNextActionRealization.self
             )
         }
-        let inferenceInvoker = ProgramInferenceInvoker(
+        let inferenceInvoker = ProgramInferenceExecutor(
             realization: realization,
             executor: executor
         )
@@ -152,7 +152,7 @@ extension ProgramsFlowTesting {
             selectedActionIdentifier: "invented_action",
             recorder: invalidRecorder
         )
-        let invalidInvoker = ProgramInferenceInvoker(
+        let invalidInvoker = ProgramInferenceExecutor(
             realization: realization,
             executor: invalidExecutor
         )

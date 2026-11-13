@@ -21,9 +21,9 @@ extension ExecutionTesting {
                 value: "hello"
             )
         )
-        let modelCall = ToolCall(
+        let modelCall = FunctionCall(
             id: "typed-tool-contract-model-call",
-            tool: tool.identifier,
+            name: tool.identifier.rawValue,
             input: .object([
                 "arguments": semanticInput,
             ])
@@ -48,10 +48,10 @@ extension ExecutionTesting {
             "model invocation unwraps the semantic arguments"
         )
 
-        let call = ToolCall(
+        let call = ToolInvocation(
             id: "typed-tool-contract-call",
             tool: tool.identifier,
-            input: semanticInput
+            arguments: semanticInput
         )
 
         let preflight = try await registry.preflight(
@@ -221,7 +221,7 @@ private struct TypedAgentToolContractTool: Tool {
     func process(
         _ output: Output,
         input: Input
-    ) -> ToolCall.ResultProjection? {
+    ) -> ToolExecution.Projection? {
         .init(
             status: "completed",
             summary:

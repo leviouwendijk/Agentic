@@ -19,7 +19,7 @@ func runCapabilityKindBindingsSmoke() throws {
         "inference binding retains the authored input contract"
     )
 
-    let inferenceCall = CapabilityCall.Raw(
+    let inferenceCall = CapabilityCall(
         id: "inference-binding-smoke",
         capability: I.reference,
         input: try JSONValue.encoding(I.Input(value: "hello"))
@@ -59,23 +59,23 @@ func runCapabilityKindBindingsSmoke() throws {
     try Expect.equal(agent.reference, A.reference, "agent reference stays typed")
     try Expect.equal(agent.contract.output, A.contract.output,
                      "agent binding retains authored output contract")
-    let agentRaw = CapabilityCall.Raw(
+    let agentRaw = CapabilityCall(
         id: "agent-binding-smoke",
         capability: A.reference,
         input: try JSONValue.encoding(A.Input(objective: "evaluate"))
     )
-    let agentCall = try agent.call(from: agentRaw)
+    let agentCall = try agent.verify(agentRaw)
     try Expect.equal(agentCall.id, agentRaw.id, "agent call ID preserved")
-    try Expect.equal(agentCall.agent, A.definition.identifier,
-                     "agent call uses resolved identity")
+    try Expect.equal(agentCall.capability, A.reference,
+                     "agent call keeps its verified identity")
 
-    let wrong = CapabilityCall.Raw(
+    let wrong = CapabilityCall(
         id: agentRaw.id,
         capability: .tool(.init(rawValue: A.definition.identifier.rawValue)),
         input: agentRaw.input
     )
     do {
-        _ = try agent.call(from: wrong)
+        _ = try agent.verify(wrong)
         throw KindBindingSmokeError.unexpectedSuccess
     } catch let error as CapabilityRequestError {
         guard case let .mismatchedCapability(expected, actual) = error else {
@@ -85,13 +85,13 @@ func runCapabilityKindBindingsSmoke() throws {
         try Expect.equal(actual, wrong.capability, "mismatched Tool reference retained")
     }
 
-    let invalid = CapabilityCall.Raw(
+    let invalid = CapabilityCall(
         id: "invalid-agent-input",
         capability: A.reference,
         input: try JSONValue.encoding(123)
     )
     do {
-        _ = try agent.call(from: invalid)
+        _ = try agent.verify(invalid)
         throw KindBindingSmokeError.unexpectedSuccess
     } catch is KindBindingSmokeError {
         throw KindBindingSmokeError.unexpectedError

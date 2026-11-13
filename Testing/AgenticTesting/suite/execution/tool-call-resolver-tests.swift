@@ -4,13 +4,13 @@ import Schema
 import Testing
 
 extension ExecutionTesting {
-    static func runToolCallResolver() async throws -> [TestDiagnostic] {
-        let probe = ToolCallResolverProbe()
-        let registry = try toolCallResolverRegistry(
+    static func runFunctionCallResolver() async throws -> [TestDiagnostic] {
+        let probe = FunctionCallResolverProbe()
+        let registry = try functionCallResolverRegistry(
             probe: probe
         )
 
-        let observeResolver = GovernedAgentToolCallResolver(
+        let observeResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_observe",
@@ -21,7 +21,7 @@ extension ExecutionTesting {
         )
 
         let observeResult = try await observeResolver.resolve(
-            try toolCallResolverCall(
+            try functionCallResolverCall(
                 id: "resolver-observe-call",
                 name: "resolver_observe"
             )
@@ -40,15 +40,15 @@ extension ExecutionTesting {
 
         do {
             _ = try await observeResolver.resolve(
-                try toolCallResolverCall(
+                try functionCallResolverCall(
                     id: "resolver-unexposed-call",
                     name: "resolver_mutate"
                 )
             )
 
-            throw ToolCallResolverFlowFailure
+            throw FunctionCallResolverFlowFailure
                 .expectedUnexposedToolRejection
-        } catch AgentToolCallResolutionError.toolNotVisible(let tool) {
+        } catch FunctionCallResolutionError.toolNotVisible(let tool) {
             try Expect.equal(
                 tool.rawValue,
                 "resolver_mutate",
@@ -62,7 +62,7 @@ extension ExecutionTesting {
             "unexposed call never reaches execution"
         )
 
-        let approvedResolver = GovernedAgentToolCallResolver(
+        let approvedResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_mutate",
@@ -70,13 +70,13 @@ extension ExecutionTesting {
             policy: .init(
                 autonomyMode: .auto_observe
             ),
-            approvalHandler: ToolCallResolverApprovalHandler(
+            approvalHandler: FunctionCallResolverApprovalHandler(
                 decision: .approved
             )
         )
 
         let approvedResult = try await approvedResolver.resolve(
-            try toolCallResolverCall(
+            try functionCallResolverCall(
                 id: "resolver-approved-call",
                 name: "resolver_mutate"
             )
@@ -93,7 +93,7 @@ extension ExecutionTesting {
             "approved bounded mutation executes exactly once"
         )
 
-        let unresolvedResolver = GovernedAgentToolCallResolver(
+        let unresolvedResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_mutate",
@@ -105,15 +105,15 @@ extension ExecutionTesting {
 
         do {
             _ = try await unresolvedResolver.resolve(
-                try toolCallResolverCall(
+                try functionCallResolverCall(
                     id: "resolver-needs-human-call",
                     name: "resolver_mutate"
                 )
             )
 
-            throw ToolCallResolverFlowFailure
+            throw FunctionCallResolverFlowFailure
                 .expectedNeedsHumanReview
-        } catch AgentToolCallResolutionError.needsHumanReview(let review) {
+        } catch FunctionCallResolutionError.needsHumanReview(let review) {
             try Expect.equal(
                 review.requirement,
                 .needs_human_review,
@@ -132,7 +132,7 @@ extension ExecutionTesting {
             "unresolved human review never executes the tool"
         )
 
-        let deniedResolver = GovernedAgentToolCallResolver(
+        let deniedResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_mutate",
@@ -140,13 +140,13 @@ extension ExecutionTesting {
             policy: .init(
                 autonomyMode: .auto_observe
             ),
-            approvalHandler: ToolCallResolverApprovalHandler(
+            approvalHandler: FunctionCallResolverApprovalHandler(
                 decision: .denied
             )
         )
 
         let deniedResult = try await deniedResolver.resolve(
-            try toolCallResolverCall(
+            try functionCallResolverCall(
                 id: "resolver-denied-call",
                 name: "resolver_mutate"
             )
@@ -176,7 +176,7 @@ extension ExecutionTesting {
     }
 }
 
-private actor ToolCallResolverProbe {
+private actor FunctionCallResolverProbe {
     private var count = 0
 
     func recordInvocation() {
@@ -188,7 +188,7 @@ private actor ToolCallResolverProbe {
     }
 }
 
-private struct ToolCallResolverProbeInput:
+private struct FunctionCallResolverProbeInput:
     Sendable,
     Codable,
     JSONSchemaProviding
@@ -198,12 +198,12 @@ private struct ToolCallResolverProbeInput:
     }
 }
 
-private protocol ToolCallResolverProbeIdentity {
+private protocol FunctionCallResolverProbeIdentity {
     static var definition: ToolDefinition { get }
 }
 
 private enum ResolverObserveToolIdentity:
-    ToolCallResolverProbeIdentity
+    FunctionCallResolverProbeIdentity
 {
     static let definition = ToolDefinition(
         identifier: "resolver_observe",
@@ -213,7 +213,7 @@ private enum ResolverObserveToolIdentity:
 }
 
 private enum ResolverMutateToolIdentity:
-    ToolCallResolverProbeIdentity
+    FunctionCallResolverProbeIdentity
 {
     static let definition = ToolDefinition(
         identifier: "resolver_mutate",
@@ -222,17 +222,17 @@ private enum ResolverMutateToolIdentity:
     )
 }
 
-private struct ToolCallResolverProbeTool<
-    Identity: ToolCallResolverProbeIdentity
+private struct FunctionCallResolverProbeTool<
+    Identity: FunctionCallResolverProbeIdentity
 >: Tool {
-    typealias Input = ToolCallResolverProbeInput
-    typealias Output = ToolCallResolverProbeInput
+    typealias Input = FunctionCallResolverProbeInput
+    typealias Output = FunctionCallResolverProbeInput
 
     static var definition: ToolDefinition {
         Identity.definition
     }
 
-    let probe: ToolCallResolverProbe
+    let probe: FunctionCallResolverProbe
 
     func call(
         _ input: Input,
@@ -243,7 +243,7 @@ private struct ToolCallResolverProbeTool<
     }
 }
 
-private struct ToolCallResolverApprovalHandler:
+private struct FunctionCallResolverApprovalHandler:
     ToolApprovalHandler
 {
     let decision: ApprovalDecision
@@ -255,27 +255,27 @@ private struct ToolCallResolverApprovalHandler:
     }
 }
 
-private enum ToolCallResolverFlowFailure:
+private enum FunctionCallResolverFlowFailure:
     Error
 {
     case expectedUnexposedToolRejection
     case expectedNeedsHumanReview
 }
 
-private func toolCallResolverRegistry(
-    probe: ToolCallResolverProbe
+private func functionCallResolverRegistry(
+    probe: FunctionCallResolverProbe
 ) throws -> ToolRegistry {
     var registry = ToolRegistry()
 
     try registry.register(
-        ToolCallResolverProbeTool<
+        FunctionCallResolverProbeTool<
             ResolverObserveToolIdentity
         >(
             probe: probe
         )
     )
     try registry.register(
-        ToolCallResolverProbeTool<
+        FunctionCallResolverProbeTool<
             ResolverMutateToolIdentity
         >(
             probe: probe
@@ -285,18 +285,16 @@ private func toolCallResolverRegistry(
     return registry
 }
 
-private func toolCallResolverCall(
+private func functionCallResolverCall(
     id: String,
     name: String
-) throws -> ToolCall {
-    ToolCall(
+) throws -> FunctionCall {
+    FunctionCall(
         id: id,
-        tool: ToolIdentifier(
-            rawValue: name
-        ),
+        name: name,
         input: .object([
             "arguments": try JSONValue.encoding(
-                ToolCallResolverProbeInput()
+                FunctionCallResolverProbeInput()
             ),
         ])
     )

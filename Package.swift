@@ -277,6 +277,10 @@ let package = Package(
                     package: "Macros"
                 ),
                 .product(
+                    name: "Primitives",
+                    package: "Primitives"
+                ),
+                .product(
                     name: "Schema",
                     package: "Schema"
                 ),

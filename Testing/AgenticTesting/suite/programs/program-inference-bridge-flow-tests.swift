@@ -165,7 +165,7 @@ extension ProgramsFlowTesting {
             "resolved Program inference preserves the bound semantic realization configuration"
         )
 
-        let inferenceInvoker = ProgramInferenceInvoker(
+        let inferenceInvoker = ProgramInferenceExecutor(
             realization: programRealization,
             executor: executor
         )
@@ -202,7 +202,7 @@ extension ProgramsFlowTesting {
 
         var missingSite: InferenceSiteIdentifier?
 
-        let missingInvoker = ProgramInferenceInvoker(
+        let missingInvoker = ProgramInferenceExecutor(
             realization: Bridge.realization {},
             executor: executor
         )

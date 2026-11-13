@@ -69,7 +69,7 @@ private struct DecisionProgramFixture: Program {
 
 /// Exercises authoring and ProgramContext dispatch only, without claiming model execution.
 private struct DecisionAuthoringFixtureInvoker:
-    InferenceInvoking
+    ProgramInferenceExecuting
 {
     func infer<P: Program, I: Inference>(
         _ site: InferenceSite<P, I>,

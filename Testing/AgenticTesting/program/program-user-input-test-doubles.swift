@@ -1,6 +1,6 @@
 import Agentic
 
-public struct FixedProgramUserInput: ProgramUserInputInvoking {
+public struct FixedProgramUserInput: UserInputProviding {
     public let response: UserInputResponse
 
     public init(
@@ -25,7 +25,7 @@ public enum ProgramUserInputTestError:
     case responsesExhausted
 }
 
-public actor RecordingProgramUserInput: ProgramUserInputInvoking {
+public actor RecordingProgramUserInput: UserInputProviding {
     private var responses: [UserInputResponse]
     private var requests: [UserInputRequest] = []
 

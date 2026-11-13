@@ -20,18 +20,49 @@ public struct SearchTranscriptMatch: Sendable, Codable, Hashable {
 public extension Standard.Tools {
     @Tool
     struct SearchTranscript: Tool {
-        @JSONSchema
-        public struct Input: HashableSource {
-            /// Text query to search for in transcript events.
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                /// Text query to search for in transcript events.
+                public var query: String
+                /// Transcript event kinds to search. An empty array includes all kinds.
+                public var kinds: [TranscriptEventKind]
+                /// Optional maximum number of search results.
+                public var maxResults: Int?
+                /// Whether to include full event text in search results.
+                public var includeFullText: Bool
+                /// Whether text matching is case-sensitive.
+                public var caseSensitive: Bool
+
+                public init(
+                    query: String,
+                    kinds: [TranscriptEventKind] = [],
+                    maxResults: Int? = nil,
+                    includeFullText: Bool = false,
+                    caseSensitive: Bool = false
+                ) {
+                    self.query = query
+                    self.kinds = kinds
+                    self.maxResults = maxResults
+                    self.includeFullText = includeFullText
+                    self.caseSensitive = caseSensitive
+                }
+            }
+
             public let query: String
-            /// Transcript event kinds to search. An empty array includes all kinds.
             public let kinds: [TranscriptEventKind]
-            /// Optional maximum number of search results.
-            public let maxResults: Int?
-            /// Whether to include full event text in search results.
+            /// Defaults to 8; clamped to 1...50.
+            public let maxResults: Int
             public let includeFullText: Bool
-            /// Whether text matching is case-sensitive.
             public let caseSensitive: Bool
+
+            public init(_ raw: Raw) {
+                self.query = raw.query
+                self.kinds = raw.kinds
+                self.maxResults = max(1, min(raw.maxResults ?? 8, 50))
+                self.includeFullText = raw.includeFullText
+                self.caseSensitive = raw.caseSensitive
+            }
 
             public init(
                 query: String,
@@ -40,20 +71,24 @@ public extension Standard.Tools {
                 includeFullText: Bool = false,
                 caseSensitive: Bool = false
             ) {
-                self.query = query
-                self.kinds = kinds
-                self.maxResults = maxResults
-                self.includeFullText = includeFullText
-                self.caseSensitive = caseSensitive
+                self.init(
+                    Raw(
+                        query: query,
+                        kinds: kinds,
+                        maxResults: maxResults,
+                        includeFullText: includeFullText,
+                        caseSensitive: caseSensitive
+                    )
+                )
             }
 
-            public var clampedMaxResults: Int {
-                max(
-                    1,
-                    min(
-                        maxResults ?? 8,
-                        50
-                    )
+            public var raw: Raw {
+                Raw(
+                    query: query,
+                    kinds: kinds,
+                    maxResults: maxResults,
+                    includeFullText: includeFullText,
+                    caseSensitive: caseSensitive
                 )
             }
         }
@@ -151,7 +186,7 @@ public extension Standard.Tools {
 
             let limitedMatches = Array(
                 matches.prefix(
-                    input.clampedMaxResults
+                    input.maxResults
                 )
             )
 

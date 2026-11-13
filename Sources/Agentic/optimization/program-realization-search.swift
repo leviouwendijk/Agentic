@@ -220,7 +220,7 @@ public struct ProgramRealizationSearch<ProgramType: Program>: Sendable {
                     base: inferenceExecutor,
                     recorder: recorder
                 )
-            let inferenceInvoker = ProgramInferenceInvoker(
+            let inferenceInvoker = ProgramInferenceExecutor(
                 realization: candidate.realization,
                 executor: recordingExecutor
             )

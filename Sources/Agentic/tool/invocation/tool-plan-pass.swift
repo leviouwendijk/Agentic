@@ -1,0 +1,426 @@
+import Foundation
+
+extension ToolPlan {
+    /// One pass over a plan: executes nodes in order through the governed
+    /// `ToolExecutor`. Durable start/resume/retry lives in `ToolPlan.Executor`.
+    struct Pass:
+        Sendable
+    {
+        let tools: ToolExecutor
+
+        init(
+            tools: ToolExecutor
+        ) {
+            self.tools = tools
+        }
+
+        func execute(
+            _ plan: ToolPlan,
+            in context: ToolContext,
+            references: [Reference] = [],
+            approvalHandler: (any ToolApprovalHandler)? = nil
+        ) async throws -> ToolPlan.Result {
+            var references = references
+
+            for reference in plan.references
+            where !references.contains(reference)
+            {
+                references.append(reference)
+            }
+
+            let navigator = ToolPlan.Navigator(
+                plan
+            )
+            let execution = await execute(
+                plan.root,
+                path: navigator.rootPath,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+            return .init(
+                planID: plan.id,
+                outcome: execution.outcome,
+                records: execution.records
+            )
+        }
+    }
+}
+
+private extension ToolPlan.Pass {
+    struct NodeExecution:
+        Sendable
+    {
+        let outcome: ToolPlan.Outcome
+        let records: [ToolPlan.Record]
+    }
+
+    func execute(
+        _ node: ToolPlan.Node,
+        path: String,
+        navigator: ToolPlan.Navigator,
+        context: ToolContext,
+        references: [Reference],
+        approvalHandler: (any ToolApprovalHandler)?
+    ) async -> NodeExecution {
+        switch node.kind {
+        case .call:
+            return await executeCall(
+                node,
+                path: path,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+        case .sequence:
+            return await executeSequence(
+                node.children,
+                path: path,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+        case .batch:
+            return await executeBatch(
+                node.children,
+                path: path,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+        }
+    }
+
+    func executeCall(
+        _ node: ToolPlan.Node,
+        path: String,
+        navigator: ToolPlan.Navigator,
+        context: ToolContext,
+        references: [Reference],
+        approvalHandler: (any ToolApprovalHandler)?
+    ) async -> NodeExecution {
+        guard let call = node.call else {
+            return .init(
+                outcome: .failed,
+                records: []
+            )
+        }
+
+        let invocation: ToolInvocation.Result
+
+        do {
+            invocation = try await tools.invoke(
+                ToolInvocation(
+                    id: call.id,
+                    tool: ToolIdentifier(call.name),
+                    arguments: call.input,
+                    execution: node.execution
+                ),
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+        } catch {
+            let record = ToolPlan.Record(
+                path: path,
+                call: call,
+                outcome: .failed,
+                toolFailure:
+                    (error as? ToolExecution.Error)?
+                        .failure,
+                errorDescription: errorText(
+                    error
+                )
+            )
+
+            let branches = await branchRecords(
+                for: .failed,
+                node: node,
+                path: path,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+            return .init(
+                outcome:
+                    branches.selectedOutcome == .needs_human_review
+                        ? .needs_human_review
+                        : .failed,
+                records:
+                    [record]
+                    + branches.records
+            )
+        }
+
+        let outcome = outcome(
+            for: invocation
+        )
+        let record = ToolPlan.Record(
+            path: path,
+            call: call,
+            outcome: outcome,
+            invocation: invocation,
+            toolFailure: invocation.execution?.failure,
+            errorDescription: invocation.execution?.failure?.message
+        )
+        let branches = await branchRecords(
+            for: outcome,
+            node: node,
+            path: path,
+            navigator: navigator,
+            context: context,
+            references: references,
+            approvalHandler: approvalHandler
+        )
+
+        return .init(
+            outcome: navigator.finalOutcome(
+                outcome: outcome,
+                selectedOutcome: branches.selectedOutcome
+            ),
+            records:
+                [record]
+                + branches.records
+        )
+    }
+
+    func executeSequence(
+        _ nodes: [ToolPlan.Node],
+        path: String,
+        pathComponent: String? = "sequence",
+        navigator: ToolPlan.Navigator,
+        context: ToolContext,
+        references: [Reference],
+        approvalHandler: (any ToolApprovalHandler)?
+    ) async -> NodeExecution {
+        var records: [ToolPlan.Record] = []
+
+        for (
+            index,
+            node
+        ) in nodes.enumerated() {
+            let childPath = navigator.sequencePath(
+                beneath: path,
+                component: pathComponent,
+                index: index
+            )
+            let child = await execute(
+                node,
+                path: childPath,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+            records.append(
+                contentsOf: child.records
+            )
+
+            guard child.outcome == .succeeded else {
+                for remainingIndex in nodes.indices
+                where remainingIndex > index
+                {
+                    records.append(
+                        contentsOf: navigator.skippedRecords(
+                            for: nodes[remainingIndex],
+                            path: navigator.sequencePath(
+                                beneath: path,
+                                component: pathComponent,
+                                index: remainingIndex
+                            ),
+                            reason: "sequence_stopped_after_\(child.outcome.rawValue)"
+                        )
+                    )
+                }
+
+                return .init(
+                    outcome: child.outcome,
+                    records: records
+                )
+            }
+        }
+
+        return .init(
+            outcome: .succeeded,
+            records: records
+        )
+    }
+
+    func executeBatch(
+        _ nodes: [ToolPlan.Node],
+        path: String,
+        navigator: ToolPlan.Navigator,
+        context: ToolContext,
+        references: [Reference],
+        approvalHandler: (any ToolApprovalHandler)?
+    ) async -> NodeExecution {
+        var records: [ToolPlan.Record] = []
+        var outcomes: [ToolPlan.Outcome] = []
+
+        for (
+            index,
+            node
+        ) in nodes.enumerated() {
+            let childPath = navigator.childPath(
+                beneath: path,
+                kind: .batch,
+                index: index
+            )
+            let child = await execute(
+                node,
+                path: childPath,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+            records.append(
+                contentsOf: child.records
+            )
+            outcomes.append(
+                child.outcome
+            )
+
+            if child.outcome == .needs_human_review {
+                for remainingIndex in nodes.indices
+                where remainingIndex > index
+                {
+                    records.append(
+                        contentsOf: navigator.skippedRecords(
+                            for: nodes[remainingIndex],
+                            path: navigator.childPath(
+                                beneath: path,
+                                kind: .batch,
+                                index: remainingIndex
+                            ),
+                            reason: "batch_suspended_for_approval"
+                        )
+                    )
+                }
+
+                return .init(
+                    outcome: .needs_human_review,
+                    records: records
+                )
+            }
+        }
+
+        return .init(
+            outcome: navigator.aggregate(
+                outcomes
+            ),
+            records: records
+        )
+    }
+
+    func branchRecords(
+        for outcome: ToolPlan.Outcome,
+        node: ToolPlan.Node,
+        path: String,
+        navigator: ToolPlan.Navigator,
+        context: ToolContext,
+        references: [Reference],
+        approvalHandler: (any ToolApprovalHandler)?
+    ) async -> (
+        selectedOutcome: ToolPlan.Outcome,
+        records: [ToolPlan.Record]
+    ) {
+        let selectedBranch = navigator.branch(
+            for: outcome,
+            node: node
+        )
+
+        var records: [ToolPlan.Record] = []
+        var selectedOutcome: ToolPlan.Outcome = .succeeded
+
+        if let selectedBranch {
+            let selected = await executeSequence(
+                selectedBranch.nodes,
+                path: "\(path).\(selectedBranch.label.rawValue)",
+                pathComponent: nil,
+                navigator: navigator,
+                context: context,
+                references: references,
+                approvalHandler: approvalHandler
+            )
+
+            selectedOutcome = selected.outcome
+            records.append(
+                contentsOf: selected.records
+            )
+        }
+
+        for branch in navigator.branches(
+            of: node
+        )
+        where branch.label != selectedBranch?.label
+        {
+            for (
+                index,
+                branchNode
+            ) in branch.nodes.enumerated() {
+                records.append(
+                    contentsOf: navigator.skippedRecords(
+                        for: branchNode,
+                        path: navigator.branchPath(
+                            beneath: path,
+                            label: branch.label,
+                            index: index
+                        ),
+                        reason: "condition_not_selected"
+                    )
+                )
+            }
+        }
+
+        return (
+            selectedOutcome,
+            records
+        )
+    }
+
+    func outcome(
+        for invocation: ToolInvocation.Result
+    ) -> ToolPlan.Outcome {
+        switch invocation.outcome {
+        case .executed(let execution):
+            return execution.result.isError
+                ? .failed
+                : .succeeded
+
+        case .denied:
+            return .denied
+
+        case .skipped:
+            return .skipped
+
+        case .interrupted(.human_review):
+            return .needs_human_review
+        }
+    }
+
+    func errorText(
+        _ error: any Swift.Error
+    ) -> String {
+        if let localized = error as? any LocalizedError,
+           let description = localized.errorDescription
+        {
+            return description
+        }
+
+        return String(
+            describing: error
+        )
+    }
+}

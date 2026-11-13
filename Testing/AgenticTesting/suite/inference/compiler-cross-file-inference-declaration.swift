@@ -65,7 +65,7 @@ extension Standard.Inferences {
 
         @JSONSchema
         struct Output:
-            Result,
+            Contract.Result,
             Hashable
         {
             var proposals: [CrossFileInferenceInstructionProposal]

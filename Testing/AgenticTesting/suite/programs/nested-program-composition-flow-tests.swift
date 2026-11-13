@@ -14,7 +14,7 @@ private struct NestedProgramInput:
 
 @JSONSchema
 private struct NestedProgramOutput:
-    Result,
+    Contract.Result,
     Equatable
 {
     let value: String

@@ -1,22 +1,37 @@
 import Agentic
 import Macros
+import Primitives
 import Schema
 
 public extension Harness.Tools {
     @Tool("inspect_exposure")
     struct InspectExposure: Tool {
-        @JSONSchema
-        public struct Input: HashableSource {
-            public let includeHidden: Bool?
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                public var includeHidden: Bool?
+
+                public init(
+                    includeHidden: Bool? = nil
+                ) {
+                    self.includeHidden = includeHidden
+                }
+            }
+
+            public let includeHidden: Bool
+
+            public init(_ raw: Raw) {
+                self.includeHidden = raw.includeHidden ?? false
+            }
 
             public init(
                 includeHidden: Bool? = nil
             ) {
-                self.includeHidden = includeHidden
+                self.init(Raw(includeHidden: includeHidden))
             }
 
-            public var resolvedIncludeHidden: Bool {
-                includeHidden ?? false
+            public var raw: Raw {
+                Raw(includeHidden: includeHidden)
             }
         }
 

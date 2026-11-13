@@ -49,7 +49,7 @@ func runAgenticTestingToolLifecycleSmoke()
         "default Tool recovery classification remains observable"
     )
 
-    let failure = ToolCall.Failure(
+    let failure = ToolExecution.Failure(
         call: .init(
             id: "tool-lifecycle-smoke",
             tool: SmokeTool.definition.identifier

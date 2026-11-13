@@ -193,7 +193,7 @@ extension ExecutionTesting {
         let invocation = try await fixture.invoker.invoke(
             ToolInvocation(
                 id: fixture.call.id,
-                tool: fixture.call.tool,
+                tool: ToolIdentifier(fixture.call.name),
                 arguments: fixture.call.input
             ),
             context: .init()
@@ -347,7 +347,7 @@ private extension ExecutionTesting {
         let invocation = try await fixture.invoker.invoke(
             ToolInvocation(
                 id: fixture.call.id,
-                tool: fixture.call.tool,
+                tool: ToolIdentifier(fixture.call.name),
                 arguments: fixture.call.input
             ),
             context: .init(),
@@ -356,21 +356,21 @@ private extension ExecutionTesting {
 
         return try Expect.notNil(
             invocation.execution,
-            "mechanical recovery fixture executes through governed ToolInvoker path"
+            "mechanical recovery fixture executes through governed ToolExecutor path"
         )
     }
 
     static func mechanicalRecoveryFixture(
         scenario: MechanicalRecoveryScenario
     ) throws -> (
-        invoker: ToolInvoker,
-        call: ToolCall
+        invoker: ToolExecutor,
+        call: FunctionCall
     ) {
         let probe = MechanicalRecoveryProbe()
         let tool = MechanicalRecoveryTool(
             probe: probe
         )
-        let invoker = ToolInvoker(
+        let invoker = ToolExecutor(
             registry: try ToolRegistry {
                 tool
             },
@@ -379,9 +379,9 @@ private extension ExecutionTesting {
             ),
             recovery: mechanicalRecoveryPolicy
         )
-        let call = ToolCall(
+        let call = FunctionCall(
             id: "mechanical-recovery-\(scenario.rawValue)",
-            tool: tool.identifier,
+            name: tool.identifier.rawValue,
             input: try JSONValue.encoding(
                 MechanicalRecoveryInput(
                     scenario: scenario.rawValue
@@ -608,7 +608,7 @@ private struct MechanicalRecoveryTool: Tool {
 
     func classify(
         _ error: any Error,
-        phase: ToolCall.Phase,
+        phase: ToolExecution.Phase,
         input: Input?
     ) -> Recovery.Incident? {
         guard
@@ -668,9 +668,9 @@ private struct MechanicalRecoveryTool: Tool {
 
     func reconcile(
         _ input: Input,
-        after failure: ToolCall.Failure,
+        after failure: ToolExecution.Failure,
         in _: ToolContext
-    ) async throws -> ToolCall.Reconciliation<Output>? {
+    ) async throws -> ToolExecution.Reconciliation<Output>? {
         _ = failure
         await ToolExecutionObservations.emit(.init(kind: .detail, content: "reconcile"))
 

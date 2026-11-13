@@ -164,9 +164,9 @@ private struct ToolReconciliationFixture: Tool {
 
     func reconcile(
         _ input: Input,
-        after failure: ToolCall.Failure,
+        after failure: ToolExecution.Failure,
         in context: ToolContext
-    ) async throws -> ToolCall.Reconciliation<Output>? {
+    ) async throws -> ToolExecution.Reconciliation<Output>? {
         try Expect.equal(
             failure.phase,
             .call,
@@ -276,13 +276,13 @@ private func unsupportedReconciliation()
 
 private func reconciliationCall(
     name: String
-) throws -> ToolCall {
-    ToolCall(
+) throws -> ToolInvocation {
+    ToolInvocation(
         id: "reconciliation-call",
         tool: ToolIdentifier(
             rawValue: name
         ),
-        input: try JSONValue.encoding(
+        arguments: try JSONValue.encoding(
             ToolReconciliationFixtureInput(
                 value: "fixture"
             )
@@ -293,7 +293,7 @@ private func reconciliationCall(
 private func reconciliationFailure(
     tool: ToolIdentifier,
     callID: String
-) -> ToolCall.Failure {
+) -> ToolExecution.Failure {
     .init(
         call: .init(
             id: callID,

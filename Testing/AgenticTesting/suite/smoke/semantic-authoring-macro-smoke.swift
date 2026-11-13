@@ -21,7 +21,7 @@ extension SmokeDomain.Agents {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let summary: String
 
             static var jsonschema: JSONSchema {
@@ -71,7 +71,7 @@ extension SmokeDomain.Inferences {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -95,7 +95,7 @@ extension SmokeDomain.Inferences {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -149,7 +149,7 @@ extension SmokeDomain.Programs {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -206,7 +206,7 @@ extension SmokeDomain.Tools {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let value: String
 
             static var jsonschema: JSONSchema {
@@ -239,7 +239,7 @@ extension SmokeDomain.Tools {
             }
         }
 
-        struct Output: Result {
+        struct Output: Contract.Result {
             let value: String
 
             static var jsonschema: JSONSchema {

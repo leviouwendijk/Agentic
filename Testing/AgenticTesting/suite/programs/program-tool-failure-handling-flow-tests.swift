@@ -3,11 +3,11 @@ import AgenticStandard
 import Testing
 
 private struct ProgramToolFailureFixtureInvoker:
-    ProgramToolInvoking
+    ProgramToolExecuting
 {
     let failure: ProgramToolFailure
 
-    func invoke<Input, Output>(
+    func execute<Input, Output>(
         _ identifier: ToolIdentifier,
         input: Input,
         as output: Output.Type
@@ -30,7 +30,7 @@ extension ProgramsFlowTesting {
     {
         let identifier: ToolIdentifier =
             "fixture.program_tool_failure"
-        let result = ToolCall.Response(
+        let result = ToolExecution.Response(
             call: .init(
                 id: "fixture-program-tool-failure-call",
                 tool: identifier

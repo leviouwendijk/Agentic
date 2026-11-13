@@ -200,7 +200,7 @@ private struct EchoInput:
 
 @JSONSchema
 private struct EchoOutput:
-    Result,
+    Contract.Result,
     Hashable
 {
     let value: String

@@ -1,0 +1,234 @@
+import Workspace
+import Schema
+
+public struct ToolRegistry: Sendable {
+    private var tools:
+        [ToolIdentifier: ToolBinding]
+    private var services: ToolServices?
+
+    public init() {
+        self.tools = [:]
+        self.services = nil
+    }
+
+    /// Scope existing macro-installed bindings without registering new tools.
+    /// The resulting registry is a value copy; all bindings are preserved.
+    public func using(services: ToolServices) -> Self {
+        guard !services.isEmpty else {
+            return self
+        }
+        var copy = self
+        copy.services = services
+        return copy
+    }
+
+    func executionContext(_ context: ToolContext) -> ToolContext {
+        guard let services else {
+            return context
+        }
+        return context.using(services: services)
+    }
+
+    public var definitions: [ToolDefinition] {
+        registeredTools.map(
+            \.definition
+        )
+    }
+
+    public var modelFacingDefinitions: [ToolDescriptor] {
+        registeredTools.compactMap(
+            \.modelFacingDescriptor
+        )
+    }
+
+    public func modelFacingDefinition(
+        identifiedBy identifier: ToolIdentifier
+    ) -> ToolDescriptor? {
+        registeredTool(
+            identifiedBy: identifier
+        )?.modelFacingDescriptor
+    }
+
+    public func modelFacingDefinitions(
+        for identifiers: [ToolIdentifier]
+    ) throws -> [ToolDescriptor] {
+        var seen:
+            Set<ToolIdentifier> = []
+        var definitions:
+            [ToolDescriptor] = []
+
+        for identifier in identifiers {
+            guard seen.insert(
+                identifier
+            ).inserted else {
+                continue
+            }
+
+            guard let definition =
+                modelFacingDefinition(
+                    identifiedBy: identifier
+                )
+            else {
+                throw ToolRegistryError
+                    .missingModelFacingTool(
+                        identifier.rawValue
+                    )
+            }
+
+            definitions.append(
+                definition
+            )
+        }
+
+        return definitions.sorted { lhs, rhs in
+            lhs.name < rhs.name
+        }
+    }
+
+    /// The final model-facing `{ arguments, execution? }` envelope schema,
+    /// when this registered tool is model-facing.
+    public func modelFacingSchema(
+        identifiedBy identifier: ToolIdentifier
+    ) -> JSONSchema? {
+        registeredTool(
+            identifiedBy: identifier
+        )?.modelFacingInputSchema
+    }
+
+    var registeredTools: [ToolBinding] {
+        tools.values.sorted { lhs, rhs in
+            lhs.definition.identifier.rawValue
+                < rhs.definition.identifier.rawValue
+        }
+    }
+
+    public var isEmpty: Bool {
+        tools.isEmpty
+    }
+
+    public var count: Int {
+        tools.count
+    }
+
+    public mutating func register<T>(
+        _ tool: T,
+        modelContract: ToolModelContract? = nil
+    ) throws where T: Tool {
+        try register(
+            ToolBinding(
+                tool,
+                modelContract: modelContract
+            )
+        )
+    }
+
+    public mutating func register(
+        _ registered: ToolBinding
+    ) throws {
+        let identifier =
+            registered.definition.identifier
+
+        guard tools[identifier] == nil else {
+            throw ToolRegistryError.duplicateTool(
+                identifier.rawValue
+            )
+        }
+
+        tools[identifier] = registered
+    }
+
+    public func registeredTool(
+        identifiedBy identifier: ToolIdentifier
+    ) -> ToolBinding? {
+        tools[identifier]
+    }
+
+    public func registeredTool(
+        named name: String
+    ) -> ToolBinding? {
+        registeredTool(
+            identifiedBy:
+                .init(
+                    name
+                )
+        )
+    }
+
+    public func invocation(
+        for call: FunctionCall
+    ) throws -> ToolInvocation {
+        guard let registered =
+            registeredTool(
+                named: call.name
+            )
+        else {
+            throw ToolBindingError
+                .invalidModelCall(
+                    tool: call.name,
+                    reason:
+                        "No registered tool has this identifier."
+                )
+        }
+
+        return try registered.invocation(
+            for: call
+        )
+    }
+
+    public func preflight(
+        _ call: ToolInvocation,
+        workspace: WorkspaceContext? = nil
+    ) async throws -> ToolPreflight {
+        try await preflight(
+            call,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    public func prepare(
+        _ call: ToolInvocation,
+        context: ToolContext
+    ) async throws -> CapabilityPreparation<ToolPreflight> {
+        guard let registered = registeredTool(identifiedBy: call.tool) else {
+            throw ToolRegistryExecutionError.missingTool(call.tool.rawValue)
+        }
+        return try await registered.prepare(
+            call,
+            context: executionContext(context)
+        )
+    }
+
+    public func preflight(
+        _ call: ToolInvocation,
+        context: ToolContext
+    ) async throws -> ToolPreflight {
+        guard let registered =
+            registeredTool(
+                named: call.tool.rawValue
+            )
+        else {
+            throw ToolRegistryExecutionError.missingTool(
+                call.tool.rawValue
+            )
+        }
+
+        return try await registered.preflight(
+            call,
+            context: executionContext(context)
+        )
+    }
+
+    public func call(
+        _ call: ToolInvocation,
+        workspace: WorkspaceContext?
+    ) async throws -> ToolExecution.Result {
+        try await execute(
+            call,
+            workspace: workspace
+        )
+    }
+}
+
+

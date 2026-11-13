@@ -48,9 +48,13 @@ public struct AgentCostUsage: Sendable, Codable, Hashable {
         requestCount: Int = 1,
         metadata: [String: String] = [:]
     ) {
+        // Reasoning stays inside outputTokens: providers bill it at the output rate,
+        // and copying it here as well would price it twice.
         self.init(
             inputTokens: providerUsage.inputTokens ?? 0,
             outputTokens: providerUsage.outputTokens ?? 0,
+            cachedInputReadTokens: providerUsage.cachedInputReadTokens ?? 0,
+            cachedInputWriteTokens: providerUsage.cachedInputWriteTokens ?? 0,
             requestCount: requestCount,
             metadata: metadata
         )

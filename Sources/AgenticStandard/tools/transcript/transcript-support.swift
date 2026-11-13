@@ -90,14 +90,14 @@ enum TranscriptSupport {
             return [
                 "tool_call",
                 "id=\(call.id)",
-                "name=\(call.tool.rawValue)",
+                "name=\(call.name)",
                 "input=\(call.input)"
             ].joined(separator: "\n")
 
         case .tool_result(let result):
             return [
                 "tool_result",
-                "toolCallID=\(result.call.id)",
+                "callID=\(result.call.id)",
                 "name=\(result.call.tool.rawValue)",
                 "isError=\(result.isError)",
                 "output=\(result.output)"
@@ -126,7 +126,7 @@ enum TranscriptSupport {
     ) -> String? {
         switch event {
         case .tool_call(let call):
-            return call.tool.rawValue
+            return call.name
 
         case .tool_result(let result):
             return result.call.tool.rawValue

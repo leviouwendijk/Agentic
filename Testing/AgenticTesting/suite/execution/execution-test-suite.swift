@@ -265,7 +265,7 @@ enum ExecutionTestSuite {
             ]
         ) {
             try await ExecutionTesting
-                .runToolCallResolver()
+                .runFunctionCallResolver()
         }
 
         diagnosticTest(
@@ -279,7 +279,7 @@ enum ExecutionTestSuite {
             ]
         ) {
             try await ExecutionTesting
-                .runToolCallResolverObserver()
+                .runFunctionCallResolverObserver()
         }
 
         diagnosticTest(

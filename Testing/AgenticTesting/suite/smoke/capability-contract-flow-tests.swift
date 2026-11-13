@@ -10,12 +10,12 @@ private enum CapabilityContractSmokeFailure: Error {
 
 func runCapabilityContractSmoke() throws {
     let input = SmokeToolInput(rawValue: "capability-contract")
-    let transport = ToolCall(
+    let transport = FunctionCall(
         id: "smoke-contract-call",
-        tool: SmokeTool.definition.identifier,
+        name: SmokeTool.definition.identifier.rawValue,
         input: try JSONValue.encoding(input)
     )
-    let raw = CapabilityCall.Raw(transport)
+    let raw = CapabilityCall(transport)
     let typed = try CapabilityRequest<SmokeTool>(parsing: raw)
     try Expect.equal(
         typed.input.rawValue,
@@ -23,7 +23,7 @@ func runCapabilityContractSmoke() throws {
         "raw input decodes to the authored type"
     )
 
-    let wrong = CapabilityCall.Raw(
+    let wrong = CapabilityCall(
         id: raw.id,
         capability: .program(.init(rawValue: "smoke_tool")),
         input: raw.input

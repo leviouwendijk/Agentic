@@ -104,7 +104,7 @@ extension ProgramsFlowTesting {
             )
         }
 
-        let invoker = ProgramInferenceInvoker(
+        let invoker = ProgramInferenceExecutor(
             realization: realization,
             executor: ProgramInferenceFailureFixtureExecutor()
         )
@@ -169,7 +169,7 @@ extension ProgramsFlowTesting {
             ]
         )
         let canonicalContext = ProgramContext(
-            inference: ProgramInferenceInvoker(
+            inference: ProgramInferenceExecutor(
                 realization: realization,
                 executor: ProgramInferenceCanonicalFailureFixtureExecutor(
                     failure: canonicalExecutionFailure

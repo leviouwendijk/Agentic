@@ -1,0 +1,71 @@
+import Foundation
+import Workspace
+
+public enum ToolRegistryExecutionError: Error, Sendable, LocalizedError {
+    case missingTool(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .missingTool(let name):
+            return "No tool is registered with name '\(name)'."
+        }
+    }
+}
+
+public extension ToolRegistry {
+    func execute(
+        _ call: ToolInvocation,
+        workspace: WorkspaceContext? = nil
+    ) async throws -> ToolExecution.Result {
+        try await execute(
+            call,
+            context: .init(
+                workspace: workspace
+            )
+        )
+    }
+
+    func execute(
+        _ call: ToolInvocation,
+        context: ToolContext,
+        preparedOperation: PreparedOperation.Envelope? = nil
+    ) async throws -> ToolExecution.Result {
+        guard let registered =
+            registeredTool(
+                identifiedBy: call.tool
+            )
+        else {
+            throw ToolRegistryExecutionError.missingTool(
+                call.tool.rawValue
+            )
+        }
+
+        return try await registered.execute(
+            call,
+            context: executionContext(context),
+            preparedOperation: preparedOperation
+        )
+    }
+
+    func reconcile(
+        _ call: ToolInvocation,
+        failure: ToolExecution.Failure,
+        context: ToolContext
+    ) async throws -> ToolBinding.Reconciliation? {
+        guard let registered =
+            registeredTool(
+                identifiedBy: call.tool
+            )
+        else {
+            throw ToolRegistryExecutionError.missingTool(
+                call.tool.rawValue
+            )
+        }
+
+        return try await registered.reconcile(
+            call,
+            failure: failure,
+            context: executionContext(context)
+        )
+    }
+}

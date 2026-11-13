@@ -8,8 +8,8 @@ public enum TranscriptEvent:
     JSONSchemaProviding
 {
     case message(Message)
-    case tool_call(ToolCall)
-    case tool_result(ToolCall.Response)
+    case tool_call(FunctionCall)
+    case tool_result(ToolExecution.Response)
     case session_branch(SessionBranchEvent)
     case note(id: String, text: String)
 
@@ -86,7 +86,7 @@ public enum TranscriptEvent:
         case .tool_call:
             self = .tool_call(
                 try container.decode(
-                    ToolCall.self,
+                    FunctionCall.self,
                     forKey: .tool_call
                 )
             )
@@ -94,7 +94,7 @@ public enum TranscriptEvent:
         case .tool_result:
             self = .tool_result(
                 try container.decode(
-                    ToolCall.Response.self,
+                    ToolExecution.Response.self,
                     forKey: .tool_result
                 )
             )
@@ -315,7 +315,7 @@ public enum TranscriptEvent:
             return message.content.text
 
         case .tool_call(let call):
-            return call.tool.rawValue
+            return call.name
 
         case .tool_result(let result):
             return result.call.tool.rawValue

@@ -4,17 +4,17 @@ import Schema
 import Testing
 
 extension ExecutionTesting {
-    static func runToolCallResolverObserver()
+    static func runFunctionCallResolverObserver()
         async throws
         -> [TestDiagnostic]
     {
-        let probe = ToolCallResolverObserverProbe()
-        let observer = ToolCallResolverObserverStore()
-        let registry = try toolCallResolverObserverRegistry(
+        let probe = FunctionCallResolverObserverProbe()
+        let observer = FunctionCallResolverObserverStore()
+        let registry = try functionCallResolverObserverRegistry(
             probe: probe
         )
 
-        let observeResolver = GovernedAgentToolCallResolver(
+        let observeResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_observer_observe",
@@ -30,7 +30,7 @@ extension ExecutionTesting {
         )
 
         _ = try await observeResolver.resolve(
-            try toolCallResolverObserverCall(
+            try functionCallResolverObserverCall(
                 id: "resolver-observer-observe-call",
                 name: "resolver_observer_observe"
             )
@@ -59,7 +59,7 @@ extension ExecutionTesting {
 
         await observer.removeAll()
 
-        let reviewResolver = GovernedAgentToolCallResolver(
+        let reviewResolver = GovernedFunctionCallResolver(
             registry: registry,
             visibleToolIdentifiers: [
                 "resolver_observer_mutate",
@@ -76,15 +76,15 @@ extension ExecutionTesting {
 
         do {
             _ = try await reviewResolver.resolve(
-                try toolCallResolverObserverCall(
+                try functionCallResolverObserverCall(
                     id: "resolver-observer-review-call",
                     name: "resolver_observer_mutate"
                 )
             )
 
-            throw ToolCallResolverObserverFailure
+            throw FunctionCallResolverObserverFailure
                 .expectedNeedsHumanReview
-        } catch AgentToolCallResolutionError.needsHumanReview(_) {
+        } catch FunctionCallResolutionError.needsHumanReview(_) {
         }
 
         let observedReview = try Expect.notNil(
@@ -121,7 +121,7 @@ extension ExecutionTesting {
     }
 }
 
-private actor ToolCallResolverObserverStore {
+private actor FunctionCallResolverObserverStore {
     private var invocations: [ToolInvocation.Result] = []
 
     func append(
@@ -141,7 +141,7 @@ private actor ToolCallResolverObserverStore {
     }
 }
 
-private actor ToolCallResolverObserverProbe {
+private actor FunctionCallResolverObserverProbe {
     private var count = 0
 
     func recordInvocation() {
@@ -153,7 +153,7 @@ private actor ToolCallResolverObserverProbe {
     }
 }
 
-private struct ToolCallResolverObserverInput:
+private struct FunctionCallResolverObserverInput:
     Sendable,
     Codable,
     JSONSchemaProviding
@@ -163,12 +163,12 @@ private struct ToolCallResolverObserverInput:
     }
 }
 
-private protocol ToolCallResolverObserverIdentity {
+private protocol FunctionCallResolverObserverIdentity {
     static var definition: ToolDefinition { get }
 }
 
 private enum ResolverObserverObserveIdentity:
-    ToolCallResolverObserverIdentity
+    FunctionCallResolverObserverIdentity
 {
     static let definition = ToolDefinition(
         identifier: "resolver_observer_observe",
@@ -178,7 +178,7 @@ private enum ResolverObserverObserveIdentity:
 }
 
 private enum ResolverObserverMutateIdentity:
-    ToolCallResolverObserverIdentity
+    FunctionCallResolverObserverIdentity
 {
     static let definition = ToolDefinition(
         identifier: "resolver_observer_mutate",
@@ -187,17 +187,17 @@ private enum ResolverObserverMutateIdentity:
     )
 }
 
-private struct ToolCallResolverObserverTool<
-    Identity: ToolCallResolverObserverIdentity
+private struct FunctionCallResolverObserverTool<
+    Identity: FunctionCallResolverObserverIdentity
 >: Tool {
-    typealias Input = ToolCallResolverObserverInput
-    typealias Output = ToolCallResolverObserverInput
+    typealias Input = FunctionCallResolverObserverInput
+    typealias Output = FunctionCallResolverObserverInput
 
     static var definition: ToolDefinition {
         Identity.definition
     }
 
-    let probe: ToolCallResolverObserverProbe
+    let probe: FunctionCallResolverObserverProbe
 
     func call(
         _ input: Input,
@@ -208,26 +208,26 @@ private struct ToolCallResolverObserverTool<
     }
 }
 
-private enum ToolCallResolverObserverFailure:
+private enum FunctionCallResolverObserverFailure:
     Error
 {
     case expectedNeedsHumanReview
 }
 
-private func toolCallResolverObserverRegistry(
-    probe: ToolCallResolverObserverProbe
+private func functionCallResolverObserverRegistry(
+    probe: FunctionCallResolverObserverProbe
 ) throws -> ToolRegistry {
     var registry = ToolRegistry()
 
     try registry.register(
-        ToolCallResolverObserverTool<
+        FunctionCallResolverObserverTool<
             ResolverObserverObserveIdentity
         >(
             probe: probe
         )
     )
     try registry.register(
-        ToolCallResolverObserverTool<
+        FunctionCallResolverObserverTool<
             ResolverObserverMutateIdentity
         >(
             probe: probe
@@ -237,18 +237,16 @@ private func toolCallResolverObserverRegistry(
     return registry
 }
 
-private func toolCallResolverObserverCall(
+private func functionCallResolverObserverCall(
     id: String,
     name: String
-) throws -> ToolCall {
-    ToolCall(
+) throws -> FunctionCall {
+    FunctionCall(
         id: id,
-        tool: ToolIdentifier(
-            rawValue: name
-        ),
+        name: name,
         input: .object([
             "arguments": try JSONValue.encoding(
-                ToolCallResolverObserverInput()
+                FunctionCallResolverObserverInput()
             ),
         ])
     )

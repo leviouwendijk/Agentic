@@ -6,37 +6,57 @@ import Macros
 public extension Standard.Tools {
     @Tool
     struct ReadArtifact: Tool {
-        @JSONSchema
-        public struct Input: HashableSource {
-            /// Exact artifact identifier to read.
+        public struct Input: HashableSource, CodableInvariant {
+            @JSONSchema
+            public struct Raw: HashableSource {
+                /// Exact artifact identifier to read.
+                public var id: String
+                /// Whether to include artifact content. Defaults to true when omitted.
+                public var includeContent: Bool?
+                /// Optional maximum number of content characters to return.
+                public var maxCharacters: Int?
+
+                public init(
+                    id: String,
+                    includeContent: Bool? = nil,
+                    maxCharacters: Int? = nil
+                ) {
+                    self.id = id
+                    self.includeContent = includeContent
+                    self.maxCharacters = maxCharacters
+                }
+            }
+
             public let id: String
-            /// Whether to include artifact content. Defaults to true when omitted.
-            public let includeContent: Bool?
-            /// Optional maximum number of content characters to return.
+            public let includeContent: Bool
+            /// Never negative; nil means the whole content.
             public let maxCharacters: Int?
+
+            public init(_ raw: Raw) {
+                self.id = raw.id
+                self.includeContent = raw.includeContent ?? true
+                self.maxCharacters = raw.maxCharacters.map { max(0, $0) }
+            }
 
             public init(
                 id: String,
                 includeContent: Bool? = nil,
                 maxCharacters: Int? = nil
             ) {
-                self.id = id
-                self.includeContent = includeContent
-                self.maxCharacters = maxCharacters
+                self.init(
+                    Raw(
+                        id: id,
+                        includeContent: includeContent,
+                        maxCharacters: maxCharacters
+                    )
+                )
             }
 
-            public var shouldIncludeContent: Bool {
-                includeContent ?? true
-            }
-
-            public var resolvedMaxCharacters: Int? {
-                guard let maxCharacters else {
-                    return nil
-                }
-
-                return max(
-                    0,
-                    maxCharacters
+            public var raw: Raw {
+                Raw(
+                    id: id,
+                    includeContent: includeContent,
+                    maxCharacters: maxCharacters
                 )
             }
         }
@@ -101,10 +121,10 @@ public extension Standard.Tools {
         let renderedContent: String?
         let truncated: Bool
 
-        if input.shouldIncludeContent {
+        if input.includeContent {
             let limited = limitedContent(
                 record.content,
-                maxCharacters: input.resolvedMaxCharacters
+                maxCharacters: input.maxCharacters
             )
 
             renderedContent = limited.content
