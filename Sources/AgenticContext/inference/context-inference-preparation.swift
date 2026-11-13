@@ -266,7 +266,7 @@ public extension Context {
                 let assistant = messages[start]
                 guard assistant.role == .assistant else { continue }
                 let calls = Set(assistant.content.blocks.compactMap { block -> String? in
-                    if case .tool_call(let call) = block { return call.id }
+                    if case .call(let call) = block { return call.id }
                     return nil
                 })
                 guard !calls.isEmpty else { continue }
@@ -274,7 +274,7 @@ public extension Context {
                 var answered: Set<String> = []
                 while next < messages.count, messages[next].role == .tool {
                     let results = Set(messages[next].content.blocks.compactMap { block -> String? in
-                        if case .tool_result(let result) = block { return result.call.id }
+                        if case .result(let result) = block { return result.call.id }
                         return nil
                     })
                     guard !results.isEmpty, results.isSubset(of: calls) else { break }
@@ -310,11 +310,11 @@ public extension Context {
             for message in messages {
                 for block in message.content.blocks {
                     switch block {
-                    case .tool_call(let call):
+                    case .call(let call):
                         guard calls.insert(call.id).inserted else {
                             throw ContextInferenceError.duplicateToolCall(call.id)
                         }
-                    case .tool_result(let result):
+                    case .result(let result):
                         guard calls.contains(result.call.id) else {
                             throw ContextInferenceError.unpairedToolResult(result.call.id)
                         }

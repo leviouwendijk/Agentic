@@ -38,11 +38,11 @@ enum TranscriptSupport {
         case .message:
             return .message
 
-        case .tool_call:
-            return .tool_call
+        case .call:
+            return .call
 
-        case .tool_result:
-            return .tool_result
+        case .result:
+            return .result
 
         case .session_branch:
             return .session_branch
@@ -86,7 +86,7 @@ enum TranscriptSupport {
         case .message(let message):
             return message.content.text
 
-        case .tool_call(let call):
+        case .call(let call):
             return [
                 "tool_call",
                 "id=\(call.id)",
@@ -94,7 +94,7 @@ enum TranscriptSupport {
                 "input=\(call.input)"
             ].joined(separator: "\n")
 
-        case .tool_result(let result):
+        case .result(let result):
             return [
                 "tool_result",
                 "callID=\(result.call.id)",
@@ -125,10 +125,10 @@ enum TranscriptSupport {
         for event: TranscriptEvent
     ) -> String? {
         switch event {
-        case .tool_call(let call):
+        case .call(let call):
             return call.name
 
-        case .tool_result(let result):
+        case .result(let result):
             return result.call.tool.rawValue
 
         case .message,
@@ -141,7 +141,7 @@ enum TranscriptSupport {
     static func isError(
         for event: TranscriptEvent
     ) -> Bool? {
-        guard case .tool_result(let result) = event else {
+        guard case .result(let result) = event else {
             return nil
         }
 

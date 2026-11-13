@@ -4,8 +4,8 @@ import Schema
 @JSONSchema
 public enum TranscriptEventKind: String, Sendable, Codable, Hashable, CaseIterable {
     case message
-    case tool_call
-    case tool_result
+    case call
+    case result
     case session_branch
     case note
 }

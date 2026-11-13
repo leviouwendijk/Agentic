@@ -1,6 +1,6 @@
 public enum AgentStreamEvent: Sendable, Codable, Hashable {
     case messagedelta(MessageContentBlock)
-    case toolcall(FunctionCall)
-    case toolresult(ToolExecution.Response)
+    case call(FunctionCall)
+    case result(ToolExecution.Response)
     case completed(AgentResponse)
 }

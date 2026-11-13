@@ -8,8 +8,8 @@ public enum TranscriptEvent:
     JSONSchemaProviding
 {
     case message(Message)
-    case tool_call(FunctionCall)
-    case tool_result(ToolExecution.Response)
+    case call(FunctionCall)
+    case result(ToolExecution.Response)
     case session_branch(SessionBranchEvent)
     case note(id: String, text: String)
 
@@ -84,7 +84,7 @@ public enum TranscriptEvent:
             )
 
         case .tool_call:
-            self = .tool_call(
+            self = .call(
                 try container.decode(
                     FunctionCall.self,
                     forKey: .tool_call
@@ -92,7 +92,7 @@ public enum TranscriptEvent:
             )
 
         case .tool_result:
-            self = .tool_result(
+            self = .result(
                 try container.decode(
                     ToolExecution.Response.self,
                     forKey: .tool_result
@@ -139,7 +139,7 @@ public enum TranscriptEvent:
                 forKey: .message
             )
 
-        case .tool_call(let call):
+        case .call(let call):
             try container.encode(
                 Kind.tool_call,
                 forKey: .kind
@@ -149,7 +149,7 @@ public enum TranscriptEvent:
                 forKey: .tool_call
             )
 
-        case .tool_result(let result):
+        case .result(let result):
             try container.encode(
                 Kind.tool_result,
                 forKey: .kind
@@ -295,10 +295,10 @@ public enum TranscriptEvent:
         case .message(let message):
             return message.id
 
-        case .tool_call(let call):
+        case .call(let call):
             return call.id
 
-        case .tool_result(let result):
+        case .result(let result):
             return result.call.id
 
         case .session_branch(let event):
@@ -314,10 +314,10 @@ public enum TranscriptEvent:
         case .message(let message):
             return message.content.text
 
-        case .tool_call(let call):
+        case .call(let call):
             return call.name
 
-        case .tool_result(let result):
+        case .result(let result):
             return result.call.tool.rawValue
 
         case .session_branch(let event):

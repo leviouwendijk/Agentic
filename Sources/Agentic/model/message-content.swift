@@ -1,4 +1,9 @@
+import Macros
+import Schema
+/// Ordered content of one message.
+@JSONSchema
 public struct MessageContent: Sendable, Codable, Hashable {
+    /// Content blocks in order.
     public var blocks: [MessageContentBlock]
 
     public init(

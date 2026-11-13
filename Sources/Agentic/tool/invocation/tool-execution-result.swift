@@ -1,4 +1,7 @@
 import Foundation
+import Macros
+import Primitives
+import Schema
 import Primitives
 
 /// Canonical mechanical result of one tool execution operation.
@@ -181,13 +184,18 @@ extension ToolExecution {
 }
 
 extension ToolExecution {
+    /// Compact, model-facing summary of a tool's output.
+    @JSONSchema
     public struct Projection:
         Sendable,
         Codable,
         Hashable
     {
+        /// Short outcome label, such as `succeeded` or `failed`.
         public let status: String
+        /// One-line human summary.
         public let summary: String?
+        /// Labeled facts worth surfacing.
         public let facts: [Fact]
 
         public init(
@@ -200,12 +208,16 @@ extension ToolExecution {
             self.facts = facts
         }
 
+        /// One labeled fact.
+        @JSONSchema
         public struct Fact:
             Sendable,
             Codable,
             Hashable
         {
+            /// What the fact describes.
             public let label: String
+            /// The fact's value.
             public let value: String
 
             public init(
@@ -221,13 +233,16 @@ extension ToolExecution {
 
 extension ToolExecution {
     /// Identity of one tool call without its payload.
+    @JSONSchema
     public struct Reference:
         Sendable,
         Codable,
         Hashable,
         Identifiable
     {
+        /// The call identifier.
         public let id: String
+        /// The tool that was called.
         public let tool: ToolIdentifier
 
         public init(
@@ -242,14 +257,19 @@ extension ToolExecution {
 
 /// What the caller (and the model) sees of one tool execution.
 public extension ToolExecution {
+    @JSONSchema
     struct Response:
         Sendable,
         Codable,
         Hashable
     {
+        /// The call this responds to.
         public let call: ToolExecution.Reference
+        /// The tool's encoded output.
         public let output: JSONValue
+        /// Optional compact summary of the output.
         public let projection: ToolExecution.Projection?
+        /// Whether the output reports a failure.
         public let isError: Bool
 
         public init(
