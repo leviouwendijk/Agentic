@@ -62,7 +62,7 @@ public struct GovernedFunctionCallResolver:
 
     public func resolve(
         _ call: FunctionCall
-    ) async throws -> ToolExecution.Response {
+    ) async throws -> FunctionCall.Response {
         guard visibleToolIdentifiers.contains(
             ToolIdentifier(call.name)
         ),
@@ -128,8 +128,8 @@ private extension GovernedFunctionCallResolver {
     func deniedResult(
         for call: FunctionCall,
         review: ToolInvocation.Review
-    ) throws -> ToolExecution.Response {
-        ToolExecution.Response(
+    ) throws -> FunctionCall.Response {
+        FunctionCall.Response(
             call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(
@@ -147,8 +147,8 @@ private extension GovernedFunctionCallResolver {
     func skippedResult(
         for call: FunctionCall,
         review: ToolInvocation.Review
-    ) throws -> ToolExecution.Response {
-        ToolExecution.Response(
+    ) throws -> FunctionCall.Response {
+        FunctionCall.Response(
             call: call.reference,
             output: try JSONValue.encoding(
                 ResolutionPayload(

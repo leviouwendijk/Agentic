@@ -98,7 +98,7 @@ enum TranscriptSupport {
             return [
                 "tool_result",
                 "callID=\(result.call.id)",
-                "name=\(result.call.tool.rawValue)",
+                "name=\(result.call.name)",
                 "isError=\(result.isError)",
                 "output=\(result.output)"
             ].joined(separator: "\n")
@@ -129,7 +129,7 @@ enum TranscriptSupport {
             return call.name
 
         case .result(let result):
-            return result.call.tool.rawValue
+            return result.call.name
 
         case .message,
              .session_branch,

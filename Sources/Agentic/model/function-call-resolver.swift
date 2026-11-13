@@ -3,5 +3,5 @@ public protocol FunctionCallResolver:
 {
     func resolve(
         _ call: FunctionCall
-    ) async throws -> ToolExecution.Response
+    ) async throws -> FunctionCall.Response
 }

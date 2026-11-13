@@ -18,13 +18,13 @@ public extension ToolExecution {
         Codable,
         Hashable
     {
-        public var result: ToolExecution.Response
+        public var result: FunctionCall.Response
         public var observations: [ToolResultObservation]
         public var failure: ToolExecution.Failure?
         public var recovery: Recovery.Record?
 
         public init(
-            result: ToolExecution.Response,
+            result: FunctionCall.Response,
             observations: [ToolResultObservation] = [],
             failure: ToolExecution.Failure? = nil,
             recovery: Recovery.Record? = nil
@@ -42,7 +42,7 @@ public extension ToolExecution {
         public init(from decoder: any Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
             self.init(
-                result: try values.decode(ToolExecution.Response.self, forKey: .result),
+                result: try values.decode(FunctionCall.Response.self, forKey: .result),
                 observations: try values.decodeIfPresent([ToolResultObservation].self, forKey: .observations) ?? [],
                 failure: try values.decodeIfPresent(ToolExecution.Failure.self, forKey: .failure),
                 recovery: try values.decodeIfPresent(Recovery.Record.self, forKey: .recovery)
@@ -254,36 +254,3 @@ extension ToolExecution {
         }
     }
 }
-
-/// What the caller (and the model) sees of one tool execution.
-public extension ToolExecution {
-    @JSONSchema
-    struct Response:
-        Sendable,
-        Codable,
-        Hashable
-    {
-        /// The call this responds to.
-        public let call: ToolExecution.Reference
-        /// The tool's encoded output.
-        public let output: JSONValue
-        /// Optional compact summary of the output.
-        public let projection: ToolExecution.Projection?
-        /// Whether the output reports a failure.
-        public let isError: Bool
-
-        public init(
-            call: ToolExecution.Reference,
-            output: JSONValue,
-            projection: ToolExecution.Projection? = nil,
-            isError: Bool = false
-        ) {
-            self.call = call
-            self.output = output
-            self.projection = projection
-            self.isError = isError
-        }
-    }
-}
-
-

@@ -486,8 +486,8 @@ public struct ToolBinding: CapabilityBinding {
         )
 
         return ToolExecution.Result(
-            result: ToolExecution.Response(
-                call: call.reference,
+            result: FunctionCall.Response(
+                call: .init(call.reference),
                 output: execution.output,
                 projection: execution.projection,
                 isError: execution.isError
@@ -545,8 +545,8 @@ public struct ToolBinding: CapabilityBinding {
         case .applied(let output, let projection):
             return .applied(
                 ToolExecution.Result(
-                    result: ToolExecution.Response(
-                        call: call.reference,
+                    result: FunctionCall.Response(
+                        call: .init(call.reference),
                         output: output,
                         projection: projection,
                         isError: false

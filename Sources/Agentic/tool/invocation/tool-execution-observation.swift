@@ -1,5 +1,5 @@
 
-/// Execution evidence; never part of a model-facing semantic ToolExecution.Response.
+/// Execution evidence; never part of a model-facing semantic FunctionCall.Response.
 public struct ToolResultObservation: Sendable, Codable, Hashable {
     public enum Kind: String, Sendable, Codable, Hashable {
         case standard_output, standard_error, diagnostic, log, detail

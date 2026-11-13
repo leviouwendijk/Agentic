@@ -42,7 +42,7 @@ extension ToolExecutionEngine {
     func makeErrorResult(
         for call: ToolInvocation,
         error: any Swift.Error
-    ) throws -> ToolExecution.Response {
+    ) throws -> FunctionCall.Response {
         let payload = Error.Payload(
             kind: "tool_error",
             callID: call.id,
@@ -52,8 +52,8 @@ extension ToolExecutionEngine {
             )
         )
 
-        return ToolExecution.Response(
-            call: call.reference,
+        return FunctionCall.Response(
+            call: .init(call.reference),
             output: try JSONValue.encoding(
                 payload
             ),

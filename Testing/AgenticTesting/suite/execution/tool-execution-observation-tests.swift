@@ -70,7 +70,7 @@ extension ExecutionTesting {
 }
 
 private struct LegacyObservationExecution: Encodable {
-    let result: ToolExecution.Response
+    let result: FunctionCall.Response
 }
 
 private struct ObservationFixtureValue: Sendable, Codable, Hashable, JSONSchemaProviding {

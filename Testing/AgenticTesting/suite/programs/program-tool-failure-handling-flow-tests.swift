@@ -30,10 +30,10 @@ extension ProgramsFlowTesting {
     {
         let identifier: ToolIdentifier =
             "fixture.program_tool_failure"
-        let result = ToolExecution.Response(
+        let result = FunctionCall.Response(
             call: .init(
                 id: "fixture-program-tool-failure-call",
-                tool: identifier
+                name: identifier.rawValue
             ),
             output: .null,
             isError: true
@@ -55,7 +55,7 @@ extension ProgramsFlowTesting {
             guard
                 failure.tool == identifier,
                 failure.result.call.id == result.call.id,
-                failure.result.call.tool == result.call.tool,
+                ToolIdentifier(failure.result.call.name) == ToolIdentifier(result.call.name),
                 failure.result.isError
             else {
                 throw failure
@@ -72,7 +72,7 @@ extension ProgramsFlowTesting {
             guard
                 failure.tool == identifier,
                 failure.result.call.id == result.call.id,
-                failure.result.call.tool == result.call.tool,
+                ToolIdentifier(failure.result.call.name) == ToolIdentifier(result.call.name),
                 failure.result.isError
             else {
                 return .propagate
@@ -95,7 +95,7 @@ extension ProgramsFlowTesting {
             propagated =
                 failure.tool == identifier
                 && failure.result.call.id == result.call.id
-                && failure.result.call.tool == result.call.tool
+                && ToolIdentifier(failure.result.call.name) == ToolIdentifier(result.call.name)
                 && failure.result.isError
         }
 
@@ -121,7 +121,7 @@ extension ProgramsFlowTesting {
             .field("propagated", String(propagated)),
             .field(
                 "failed_result",
-                result.call.tool.rawValue
+                result.call.name
             ),
         ]
     }

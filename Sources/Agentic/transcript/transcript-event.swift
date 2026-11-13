@@ -9,7 +9,7 @@ public enum TranscriptEvent:
 {
     case message(Message)
     case call(FunctionCall)
-    case result(ToolExecution.Response)
+    case result(FunctionCall.Response)
     case session_branch(SessionBranchEvent)
     case note(id: String, text: String)
 
@@ -94,7 +94,7 @@ public enum TranscriptEvent:
         case .tool_result:
             self = .result(
                 try container.decode(
-                    ToolExecution.Response.self,
+                    FunctionCall.Response.self,
                     forKey: .tool_result
                 )
             )
@@ -318,7 +318,7 @@ public enum TranscriptEvent:
             return call.name
 
         case .result(let result):
-            return result.call.tool.rawValue
+            return result.call.name
 
         case .session_branch(let event):
             return event.summaryText

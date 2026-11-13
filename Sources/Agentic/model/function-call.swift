@@ -40,10 +40,77 @@ public struct FunctionCall:
 }
 
 extension FunctionCall {
-    public var reference: ToolExecution.Reference {
+    /// Identity of one function call without its payload.
+    @JSONSchema
+    public struct Reference:
+        Sendable,
+        Codable,
+        Hashable,
+        Identifiable
+    {
+        /// The call identifier.
+        public let id: String
+        /// The function name the call used.
+        public let name: String
+
+        public init(
+            id: String,
+            name: String
+        ) {
+            self.id = id
+            self.name = name
+        }
+
+        /// The boundary identity of a call the tool engine executed.
+        public init(
+            _ reference: ToolExecution.Reference
+        ) {
+            self.init(
+                id: reference.id,
+                name: reference.tool.rawValue
+            )
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case name = "tool"
+        }
+    }
+
+    /// What the caller, and the model, receives in reply to one function call,
+    /// whichever capability answered it.
+    @JSONSchema
+    public struct Response:
+        Sendable,
+        Codable,
+        Hashable
+    {
+        /// The call this responds to.
+        public let call: Reference
+        /// The encoded output.
+        public let output: JSONValue
+        /// Optional compact summary of the output.
+        public let projection: ToolExecution.Projection?
+        /// Whether the output reports a failure.
+        public let isError: Bool
+
+        public init(
+            call: Reference,
+            output: JSONValue,
+            projection: ToolExecution.Projection? = nil,
+            isError: Bool = false
+        ) {
+            self.call = call
+            self.output = output
+            self.projection = projection
+            self.isError = isError
+        }
+    }
+
+    public var reference: Reference {
         .init(
             id: id,
-            tool: ToolIdentifier(name)
+            name: name
         )
     }
 }
