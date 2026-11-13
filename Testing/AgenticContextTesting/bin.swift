@@ -52,6 +52,15 @@ enum ContextDeterministicTestSuite {
         }
 
         Test(
+            "history-elision",
+            tags: ["context", "history", "budget", "elision"]
+        ) { context in
+            await context.record(
+                contentsOf: try ContextDeterministicFlowTesting.runHistoryElision()
+            )
+        }
+
+        Test(
             "finding-provenance-and-invalidation",
             tags: ["context", "evidence", "revision"]
         ) { context in

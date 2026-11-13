@@ -79,15 +79,26 @@ public extension Context {
         }
     }
 
-    /// Boundaries for recent complete user-originating turns in dynamic mode.
-    /// A current user turn is mandatory; it is never silently truncated.
+    /// How dynamic mode fits the conversation into its budget. The current
+    /// user turn is mandatory; it is never silently truncated.
     struct HistoryPolicy: Sendable, Codable, Hashable {
+        /// Recent user turns kept at full fidelity. Older turns stay while
+        /// they fit, with bulky results elided to a stub.
         public let maximumTurns: Int
+        /// Budget for the whole conversation, excluding system messages.
         public let maximumTokens: Int
+        /// Results above this estimate are elided when they leave the
+        /// full-fidelity window or when the budget is exceeded.
+        public let elideResultsOver: Int
 
-        public init(maximumTurns: Int = 4, maximumTokens: Int = 4_000) {
+        public init(
+            maximumTurns: Int = 4,
+            maximumTokens: Int = 4_000,
+            elideResultsOver: Int = 256
+        ) {
             self.maximumTurns = maximumTurns
             self.maximumTokens = maximumTokens
+            self.elideResultsOver = elideResultsOver
         }
     }
 

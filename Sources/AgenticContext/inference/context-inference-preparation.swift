@@ -1,5 +1,6 @@
 import Agentic
 import Foundation
+import Primitives
 import Tokens
 
 public enum ContextInferenceError: Error, Equatable {
@@ -36,6 +37,8 @@ public extension Context {
         }
         public let retained: [Reference]
         public let omitted: [Reference]
+        /// Retained, but with bulky results replaced by a pointer stub.
+        public let elided: [Reference]
     }
 
     struct InferenceMeasurement: Sendable, Codable, Hashable {
@@ -140,6 +143,7 @@ public extension Context {
             }
 
             let assembled: [Message]
+            var elided: Set<String> = []
             switch delivery {
             case .supplement:
                 assembled = try uniqueMessages(uniqueOriginal + frameMessages)
@@ -152,12 +156,13 @@ public extension Context {
                 assembled = try uniqueMessages(originalSystem + frameMessages + tail)
 
             case .dynamic:
-                let tail = try selectTail(
-                    from: uniqueOriginal,
+                let selection = try selectHistory(
+                    from: uniqueOriginal.filter { $0.role != .system },
                     policy: historyPolicy,
-                    estimationOptions: estimationOptions
+                    options: estimationOptions
                 )
-                assembled = try uniqueMessages(originalSystem + frameMessages + tail)
+                elided = selection.elided
+                assembled = try uniqueMessages(originalSystem + frameMessages + selection.messages)
             }
 
             let counts = try validateToolRelationships(assembled)
@@ -198,6 +203,10 @@ public extension Context {
                 omitted: uniqueOriginal.enumerated().compactMap { index, message in
                     included.contains(message.id)
                         ? nil : .init(index: index, messageID: message.id)
+                },
+                elided: uniqueOriginal.enumerated().compactMap { index, message in
+                    elided.contains(message.id)
+                        ? .init(index: index, messageID: message.id) : nil
                 }
             )
             return InferencePreparation(
@@ -209,58 +218,165 @@ public extension Context {
             )
         }
 
-        /// Select only complete user-originating turns; never cut a tool call
-        /// away from its result by evicting individual messages.
-        private static func selectTail(
-            from messages: [Message],
+        /// Fit the conversation into the history budget, losing as little as
+        /// possible. Each step runs only while the budget is still exceeded,
+        /// except the first:
+        ///
+        /// 1. Turns older than `maximumTurns` lose bulky results to a stub
+        ///    that names the call (the log keeps the full result).
+        /// 2. Results the model has already seen are elided, oldest first.
+        /// 3. The oldest whole turns are dropped (never the current one).
+        /// 4. Seen exchanges of the current turn are dropped, oldest first.
+        /// 5. Results the model has not seen yet are elided.
+        ///
+        /// Calls are never separated from their results, user messages are
+        /// never edited, and the current instruction is never dropped.
+        private static func selectHistory(
+            from conversation: [Message],
             policy: HistoryPolicy,
-            estimationOptions: TokenEstimationOptions
-        ) throws -> [Message] {
+            options: TokenEstimationOptions
+        ) throws -> (messages: [Message], elided: Set<String>) {
             guard policy.maximumTurns > 0, policy.maximumTokens > 0 else {
                 throw ContextInferenceError.invalidInputBudget(policy.maximumTokens)
             }
-            let userStarts = messages.indices.filter { messages[$0].role == .user }
-            guard let latest = userStarts.last else {
+            let userStarts = conversation.indices.filter { conversation[$0].role == .user }
+            guard !userStarts.isEmpty else {
                 throw ContextInferenceError.noCurrentUserMessage
             }
-            let starts = Array(userStarts.suffix(policy.maximumTurns))
-            var selected = Array(messages[latest...])
-            // Completed tool exchanges can be removed as WHOLE exchanges,
-            // including within the newest user turn. The current user
-            // instruction and unfinished tool exchanges are never truncated.
-            while true {
-                let tokens = try estimatedTailTokens(selected, options: estimationOptions)
-                guard tokens > policy.maximumTokens else { break }
-                guard let exchange = firstCompletedExchange(in: selected) else {
-                    throw ContextInferenceError.requiredHistoryExceedsTailBudget(
-                        estimated: tokens, maximum: policy.maximumTokens
-                    )
+
+            var bounds = userStarts
+            if bounds[0] != 0 {
+                bounds.insert(0, at: 0)
+            }
+            var turns = zip(bounds, bounds.dropFirst() + [conversation.count])
+                .map { Array(conversation[$0..<$1]) }
+
+            // Results after the last assistant message have not reached the
+            // model yet; they are elided only as a last resort.
+            let lastAssistant = conversation.lastIndex { $0.role == .assistant } ?? -1
+            let unseen = Set(conversation.indices
+                .filter { $0 > lastAssistant && conversation[$0].role == .tool }
+                .map { conversation[$0].id })
+
+            var tokens = try Dictionary(uniqueKeysWithValues: conversation.map {
+                ($0.id, try estimate($0, options: options))
+            })
+            var elided: Set<String> = []
+            func total() -> Int {
+                turns.joined().reduce(0) { $0 + (tokens[$1.id] ?? 0) }
+            }
+            func over() -> Bool {
+                total() > policy.maximumTokens
+            }
+            func elide(turn: Int, includingUnseen: Bool) throws {
+                for index in turns[turn].indices where over() || turn < turns.count - policy.maximumTurns {
+                    let message = turns[turn][index]
+                    guard message.role == .tool,
+                          includingUnseen || !unseen.contains(message.id),
+                          let stubbed = try stub(message, threshold: policy.elideResultsOver, options: options)
+                    else { continue }
+                    turns[turn][index] = stubbed
+                    tokens[message.id] = try estimate(stubbed, options: options)
+                    elided.insert(message.id)
                 }
-                selected.removeSubrange(exchange)
             }
-            for start in starts.dropLast().reversed() {
-                let candidate = Array(messages[start..<latest]) + selected
-                let tokens = try estimatedTailTokens(candidate, options: estimationOptions)
-                guard tokens <= policy.maximumTokens else { break }
-                selected = candidate
+
+            for turn in turns.indices.dropLast(policy.maximumTurns) {
+                try elide(turn: turn, includingUnseen: false)
             }
-            return selected
+            for turn in turns.indices where over() {
+                try elide(turn: turn, includingUnseen: false)
+            }
+            while over(), turns.count > 1 {
+                for message in turns.removeFirst() {
+                    elided.remove(message.id)
+                }
+            }
+            while over(), let exchange = firstCompletedExchange(in: turns[0], excluding: unseen) {
+                for message in turns[0][exchange] {
+                    elided.remove(message.id)
+                }
+                turns[0].removeSubrange(exchange)
+            }
+            if over() {
+                try elide(turn: 0, includingUnseen: true)
+            }
+            guard !over() else {
+                throw ContextInferenceError.requiredHistoryExceedsTailBudget(
+                    estimated: total(), maximum: policy.maximumTokens
+                )
+            }
+            return (Array(turns.joined()), elided)
         }
 
-        private static func estimatedTailTokens(
-            _ messages: [Message],
+        /// A tool message whose bulky results are replaced by a stub, or nil
+        /// when none of its results exceeds the threshold.
+        private static func stub(
+            _ message: Message,
+            threshold: Int,
+            options: TokenEstimationOptions
+        ) throws -> Message? {
+            var changed = false
+            var stubbed = message
+            stubbed.content.blocks = try message.content.blocks.map { block in
+                guard case .result(let response) = block,
+                      !isStub(response) else {
+                    return block
+                }
+                let size = try estimate(response, options: options)
+                guard size > threshold else {
+                    return block
+                }
+                changed = true
+                return .result(.init(
+                    call: response.call,
+                    output: .string(
+                        "\(stubMarker) (≈\(size) tokens). The full result of call \(response.call.id) "
+                            + "is recorded in the session log. Preview: \(preview(response.output))]"
+                    ),
+                    isError: response.isError
+                ))
+            }
+            return changed ? stubbed : nil
+        }
+
+        private static let stubMarker = "[Output elided from context"
+
+        private static func isStub(_ response: FunctionCall.Response) -> Bool {
+            if case .string(let text) = response.output {
+                return text.hasPrefix(stubMarker)
+            }
+            return false
+        }
+
+        private static func preview(_ output: JSONValue) -> String {
+            let text: String
+            if case .string(let value) = output {
+                text = value
+            } else {
+                text = (try? JSONEncoder().encode(output))
+                    .map { String(decoding: $0, as: UTF8.self) } ?? ""
+            }
+            let line = text.split(whereSeparator: \.isNewline).joined(separator: " ")
+            return line.count > 160 ? String(line.prefix(160)) + "…" : line
+        }
+
+        private static func estimate(
+            _ value: some Encodable,
             options: TokenEstimationOptions
         ) throws -> Int {
-            let encoded = try JSONEncoder().encode(messages)
-            return TokenEstimator.estimate(
-                String(decoding: encoded, as: UTF8.self),
+            TokenEstimator.estimate(
+                String(decoding: try JSONEncoder().encode(value), as: UTF8.self),
                 options: options,
-                source: "context.history_tail_json"
+                source: "context.history_json"
             ).estimatedTokens
         }
 
+        /// An assistant call message and the tool messages answering all of
+        /// its calls, none of which the model has yet to see.
         private static func firstCompletedExchange(
-            in messages: [Message]
+            in messages: [Message],
+            excluding unseen: Set<String>
         ) -> Range<Int>? {
             for start in messages.indices {
                 let assistant = messages[start]
@@ -272,7 +388,8 @@ public extension Context {
                 guard !calls.isEmpty else { continue }
                 var next = start + 1
                 var answered: Set<String> = []
-                while next < messages.count, messages[next].role == .tool {
+                while next < messages.count, messages[next].role == .tool,
+                      !unseen.contains(messages[next].id) {
                     let results = Set(messages[next].content.blocks.compactMap { block -> String? in
                         if case .result(let result) = block { return result.call.id }
                         return nil

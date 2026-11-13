@@ -15,7 +15,7 @@ extension ContextDeterministicFlowTesting {
     static func runHistoryPolicies() async throws -> [TestDiagnostic] {
         let policy = Context.Policy(preferredInputTokens: 2_000,
             maximumInputTokens: 8_000, reservedOutputTokens: 500,
-            history: .init(maximumTurns: 2, maximumTokens: 2_000))
+            history: .init(maximumTurns: 2, maximumTokens: 3_500))
         let allocator = try Context.Allocator(policy: policy)
         try await allocator.createWorkingSet(id: "history")
         let request = AgentRequest(messages: [
@@ -27,9 +27,9 @@ extension ContextDeterministicFlowTesting {
         let noEvidence = try await allocator.prepareDynamic(request: request,
             for: "history", using: ContextHistoryResolver(), modelContextLimit: 9_000)
         try Expect.equal(noEvidence.request.messages.map(\.id),
-            ["sys", "second", "third"], "Two-turn dynamic tail")
-        try Expect.equal(noEvidence.history.omitted.map(\.messageID), ["first"],
-            "Excluded material remains addressed")
+            ["sys", "first", "second", "third"], "Older turns stay while they fit")
+        try Expect.equal(noEvidence.history.omitted.map(\.messageID), [],
+            "Nothing is dropped within budget")
         let empty = Context.Frame(workingSetID: "history", items: [],
             skippedAllocationIDs: [], inputBudget: 8_000, estimatedInputTokens: 0)
         let accumulating = try Context.InferencePreparer.prepare(request: request,
@@ -52,4 +52,64 @@ extension ContextDeterministicFlowTesting {
         return [.field("dynamic_messages", String(retained.request.messages.count)),
                 .field("retained_items", String(retained.frame.items.count))]
     }
+
+    static func runHistoryElision() throws -> [TestDiagnostic] {
+        let bulky = String(repeating: "line of file content\n", count: 400)
+        func exchange(_ id: String, output: String) -> [Message] {
+            let call = FunctionCall(id: id, name: "read_file", input: .object(["path": .string(id)]))
+            return [
+                .init(id: "a.\(id)", role: .assistant, content: .init(blocks: [.call(call)])),
+                .init(id: "t.\(id)", role: .tool, content: .init(blocks: [
+                    .result(.init(call: call.reference, output: .string(output))),
+                ])),
+            ]
+        }
+        let messages: [Message] =
+            [.init(id: "sys", role: .system, content: .init(text: "System"))]
+            + [.init(id: "u0", role: .user, content: .init(text: "Read the sources."))]
+            + exchange("old", output: bulky)
+            + exchange("receipt", output: "wrote 3 lines")
+            + [.init(id: "u1", role: .user, content: .init(text: "Correction: use the v2 API."))]
+            + exchange("recent", output: bulky)
+            + [.init(id: "u2", role: .user, content: .init(text: "Now apply it."))]
+            + exchange("fresh", output: bulky)
+        let request = AgentRequest(messages: messages)
+        let empty = Context.Frame(workingSetID: "elision", items: [],
+            skippedAllocationIDs: [], inputBudget: 0, estimatedInputTokens: 0)
+
+        // Two full-fidelity turns; the oldest turn's bulky read is elided.
+        let roomy = try Context.InferencePreparer.prepare(request: request, frame: empty,
+            delivery: .dynamic, maximumInputTokens: 100_000,
+            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000))
+        try Expect.equal(roomy.request.messages.map(\.id), messages.map(\.id),
+            "Within budget every message stays")
+        try Expect.equal(roomy.history.elided.map(\.messageID), ["t.old"],
+            "Bulky results leave with their turn's fidelity")
+        guard case .result(let stub)? = roomy.request.messages[3].content.blocks.first,
+              case .string(let text) = stub.output else {
+            throw HistoryFixtureError.missingResult
+        }
+        try Expect.true(text.contains("call old"), "The stub names its call")
+        try Expect.equal(roomy.request.messages[5], messages[5], "Small receipts are kept whole")
+
+        // Tight budget: room for one bulky read, not two. Seen results go
+        // first; the unseen fresh read stays.
+        let tight = try Context.InferencePreparer.prepare(request: request, frame: empty,
+            delivery: .dynamic, maximumInputTokens: 100_000,
+            historyPolicy: .init(
+                maximumTurns: 2,
+                maximumTokens: roomy.measurement.estimatedInputTokens * 3 / 4
+            ))
+        try Expect.equal(tight.history.elided.map(\.messageID), ["t.old", "t.recent"],
+            "Seen results are elided before anything is dropped")
+        try Expect.true(tight.request.messages.contains(messages[11]),
+            "The result the model has not seen yet stays whole")
+        try Expect.true(tight.request.messages.contains(messages[6]),
+            "User corrections are never elided")
+        try Expect.equal(request.messages, messages, "The canonical request is untouched")
+
+        return [.field("elided", String(tight.history.elided.count))]
+    }
 }
+
+private enum HistoryFixtureError: Error { case missingResult }
