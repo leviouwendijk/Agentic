@@ -34,6 +34,11 @@ public protocol AgentModelProvider: Sendable {
 
     /// Provider-supplied pricing, independent of gateway availability.
     func pricingSnapshots() throws -> [ModelPricingSnapshot]
+
+    /// Prices fetched from the provider itself. Empty when the provider
+    /// publishes none. The runtime caches these and layers them over
+    /// `pricingSnapshots()`.
+    func livePricing() async throws -> [ModelPricingSnapshot]
 }
 
 public extension AgentModelProvider {
@@ -50,6 +55,10 @@ public extension AgentModelProvider {
     }
 
     func pricingSnapshots() throws -> [ModelPricingSnapshot] {
+        []
+    }
+
+    func livePricing() async throws -> [ModelPricingSnapshot] {
         []
     }
 }

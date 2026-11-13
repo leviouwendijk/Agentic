@@ -41,9 +41,27 @@ public struct StaticModelPricingCatalog: ModelPricingCatalog, Sendable {
             }
         }
 
+        // Billed names may differ from catalog IDs in organisation prefix
+        // and casing (`deepseek/deepseek-v4-flash` for
+        // `deepseek-ai/DeepSeek-V4-Flash`); match the model's own name once.
+        let name = key.modelName
+        let matches = snapshots.values.filter {
+            $0.provider == key.provider && $0.key.modelName == name
+        }
+        if matches.count == 1, let match = matches.first {
+            return match
+        }
+
         throw AgentCostError.missingPricingForModel(
             key
         )
+    }
+}
+
+extension ModelPricingKey {
+    /// The model's name without organisation prefix, lowercased.
+    var modelName: String {
+        (model.split(separator: "/").last.map(String.init) ?? model).lowercased()
     }
 }
 
