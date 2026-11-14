@@ -2,7 +2,8 @@ import Primitives
 
 public extension ToolDescriptor {
     /// The schema a call needs: required properties in full (with their
-    /// calling guidance), optional properties as name, type and enum only.
+    /// calling guidance), optional properties without their prose; every
+    /// field stays named and typed.
     /// `inspect_capability` returns the full schema. Unchanged when nothing
     /// is optional.
     var core: ToolDescriptor {
@@ -20,26 +21,26 @@ public extension ToolDescriptor {
 
 enum SchemaCore {
     static let notice = "(Optional fields abbreviated; inspect_capability returns full details.)"
+    /// Explanatory keys dropped from optional subtrees. Everything else
+    /// (types, enums, properties, items, required) is kept, so every field
+    /// stays named and typed at any depth.
+    static let prose: Set<String> = ["description", "examples", "title", "$comment"]
 
     /// Projects a JSON schema node; reports whether anything was dropped.
     static func project(
         _ schema: JSONValue,
         required: Bool
     ) -> (JSONValue, abbreviated: Bool) {
-        guard case .object(let node) = schema else {
-            return (schema, false)
-        }
-        guard required else {
-            var kept = node.filter { $0.key == "type" || $0.key == "enum" }
-            if case .object(let items)? = node["items"], items["enum"] != nil {
-                kept["items"] = .object(items.filter { $0.key == "type" || $0.key == "enum" })
+        switch schema {
+        case .array(let values):
+            var abbreviated = false
+            let projected = values.map { value -> JSONValue in
+                let (result, dropped) = project(value, required: required)
+                abbreviated = abbreviated || dropped
+                return result
             }
-            return (.object(kept), kept.count < node.count || kept["items"] != node["items"])
-        }
-
-        var abbreviated = false
-        var kept = node
-        if case .object(let properties)? = node["properties"] {
+            return (.array(projected), abbreviated)
+        case .object(let node):
             let requiredNames: Set<String>
             if case .array(let names)? = node["required"] {
                 requiredNames = Set(names.compactMap {
@@ -49,19 +50,40 @@ enum SchemaCore {
             } else {
                 requiredNames = []
             }
-            var projected: [String: JSONValue] = [:]
-            for (name, property) in properties {
-                let (value, dropped) = project(property, required: requiredNames.contains(name))
-                projected[name] = value
-                abbreviated = abbreviated || dropped
+            var abbreviated = false
+            var kept: [String: JSONValue] = [:]
+            for (key, value) in node {
+                if !required, prose.contains(key) {
+                    abbreviated = true
+                    continue
+                }
+                switch key {
+                case "properties":
+                    guard case .object(let properties) = value else {
+                        kept[key] = value
+                        continue
+                    }
+                    var projected: [String: JSONValue] = [:]
+                    for (name, property) in properties {
+                        let (result, dropped) = project(
+                            property,
+                            required: required && requiredNames.contains(name)
+                        )
+                        projected[name] = result
+                        abbreviated = abbreviated || dropped
+                    }
+                    kept[key] = .object(projected)
+                case "items", "anyOf", "oneOf", "allOf":
+                    let (result, dropped) = project(value, required: required)
+                    kept[key] = result
+                    abbreviated = abbreviated || dropped
+                default:
+                    kept[key] = value
+                }
             }
-            kept["properties"] = .object(projected)
+            return (.object(kept), abbreviated)
+        default:
+            return (schema, false)
         }
-        if let items = node["items"] {
-            let (value, dropped) = project(items, required: true)
-            kept["items"] = value
-            abbreviated = abbreviated || dropped
-        }
-        return (.object(kept), abbreviated)
     }
 }
