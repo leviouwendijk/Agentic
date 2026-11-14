@@ -32,6 +32,8 @@ public extension Standard.Tools {
             public let modelInputSchema: JSONValue?
             public let risk: String?
             public let wasVisible: Bool
+            /// Advertised from the next turn on, with its full schema.
+            public let revealed: Bool
 
             public init(
                 kind: FindCapabilities.Kind,
@@ -42,7 +44,8 @@ public extension Standard.Tools {
                 output: JSONValue,
                 modelInputSchema: JSONValue?,
                 risk: String?,
-                wasVisible: Bool
+                wasVisible: Bool,
+                revealed: Bool = false
             ) {
                 self.kind = kind
                 self.identifier = identifier
@@ -53,11 +56,12 @@ public extension Standard.Tools {
                 self.modelInputSchema = modelInputSchema
                 self.risk = risk
                 self.wasVisible = wasVisible
+                self.revealed = revealed
             }
         }
 
         public static let purpose =
-            "Inspect one available installed capability's authentic typed contracts without exposing or invoking it."
+            "Return one available capability's full contract, including optional fields and guidance; it is then advertised from the next turn on."
         public static let risk: ActionRisk = .observe
         public init() {}
 
@@ -69,6 +73,11 @@ public extension Standard.Tools {
             }) else {
                 throw InspectCapabilityError.notAvailable
             }
+            let wasVisible = CapabilityDiscovery.contains(selected.reference, in: snapshot.visible)
+            var revealed = false
+            if !wasVisible, let reveal = try? context.require(CapabilityReveal.self) {
+                revealed = await reveal(selected.reference.capabilitySet) != .none
+            }
             return Output(
                 kind: input.kind,
                 identifier: selected.identifier,
@@ -78,7 +87,8 @@ public extension Standard.Tools {
                 output: selected.output,
                 modelInputSchema: selected.modelInputSchema,
                 risk: selected.risk.map { String(describing: $0) },
-                wasVisible: CapabilityDiscovery.contains(selected.reference, in: snapshot.visible)
+                wasVisible: wasVisible,
+                revealed: revealed
             )
         }
     }

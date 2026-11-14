@@ -32,3 +32,14 @@ enum CapabilityDiscovery {
         }
     }
 }
+
+extension CapabilityReference {
+    var capabilitySet: AgentCapabilitySet {
+        switch self {
+        case .tool(let id): .init(tools: [id])
+        case .program(let id): .init(programs: [id])
+        case .inference(let id): .init(inferences: [id])
+        case .agent(let id): .init(agents: [id])
+        }
+    }
+}

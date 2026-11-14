@@ -113,20 +113,32 @@ public extension Context {
         public let reservedOutputTokens: Int
         public let maximumResolutions: Int
         public let history: HistoryPolicy
+        /// How much of each capability schema is advertised.
+        public let schemas: SchemaDetail
 
         public init(
             preferredInputTokens: Int = 12_000,
             maximumInputTokens: Int = 48_000,
             reservedOutputTokens: Int = 4_000,
             maximumResolutions: Int = 32,
-            history: HistoryPolicy = .init()
+            history: HistoryPolicy = .init(),
+            schemas: SchemaDetail = .full
         ) {
             self.preferredInputTokens = preferredInputTokens
             self.maximumInputTokens = maximumInputTokens
             self.reservedOutputTokens = reservedOutputTokens
             self.maximumResolutions = maximumResolutions
             self.history = history
+            self.schemas = schemas
         }
+    }
+
+    enum SchemaDetail: String, Sendable, Codable, Hashable {
+        /// Every schema in full.
+        case full
+        /// Required properties in full, optional ones abbreviated
+        /// (`ToolDescriptor.core`); full detail through `inspect_capability`.
+        case core
     }
 
     /// An immutable, provider-neutral account of what was actually selected
