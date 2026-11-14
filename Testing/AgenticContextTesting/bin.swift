@@ -52,6 +52,15 @@ enum ContextDeterministicTestSuite {
         }
 
         Test(
+            "repeated-result-pointers",
+            tags: ["context", "history", "dedupe"]
+        ) { context in
+            await context.record(
+                contentsOf: try ContextDeterministicFlowTesting.runRepeatedResultPointers()
+            )
+        }
+
+        Test(
             "history-elision",
             tags: ["context", "history", "budget", "elision"]
         ) { context in

@@ -67,12 +67,12 @@ extension ContextDeterministicFlowTesting {
         let messages: [Message] =
             [.init(id: "sys", role: .system, content: .init(text: "System"))]
             + [.init(id: "u0", role: .user, content: .init(text: "Read the sources."))]
-            + exchange("old", output: bulky)
+            + exchange("old", output: "old\n" + bulky)
             + exchange("receipt", output: "wrote 3 lines")
             + [.init(id: "u1", role: .user, content: .init(text: "Correction: use the v2 API."))]
-            + exchange("recent", output: bulky)
+            + exchange("recent", output: "recent\n" + bulky)
             + [.init(id: "u2", role: .user, content: .init(text: "Now apply it."))]
-            + exchange("fresh", output: bulky)
+            + exchange("fresh", output: "fresh\n" + bulky)
         let request = AgentRequest(messages: messages)
         let empty = Context.Frame(workingSetID: "elision", items: [],
             skippedAllocationIDs: [], inputBudget: 0, estimatedInputTokens: 0)
@@ -109,6 +109,51 @@ extension ContextDeterministicFlowTesting {
         try Expect.equal(request.messages, messages, "The canonical request is untouched")
 
         return [.field("elided", String(tight.history.elided.count))]
+    }
+}
+
+extension ContextDeterministicFlowTesting {
+    static func runRepeatedResultPointers() throws -> [TestDiagnostic] {
+        let listing = (1...40).map { "entry-\($0).html" }.joined(separator: "\n")
+        func exchange(_ id: String, output: String) -> [Message] {
+            let call = FunctionCall(id: id, name: "scan_filepaths", input: .object(["path": .string(".")]))
+            return [
+                .init(id: "a.\(id)", role: .assistant, content: .init(blocks: [.call(call)])),
+                .init(id: "t.\(id)", role: .tool, content: .init(blocks: [
+                    .result(.init(call: call.reference, output: .string(output))),
+                ])),
+            ]
+        }
+        let messages: [Message] =
+            [.init(id: "u0", role: .user, content: .init(text: "Look around."))]
+            + exchange("first", output: listing)
+            + exchange("again", output: listing)
+            + exchange("other", output: listing + "\nnew.html")
+            + exchange("small", output: "ok")
+            + exchange("small2", output: "ok")
+        let prepared = try Context.InferencePreparer.prepare(
+            request: AgentRequest(messages: messages),
+            frame: .init(workingSetID: "pointers", items: [], skippedAllocationIDs: [],
+                         inputBudget: 0, estimatedInputTokens: 0),
+            delivery: .dynamic,
+            maximumInputTokens: 100_000,
+            historyPolicy: .init(maximumTurns: 4, maximumTokens: 50_000)
+        )
+        func output(_ id: String) -> String? {
+            guard let message = prepared.request.messages.first(where: { $0.id == id }),
+                  case .result(let response)? = message.content.blocks.first,
+                  case .string(let text) = response.output else { return nil }
+            return text
+        }
+        try Expect.equal(output("t.first"), listing, "The first result stays whole")
+        try Expect.true(
+            output("t.again")?.contains("call first") == true,
+            "A repeated identical result points at the original"
+        )
+        try Expect.equal(output("t.other"), listing + "\nnew.html", "A changed result stays whole")
+        try Expect.equal(output("t.small2"), "ok", "Small repeats are not worth a pointer")
+        try Expect.equal(prepared.history.elided.map(\.messageID), ["t.again"], "The pointer is recorded")
+        return []
     }
 }
 

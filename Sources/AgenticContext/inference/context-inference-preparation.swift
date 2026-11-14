@@ -284,6 +284,21 @@ public extension Context {
             for turn in turns.indices.dropLast(policy.maximumTurns) {
                 try elide(turn: turn, includingUnseen: false)
             }
+            // Lossless: a result identical to one still shown in full is
+            // sent as a pointer to it. Runs after aging so it never points
+            // at a stub.
+            var shown: [Data: String] = [:]
+            for turn in turns.indices {
+                for index in turns[turn].indices {
+                    let message = turns[turn][index]
+                    guard message.role == .tool,
+                          let pointed = try pointer(message, to: &shown, options: options)
+                    else { continue }
+                    turns[turn][index] = pointed
+                    tokens[message.id] = try estimate(pointed, options: options)
+                    elided.insert(message.id)
+                }
+            }
             for turn in turns.indices where over() {
                 try elide(turn: turn, includingUnseen: false)
             }
@@ -340,11 +355,52 @@ public extension Context {
             return changed ? stubbed : nil
         }
 
+        /// A tool message whose results repeat an earlier full result, with
+        /// those results replaced by a pointer; nil when nothing repeats.
+        /// Records this message's own full results in `shown`.
+        private static func pointer(
+            _ message: Message,
+            to shown: inout [Data: String],
+            options: TokenEstimationOptions
+        ) throws -> Message? {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys]
+            var changed = false
+            var pointed = message
+            pointed.content.blocks = try message.content.blocks.map { block in
+                guard case .result(let response) = block,
+                      !isStub(response) else {
+                    return block
+                }
+                let key = try encoder.encode(
+                    FunctionCall.Response(call: .init(id: "", name: ""), output: response.output, isError: response.isError)
+                )
+                guard let original = shown[key] else {
+                    shown[key] = response.call.id
+                    return block
+                }
+                // Pointers only pay off for results larger than themselves.
+                guard try estimate(response.output, options: options) > minimumPointedTokens else {
+                    return block
+                }
+                changed = true
+                return .result(.init(
+                    call: response.call,
+                    output: .string("\(pointerMarker) the result of call \(original) above.]"),
+                    isError: response.isError
+                ))
+            }
+            return changed ? pointed : nil
+        }
+
+        private static let pointerMarker = "[Unchanged: identical to"
+        private static let minimumPointedTokens = 32
+
         private static let stubMarker = "[Output elided from context"
 
         private static func isStub(_ response: FunctionCall.Response) -> Bool {
             if case .string(let text) = response.output {
-                return text.hasPrefix(stubMarker)
+                return text.hasPrefix(stubMarker) || text.hasPrefix(pointerMarker)
             }
             return false
         }
