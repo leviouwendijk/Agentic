@@ -122,6 +122,11 @@ public extension Context {
         public let history: HistoryPolicy
         /// How much of each capability schema is advertised.
         public let schemas: SchemaDetail
+        /// A result the model reads beyond this many estimated tokens shows
+        /// its beginning and where `read_result` continues; the full result
+        /// stays in the session log. Applies only while `read_result` can
+        /// be revealed and the session is logged. Nil shows results whole.
+        public let resultBudget: Int?
 
         public init(
             preferredInputTokens: Int = 12_000,
@@ -129,7 +134,8 @@ public extension Context {
             reservedOutputTokens: Int = 4_000,
             maximumResolutions: Int = 32,
             history: HistoryPolicy = .init(),
-            schemas: SchemaDetail = .full
+            schemas: SchemaDetail = .full,
+            resultBudget: Int? = 4_000
         ) {
             self.preferredInputTokens = preferredInputTokens
             self.maximumInputTokens = maximumInputTokens
@@ -137,6 +143,7 @@ public extension Context {
             self.maximumResolutions = maximumResolutions
             self.history = history
             self.schemas = schemas
+            self.resultBudget = resultBudget.map { max(1, $0) }
         }
     }
 

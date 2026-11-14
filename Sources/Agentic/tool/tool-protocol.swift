@@ -8,7 +8,8 @@
 public protocol Tool:
     Capability,
     ToolRecovery,
-    ToolProjection
+    ToolProjection,
+    ToolRendering
 where DefinitionType == ToolDefinition
 {
 

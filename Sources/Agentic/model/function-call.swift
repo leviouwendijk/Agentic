@@ -93,17 +93,23 @@ extension FunctionCall {
         public let projection: ToolExecution.Projection?
         /// Whether the output reports a failure.
         public let isError: Bool
+        /// What the model reads, when the capability renders its output as
+        /// text. `output` stays the record; without a rendering the model
+        /// reads `output` as JSON.
+        public let text: String?
 
         public init(
             call: Reference,
             output: JSONValue,
             projection: ToolExecution.Projection? = nil,
-            isError: Bool = false
+            isError: Bool = false,
+            text: String? = nil
         ) {
             self.call = call
             self.output = output
             self.projection = projection
             self.isError = isError
+            self.text = text
         }
     }
 
@@ -112,5 +118,52 @@ extension FunctionCall {
             id: id,
             name: name
         )
+    }
+}
+
+public extension FunctionCall.Response {
+    /// The text a model reads for this response: its rendering, or `output`
+    /// as compact JSON. Providers send it as the tool message's content.
+    var modelText: String {
+        if let text {
+            return text
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return (try? encoder.encode(output)).map {
+            String(decoding: $0, as: UTF8.self)
+        } ?? ""
+    }
+
+    /// The same response, read by the model as `text`.
+    func rendered(
+        _ text: String?
+    ) -> Self {
+        .init(
+            call: call,
+            output: output,
+            projection: projection,
+            isError: isError,
+            text: text
+        )
+    }
+}
+
+public extension Message {
+    /// The message as a model reads it: each result carries only its model
+    /// text. For measuring what a request costs, never for the record.
+    var modelFacing: Message {
+        var facing = self
+        facing.content.blocks = content.blocks.map { block in
+            guard case .result(let response) = block else {
+                return block
+            }
+            return .result(.init(
+                call: response.call,
+                output: .string(response.modelText),
+                isError: response.isError
+            ))
+        }
+        return facing
     }
 }

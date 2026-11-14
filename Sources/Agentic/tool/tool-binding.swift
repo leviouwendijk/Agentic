@@ -100,7 +100,8 @@ public struct ToolBinding: CapabilityBinding {
         ) async throws -> (
             output: JSONValue,
             projection: ToolExecution.Projection?,
-            isError: Bool
+            isError: Bool,
+            text: String?
         )
 
     private let reconcileHandler:
@@ -237,7 +238,11 @@ public struct ToolBinding: CapabilityBinding {
             return (
                 output: encodedOutput,
                 projection: projection,
-                isError: isError
+                isError: isError,
+                text: tool.render(
+                    output,
+                    input: input
+                )
             )
         }
 
@@ -490,7 +495,8 @@ public struct ToolBinding: CapabilityBinding {
                 call: .init(call.reference),
                 output: execution.output,
                 projection: execution.projection,
-                isError: execution.isError
+                isError: execution.isError,
+                text: execution.text
             )
         )
     }

@@ -170,8 +170,10 @@ public extension Context {
             prepared.messages = assembled
 
             let encoded = try JSONEncoder().encode(prepared)
+            var facing = prepared
+            facing.messages = assembled.map(\.modelFacing)
             let estimate = TokenEstimator.estimate(
-                String(decoding: encoded, as: UTF8.self),
+                String(decoding: try JSONEncoder().encode(facing), as: UTF8.self),
                 options: estimationOptions,
                 source: "context.inference_request_json"
             )
@@ -336,23 +338,23 @@ public extension Context {
         ) throws -> Message? {
             var changed = false
             var stubbed = message
-            stubbed.content.blocks = try message.content.blocks.map { block in
+            stubbed.content.blocks = message.content.blocks.map { block in
                 guard case .result(let response) = block,
                       !isStub(response) else {
                     return block
                 }
-                let size = try estimate(response, options: options)
+                let size = estimate(text: response.modelText, options: options)
                 guard size > threshold else {
                     return block
                 }
                 changed = true
+                let text = "\(stubMarker) (≈\(size) tokens). The full result of call \(response.call.id) "
+                    + "is recorded in the session log. Preview: \(preview(response.modelText))]"
                 return .result(.init(
                     call: response.call,
-                    output: .string(
-                        "\(stubMarker) (≈\(size) tokens). The full result of call \(response.call.id) "
-                            + "is recorded in the session log. Preview: \(preview(response.output))]"
-                    ),
-                    isError: response.isError
+                    output: .string(text),
+                    isError: response.isError,
+                    text: text
                 ))
             }
             return changed ? stubbed : nil
@@ -376,21 +378,27 @@ public extension Context {
                     return block
                 }
                 let key = try encoder.encode(
-                    FunctionCall.Response(call: .init(id: "", name: ""), output: response.output, isError: response.isError)
+                    FunctionCall.Response(
+                        call: .init(id: "", name: ""),
+                        output: .string(response.modelText),
+                        isError: response.isError
+                    )
                 )
                 guard let original = shown[key] else {
                     shown[key] = response.call.id
                     return block
                 }
                 // Pointers only pay off for results larger than themselves.
-                guard try estimate(response.output, options: options) > minimumPointedTokens else {
+                guard estimate(text: response.modelText, options: options) > minimumPointedTokens else {
                     return block
                 }
                 changed = true
+                let text = "\(pointerMarker) the result of call \(original) above.]"
                 return .result(.init(
                     call: response.call,
-                    output: .string("\(pointerMarker) the result of call \(original) above.]"),
-                    isError: response.isError
+                    output: .string(text),
+                    isError: response.isError,
+                    text: text
                 ))
             }
             return changed ? pointed : nil
@@ -408,20 +416,32 @@ public extension Context {
             return false
         }
 
-        private static func preview(_ output: JSONValue) -> String {
-            let text: String
-            if case .string(let value) = output {
-                text = value
-            } else {
-                text = (try? JSONEncoder().encode(output))
-                    .map { String(decoding: $0, as: UTF8.self) } ?? ""
-            }
+        private static func preview(_ text: String) -> String {
             let line = text.split(whereSeparator: \.isNewline).joined(separator: " ")
             return line.count > 160 ? String(line.prefix(160)) + "…" : line
         }
 
         private static func estimate(
-            _ value: some Encodable,
+            text: String,
+            options: TokenEstimationOptions
+        ) -> Int {
+            TokenEstimator.estimate(
+                text,
+                options: options,
+                source: "context.history_text"
+            ).estimatedTokens
+        }
+
+        /// A message as the model reads it.
+        private static func estimate(
+            _ message: Message,
+            options: TokenEstimationOptions
+        ) throws -> Int {
+            try estimate(encoding: message.modelFacing, options: options)
+        }
+
+        private static func estimate(
+            encoding value: some Encodable,
             options: TokenEstimationOptions
         ) throws -> Int {
             TokenEstimator.estimate(
