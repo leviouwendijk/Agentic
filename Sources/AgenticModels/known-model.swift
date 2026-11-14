@@ -24,6 +24,22 @@ public extension KnownModel {
             "anthropic:claude-3-5-haiku"
         public static let haiku_3: AgentModelID =
             "anthropic:claude-3-haiku"
+        public static let fable_5: AgentModelID =
+            "anthropic:claude-fable-5"
+        public static let opus_5: AgentModelID =
+            "anthropic:claude-opus-5"
+        public static let sonnet_5: AgentModelID =
+            "anthropic:claude-sonnet-5"
+        public static let opus_4_8: AgentModelID =
+            "anthropic:claude-opus-4-8"
+        public static let fable_5_2: AgentModelID =
+            "anthropic:claude-fable-5-2"
+        public static let opus_5_5: AgentModelID =
+            "anthropic:claude-opus-5-5"
+        public static let sonnet_5_5: AgentModelID =
+            "anthropic:claude-sonnet-5-5"
+        public static let haiku_5_5: AgentModelID =
+            "anthropic:claude-haiku-5-5"
     }
 
     enum nova {
@@ -63,6 +79,17 @@ public extension KnownModel {
         public static let qwen3_coder_30b_a3b = coder_3_30b_a3b
         public static let qwen3_coder_480b_a35b = coder_3_480b_a35b
         public static let qwen3_next_80b_a3b = next_3_80b_a3b
+    }
+
+    enum gpt {
+        public static let astra_6: AgentModelID =
+            "openai:gpt-6-astra"
+        public static let sol_6_1: AgentModelID =
+            "openai:gpt-6.1-sol"
+        public static let terra_6_1: AgentModelID =
+            "openai:gpt-6.1-terra"
+        public static let luna_6: AgentModelID =
+            "openai:gpt-6-luna"
     }
 
     enum gpt_oss {

@@ -11,15 +11,20 @@ public struct Message: Sendable, Codable, Hashable, Identifiable {
     public let role: MessageRole
     /// The message's ordered content blocks.
     public var content: MessageContent
+    /// Opaque, provider-specific replay data. Never rewrite it as model text.
+    /// The optional field preserves decoding of persisted older messages.
+    public var providerContinuation: [String: String]?
 
     public init(
         id: String,
         role: MessageRole,
-        content: MessageContent
+        content: MessageContent,
+        providerContinuation: [String: String]? = nil
     ) {
         self.id = id
         self.role = role
         self.content = content
+        self.providerContinuation = providerContinuation
     }
 }
 
