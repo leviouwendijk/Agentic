@@ -1,5 +1,5 @@
 {
-  "originHash" : "e214b877342c0c072685f22a9f85b5641800c7362964065884353f4aef68f679",
+  "originHash" : "ef88c8d90040dcdd9a7963a03dcc52155481660730970a9ca051796fefff91bf",
   "pins" : [
     {
       "identity" : "arguments",
@@ -106,7 +106,7 @@
       "location" : "https://github.com/leviouwendijk/IO.git",
       "state" : {
         "branch" : "master",
-        "revision" : "5e88720439dc8f782034b6f9f8374c61ef1707f0"
+        "revision" : "8c462fa29ff9abfd5068cec656d4a84526f24644"
       }
     },
     {
@@ -187,7 +187,7 @@
       "location" : "https://github.com/leviouwendijk/Primitives.git",
       "state" : {
         "branch" : "master",
-        "revision" : "5e64f0cf4dfe5ec5b793a7dd393e45bc70003cec"
+        "revision" : "89448ec3f266a70dfc755edd694cc7854d5419d6"
       }
     },
     {
@@ -214,7 +214,7 @@
       "location" : "https://github.com/leviouwendijk/Readers.git",
       "state" : {
         "branch" : "master",
-        "revision" : "e9b967413538320ef2cae3bcecfc2edc6f11933b"
+        "revision" : "9fad46ff279471563215cc1202cc4854d361a199"
       }
     },
     {
@@ -286,7 +286,7 @@
       "location" : "https://github.com/leviouwendijk/Tokens.git",
       "state" : {
         "branch" : "master",
-        "revision" : "6c36483226bfaecd544b8faba1f86215b3e9dce5"
+        "revision" : "f14620970eb1b4d77ea4811c053a65cbd1b6f972"
       }
     },
     {
@@ -304,7 +304,7 @@
       "location" : "https://github.com/leviouwendijk/Workspace.git",
       "state" : {
         "branch" : "master",
-        "revision" : "2bfc5c4b032592d316d9349222a7dde92edccc7a"
+        "revision" : "138e69f06cbbbbd1fe1e5deacb3790b5cf9cfaca"
       }
     },
     {
@@ -313,7 +313,7 @@
       "location" : "https://github.com/leviouwendijk/Writers.git",
       "state" : {
         "branch" : "master",
-        "revision" : "ccb9eddb7aefb63d111ca2f6ff3df655f0a64684"
+        "revision" : "ef3e6f78ffc5876e8985be65cff206389de8f075"
       }
     }
   ],

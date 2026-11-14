@@ -269,7 +269,7 @@ public extension Context {
                 total() > policy.maximumTokens
             }
             func elide(turn: Int, includingUnseen: Bool) throws {
-                for index in turns[turn].indices where over() || turn < turns.count - policy.maximumTurns {
+                for index in turns[turn].indices where over() || turn < aged / policy.elisionBatch * policy.elisionBatch {
                     let message = turns[turn][index]
                     guard message.role == .tool,
                           includingUnseen || !unseen.contains(message.id),
@@ -281,7 +281,10 @@ public extension Context {
                 }
             }
 
-            for turn in turns.indices.dropLast(policy.maximumTurns) {
+            // Aged turns lose their bulky results a whole batch at a time,
+            // so the cached prefix is invalidated once per batch.
+            let aged = max(0, turns.count - policy.maximumTurns)
+            for turn in 0..<(aged / policy.elisionBatch * policy.elisionBatch) {
                 try elide(turn: turn, includingUnseen: false)
             }
             // Lossless: a result identical to one still shown in full is

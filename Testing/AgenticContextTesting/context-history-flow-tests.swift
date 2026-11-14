@@ -92,6 +92,19 @@ extension ContextDeterministicFlowTesting {
         try Expect.true(text.contains("call old"), "The stub names its call")
         try Expect.equal(roomy.request.messages[5], messages[5], "Small receipts are kept whole")
 
+        // Batched: one aged turn waits for a second before eliding, so the
+        // cached prefix is rewritten once per two turns.
+        let batched = try Context.InferencePreparer.prepare(request: request, frame: empty,
+            delivery: .dynamic, maximumInputTokens: 100_000,
+            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, elisionBatch: 2))
+        try Expect.equal(batched.history.elided.map(\.messageID), [],
+            "An incomplete batch leaves aged turns intact")
+        let batchedFull = try Context.InferencePreparer.prepare(request: request, frame: empty,
+            delivery: .dynamic, maximumInputTokens: 100_000,
+            historyPolicy: .init(maximumTurns: 1, maximumTokens: 50_000, elisionBatch: 2))
+        try Expect.equal(batchedFull.history.elided.map(\.messageID), ["t.old", "t.recent"],
+            "A complete batch elides together")
+
         // Tight budget: room for one bulky read, not two. Seen results go
         // first; the unseen fresh read stays.
         let tight = try Context.InferencePreparer.prepare(request: request, frame: empty,

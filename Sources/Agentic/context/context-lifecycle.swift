@@ -90,15 +90,22 @@ public extension Context {
         /// Results above this estimate are elided when they leave the
         /// full-fidelity window or when the budget is exceeded.
         public let elideResultsOver: Int
+        /// Aged turns are elided in batches of this many. Every elision
+        /// rewrites the prompt after it, invalidating a provider's prefix
+        /// cache from that point; batching pays that once per batch. Budget
+        /// pressure still elides immediately.
+        public let elisionBatch: Int
 
         public init(
             maximumTurns: Int = 4,
             maximumTokens: Int = 4_000,
-            elideResultsOver: Int = 256
+            elideResultsOver: Int = 256,
+            elisionBatch: Int = 1
         ) {
             self.maximumTurns = maximumTurns
             self.maximumTokens = maximumTokens
             self.elideResultsOver = elideResultsOver
+            self.elisionBatch = max(1, elisionBatch)
         }
     }
 
