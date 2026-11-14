@@ -73,6 +73,10 @@ public struct InstructionDefinition: Definition, Codable, Hashable {
     }
 }
 
+/// `Instructions` for declarations inside a Domain, where the bare name
+/// means the Domain's own instruction namespace.
+public typealias AgentInstructions = Instructions
+
 /// Order-preserving composition of reusable Instructions and local guidance.
 /// Values are retained, so a snapshot does not depend on mutable source files.
 public struct Instructions: Sendable, Codable, Hashable, ExpressibleByArrayLiteral, ExpressibleByStringLiteral {
