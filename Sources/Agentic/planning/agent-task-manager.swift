@@ -15,6 +15,7 @@ public actor AgentTaskManager {
         blockedBy: [AgentTaskIdentifier] = [],
         owner: String? = nil,
         sessionID: String? = nil,
+        contract: AgentTaskContract? = nil,
         metadata: [String: String] = [:]
     ) async throws -> AgentTask {
         let subject = subject.trimmingCharacters(
@@ -37,6 +38,7 @@ public actor AgentTaskManager {
             sessionID: normalized(
                 sessionID
             ),
+            contract: contract,
             metadata: metadata
         )
 
@@ -64,14 +66,23 @@ public actor AgentTaskManager {
     public func list(
         statuses: [AgentTaskStatus] = [],
         owner: String? = nil,
+        sessionID: String? = nil,
         readyOnly: Bool = false,
         includeCompleted: Bool = true
     ) async throws -> [AgentTask] {
         let owner = normalized(
             owner
         )
+        let sessionID = normalized(
+            sessionID
+        )
 
         return try await store.list().filter { task in
+            if let sessionID,
+               task.sessionID != sessionID {
+                return false
+            }
+
             if !includeCompleted,
                task.status == .completed {
                 return false
@@ -170,7 +181,7 @@ public actor AgentTaskManager {
             )
         }
 
-        try await store.save(
+        try await save(
             task
         )
 
@@ -212,9 +223,137 @@ public actor AgentTaskManager {
             id: id
         )
     }
+
+    /// Record an assignee's report. The task waits for a coordinator's
+    /// acceptance; the report alone never completes it.
+    public func recordAttempt(
+        id: AgentTaskIdentifier,
+        owner: String? = nil,
+        report: AgentTaskAttemptReport
+    ) async throws -> AgentTask {
+        var task = try await get(
+            id
+        )
+
+        switch task.status {
+        case .pending, .processing:
+            break
+
+        default:
+            throw AgentTaskError.invalidTransition(
+                id,
+                from: task.status,
+                to: .awaiting_acceptance
+            )
+        }
+
+        task.attempts.append(
+            .init(
+                number: task.attempts.count + 1,
+                owner: normalized(owner) ?? task.owner,
+                report: report
+            )
+        )
+        task.status = .awaiting_acceptance
+
+        try await save(
+            task
+        )
+
+        return task
+    }
+
+    /// Accept the submitted attempt, complete the task, and unblock dependents.
+    public func accept(
+        id: AgentTaskIdentifier,
+        note: String? = nil
+    ) async throws -> AgentTask {
+        try await decide(
+            id: id,
+            outcome: .accepted,
+            status: .completed,
+            note: note
+        )
+    }
+
+    /// Return the task to `pending` for a bounded retry. The note travels
+    /// with the rejected attempt as the next attempt's starting evidence.
+    public func reject(
+        id: AgentTaskIdentifier,
+        note: String
+    ) async throws -> AgentTask {
+        try await decide(
+            id: id,
+            outcome: .rejected,
+            status: .pending,
+            note: note
+        )
+    }
+
+    public func fail(
+        id: AgentTaskIdentifier,
+        note: String
+    ) async throws -> AgentTask {
+        try await decide(
+            id: id,
+            outcome: .failed,
+            status: .failed,
+            note: note
+        )
+    }
 }
 
 private extension AgentTaskManager {
+    func decide(
+        id: AgentTaskIdentifier,
+        outcome: AgentTaskAttemptOutcome,
+        status: AgentTaskStatus,
+        note: String?
+    ) async throws -> AgentTask {
+        var task = try await get(
+            id
+        )
+
+        guard task.status == .awaiting_acceptance,
+              let index = task.attempts.indices.last,
+              task.attempts[index].outcome == .submitted
+        else {
+            throw AgentTaskError.noSubmittedAttempt(
+                id
+            )
+        }
+
+        task.attempts[index].outcome = outcome
+        task.attempts[index].decisionNote = normalized(
+            note
+        )
+        task.attempts[index].decidedAt = Date()
+        task.status = status
+
+        try await save(
+            task
+        )
+
+        if status == .completed {
+            try await clearDependency(
+                id
+            )
+        }
+
+        return task
+    }
+
+    func save(
+        _ task: AgentTask
+    ) async throws {
+        var task = task
+        task.updatedAt = Date()
+
+        try await store.save(
+            task
+        )
+    }
+
     func clearDependency(
         _ completedID: AgentTaskIdentifier
     ) async throws {
@@ -225,7 +364,7 @@ private extension AgentTaskManager {
                 id == completedID
             }
 
-            try await store.save(
+            try await save(
                 task
             )
         }

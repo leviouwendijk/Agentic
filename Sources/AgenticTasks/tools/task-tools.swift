@@ -3,32 +3,32 @@ import Primitives
 import Schema
 import Macros
 
-public extension Standard.Tools {
+public extension Tasks.Tools {
     @Tool("task_create")
     struct CreateTask: Tool {
         /// Create a new agent task.
         @JSONSchema
         public struct Input: HashableSource {
             public let subject: String
-            public let description: String
-            public let blockedBy: [AgentTaskIdentifier]
+            public let description: String?
+            public let blockedBy: [AgentTaskIdentifier]?
             public let owner: String?
-            public let sessionID: String?
-            public let metadata: [String: String]
+            public let contract: AgentTaskContract?
+            public let metadata: [String: String]?
 
             public init(
                 subject: String,
-                description: String = "",
-                blockedBy: [AgentTaskIdentifier] = [],
+                description: String? = nil,
+                blockedBy: [AgentTaskIdentifier]? = nil,
                 owner: String? = nil,
-                sessionID: String? = nil,
-                metadata: [String: String] = [:]
+                contract: AgentTaskContract? = nil,
+                metadata: [String: String]? = nil
             ) {
                 self.subject = subject
                 self.description = description
                 self.blockedBy = blockedBy
                 self.owner = owner
-                self.sessionID = sessionID
+                self.contract = contract
                 self.metadata = metadata
             }
         }
@@ -44,19 +44,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let purpose = "Create a durable Agentic task."
+        public static let purpose = "Create a durable Agentic task, optionally carrying a typed assignment contract."
 
         public static let risk: ActionRisk = .boundedmutate
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -77,15 +69,16 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let task = try await manager.create(
+            let task = try await context.taskManager().create(
                 subject: input.subject,
-                description: input.description,
-                blockedBy: input.blockedBy,
+                description: input.description ?? "",
+                blockedBy: input.blockedBy ?? [],
                 owner: input.owner,
-                sessionID: input.sessionID,
-                metadata: input.metadata
+                sessionID: context.taskSessionID(),
+                contract: input.contract,
+                metadata: input.metadata ?? [:]
             )
 
             return Output(
@@ -104,10 +97,9 @@ public extension Standard.Tools {
             public let description: String?
             public let status: AgentTaskStatus?
             public let owner: String?
-            public let addBlockedBy: [AgentTaskIdentifier]
-            public let removeBlockedBy: [AgentTaskIdentifier]
-            public let sessionID: String?
-            public let metadataPatch: [String: String]
+            public let addBlockedBy: [AgentTaskIdentifier]?
+            public let removeBlockedBy: [AgentTaskIdentifier]?
+            public let metadataPatch: [String: String]?
 
             public init(
                 id: AgentTaskIdentifier,
@@ -115,10 +107,9 @@ public extension Standard.Tools {
                 description: String? = nil,
                 status: AgentTaskStatus? = nil,
                 owner: String? = nil,
-                addBlockedBy: [AgentTaskIdentifier] = [],
-                removeBlockedBy: [AgentTaskIdentifier] = [],
-                sessionID: String? = nil,
-                metadataPatch: [String: String] = [:]
+                addBlockedBy: [AgentTaskIdentifier]? = nil,
+                removeBlockedBy: [AgentTaskIdentifier]? = nil,
+                metadataPatch: [String: String]? = nil
             ) {
                 self.id = id
                 self.subject = subject
@@ -127,7 +118,6 @@ public extension Standard.Tools {
                 self.owner = owner
                 self.addBlockedBy = addBlockedBy
                 self.removeBlockedBy = removeBlockedBy
-                self.sessionID = sessionID
                 self.metadataPatch = metadataPatch
             }
         }
@@ -147,15 +137,7 @@ public extension Standard.Tools {
 
         public static let risk: ActionRisk = .boundedmutate
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -179,18 +161,17 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let task = try await manager.update(
+            let task = try await context.taskManager().update(
                 id: input.id,
                 subject: input.subject,
                 description: input.description,
                 status: input.status,
                 owner: input.owner,
-                addBlockedBy: input.addBlockedBy,
-                removeBlockedBy: input.removeBlockedBy,
-                sessionID: input.sessionID,
-                metadataPatch: input.metadataPatch
+                addBlockedBy: input.addBlockedBy ?? [],
+                removeBlockedBy: input.removeBlockedBy ?? [],
+                metadataPatch: input.metadataPatch ?? [:]
             )
 
             return Output(
@@ -204,21 +185,25 @@ public extension Standard.Tools {
         /// List agent tasks with optional status, owner, readiness, and completion filters.
         @JSONSchema
         public struct Input: HashableSource {
-            public let statuses: [AgentTaskStatus]
+            public let statuses: [AgentTaskStatus]?
             public let owner: String?
-            public let readyOnly: Bool
-            public let includeCompleted: Bool
+            public let readyOnly: Bool?
+            public let includeCompleted: Bool?
+            /// Include tasks from other sessions; defaults to the current session only.
+            public let allSessions: Bool?
 
             public init(
-                statuses: [AgentTaskStatus] = [],
+                statuses: [AgentTaskStatus]? = nil,
                 owner: String? = nil,
-                readyOnly: Bool = false,
-                includeCompleted: Bool = true
+                readyOnly: Bool? = nil,
+                includeCompleted: Bool? = nil,
+                allSessions: Bool? = nil
             ) {
                 self.statuses = statuses
                 self.owner = owner
                 self.readyOnly = readyOnly
                 self.includeCompleted = includeCompleted
+                self.allSessions = allSessions
             }
         }
 
@@ -235,19 +220,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let purpose = "List durable Agentic tasks."
+        public static let purpose = "List durable Agentic tasks, scoped to the current session by default."
 
         public static let risk: ActionRisk = .observe
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -263,13 +240,16 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let tasks = try await manager.list(
-                statuses: input.statuses,
+            let tasks = try await context.taskManager().list(
+                statuses: input.statuses ?? [],
                 owner: input.owner,
-                readyOnly: input.readyOnly,
-                includeCompleted: input.includeCompleted
+                sessionID: input.allSessions == true
+                    ? nil
+                    : context.taskSessionID(),
+                readyOnly: input.readyOnly ?? false,
+                includeCompleted: input.includeCompleted ?? true
             )
 
             return Output(
@@ -303,19 +283,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let purpose = "Read a durable Agentic task."
+        public static let purpose = "Read a durable Agentic task, including its contract and attempts."
 
         public static let risk: ActionRisk = .observe
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -331,9 +303,9 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let task = try await manager.get(
+            let task = try await context.taskManager().get(
                 input.id
             )
 
@@ -375,15 +347,7 @@ public extension Standard.Tools {
 
         public static let risk: ActionRisk = .boundedmutate
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -404,9 +368,9 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let task = try await manager.claim(
+            let task = try await context.taskManager().claim(
                 id: input.id,
                 owner: input.owner
             )
@@ -442,19 +406,11 @@ public extension Standard.Tools {
             }
         }
 
-        public static let purpose = "Complete a durable Agentic task and unblock dependents."
+        public static let purpose = "Complete a durable Agentic task that needs no attempt review, and unblock dependents. Use task_accept for submitted attempts."
 
         public static let risk: ActionRisk = .boundedmutate
 
-
-
-        public let manager: AgentTaskManager
-
-        public init(
-            manager: AgentTaskManager
-        ) {
-            self.manager = manager
-        }
+        public init() {}
 
         public func preflight(
             _ input: Input,
@@ -476,9 +432,9 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in context: ToolContext
         ) async throws -> Output {
-            let task = try await manager.complete(
+            let task = try await context.taskManager().complete(
                 id: input.id
             )
 

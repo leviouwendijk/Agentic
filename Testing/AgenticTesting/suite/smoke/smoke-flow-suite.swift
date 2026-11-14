@@ -190,6 +190,19 @@ enum AgenticSmokeFlowSuite: TestFlowRegistry {
             }
         ),
         TestFlow(
+            "task-lifecycle",
+            tags: [
+                "agentic",
+                "smoke",
+                "tasks",
+                "tool",
+            ],
+            operation: {
+                try await runTaskLifecycleSmoke()
+                return []
+            }
+        ),
+        TestFlow(
             "domain-smoke",
             tags: [
                 "agentic",

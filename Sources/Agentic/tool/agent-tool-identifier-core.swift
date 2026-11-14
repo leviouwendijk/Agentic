@@ -34,6 +34,10 @@ public extension ToolIdentifier {
     static var task_get: Self
     static var task_claim: Self
     static var task_complete: Self
+    static var task_record_attempt: Self
+    static var task_accept: Self
+    static var task_reject: Self
+    static var task_fail: Self
 
     static var list_prepared_intents: Self
     static var read_prepared_intent: Self

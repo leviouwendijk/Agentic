@@ -146,7 +146,7 @@ public struct StaticModelRouter: ModelRouter {
             }
         }
 
-        if let preferredGateway = selection.preferences.gateway {
+        for preferredGateway in selection.preferences.gatewayChain {
             let matchingEligible = ranked(
                 eligible.filter { profile in
                     profile.gateway.id == preferredGateway
@@ -329,9 +329,10 @@ private extension StaticModelRouter {
     ) -> Int {
         var score = 0
 
-        if let gateway = preferences.gateway,
-           profile.gateway.id == gateway {
-            score += 4
+        // Chain position outweighs cost and latency (at most 3 together).
+        let chain = preferences.gatewayChain
+        if let position = chain.firstIndex(of: profile.gateway.id) {
+            score += 4 * (chain.count - position)
         }
 
         if let cost = preferences.cost,

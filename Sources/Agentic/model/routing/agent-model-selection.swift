@@ -42,6 +42,10 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
     public var preferredProfileIdentifier: AgentModelProfileIdentifier?
     public var preferredModelID: AgentModelID?
     public var gateway: AgentModelGatewayIdentifier?
+    /// Ordered fallback gateways tried after `gateway`. Together they form
+    /// one target: the first gateway in `gatewayChain` able to serve the
+    /// selection wins.
+    public var gateways: [AgentModelGatewayIdentifier]
     public var cost: AgentModelCostClass?
     public var latency: AgentModelLatencyClass?
 
@@ -49,17 +53,27 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
         preferredProfileIdentifier: AgentModelProfileIdentifier? = nil,
         preferredModelID: AgentModelID? = nil,
         gateway: AgentModelGatewayIdentifier? = nil,
+        gateways: [AgentModelGatewayIdentifier] = [],
         cost: AgentModelCostClass? = nil,
         latency: AgentModelLatencyClass? = nil
     ) {
         self.preferredProfileIdentifier = preferredProfileIdentifier
         self.preferredModelID = preferredModelID
         self.gateway = gateway
+        self.gateways = gateways
         self.cost = cost
         self.latency = latency
     }
 
-    /// A model target (profile, model, or gateway) is one coherent choice.
+    /// `gateway` followed by `gateways`, without repeats, in preference order.
+    public var gatewayChain: [AgentModelGatewayIdentifier] {
+        var seen = Set<AgentModelGatewayIdentifier>()
+        return ([gateway].compactMap { $0 } + gateways).filter {
+            seen.insert($0).inserted
+        }
+    }
+
+    /// A model target (profile, model, or gateway chain) is one coherent choice.
     /// A higher-priority target clears lower-priority target fields.
     public func overriding(
         with higherPriority: Self
@@ -67,7 +81,7 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
         let overridesTarget =
             higherPriority.preferredProfileIdentifier != nil
             || higherPriority.preferredModelID != nil
-            || higherPriority.gateway != nil
+            || !higherPriority.gatewayChain.isEmpty
 
         return .init(
             preferredProfileIdentifier: overridesTarget
@@ -79,8 +93,33 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
             gateway: overridesTarget
                 ? higherPriority.gateway
                 : gateway,
+            gateways: overridesTarget
+                ? higherPriority.gateways
+                : gateways,
             cost: higherPriority.cost ?? cost,
             latency: higherPriority.latency ?? latency
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case preferredProfileIdentifier
+        case preferredModelID
+        case gateway
+        case gateways
+        case cost
+        case latency
+    }
+
+    // Preferences encoded before gateway chains existed stay decodable.
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            preferredProfileIdentifier: try values.decodeIfPresent(AgentModelProfileIdentifier.self, forKey: .preferredProfileIdentifier),
+            preferredModelID: try values.decodeIfPresent(AgentModelID.self, forKey: .preferredModelID),
+            gateway: try values.decodeIfPresent(AgentModelGatewayIdentifier.self, forKey: .gateway),
+            gateways: try values.decodeIfPresent([AgentModelGatewayIdentifier].self, forKey: .gateways) ?? [],
+            cost: try values.decodeIfPresent(AgentModelCostClass.self, forKey: .cost),
+            latency: try values.decodeIfPresent(AgentModelLatencyClass.self, forKey: .latency)
         )
     }
 }

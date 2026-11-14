@@ -74,6 +74,19 @@ enum ModelRoutingImplementationTestSuite {
         }
 
         diagnosticTest(
+            "gateway-chain",
+            tags: [
+                "model-routing",
+                "routing",
+                "gateway",
+                "preferences",
+            ]
+        ) {
+            try await ModelRoutingImplementationTesting
+                .runGatewayChain()
+        }
+
+        diagnosticTest(
             "gateway-availability-catalog",
             tags: [
                 "model-routing",

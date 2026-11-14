@@ -5,6 +5,8 @@ public enum AgentTaskError: Error, Sendable, LocalizedError {
     case taskNotFound(AgentTaskIdentifier)
     case emptySubject
     case invalidTaskIdentifier(String)
+    case noSubmittedAttempt(AgentTaskIdentifier)
+    case invalidTransition(AgentTaskIdentifier, from: AgentTaskStatus, to: AgentTaskStatus)
 
     public var errorDescription: String? {
         switch self {
@@ -19,6 +21,12 @@ public enum AgentTaskError: Error, Sendable, LocalizedError {
 
         case .invalidTaskIdentifier(let value):
             return "Invalid task identifier '\(value)'."
+
+        case .noSubmittedAttempt(let id):
+            return "Task '\(id.rawValue)' has no submitted attempt awaiting a decision."
+
+        case .invalidTransition(let id, let from, let to):
+            return "Task '\(id.rawValue)' cannot move from \(from.rawValue) to \(to.rawValue)."
         }
     }
 }

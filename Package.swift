@@ -48,6 +48,12 @@ let package = Package(
             targets: ["AgenticMath"]
         ),
 
+        // opt-in durable task graph and typed assignments
+        .library(
+            name: "AgenticTasks",
+            targets: ["AgenticTasks"]
+        ),
+
         // known model library 
         .library(
             name: "AgenticModels",
@@ -220,6 +226,15 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticTasks",
+            dependencies: [
+                "Agentic",
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Schema", package: "Schema"),
+            ]
+        ),
+        .target(
             name: "AgenticStandard",
             dependencies: [
                 "Agentic",
@@ -349,6 +364,7 @@ let package = Package(
                 "Agentic",
                 "AgenticModels",
                 "AgenticStandard",
+                "AgenticTasks",
                 "AgenticHarness",
                 "AgenticLinkerCatalogFixture",
                 .product(

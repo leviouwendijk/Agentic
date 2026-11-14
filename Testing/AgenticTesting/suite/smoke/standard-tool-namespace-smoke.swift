@@ -1,4 +1,5 @@
 import AgenticStandard
+import AgenticTasks
 
 func runStandardToolNamespaceSmoke() throws {
     ContractProof.tool(
@@ -114,58 +115,58 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ClarifyWithUser.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.CreateTask.self
+        Tasks.Tools.CreateTask.self
     )
     ContractProof.source(
-        Standard.Tools.CreateTask.Input.self
+        Tasks.Tools.CreateTask.Input.self
     )
     ContractProof.result(
-        Standard.Tools.CreateTask.Output.self
+        Tasks.Tools.CreateTask.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.UpdateTask.self
+        Tasks.Tools.UpdateTask.self
     )
     ContractProof.source(
-        Standard.Tools.UpdateTask.Input.self
+        Tasks.Tools.UpdateTask.Input.self
     )
     ContractProof.result(
-        Standard.Tools.UpdateTask.Output.self
+        Tasks.Tools.UpdateTask.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.ListTasks.self
+        Tasks.Tools.ListTasks.self
     )
     ContractProof.source(
-        Standard.Tools.ListTasks.Input.self
+        Tasks.Tools.ListTasks.Input.self
     )
     ContractProof.result(
-        Standard.Tools.ListTasks.Output.self
+        Tasks.Tools.ListTasks.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.GetTask.self
+        Tasks.Tools.GetTask.self
     )
     ContractProof.source(
-        Standard.Tools.GetTask.Input.self
+        Tasks.Tools.GetTask.Input.self
     )
     ContractProof.result(
-        Standard.Tools.GetTask.Output.self
+        Tasks.Tools.GetTask.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.ClaimTask.self
+        Tasks.Tools.ClaimTask.self
     )
     ContractProof.source(
-        Standard.Tools.ClaimTask.Input.self
+        Tasks.Tools.ClaimTask.Input.self
     )
     ContractProof.result(
-        Standard.Tools.ClaimTask.Output.self
+        Tasks.Tools.ClaimTask.Output.self
     )
     ContractProof.tool(
-        Standard.Tools.CompleteTask.self
+        Tasks.Tools.CompleteTask.self
     )
     ContractProof.source(
-        Standard.Tools.CompleteTask.Input.self
+        Tasks.Tools.CompleteTask.Input.self
     )
     ContractProof.result(
-        Standard.Tools.CompleteTask.Output.self
+        Tasks.Tools.CompleteTask.Output.self
     )
     ContractProof.tool(
         Standard.Tools.ReadTranscriptEvents.self
@@ -258,27 +259,27 @@ func runStandardToolNamespaceSmoke() throws {
         expected: "clarify_with_user"
     )
     try ContractProof.identifier(
-        Standard.Tools.CreateTask.definition.identifier.rawValue,
+        Tasks.Tools.CreateTask.definition.identifier.rawValue,
         expected: "task_create"
     )
     try ContractProof.identifier(
-        Standard.Tools.UpdateTask.definition.identifier.rawValue,
+        Tasks.Tools.UpdateTask.definition.identifier.rawValue,
         expected: "task_update"
     )
     try ContractProof.identifier(
-        Standard.Tools.ListTasks.definition.identifier.rawValue,
+        Tasks.Tools.ListTasks.definition.identifier.rawValue,
         expected: "task_list"
     )
     try ContractProof.identifier(
-        Standard.Tools.GetTask.definition.identifier.rawValue,
+        Tasks.Tools.GetTask.definition.identifier.rawValue,
         expected: "task_get"
     )
     try ContractProof.identifier(
-        Standard.Tools.ClaimTask.definition.identifier.rawValue,
+        Tasks.Tools.ClaimTask.definition.identifier.rawValue,
         expected: "task_claim"
     )
     try ContractProof.identifier(
-        Standard.Tools.CompleteTask.definition.identifier.rawValue,
+        Tasks.Tools.CompleteTask.definition.identifier.rawValue,
         expected: "task_complete"
     )
     try ContractProof.identifier(
