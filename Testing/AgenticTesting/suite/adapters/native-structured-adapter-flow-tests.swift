@@ -223,7 +223,7 @@ enum NativeStructuredAdapterFlowTests {
     }
 }
 
-private struct ProbeStructuredInference: Inference {
+struct ProbeStructuredInference: Inference {
     @JSONSchema
     struct Input: Source {
         let value: String

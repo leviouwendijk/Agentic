@@ -301,11 +301,11 @@ private extension ModelBroker {
         )
 
         var request = invocation.request
-        if case .jsonschema(let schema) = request.responseFormat,
-           !routed.route.profile.capabilities.contains(.structured_output)
-        {
-            request = try Self.prompting(schema, in: request)
-            requestMetadata["structured_output"] = "prompted"
+        if case .jsonschema(let schema) = request.responseFormat {
+            let contract = AgentOutputContract(schema: schema)
+            let representation = contract.representation(for: routed.route.profile)
+            request = try contract.requesting(request, as: representation)
+            requestMetadata["output_representation"] = representation.rawValue
         }
 
         return .init(
@@ -318,31 +318,6 @@ private extension ModelBroker {
             requestMetadata: requestMetadata,
             request: request
         )
-    }
-
-    /// The request as text, its schema stated after the leading system
-    /// messages; the caller still decodes the final message as JSON.
-    static func prompting(
-        _ schema: JSONSchema,
-        in request: AgentRequest
-    ) throws -> AgentRequest {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
-        let text = String(decoding: try encoder.encode(schema.jsonvalue), as: UTF8.self)
-        var request = request
-        request.responseFormat = .text
-        let instruction = Message(
-            role: .system,
-            text: """
-                Your final answer must be only a JSON value that conforms to this JSON Schema: \
-                no prose before or after it and no code fences. Tool calls before the final answer \
-                are unaffected.
-                \(text)
-                """
-        )
-        let leading = request.messages.prefix { $0.role == .system }.count
-        request.messages.insert(instruction, at: leading)
-        return request
     }
 
     @discardableResult

@@ -104,28 +104,19 @@ public struct NativeStructuredAdapter:
         _ inference: InferenceType.Type,
         response: AgentResponse
     ) throws -> InferenceType.Output {
-        let text = response.message.content.text
-            .trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-
-        guard !text.isEmpty else {
-            throw NativeStructuredAdapterError.emptyResponse
-        }
-
+        let contract = AgentOutputContract(schema: InferenceType.Output.jsonschema)
+        let answer: AgentStructuredAnswer
         do {
-            return try JSONDecoder().decode(
-                InferenceType.Output.self,
-                from: Data(
-                    text.utf8
-                )
-            )
+            answer = try contract.parse(response.message.content.text)
+        } catch .empty {
+            throw NativeStructuredAdapterError.emptyResponse
         } catch {
-            throw NativeStructuredAdapterError.invalidResponse(
-                String(
-                    describing: error
-                )
-            )
+            throw NativeStructuredAdapterError.invalidResponse(error.description)
+        }
+        do {
+            return try answer.decoded(as: InferenceType.Output.self)
+        } catch {
+            throw NativeStructuredAdapterError.invalidResponse(String(describing: error))
         }
     }
 

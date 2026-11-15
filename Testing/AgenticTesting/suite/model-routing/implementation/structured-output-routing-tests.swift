@@ -52,7 +52,7 @@ extension ModelRoutingImplementationTesting {
             sentPlain.messages[1].content.text.contains("\"summary\""),
             "the instruction carries the schema"
         )
-        try Expect.equal(prompted.route.requestMetadata["structured_output"], "prompted", "the route record says so")
+        try Expect.equal(prompted.route.requestMetadata["output_representation"], "prompted_json", "the route record says so")
 
         let enforced = try await broker.buffered(.init(request: request(), selection: selection("native.gateway")))
         try Expect.equal(enforced.route.route.profile.identifier, native.identifier, "native route")
