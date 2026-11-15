@@ -1,6 +1,5 @@
 import AgenticStandard
 import AgenticTasks
-import Testing
 
 func runStandardToolNamespaceSmoke() throws {
     ContractProof.tool(
@@ -294,15 +293,5 @@ func runStandardToolNamespaceSmoke() throws {
     try ContractProof.identifier(
         Standard.Tools.SummarizeTranscriptWindow.definition.identifier.rawValue,
         expected: "summarize_transcript_window"
-    )
-    try ContractProof.identifier(
-        Standard.Agents.GeneralPurpose.definition.identifier.rawValue,
-        expected: "standard.agents.general_purpose"
-    )
-    // Domains core cannot import are still selectable by namespace.
-    try Expect.true(
-        Standard.Agents.GeneralPurpose.capabilities.available.tools.domains
-            .contains("system_io"),
-        "GeneralPurpose names uninstallable-from-core domains by namespace"
     )
 }

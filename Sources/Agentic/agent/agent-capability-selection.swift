@@ -236,26 +236,10 @@ public extension AgentCapabilityScope {
         inferences: AgentCapabilitySelection<InferenceIdentifier> = .none,
         agents: AgentCapabilitySelection<AgentIdentifier> = .none
     ) {
-        self.init(
-            namespaces: domains.map {
-                $0.definition.namespace
-            },
-            tools: tools,
-            programs: programs,
-            inferences: inferences,
-            agents: agents
-        )
-    }
+        let namespaces = domains.map {
+            $0.definition.namespace
+        }
 
-    /// Select whole domains by namespace, for an Agent that cannot import
-    /// them. A namespace with nothing installed contributes nothing.
-    init(
-        namespaces: [Namespace],
-        tools: AgentCapabilitySelection<ToolIdentifier> = .none,
-        programs: AgentCapabilitySelection<ProgramIdentifier> = .none,
-        inferences: AgentCapabilitySelection<InferenceIdentifier> = .none,
-        agents: AgentCapabilitySelection<AgentIdentifier> = .none
-    ) {
         self.init(
             tools:
                 .init(domains: namespaces)
