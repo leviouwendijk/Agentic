@@ -2,19 +2,36 @@ import Foundation
 import Macros
 import Schema
 
-/// Where a constraint's authority comes from. A model-generated claim
-/// (`observed`, `hypothesis`) never becomes an invariant by being stored.
+/// Where a constraint's authority comes from. A claim does not become an
+/// invariant by being stored.
 @JSONSchema
 public enum AgentTaskConstraintProvenance: String, Sendable, Codable, Hashable, CaseIterable {
+    /// The user stated it. An invariant.
     case user_instruction
+    /// The coordinator settled it. An invariant until the coordinator reopens it.
     case accepted_decision
+    /// Someone inspected it. A claim that may prove wrong.
     case observed
+    /// Assumed, not verified. A claim to check.
     case hypothesis
+
+    /// Whether a result must respect this constraint rather than test it.
+    public var isInvariant: Bool {
+        switch self {
+        case .user_instruction, .accepted_decision:
+            true
+        case .observed, .hypothesis:
+            false
+        }
+    }
 }
 
+/// One statement a result must respect, with the authority behind it.
 @JSONSchema
 public struct AgentTaskConstraint: Sendable, Codable, Hashable {
+    /// The constraint itself, stated so it can be checked.
     public let statement: String
+    /// Where the constraint's authority comes from.
     public let provenance: AgentTaskConstraintProvenance
 
     public init(
@@ -26,18 +43,21 @@ public struct AgentTaskConstraint: Sendable, Codable, Hashable {
     }
 }
 
-/// The bounded assignment a task carries: what to change, where it may
-/// write, what it must preserve, and how its result will be judged.
+/// The binding description of one bounded assignment: what to change, where
+/// it may write, what it must preserve, and how its result will be judged.
 @JSONSchema
 public struct AgentTaskContract: Sendable, Codable, Hashable {
+    /// The change to make and its expected outcome.
     public let objective: String
-    /// Paths the assignee may mutate. Empty means no mutation is expected.
+    /// The only paths that may be mutated. Empty means inspect and report only.
     public let writeScope: [String]
+    /// Statements the result must respect, each with its provenance.
     public let constraints: [AgentTaskConstraint]
-    /// Discovered locations likely to need change; not exhaustive.
+    /// Locations likely to need change; discovered, not exhaustive.
     public let candidateSites: [String]
+    /// Related work that is out of scope, even if adjacent.
     public let exclusions: [String]
-    /// Conditions the result must meet before the task is accepted.
+    /// Conditions the result is judged against before the task is accepted.
     public let acceptance: [String]
 
     public init(
@@ -81,11 +101,16 @@ public extension AgentTaskContract {
     }
 }
 
+/// What execution evidence shows about an attempt's mutations.
 @JSONSchema
 public enum AgentTaskMutationState: String, Sendable, Codable, Hashable, CaseIterable {
+    /// Nothing was mutated.
     case none
+    /// Mutations were applied to the workspace.
     case applied
+    /// Mutations were prepared and await review before they apply.
     case pending_review
+    /// Mutations were attempted and failed.
     case failed
 }
 
@@ -93,12 +118,18 @@ public enum AgentTaskMutationState: String, Sendable, Codable, Hashable, CaseIte
 /// acceptance decision, not the decision itself.
 @JSONSchema
 public struct AgentTaskAttemptReport: Sendable, Codable, Hashable {
+    /// What was done, concisely.
     public let summary: String
+    /// Files actually mutated, not files intended to be.
     public let changedFiles: [String]
+    /// The state of the attempt's mutations, by execution evidence.
     public let mutationState: AgentTaskMutationState
+    /// Remaining dependencies or blockers.
     public let unresolved: [String]
-    /// Assumptions in the contract the attempt found to be wrong. A
-    /// non-empty list asks the coordinator to reopen the contract.
+    /// Contract assumptions the attempt found to be wrong: an invariant that
+    /// cannot hold, a needed change outside the write scope, a claim that
+    /// proved false. A non-empty list asks the coordinator to reopen the
+    /// contract instead of accepting a workaround.
     public let contractConflicts: [String]
 
     public init(

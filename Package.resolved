@@ -1,5 +1,5 @@
 {
-  "originHash" : "ef88c8d90040dcdd9a7963a03dcc52155481660730970a9ca051796fefff91bf",
+  "originHash" : "87f98cc94cbf2081ec81aa9f8195e8cb396054aed6127c67218baff4dafa32ab",
   "pins" : [
     {
       "identity" : "arguments",
@@ -34,7 +34,7 @@
       "location" : "https://github.com/leviouwendijk/DSL.git",
       "state" : {
         "branch" : "master",
-        "revision" : "30ec6798f883b91f697d060bb001e0e4f7a09225"
+        "revision" : "b85a4fcf315dfa6c100b38adc7a9cdec15ad817f"
       }
     },
     {
@@ -97,7 +97,7 @@
       "location" : "https://github.com/leviouwendijk/GuidelinesSearch.git",
       "state" : {
         "branch" : "master",
-        "revision" : "791d4382cfb7434b265398843167b5d9c10060c5"
+        "revision" : "19b2f95ea4b37aa4d655286117161df5ff6e7651"
       }
     },
     {
@@ -124,7 +124,7 @@
       "location" : "https://github.com/leviouwendijk/Macros.git",
       "state" : {
         "branch" : "master",
-        "revision" : "e01a42e9d0ee8061e861bc68c1fb2a02d26cbde4"
+        "revision" : "8f3b35eadca38087a3634402deba4cd444fc3a13"
       }
     },
     {
@@ -169,7 +169,7 @@
       "location" : "https://github.com/leviouwendijk/Path.git",
       "state" : {
         "branch" : "master",
-        "revision" : "dc0a6c12fb51692b1f3f4eb29c138d06de7e8eef"
+        "revision" : "6467fc2dce6630597499346fa449cd83a930486e"
       }
     },
     {
@@ -232,7 +232,7 @@
       "location" : "https://github.com/leviouwendijk/Schema.git",
       "state" : {
         "branch" : "master",
-        "revision" : "a3b2d62e52cb7e061d5a5cdadb63f4d31684dd4d"
+        "revision" : "1ce1553b576483aeec8cc2975caeb6f8ac548d41"
       }
     },
     {
@@ -304,7 +304,7 @@
       "location" : "https://github.com/leviouwendijk/Workspace.git",
       "state" : {
         "branch" : "master",
-        "revision" : "138e69f06cbbbbd1fe1e5deacb3790b5cf9cfaca"
+        "revision" : "546377843b224de53b2d77d6fc6dd94e346b1950"
       }
     },
     {
@@ -313,7 +313,7 @@
       "location" : "https://github.com/leviouwendijk/Writers.git",
       "state" : {
         "branch" : "master",
-        "revision" : "ef3e6f78ffc5876e8985be65cff206389de8f075"
+        "revision" : "5cf5d7c27bcfe34957b31d48c12b3a9cdedd714b"
       }
     }
   ],

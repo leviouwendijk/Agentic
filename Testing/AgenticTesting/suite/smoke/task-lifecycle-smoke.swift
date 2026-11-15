@@ -1,6 +1,7 @@
 import Agentic
 import AgenticTasks
 import Foundation
+import Schema
 import Testing
 
 /// The task tools resolve their manager and session scope from trusted
@@ -114,6 +115,8 @@ func runTaskLifecycleSmoke() async throws {
         "task files written before contracts still decode"
     )
 
+    try runTaskContractInstructionDriftChecks()
+
     let sparse = try JSONDecoder().decode(
         Tasks.Assignment.self,
         from: Data(#"{"contract":{"objective":"Inspect only."}}"#.utf8)
@@ -122,4 +125,95 @@ func runTaskLifecycleSmoke() async throws {
         sparse.task == nil && sparse.contract.writeScope.isEmpty,
         "a model-written assignment may omit empty lists"
     )
+}
+
+/// The contract instruction is rendered from the task types; these checks
+/// fail when a field or value loses its documentation, when the rendering
+/// omits one, or when the schema stops matching what the type encodes.
+private func runTaskContractInstructionDriftChecks() throws {
+    let content = Tasks.Instructions.Contract.content
+
+    try checkDocumentedFields(AgentTaskContract.self, in: content)
+    try checkDocumentedFields(AgentTaskConstraint.self, in: content)
+    try checkDocumentedFields(AgentTaskAttemptReport.self, in: content)
+    try Expect.true(
+        SchemaInstructionText.undocumentedFields(of: Tasks.Assignment.self).isEmpty,
+        "every assignment field is documented"
+    )
+
+    for provenance in AgentTaskConstraintProvenance.allCases {
+        try Expect.true(
+            content.contains("- \(provenance.rawValue): "),
+            "the contract instruction explains provenance \(provenance.rawValue)"
+        )
+    }
+    for state in AgentTaskMutationState.allCases {
+        try Expect.true(
+            content.contains("- \(state.rawValue): "),
+            "the contract instruction explains mutation state \(state.rawValue)"
+        )
+    }
+    try Expect.true(
+        SchemaInstructionText.undocumentedValues(of: AgentTaskConstraintProvenance.self).isEmpty
+            && SchemaInstructionText.undocumentedValues(of: AgentTaskMutationState.self).isEmpty,
+        "every provenance and mutation state is documented"
+    )
+
+    // Independent of the schema: the keys the types actually encode.
+    try Expect.equal(
+        try encodedKeys(
+            AgentTaskContract(
+                objective: "o",
+                writeScope: ["w"],
+                constraints: [.init(statement: "s", provenance: .observed)],
+                candidateSites: ["c"],
+                exclusions: ["e"],
+                acceptance: ["a"]
+            )
+        ),
+        schemaFieldNames(AgentTaskContract.self),
+        "the contract schema names exactly the keys the contract encodes"
+    )
+    try Expect.equal(
+        try encodedKeys(
+            AgentTaskAttemptReport(summary: "s")
+        ),
+        schemaFieldNames(AgentTaskAttemptReport.self),
+        "the report schema names exactly the keys the report encodes"
+    )
+}
+
+private func checkDocumentedFields<Value: JSONSchemaProviding>(
+    _ type: Value.Type,
+    in content: String
+) throws {
+    try Expect.equal(
+        SchemaInstructionText.undocumentedFields(of: type),
+        [],
+        "every field of \(type) is documented"
+    )
+    for name in schemaFieldNames(type) {
+        try Expect.true(
+            content.contains("- \(name): "),
+            "the contract instruction explains \(type).\(name)"
+        )
+    }
+}
+
+private func schemaFieldNames<Value: JSONSchemaProviding>(
+    _ type: Value.Type
+) -> Set<String> {
+    guard case .object(let properties, _) = type.jsonschema.form else {
+        return []
+    }
+    return Set(properties.map(\.name))
+}
+
+private func encodedKeys(
+    _ value: some Encodable
+) throws -> Set<String> {
+    let object = try JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(value)
+    )
+    return Set((object as? [String: Any])?.keys.map { $0 } ?? [])
 }

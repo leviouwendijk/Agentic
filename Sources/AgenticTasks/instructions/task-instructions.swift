@@ -3,35 +3,45 @@ import Agentic
 /// Shared task vocabulary, so every Agent that reads or writes a contract
 /// interprets its fields and provenances the same way.
 public extension Tasks.Instructions {
+    /// Rendered from the contract and report types and their doc comments;
+    /// renaming or documenting a field changes this text with it.
     @Instruction
     enum Contract: Instruction {
         public static let content = """
         TASK CONTRACT
 
-        A task contract is the binding description of one bounded assignment:
-            - objective: the change and its expected outcome.
-            - writeScope: the only paths that may be mutated. Empty means
-              inspect and report only.
-            - constraints: statements the result must respect, each with
-              a provenance.
-            - candidateSites: locations likely to need change; not exhaustive.
-            - exclusions: related work that is out of scope.
-            - acceptance: the conditions the result is judged against.
+        A contract is the binding description of one bounded assignment. Its fields:
+        \(SchemaInstructionText.fields(of: AgentTaskContract.self))
 
-        Constraint provenance:
-            - user_instruction: the user stated it. An invariant.
-            - accepted_decision: the coordinator settled it. An invariant
-              until the coordinator reopens it.
-            - observed: someone inspected it. A claim that may prove wrong.
-            - hypothesis: assumed, not verified. A claim to check.
+        Each constraint states something the result must respect:
+        \(SchemaInstructionText.fields(of: AgentTaskConstraint.self))
 
-        An invariant cannot hold, a needed change lies outside writeScope,
-        or a claim proves false: that is a contract conflict. Report it in
-        contractConflicts; never work around the contract.
+        Constraint provenances:
+        \(SchemaInstructionText.values(of: AgentTaskConstraintProvenance.self))
 
-        A recorded attempt is evidence for a decision, not the decision:
-        only \(Tasks.Tools.AcceptTask.identifier.rawValue) completes a task
-        and unblocks its dependents.
+        \(invariants) constraints bind the result. The others are claims; \
+        check them before relying on them.
+
+        When an invariant cannot hold, a needed change lies outside the write \
+        scope, or a claim proves false, that is a contract conflict: report it \
+        in the attempt report and never work around the contract.
+
+        An attempt report's fields:
+        \(SchemaInstructionText.fields(of: AgentTaskAttemptReport.self))
+
+        Mutation states:
+        \(SchemaInstructionText.values(of: AgentTaskMutationState.self))
+
+        A recorded attempt is evidence for a decision, not the decision: only \
+        \(Tasks.Tools.AcceptTask.identifier.rawValue) completes a task and \
+        unblocks its dependents.
         """
+
+        private static var invariants: String {
+            AgentTaskConstraintProvenance.allCases
+                .filter(\.isInvariant)
+                .map(\.rawValue)
+                .joined(separator: " and ")
+        }
     }
 }

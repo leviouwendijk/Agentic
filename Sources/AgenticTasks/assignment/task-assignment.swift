@@ -10,6 +10,7 @@ public extension Tasks {
         /// The durable task this assignment belongs to, when one exists.
         /// The assignee records its report against it.
         public let task: AgentTaskIdentifier?
+        /// The binding description of the work to do.
         public let contract: AgentTaskContract
         /// Why the previous attempt was rejected, as bounded retry evidence.
         public let retryNote: String?
