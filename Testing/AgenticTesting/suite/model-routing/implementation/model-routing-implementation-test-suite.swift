@@ -36,6 +36,18 @@ enum ModelRoutingImplementationTestSuite {
         }
 
         diagnosticTest(
+            "structured-output-routing",
+            tags: [
+                "model-routing",
+                "broker",
+                "structured-output",
+            ]
+        ) {
+            try await ModelRoutingImplementationTesting
+                .runStructuredOutputRouting()
+        }
+
+        diagnosticTest(
             "selection-resolution",
             tags: [
                 "model-routing",

@@ -1,3 +1,6 @@
+import Foundation
+import Schema
+
 
 public struct ModelBroker: Sendable, AgentModelInvoking {
     public let profiles: ProfileCatalog
@@ -34,7 +37,7 @@ public struct ModelBroker: Sendable, AgentModelInvoking {
             for: prepared.routeResult.route.profile.gateway.id
         )
         let response = try await gateway.respond(
-            request: invocation.request,
+            request: prepared.request,
             route: prepared.routeResult.route,
             context: invocation.context
         )
@@ -70,7 +73,7 @@ public struct ModelBroker: Sendable, AgentModelInvoking {
                     )
 
                     for try await event in gateway.respond(
-                        request: invocation.request,
+                        request: prepared.request,
                         route: prepared.routeResult.route,
                         delivery: .stream,
                         context: invocation.context
@@ -140,6 +143,10 @@ private extension ModelBroker {
     struct PreparedInvocation {
         var routeResult: AgentModelRouteResult
         var requestMetadata: [String: String]
+        /// What the gateway receives: the invocation's request, or, for a
+        /// schema the routed model cannot enforce natively, the same request
+        /// as text with the schema as an instruction.
+        var request: AgentRequest
     }
 
     func route(
@@ -262,12 +269,17 @@ private extension ModelBroker {
     func prepare(
         _ invocation: AgentModelInvocation
     ) throws -> PreparedInvocation {
+        // A response schema does not override the purpose's model binding:
+        // routing needs text, and a model without native structured output
+        // gets the schema as an instruction instead. Requirements the
+        // selection itself declares still hold.
         var selection = invocation.selection
         selection.requirements = selection.requirements.merging(
             .init(
                 capabilities:
                     invocation.request.responseFormat
                         .requiredCapabilities
+                        .subtracting([.structured_output])
             )
         )
 
@@ -288,6 +300,14 @@ private extension ModelBroker {
             )
         )
 
+        var request = invocation.request
+        if case .jsonschema(let schema) = request.responseFormat,
+           !routed.route.profile.capabilities.contains(.structured_output)
+        {
+            request = try Self.prompting(schema, in: request)
+            requestMetadata["structured_output"] = "prompted"
+        }
+
         return .init(
             routeResult: .init(
                 route: routed.route,
@@ -295,8 +315,34 @@ private extension ModelBroker {
                     resolution.diagnostics
                     + routed.diagnostics
             ),
-            requestMetadata: requestMetadata
+            requestMetadata: requestMetadata,
+            request: request
         )
+    }
+
+    /// The request as text, its schema stated after the leading system
+    /// messages; the caller still decodes the final message as JSON.
+    static func prompting(
+        _ schema: JSONSchema,
+        in request: AgentRequest
+    ) throws -> AgentRequest {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let text = String(decoding: try encoder.encode(schema.jsonvalue), as: UTF8.self)
+        var request = request
+        request.responseFormat = .text
+        let instruction = Message(
+            role: .system,
+            text: """
+                Your final answer must be only a JSON value that conforms to this JSON Schema: \
+                no prose before or after it and no code fences. Tool calls before the final answer \
+                are unaffected.
+                \(text)
+                """
+        )
+        let leading = request.messages.prefix { $0.role == .system }.count
+        request.messages.insert(instruction, at: leading)
+        return request
     }
 
     @discardableResult
