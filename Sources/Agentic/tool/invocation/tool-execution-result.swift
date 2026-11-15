@@ -101,11 +101,16 @@ extension ToolExecution {
         LocalizedError
     {
         public let failure: Failure
+        /// The error the tool raised, when it can travel: a runner can act
+        /// on it (e.g. ask for workspace access) instead of only reporting.
+        public let underlying: (any Swift.Error)?
 
         public init(
-            failure: Failure
+            failure: Failure,
+            underlying: (any Swift.Error)? = nil
         ) {
             self.failure = failure
+            self.underlying = underlying
         }
 
         public init(
@@ -127,7 +132,8 @@ extension ToolExecution {
                         )
                     ),
                     incident: incident
-                )
+                ),
+                underlying: error
             )
         }
 
