@@ -1,4 +1,5 @@
 import Agentic
+import AgenticSessions
 import Foundation
 import Tokens
 
@@ -71,6 +72,18 @@ public extension Context {
     }
 
     enum Compactor {
+        /// The tools that read back what compaction replaced with pointers.
+        /// Wherever compactions can apply they must be installed and visible,
+        /// whatever an agent declares; the pointer text names the first.
+        public static let requiredTools: [ToolIdentifier] = [
+            Sessions.Tools.History.definition.identifier,
+            Sessions.Tools.Log.definition.identifier,
+            Sessions.Tools.Step.definition.identifier,
+            Sessions.Tools.Payload.definition.identifier,
+            Sessions.Tools.Read.definition.identifier,
+            Sessions.Tools.List.definition.identifier,
+        ]
+
         /// Pointers for every tool result above `threshold` tokens outside
         /// the current and previous turns, not already compacted. Nil when
         /// there is nothing to compact. The two newest turns stay whole:

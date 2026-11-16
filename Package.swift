@@ -36,6 +36,14 @@ let package = Package(
             ]
         ),
 
+        // session introspection: history, log, catalog, approvals, artifacts
+        .library(
+            name: "AgenticSessions",
+            targets: [
+                "AgenticSessions",
+            ]
+        ),
+
         // opt-in declarative assertions
         .library(
             name: "AgenticAssertions",
@@ -306,9 +314,19 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticSessions",
+            dependencies: [
+                "Agentic",
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Schema", package: "Schema"),
+            ]
+        ),
+        .target(
             name: "AgenticContext",
             dependencies: [
                 "Agentic",
+                "AgenticSessions",
                 .product(name: "Schema", package: "Schema"),
                 .product(name: "Tokens", package: "Tokens"),
             ]
