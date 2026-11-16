@@ -32,6 +32,15 @@ public struct ToolServices: Sendable {
         return copy
     }
 
+    /// The same scope without one service, e.g. one a child must not hold.
+    public func removing<Service: Sendable>(
+        _ type: Service.Type
+    ) -> Self {
+        var copy = self
+        copy.values.removeValue(forKey: ObjectIdentifier(type))
+        return copy
+    }
+
     public func require<Service: Sendable>(
         _ type: Service.Type
     ) throws -> Service {
