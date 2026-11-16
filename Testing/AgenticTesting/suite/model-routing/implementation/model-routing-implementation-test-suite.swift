@@ -60,6 +60,18 @@ enum ModelRoutingImplementationTestSuite {
         }
 
         diagnosticTest(
+            "model-tiers",
+            tags: [
+                "model-routing",
+                "routing",
+                "tiers",
+            ]
+        ) {
+            try await ModelRoutingImplementationTesting
+                .runModelTiers()
+        }
+
+        diagnosticTest(
             "preference-fallback",
             tags: [
                 "model-routing",

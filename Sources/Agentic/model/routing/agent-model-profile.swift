@@ -8,6 +8,9 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public var operations: Set<AgentModelOperation>
     public var purposes: Set<AgentModelRoutePurpose>
     public var capabilities: Set<AgentModelCapability>
+    /// Nil when nobody has judged the model; a minimum-tier requirement
+    /// then refuses it rather than assume.
+    public var tier: AgentModelTier?
     public var cost: AgentModelCostClass
     public var latency: AgentModelLatencyClass
     public var privacy: AgentModelPrivacyClass
@@ -22,8 +25,9 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         title: String? = nil,
         kind: AgentModelKind = .generative,
         operations: Set<AgentModelOperation>? = nil,
-        purposes: Set<AgentModelRoutePurpose> = [.executor],
+        purposes: Set<AgentModelRoutePurpose> = AgentModelRoutePurpose.general,
         capabilities: Set<AgentModelCapability> = [.text],
+        tier: AgentModelTier? = nil,
         cost: AgentModelCostClass = .balanced,
         latency: AgentModelLatencyClass = .medium,
         privacy: AgentModelPrivacyClass = .private_cloud,
@@ -39,6 +43,7 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         self.operations = operations ?? (kind == .decision ? [.decision] : [.generation])
         self.purposes = purposes
         self.capabilities = capabilities
+        self.tier = tier
         self.cost = cost
         self.latency = latency
         self.privacy = privacy
@@ -113,6 +118,12 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
         if let minimumPrivacy = constraints.minimumPrivacy,
            privacy.rank < minimumPrivacy.rank {
             return false
+        }
+
+        if let minimumTier = requirements.minimumTier {
+            guard let tier, tier >= minimumTier else {
+                return false
+            }
         }
 
         if let minimumInputCapacity = requirements.minimumInputCapacity {

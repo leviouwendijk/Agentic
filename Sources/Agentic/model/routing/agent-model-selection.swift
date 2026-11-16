@@ -2,14 +2,19 @@ public struct AgentModelRequirements: Sendable, Codable, Hashable {
     public var capabilities: Set<AgentModelCapability>
     public var minimumInputCapacity: Int?
     public var minimumOutputCapacity: Int?
+    /// The least capable tier this work accepts, e.g. a planner that must
+    /// be `strong` in one agent and may be `standard` in another.
+    public var minimumTier: AgentModelTier?
 
     public init(
         capabilities: Set<AgentModelCapability> = [
             .text,
         ],
         minimumInputCapacity: Int? = nil,
-        minimumOutputCapacity: Int? = nil
+        minimumOutputCapacity: Int? = nil,
+        minimumTier: AgentModelTier? = nil
     ) {
+        self.minimumTier = minimumTier
         self.capabilities = capabilities
         self.minimumInputCapacity = minimumInputCapacity.map {
             max(0, $0)
@@ -33,7 +38,8 @@ public struct AgentModelRequirements: Sendable, Codable, Hashable {
             minimumOutputCapacity: maximum(
                 minimumOutputCapacity,
                 other.minimumOutputCapacity
-            )
+            ),
+            minimumTier: [minimumTier, other.minimumTier].compactMap { $0 }.max()
         )
     }
 }

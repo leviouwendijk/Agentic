@@ -66,3 +66,30 @@ public enum AgentModelPrivacyClass: String, Sendable, Codable, Hashable, CaseIte
         self == .external_cloud
     }
 }
+
+/// What a model can be relied on for, independent of its cost and speed.
+/// A declared, coarse judgement; measured results per task family belong to
+/// benchmarks, not to this catalog.
+public enum AgentModelTier: String, Sendable, Codable, Hashable, CaseIterable, Comparable {
+    /// Short, simple, high-volume work; small local models.
+    case light
+    /// Routine coding and tool use.
+    case standard
+    /// Reliable multi-step agentic work, planning and review.
+    case strong
+    /// The best available: hardest reasoning, long autonomous work.
+    case frontier
+
+    public var rank: Int {
+        switch self {
+        case .light: 0
+        case .standard: 1
+        case .strong: 2
+        case .frontier: 3
+        }
+    }
+
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.rank < rhs.rank
+    }
+}
