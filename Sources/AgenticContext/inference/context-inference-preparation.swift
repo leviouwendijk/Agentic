@@ -111,19 +111,23 @@ public extension Context {
         public let delivery: InferenceDelivery
         public let measurement: InferenceMeasurement
         public let history: HistorySelection
+        /// How close the request is to its input limit. Nil in older records.
+        public let pressure: Pressure?
 
         public init(
             request: AgentRequest,
             frame: Frame,
             delivery: InferenceDelivery,
             measurement: InferenceMeasurement,
-            history: HistorySelection
+            history: HistorySelection,
+            pressure: Pressure? = nil
         ) {
             self.request = request
             self.frame = frame
             self.delivery = delivery
             self.measurement = measurement
             self.history = history
+            self.pressure = pressure
         }
     }
 
@@ -138,7 +142,8 @@ public extension Context {
             delivery: InferenceDelivery,
             maximumInputTokens: Int,
             estimationOptions: TokenEstimationOptions = .agenticContext,
-            historyPolicy: HistoryPolicy = .init()
+            historyPolicy: HistoryPolicy = .init(),
+            compactions: [Compaction] = []
         ) throws -> InferencePreparation {
             guard maximumInputTokens > 0 else {
                 throw ContextInferenceError.invalidInputBudget(maximumInputTokens)
@@ -184,11 +189,18 @@ public extension Context {
                 assembled = try uniqueMessages(originalSystem + frameMessages + tail)
 
             case .dynamic:
-                let selection = try selectHistory(
-                    from: uniqueOriginal.filter { $0.role != .system },
-                    policy: historyPolicy,
-                    options: estimationOptions
-                )
+                let conversation = uniqueOriginal.filter { $0.role != .system }
+                let selection = historyPolicy.mode == .fitted
+                    ? try selectHistory(
+                        from: conversation,
+                        policy: historyPolicy,
+                        options: estimationOptions
+                    )
+                    : try appendOnly(
+                        conversation,
+                        compactions: compactions,
+                        options: estimationOptions
+                    )
                 elided = selection.elided
                 changes = selection.changes
                 assembled = try uniqueMessages(originalSystem + frameMessages + selection.messages)
@@ -251,8 +263,58 @@ public extension Context {
                 frame: frame,
                 delivery: delivery,
                 measurement: measurement,
-                history: history
+                history: history,
+                pressure: .init(
+                    estimatedInputTokens: estimate.estimatedTokens,
+                    softLimit: Int(Double(maximumInputTokens) * historyPolicy.softLimit),
+                    hardLimit: maximumInputTokens
+                )
             )
+        }
+
+        /// The conversation as sent before, plus what is new: only explicit
+        /// compactions and repeated-result pointers change it, and both are
+        /// deterministic over the prefix, so earlier requests' bytes stay.
+        private static func appendOnly(
+            _ conversation: [Message],
+            compactions: [Compaction],
+            options: TokenEstimationOptions
+        ) throws -> (
+            messages: [Message], elided: Set<String>, changes: [HistorySelection.Change]
+        ) {
+            let pointers = Dictionary(
+                compactions.flatMap(\.pointers).map { ($0.call.id, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
+            var elided: Set<String> = []
+            var changes: [HistorySelection.Change] = []
+            var messages = conversation.map { message -> Message in
+                guard message.role == .tool, !pointers.isEmpty else { return message }
+                var compacted = message
+                compacted.content.blocks = message.content.blocks.map { block in
+                    guard case .result(let response) = block,
+                          let pointer = pointers[response.call.id] else {
+                        return block
+                    }
+                    changes.append(.init(messageID: message.id, reason: .compacted, call: response.call))
+                    return .result(.init(
+                        call: response.call,
+                        output: .string(pointer.text),
+                        isError: response.isError,
+                        text: pointer.text
+                    ))
+                }
+                if compacted != message { elided.insert(message.id) }
+                return compacted
+            }
+            var shown: [Data: FunctionCall.Reference] = [:]
+            for index in messages.indices where messages[index].role == .tool {
+                if let pointed = try pointer(messages[index], to: &shown, options: options, changes: &changes) {
+                    messages[index] = pointed
+                    elided.insert(pointed.id)
+                }
+            }
+            return (messages, elided, changes)
         }
 
         /// Fit the conversation into the history budget, losing as little as
@@ -486,6 +548,7 @@ public extension Context {
         private static func isStub(_ response: FunctionCall.Response) -> Bool {
             if case .string(let text) = response.output {
                 return text.hasPrefix(stubMarker) || text.hasPrefix(pointerMarker)
+                    || text.hasPrefix("[Compacted:")
             }
             return false
         }

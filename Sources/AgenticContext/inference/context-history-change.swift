@@ -12,6 +12,8 @@ public extension Context.HistorySelection {
             case turn_budget
             case exchange_budget
             case working_set
+            /// Replaced by a pointer recorded in an explicit compaction.
+            case compacted
         }
 
         public let messageID: String

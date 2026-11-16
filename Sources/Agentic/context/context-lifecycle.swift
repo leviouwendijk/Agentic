@@ -79,9 +79,23 @@ public extension Context {
         }
     }
 
-    /// How dynamic mode fits the conversation into its budget. The current
-    /// user turn is mandatory; it is never silently truncated.
+    /// How dynamic mode treats the conversation. By default it is
+    /// append-only: a sent message is never rewritten automatically, so a
+    /// provider's prefix cache keeps hitting; history shrinks only through
+    /// an explicit compaction. `.fitted` rewrites earlier history to fit a
+    /// budget on every request, which breaks prefix caching.
     struct HistoryPolicy: Sendable, Codable, Hashable {
+        public enum Mode: String, Sendable, Codable, Hashable {
+            /// Never rewrite sent history; report pressure, compact explicitly.
+            case append_only
+            /// Fit `maximumTokens` on every request (cache-breaking).
+            case fitted
+        }
+
+        public let mode: Mode
+        /// Fraction of the request's input limit at which it reports soft
+        /// pressure: an advisory, never an action.
+        public let softLimit: Double
         /// Recent user turns kept at full fidelity. Older turns stay while
         /// they fit, with bulky results elided to a stub.
         public let maximumTurns: Int
@@ -100,12 +114,32 @@ public extension Context {
             maximumTurns: Int = 4,
             maximumTokens: Int = 4_000,
             elideResultsOver: Int = 256,
-            elisionBatch: Int = 1
+            elisionBatch: Int = 1,
+            mode: Mode = .append_only,
+            softLimit: Double = 0.6
         ) {
             self.maximumTurns = maximumTurns
             self.maximumTokens = maximumTokens
             self.elideResultsOver = elideResultsOver
             self.elisionBatch = max(1, elisionBatch)
+            self.mode = mode
+            self.softLimit = min(1, max(0.05, softLimit))
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case maximumTurns, maximumTokens, elideResultsOver, elisionBatch, mode, softLimit
+        }
+
+        public init(from decoder: any Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            self.init(
+                maximumTurns: try values.decode(Int.self, forKey: .maximumTurns),
+                maximumTokens: try values.decode(Int.self, forKey: .maximumTokens),
+                elideResultsOver: try values.decode(Int.self, forKey: .elideResultsOver),
+                elisionBatch: try values.decodeIfPresent(Int.self, forKey: .elisionBatch) ?? 1,
+                mode: try values.decodeIfPresent(Mode.self, forKey: .mode) ?? .append_only,
+                softLimit: try values.decodeIfPresent(Double.self, forKey: .softLimit) ?? 0.6
+            )
         }
     }
 

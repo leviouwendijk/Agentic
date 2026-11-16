@@ -66,7 +66,7 @@ struct ContextIncidentFixture {
             ),
             delivery: delivery,
             maximumInputTokens: 100_000,
-            historyPolicy: .init(maximumTurns: 4, maximumTokens: historyBudget)
+            historyPolicy: .init(maximumTurns: 4, maximumTokens: historyBudget, mode: .fitted)
         )
     }
 

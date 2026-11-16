@@ -15,7 +15,7 @@ extension ContextDeterministicFlowTesting {
     static func runHistoryPolicies() async throws -> [TestDiagnostic] {
         let policy = Context.Policy(preferredInputTokens: 2_000,
             maximumInputTokens: 8_000, reservedOutputTokens: 500,
-            history: .init(maximumTurns: 2, maximumTokens: 3_500))
+            history: .init(maximumTurns: 2, maximumTokens: 3_500, mode: .fitted))
         let allocator = try Context.Allocator(policy: policy)
         try await allocator.createWorkingSet(id: "history")
         let request = AgentRequest(messages: [
@@ -80,7 +80,7 @@ extension ContextDeterministicFlowTesting {
         // Two full-fidelity turns; the oldest turn's bulky read is elided.
         let roomy = try Context.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
-            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000))
+            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, mode: .fitted))
         try Expect.equal(roomy.request.messages.map(\.id), messages.map(\.id),
             "Within budget every message stays")
         try Expect.equal(roomy.history.elided.map(\.messageID), ["t.old"],
@@ -100,12 +100,12 @@ extension ContextDeterministicFlowTesting {
         // cached prefix is rewritten once per two turns.
         let batched = try Context.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
-            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, elisionBatch: 2))
+            historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, elisionBatch: 2, mode: .fitted))
         try Expect.equal(batched.history.elided.map(\.messageID), [],
             "An incomplete batch leaves aged turns intact")
         let batchedFull = try Context.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
-            historyPolicy: .init(maximumTurns: 1, maximumTokens: 50_000, elisionBatch: 2))
+            historyPolicy: .init(maximumTurns: 1, maximumTokens: 50_000, elisionBatch: 2, mode: .fitted))
         try Expect.equal(batchedFull.history.elided.map(\.messageID), ["t.old", "t.recent"],
             "A complete batch elides together")
 
@@ -115,7 +115,8 @@ extension ContextDeterministicFlowTesting {
             delivery: .dynamic, maximumInputTokens: 100_000,
             historyPolicy: .init(
                 maximumTurns: 2,
-                maximumTokens: roomy.measurement.estimatedInputTokens * 3 / 4
+                maximumTokens: roomy.measurement.estimatedInputTokens * 3 / 4,
+                mode: .fitted
             ))
         try Expect.equal(tight.history.elided.map(\.messageID), ["t.old", "t.recent"],
             "Seen results are elided before anything is dropped")
@@ -156,7 +157,7 @@ extension ContextDeterministicFlowTesting {
                          inputBudget: 0, estimatedInputTokens: 0),
             delivery: .dynamic,
             maximumInputTokens: 100_000,
-            historyPolicy: .init(maximumTurns: 4, maximumTokens: 50_000)
+            historyPolicy: .init(maximumTurns: 4, maximumTokens: 50_000, mode: .fitted)
         )
         func output(_ id: String) -> String? {
             guard let message = prepared.request.messages.first(where: { $0.id == id }),

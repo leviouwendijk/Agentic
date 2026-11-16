@@ -94,6 +94,18 @@ enum ContextDeterministicTestSuite {
             try ContextDeterministicFlowTesting.runIncidentContinuity()
         }
 
+        Test("append-only-prefix", tags: ["context", "history", "cache"]) {
+            try ContextDeterministicFlowTesting.runAppendOnlyPrefix()
+        }
+
+        Test("append-only-pressure", tags: ["context", "history", "pressure"]) {
+            try ContextDeterministicFlowTesting.runAppendOnlyPressure()
+        }
+
+        Test("compaction-pointers", tags: ["context", "history", "compaction"]) {
+            try ContextDeterministicFlowTesting.runCompaction()
+        }
+
         Test(
             "incident-refuses-rather-than-drops",
             tags: ["context", "history", "incident"]
