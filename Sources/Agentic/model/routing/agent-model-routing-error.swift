@@ -15,6 +15,7 @@ public enum AgentModelRoutingError: Error, Sendable, LocalizedError {
         reason: AgentModelGatewayUnavailability
     )
     case noRoute(AgentModelRoutePurpose)
+    case selectionRefused(diagnostics: [AgentModelSelectionDiagnostic])
     case profileRejected(
         profile: AgentModelProfileIdentifier,
         reason: String
@@ -41,6 +42,10 @@ public enum AgentModelRoutingError: Error, Sendable, LocalizedError {
         case .gatewayUnavailable(let gateway, let reason):
             let detail = reason.message ?? reason.kind.rawValue
             return "Agent model gateway '\(gateway.rawValue)' is unavailable: \(detail)"
+
+        case .selectionRefused(let diagnostics):
+            return "The selected model route cannot be used; fallback is disabled. "
+                + diagnostics.compactMap(\.message).joined(separator: " ")
 
         case .noRoute(let purpose):
             return "No agent model route could be selected for purpose '\(purpose.rawValue)'."

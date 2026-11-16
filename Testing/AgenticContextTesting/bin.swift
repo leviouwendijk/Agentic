@@ -79,6 +79,32 @@ enum ContextDeterministicTestSuite {
         }
 
         Test(
+            "incident-history-baseline",
+            tags: ["context", "history", "incident"]
+        ) { context in
+            await context.record(
+                contentsOf: try ContextDeterministicFlowTesting.runIncidentBaseline()
+            )
+        }
+
+        Test(
+            "incident-followup-continuity",
+            tags: ["context", "history", "incident"],
+            expectedFailure: "Known context eviction defect; remove this marker when continuity is fixed."
+        ) {
+            try ContextDeterministicFlowTesting.runIncidentContinuity()
+        }
+
+        Test(
+            "incident-replay-measurement",
+            tags: ["context", "measurement", "incident"]
+        ) { context in
+            await context.record(
+                contentsOf: try ContextDeterministicFlowTesting.runIncidentReplayMeasurement()
+            )
+        }
+
+        Test(
             "finding-provenance-and-invalidation",
             tags: ["context", "evidence", "revision"]
         ) { context in

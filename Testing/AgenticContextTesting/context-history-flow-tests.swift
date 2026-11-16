@@ -85,6 +85,10 @@ extension ContextDeterministicFlowTesting {
             "Within budget every message stays")
         try Expect.equal(roomy.history.elided.map(\.messageID), ["t.old"],
             "Bulky results leave with their turn's fidelity")
+        try Expect.equal(roomy.history.changes, [
+            .init(messageID: "t.old", reason: .aged_result,
+                  call: .init(id: "old", name: "read_file")),
+        ], "Aging records its exact affected result")
         guard case .result(let stub)? = roomy.request.messages[3].content.blocks.first,
               case .string(let text) = stub.output else {
             throw HistoryFixtureError.missingResult
@@ -115,6 +119,8 @@ extension ContextDeterministicFlowTesting {
             ))
         try Expect.equal(tight.history.elided.map(\.messageID), ["t.old", "t.recent"],
             "Seen results are elided before anything is dropped")
+        try Expect.equal(tight.history.changes?.map(\.reason), [.aged_result, .budget_result],
+            "Budget-driven elision is distinct from aging")
         try Expect.true(tight.request.messages.contains(messages[11]),
             "The result the model has not seen yet stays whole")
         try Expect.true(tight.request.messages.contains(messages[6]),
@@ -166,6 +172,11 @@ extension ContextDeterministicFlowTesting {
         try Expect.equal(output("t.other"), listing + "\nnew.html", "A changed result stays whole")
         try Expect.equal(output("t.small2"), "ok", "Small repeats are not worth a pointer")
         try Expect.equal(prepared.history.elided.map(\.messageID), ["t.again"], "The pointer is recorded")
+        try Expect.equal(prepared.history.changes, [
+            .init(messageID: "t.again", reason: .repeated_result,
+                  call: .init(id: "again", name: "scan_filepaths"),
+                  sourceCall: .init(id: "first", name: "scan_filepaths")),
+        ], "Pointer recovery has typed source and destination call references")
         return []
     }
 }

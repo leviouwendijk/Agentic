@@ -89,6 +89,11 @@ public struct StaticModelRouter: ModelRouter {
             }
         }
 
+        if selection.preferences.preferredProfileIdentifier != nil,
+           !selection.preferences.allowsFallback {
+            throw AgentModelRoutingError.selectionRefused(diagnostics: diagnostics)
+        }
+
         if let preferredModelID = selection.preferences.preferredModelID {
             let matchingProfiles = catalog.profiles(
                 for: preferredModelID
@@ -146,6 +151,11 @@ public struct StaticModelRouter: ModelRouter {
             }
         }
 
+        if selection.preferences.preferredModelID != nil,
+           !selection.preferences.allowsFallback {
+            throw AgentModelRoutingError.selectionRefused(diagnostics: diagnostics)
+        }
+
         for preferredGateway in selection.preferences.gatewayChain {
             let matchingEligible = ranked(
                 eligible.filter { profile in
@@ -183,6 +193,11 @@ public struct StaticModelRouter: ModelRouter {
                     ]
                 )
             )
+        }
+
+        if !selection.preferences.gatewayChain.isEmpty,
+           !selection.preferences.allowsFallback {
+            throw AgentModelRoutingError.selectionRefused(diagnostics: diagnostics)
         }
 
         if let defaultIdentifier = defaults[selection.purpose],

@@ -281,12 +281,35 @@ extension ModelRoutingImplementationTesting {
             ]
         )
         let router = StaticModelRouter()
+        // An explicit target is binding: without fallback, a rejected
+        // preference refuses instead of quietly choosing another profile.
+        do {
+            _ = try router.route(
+                .init(
+                    selection: .init(
+                        purpose: .executor,
+                        preferences: .init(
+                            preferredProfileIdentifier: rejected.identifier
+                        ),
+                        constraints: .init(
+                            allowedProfileIdentifiers: [
+                                eligible.identifier,
+                            ]
+                        )
+                    )
+                ),
+                catalog: catalog
+            )
+            try Expect.true(false, "a rejected explicit profile refuses without fallback")
+        } catch AgentModelRoutingError.selectionRefused {
+        }
         let result = try router.route(
             .init(
                 selection: .init(
                     purpose: .executor,
                     preferences: .init(
-                        preferredProfileIdentifier: rejected.identifier
+                        preferredProfileIdentifier: rejected.identifier,
+                        allowsFallback: true
                     ),
                     constraints: .init(
                         allowedProfileIdentifiers: [

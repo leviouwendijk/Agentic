@@ -4,6 +4,15 @@ public protocol AgentModelGateway: Sendable {
 }
 
 public protocol AgentModelResponseProviding: Sendable {
+    /// Explicit provider-side input counting. May perform a network request,
+    /// but never generates a response. Nil means counting is unsupported;
+    /// failures must throw rather than becoming zero or a lexical estimate.
+    func countInputTokens(
+        request: AgentRequest,
+        route: AgentModelRoute,
+        context: AgentModelInvocationContext
+    ) async throws -> Int?
+
     func buffered(
         request: AgentRequest,
         route: AgentModelRoute,
@@ -46,6 +55,14 @@ public extension AgentModelGateway {
 }
 
 public extension AgentModelResponseProviding {
+    func countInputTokens(
+        request _: AgentRequest,
+        route _: AgentModelRoute,
+        context _: AgentModelInvocationContext
+    ) async throws -> Int? {
+        nil
+    }
+
     func respond(
         request: AgentRequest,
         route: AgentModelRoute,

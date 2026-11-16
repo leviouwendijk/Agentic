@@ -39,6 +39,9 @@ public extension Context {
         public let omitted: [Reference]
         /// Retained, but with bulky results replaced by a pointer stub.
         public let elided: [Reference]
+        /// Ordered preparation decisions, outside model-facing content.
+        /// Nil means an older record did not capture decision evidence.
+        public let changes: [Change]?
     }
 
     struct InferenceMeasurement: Sendable, Codable, Hashable {
@@ -144,6 +147,7 @@ public extension Context {
 
             let assembled: [Message]
             var elided: Set<String> = []
+            var changes: [HistorySelection.Change] = []
             switch delivery {
             case .supplement:
                 assembled = try uniqueMessages(uniqueOriginal + frameMessages)
@@ -162,6 +166,7 @@ public extension Context {
                     options: estimationOptions
                 )
                 elided = selection.elided
+                changes = selection.changes
                 assembled = try uniqueMessages(originalSystem + frameMessages + selection.messages)
             }
 
@@ -197,6 +202,11 @@ public extension Context {
                 maximumInputTokens: maximumInputTokens
             )
             let included = Set(assembled.map(\.id))
+            if delivery == .working_set {
+                changes = uniqueOriginal.filter { !included.contains($0.id) }.map {
+                    .init(messageID: $0.id, reason: .working_set)
+                }
+            }
             let history = HistorySelection(
                 retained: uniqueOriginal.enumerated().compactMap { index, message in
                     included.contains(message.id)
@@ -209,7 +219,8 @@ public extension Context {
                 elided: uniqueOriginal.enumerated().compactMap { index, message in
                     elided.contains(message.id)
                         ? .init(index: index, messageID: message.id) : nil
-                }
+                },
+                changes: changes
             )
             return InferencePreparation(
                 request: prepared,
@@ -237,7 +248,9 @@ public extension Context {
             from conversation: [Message],
             policy: HistoryPolicy,
             options: TokenEstimationOptions
-        ) throws -> (messages: [Message], elided: Set<String>) {
+        ) throws -> (
+            messages: [Message], elided: Set<String>, changes: [HistorySelection.Change]
+        ) {
             guard policy.maximumTurns > 0, policy.maximumTokens > 0 else {
                 throw ContextInferenceError.invalidInputBudget(policy.maximumTokens)
             }
@@ -264,18 +277,26 @@ public extension Context {
                 ($0.id, try estimate($0, options: options))
             })
             var elided: Set<String> = []
+            var changes: [HistorySelection.Change] = []
             func total() -> Int {
                 turns.joined().reduce(0) { $0 + (tokens[$1.id] ?? 0) }
             }
             func over() -> Bool {
                 total() > policy.maximumTokens
             }
-            func elide(turn: Int, includingUnseen: Bool) throws {
+            func elide(
+                turn: Int,
+                includingUnseen: Bool,
+                reason: HistorySelection.Change.Reason
+            ) throws {
                 for index in turns[turn].indices where over() || turn < aged / policy.elisionBatch * policy.elisionBatch {
                     let message = turns[turn][index]
                     guard message.role == .tool,
                           includingUnseen || !unseen.contains(message.id),
-                          let stubbed = try stub(message, threshold: policy.elideResultsOver, options: options)
+                          let stubbed = try stub(
+                            message, threshold: policy.elideResultsOver, options: options,
+                            reason: reason, changes: &changes
+                          )
                     else { continue }
                     turns[turn][index] = stubbed
                     tokens[message.id] = try estimate(stubbed, options: options)
@@ -287,17 +308,19 @@ public extension Context {
             // so the cached prefix is invalidated once per batch.
             let aged = max(0, turns.count - policy.maximumTurns)
             for turn in 0..<(aged / policy.elisionBatch * policy.elisionBatch) {
-                try elide(turn: turn, includingUnseen: false)
+                try elide(turn: turn, includingUnseen: false, reason: .aged_result)
             }
             // Lossless: a result identical to one still shown in full is
             // sent as a pointer to it. Runs after aging so it never points
             // at a stub.
-            var shown: [Data: String] = [:]
+            var shown: [Data: FunctionCall.Reference] = [:]
             for turn in turns.indices {
                 for index in turns[turn].indices {
                     let message = turns[turn][index]
                     guard message.role == .tool,
-                          let pointed = try pointer(message, to: &shown, options: options)
+                          let pointed = try pointer(
+                            message, to: &shown, options: options, changes: &changes
+                          )
                     else { continue }
                     turns[turn][index] = pointed
                     tokens[message.id] = try estimate(pointed, options: options)
@@ -305,28 +328,30 @@ public extension Context {
                 }
             }
             for turn in turns.indices where over() {
-                try elide(turn: turn, includingUnseen: false)
+                try elide(turn: turn, includingUnseen: false, reason: .budget_result)
             }
             while over(), turns.count > 1 {
                 for message in turns.removeFirst() {
+                    changes.append(.init(messageID: message.id, reason: .turn_budget))
                     elided.remove(message.id)
                 }
             }
             while over(), let exchange = firstCompletedExchange(in: turns[0], excluding: unseen) {
                 for message in turns[0][exchange] {
+                    changes.append(.init(messageID: message.id, reason: .exchange_budget))
                     elided.remove(message.id)
                 }
                 turns[0].removeSubrange(exchange)
             }
             if over() {
-                try elide(turn: 0, includingUnseen: true)
+                try elide(turn: 0, includingUnseen: true, reason: .unseen_result)
             }
             guard !over() else {
                 throw ContextInferenceError.requiredHistoryExceedsTailBudget(
                     estimated: total(), maximum: policy.maximumTokens
                 )
             }
-            return (Array(turns.joined()), elided)
+            return (Array(turns.joined()), elided, changes)
         }
 
         /// A tool message whose bulky results are replaced by a stub, or nil
@@ -334,7 +359,9 @@ public extension Context {
         private static func stub(
             _ message: Message,
             threshold: Int,
-            options: TokenEstimationOptions
+            options: TokenEstimationOptions,
+            reason: HistorySelection.Change.Reason,
+            changes: inout [HistorySelection.Change]
         ) throws -> Message? {
             var changed = false
             var stubbed = message
@@ -348,6 +375,7 @@ public extension Context {
                     return block
                 }
                 changed = true
+                changes.append(.init(messageID: message.id, reason: reason, call: response.call))
                 let text = "\(stubMarker) (≈\(size) tokens). The full result of call \(response.call.id) "
                     + "is recorded in the session log. Preview: \(preview(response.modelText))]"
                 return .result(.init(
@@ -365,8 +393,9 @@ public extension Context {
         /// Records this message's own full results in `shown`.
         private static func pointer(
             _ message: Message,
-            to shown: inout [Data: String],
-            options: TokenEstimationOptions
+            to shown: inout [Data: FunctionCall.Reference],
+            options: TokenEstimationOptions,
+            changes: inout [HistorySelection.Change]
         ) throws -> Message? {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.sortedKeys]
@@ -385,7 +414,7 @@ public extension Context {
                     )
                 )
                 guard let original = shown[key] else {
-                    shown[key] = response.call.id
+                    shown[key] = response.call
                     return block
                 }
                 // Pointers only pay off for results larger than themselves.
@@ -393,7 +422,11 @@ public extension Context {
                     return block
                 }
                 changed = true
-                let text = "\(pointerMarker) the result of call \(original) above.]"
+                changes.append(.init(
+                    messageID: message.id, reason: .repeated_result,
+                    call: response.call, sourceCall: original
+                ))
+                let text = "\(pointerMarker) the result of call \(original.id) above.]"
                 return .result(.init(
                     call: response.call,
                     output: .string(text),

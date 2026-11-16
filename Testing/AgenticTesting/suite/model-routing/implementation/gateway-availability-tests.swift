@@ -215,11 +215,24 @@ extension ModelRoutingImplementationTesting {
             "preferred gateway selection is observable"
         )
 
+        do {
+            _ = try broker.route(
+                selection: .init(
+                    purpose: .executor,
+                    preferences: .init(
+                        gateway: unavailable
+                    )
+                )
+            )
+            try Expect.true(false, "an unavailable explicit gateway refuses without fallback")
+        } catch AgentModelRoutingError.selectionRefused {
+        }
         let fallback = try broker.route(
             selection: .init(
                 purpose: .executor,
                 preferences: .init(
-                    gateway: unavailable
+                    gateway: unavailable,
+                    allowsFallback: true
                 )
             )
         )

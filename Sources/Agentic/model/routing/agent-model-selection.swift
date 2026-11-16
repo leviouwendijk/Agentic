@@ -39,6 +39,8 @@ public struct AgentModelRequirements: Sendable, Codable, Hashable {
 }
 
 public struct AgentModelPreferences: Sendable, Codable, Hashable {
+    /// Explicit targets are binding unless fallback is deliberately enabled.
+    public var allowsFallback: Bool
     public var preferredProfileIdentifier: AgentModelProfileIdentifier?
     public var preferredModelID: AgentModelID?
     public var gateway: AgentModelGatewayIdentifier?
@@ -54,6 +56,7 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
         preferredModelID: AgentModelID? = nil,
         gateway: AgentModelGatewayIdentifier? = nil,
         gateways: [AgentModelGatewayIdentifier] = [],
+        allowsFallback: Bool = false,
         cost: AgentModelCostClass? = nil,
         latency: AgentModelLatencyClass? = nil
     ) {
@@ -61,6 +64,7 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
         self.preferredModelID = preferredModelID
         self.gateway = gateway
         self.gateways = gateways
+        self.allowsFallback = allowsFallback
         self.cost = cost
         self.latency = latency
     }
@@ -96,12 +100,14 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
             gateways: overridesTarget
                 ? higherPriority.gateways
                 : gateways,
+            allowsFallback: overridesTarget ? higherPriority.allowsFallback : allowsFallback,
             cost: higherPriority.cost ?? cost,
             latency: higherPriority.latency ?? latency
         )
     }
 
     private enum CodingKeys: String, CodingKey {
+        case allowsFallback
         case preferredProfileIdentifier
         case preferredModelID
         case gateway
@@ -118,6 +124,7 @@ public struct AgentModelPreferences: Sendable, Codable, Hashable {
             preferredModelID: try values.decodeIfPresent(AgentModelID.self, forKey: .preferredModelID),
             gateway: try values.decodeIfPresent(AgentModelGatewayIdentifier.self, forKey: .gateway),
             gateways: try values.decodeIfPresent([AgentModelGatewayIdentifier].self, forKey: .gateways) ?? [],
+            allowsFallback: try values.decodeIfPresent(Bool.self, forKey: .allowsFallback) ?? false,
             cost: try values.decodeIfPresent(AgentModelCostClass.self, forKey: .cost),
             latency: try values.decodeIfPresent(AgentModelLatencyClass.self, forKey: .latency)
         )

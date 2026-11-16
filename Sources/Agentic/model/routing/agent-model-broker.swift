@@ -27,6 +27,27 @@ public struct ModelBroker: Sendable, AgentModelInvoking {
         self.ledger = ledger
     }
 
+    /// Count only when explicitly requested. Uses the same routing and output
+    /// adaptation as generation; does not invoke a model or record generation.
+    public func countInputTokens(
+        _ invocation: AgentModelInvocation
+    ) async throws -> AgentModelInvocation.InputCount {
+        let prepared = try prepare(invocation)
+        let gateway = try gateways.gateway(
+            for: prepared.routeResult.route.profile.gateway.id
+        )
+        let count = try await gateway.response.countInputTokens(
+            request: prepared.request,
+            route: prepared.routeResult.route,
+            context: invocation.context
+        )
+        return try .init(
+            request: prepared.request,
+            route: prepared.routeResult,
+            inputTokens: count
+        )
+    }
+
     public func buffered(
         _ invocation: AgentModelInvocation
     ) async throws -> AgentModelInvocation.Result {

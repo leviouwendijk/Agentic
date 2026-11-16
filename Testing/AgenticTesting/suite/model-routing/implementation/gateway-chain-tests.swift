@@ -79,6 +79,33 @@ extension ModelRoutingImplementationTesting {
             "skipped chain gateways are observable"
         )
 
+        let missingModel = AgentModelID(rawValue: "fixture:missing-model")
+        var refused = false
+        do {
+            _ = try router.route(
+                .init(selection: .init(
+                    purpose: .executor,
+                    preferences: .init(preferredModelID: missingModel)
+                )),
+                catalog: catalog
+            )
+        } catch AgentModelRoutingError.selectionRefused(let diagnostics) {
+            refused = diagnostics.contains { $0.code == .preference_unavailable }
+        }
+        try Expect.true(refused, "an unavailable explicit model refuses substitution by default")
+
+        let fallback = try router.route(
+            .init(selection: .init(
+                purpose: .executor,
+                preferences: .init(preferredModelID: missingModel, allowsFallback: true)
+            )),
+            catalog: catalog
+        )
+        try Expect.true(
+            fallback.diagnostics.contains { $0.code == .fallback_selected },
+            "explicitly allowed substitution reports fallback"
+        )
+
         let overridden = AgentModelPreferences(
             gateway: first,
             gateways: [second]
@@ -100,6 +127,8 @@ extension ModelRoutingImplementationTesting {
             [first],
             "preferences encoded before gateway chains still decode"
         )
+
+        try Expect.true(!legacy.allowsFallback, "legacy explicit selections default to refusal")
 
         return [
             .field(
