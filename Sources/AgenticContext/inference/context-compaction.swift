@@ -138,3 +138,24 @@ public extension Context {
         }
     }
 }
+
+public extension Context {
+    /// One session's compactions, in the order they were made. A host
+    /// keeps one per conversation and hands it to every run, so each
+    /// request applies the same pointers.
+    actor CompactionLedger {
+        public private(set) var compactions: [Compaction]
+
+        public init(
+            _ compactions: [Compaction] = []
+        ) {
+            self.compactions = compactions
+        }
+
+        public func record(
+            _ compaction: Compaction
+        ) {
+            compactions.append(compaction)
+        }
+    }
+}
