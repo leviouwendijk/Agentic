@@ -176,6 +176,22 @@ extension ContextDeterministicFlowTesting {
         }
     }
 
+    /// When even the dialogue does not fit, preparation refuses before
+    /// dispatch; it never sends the follow-up without the answer it names.
+    static func runIncidentRefusesRatherThanDrops() throws {
+        let fixture = try ContextIncidentFixture()
+        do {
+            let prepared = try ContextIncidentFixture.prepare(
+                fixture.requests[0], delivery: .dynamic, historyBudget: 40
+            )
+            try Expect.true(
+                prepared.request.messages.contains { $0.id == ContextIncidentFixture.findingsID },
+                "A prepared request keeps the findings"
+            )
+        } catch ContextInferenceError.requiredHistoryExceedsTailBudget {
+        }
+    }
+
     static func runIncidentReplayMeasurement() throws -> [TestDiagnostic] {
         let fixture = try ContextIncidentFixture()
         let stored = fixture.requests[0]

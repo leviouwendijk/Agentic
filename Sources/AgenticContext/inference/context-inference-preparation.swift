@@ -16,6 +16,30 @@ public enum ContextInferenceError: Error, Equatable {
     case requiredHistoryExceedsTailBudget(estimated: Int, maximum: Int)
 }
 
+extension ContextInferenceError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .noCurrentUserMessage:
+            "The request has no user message to answer."
+        case .foreignSystemMessage(let id), .foreignUserMessage(let id), .foreignToolMessage(let id):
+            "Context evidence '\(id)' does not match the conversation's message."
+        case .conflictingMessageID(let id):
+            "Two different messages share the identifier '\(id)'."
+        case .unpairedToolResult(let id):
+            "A tool result for call '\(id)' has no call in the request."
+        case .duplicateToolCall(let id):
+            "Tool call '\(id)' appears twice in the request."
+        case .inputBudgetExceeded(let estimated, let maximum):
+            "The request (≈\(estimated) tokens) exceeds its input budget of \(maximum). Nothing was sent."
+        case .invalidInputBudget(let budget):
+            "Invalid input budget \(budget)."
+        case .requiredHistoryExceedsTailBudget(let estimated, let maximum):
+            "The history this request needs (≈\(estimated) tokens: the current turn and the previous answer) "
+                + "exceeds the history budget of \(maximum). Nothing was sent and nothing was dropped."
+        }
+    }
+}
+
 public extension Context {
     /// Preparation changes one inference request, never the durable session state.
     enum InferenceDelivery: String, Sendable, Codable, Hashable {
@@ -238,12 +262,17 @@ public extension Context {
         /// 1. Turns older than `maximumTurns` lose bulky results to a stub
         ///    that names the call (the log keeps the full result).
         /// 2. Results the model has already seen are elided, oldest first.
-        /// 3. The oldest whole turns are dropped (never the current one).
-        /// 4. Seen exchanges of the current turn are dropped, oldest first.
-        /// 5. Results the model has not seen yet are elided.
+        /// 3. Earlier turns lose their tool exchanges, oldest first, and
+        ///    keep their dialogue.
+        /// 4. The dialogue of turns before the previous one is dropped,
+        ///    oldest first.
+        /// 5. Seen exchanges of the current turn are dropped, oldest first.
+        /// 6. Results the model has not seen yet are elided.
         ///
         /// Calls are never separated from their results, user messages are
-        /// never edited, and the current instruction is never dropped.
+        /// never edited, and neither the current instruction nor the
+        /// previous turn's dialogue is dropped: when they do not fit, the
+        /// request is refused before dispatch rather than sent without them.
         private static func selectHistory(
             from conversation: [Message],
             policy: HistoryPolicy,
@@ -330,21 +359,33 @@ public extension Context {
             for turn in turns.indices where over() {
                 try elide(turn: turn, includingUnseen: false, reason: .budget_result)
             }
-            while over(), turns.count > 1 {
+            func dropExchanges(of turn: Int) {
+                while over(), let exchange = firstCompletedExchange(in: turns[turn], excluding: unseen) {
+                    for message in turns[turn][exchange] {
+                        changes.append(.init(messageID: message.id, reason: .exchange_budget))
+                        elided.remove(message.id)
+                    }
+                    turns[turn].removeSubrange(exchange)
+                }
+            }
+            // Earlier turns lose their tool work first and keep their
+            // dialogue: what the operator asked and what the model answered.
+            for turn in turns.indices.dropLast() where over() {
+                dropExchanges(of: turn)
+            }
+            // Then the dialogue of turns before the previous one. The
+            // previous turn's answer is what the current request most
+            // likely refers to; it is never dropped.
+            while over(), turns.count > 2 {
                 for message in turns.removeFirst() {
                     changes.append(.init(messageID: message.id, reason: .turn_budget))
                     elided.remove(message.id)
                 }
             }
-            while over(), let exchange = firstCompletedExchange(in: turns[0], excluding: unseen) {
-                for message in turns[0][exchange] {
-                    changes.append(.init(messageID: message.id, reason: .exchange_budget))
-                    elided.remove(message.id)
-                }
-                turns[0].removeSubrange(exchange)
-            }
+            let current = turns.count - 1
+            dropExchanges(of: current)
             if over() {
-                try elide(turn: 0, includingUnseen: true, reason: .unseen_result)
+                try elide(turn: current, includingUnseen: true, reason: .unseen_result)
             }
             guard !over() else {
                 throw ContextInferenceError.requiredHistoryExceedsTailBudget(

@@ -89,10 +89,16 @@ enum ContextDeterministicTestSuite {
 
         Test(
             "incident-followup-continuity",
-            tags: ["context", "history", "incident"],
-            expectedFailure: "Known context eviction defect; remove this marker when continuity is fixed."
+            tags: ["context", "history", "incident"]
         ) {
             try ContextDeterministicFlowTesting.runIncidentContinuity()
+        }
+
+        Test(
+            "incident-refuses-rather-than-drops",
+            tags: ["context", "history", "incident"]
+        ) {
+            try ContextDeterministicFlowTesting.runIncidentRefusesRatherThanDrops()
         }
 
         Test(
