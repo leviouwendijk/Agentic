@@ -1,6 +1,5 @@
 import Foundation
 import Primitives
-import Reporting
 import Schema
 import Workspace
 
@@ -44,7 +43,7 @@ public struct ToolBinding: CapabilityBinding {
         case applied(
             output: JSONValue,
             projection: ToolExecution.Projection?,
-            presentation: ReportDocument?
+            presentation: ToolPresentation?
         )
         case applied_without_output
         case not_applied
@@ -104,7 +103,7 @@ public struct ToolBinding: CapabilityBinding {
             projection: ToolExecution.Projection?,
             isError: Bool,
             text: String?,
-            presentation: ReportDocument?
+            presentation: ToolPresentation?
         )
 
     private let reconcileHandler:

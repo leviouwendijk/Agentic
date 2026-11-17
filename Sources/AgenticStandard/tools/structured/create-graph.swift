@@ -130,7 +130,7 @@ public extension Standard.Tools {
             try Self.evaluate(input)
         }
 
-        public func present(_ output: Output, input: Input) -> ReportDocument? {
+        public func present(_ output: Output, input: Input) -> ToolPresentation? {
             let nodes = input.nodes.map { node in
                 ReportBlock.Graph.Node(
                     id: node.id,
@@ -142,11 +142,11 @@ public extension Standard.Tools {
                 ReportBlock.Graph.Edge(id: $0.id, source: $0.source, destination: $0.destination, label: $0.label)
             }
             let references = input.references.map { ReportBlock.Graph.Reference(id: $0.id, target: $0.target) }
-            return try? ReportDocument(
+            return (try? ReportDocument(
                 title: input.title ?? "Graph",
                 datasets: [],
                 blocks: [.graph(.init(nodes: nodes, edges: edges, references: references))]
-            )
+            )).map { ToolPresentation($0) }
         }
 
         /// Graphs authored before typed labels carried them in `value`.

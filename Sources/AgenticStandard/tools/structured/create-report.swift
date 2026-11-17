@@ -426,8 +426,8 @@ public extension Standard.Tools {
                 + " The user sees it as an attachment."
         }
 
-        public func present(_ output: Output, input _: Input) -> ReportDocument? {
-            output.document
+        public func present(_ output: Output, input _: Input) -> ToolPresentation? {
+            .init(output.document)
         }
     }
 }
