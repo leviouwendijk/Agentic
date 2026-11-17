@@ -8,7 +8,7 @@ public extension ToolIdentifier {
     static var inspect_context_sources: Self
     static var estimate_context_size: Self
 
-    static var read_file: Self
+    static var read_files: Self
     static var mutate_files: Self
     static var scan_paths: Self
     static var read_selection: Self
