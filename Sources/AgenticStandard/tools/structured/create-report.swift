@@ -92,10 +92,12 @@ public extension Standard.Tools {
         public struct Dataset: HashableSource {
             public let id: String
             public let columns: [Column]
-            /// Inline rows. Leave empty when `from_call` is given.
-            public let rows: [Row]
+            /// Inline rows. Leave out when `from_call` is given.
+            public let rows: [Row]?
             /// A previous call whose result supplies the rows, instead of
-            /// copying them: complete and traceable to that call.
+            /// copying them: complete and traceable to that call. Either the
+            /// call's identifier or a tool name, such as `schedule_agenda`,
+            /// for that tool's latest successful result.
             public let from_call: String?
             /// Dotted path to the array of row objects in that call's
             /// result, such as `candidates`; `*` takes every element of an
@@ -106,7 +108,7 @@ public extension Standard.Tools {
             public init(
                 id: String,
                 columns: [Column],
-                rows: [Row] = [],
+                rows: [Row]? = nil,
                 from_call: String? = nil,
                 rows_path: String? = nil
             ) {
@@ -222,12 +224,13 @@ public extension Standard.Tools {
 
         public enum Failure: Error, Sendable, Equatable {
             case invalid_value(dataset: String, row: Int, column: String)
-            case invalid_block(Int)
+            /// The block's fields do not fit its kind; `reason` says which.
+            case invalid_block(index: Int, reason: String)
             /// `from_call` with inline rows, or a call without a recorded result.
             case invalid_source(dataset: String, reason: String)
         }
 
-        public static let purpose = "Construct a validated structured ReportDocument containing datasets, Markdown narratives, callouts, facts, tables, bar/line charts and timelines. Prefer datasets read from a previous call (`from_call`, `rows_path`, column `field` paths) over copying values: those are complete and traced to the call. Inline decimal cells must be exact JSON strings; other cells must match declared types. Inline datasets have unknown completeness, regardless of source references. Does not persist; the user sees the report."
+        public static let purpose = "Construct a validated structured ReportDocument containing datasets, Markdown narratives, callouts, facts, tables, bar/line charts and timelines. Prefer datasets read from a previous call (`from_call` with the call's identifier or simply the tool's name for its latest result, `rows_path`, column `field` paths) over copying values: those are complete and traced to the call. Inline decimal cells must be exact JSON strings; other cells must match declared types. Inline datasets have unknown completeness, regardless of source references. Does not persist; the user sees the report."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -249,9 +252,12 @@ public extension Standard.Tools {
                     // Preflight sees the declaration before the call is read.
                     return try ReportDataset(id: draft.id, columns: columns, rows: [], coverage: .unknown)
                 }
-                let rows = try draft.rows.enumerated().map { index, row -> ReportDataset.Row in
+                let rows = try (draft.rows ?? []).enumerated().map { index, row -> ReportDataset.Row in
                     guard row.values.count == draft.columns.count else {
-                        throw ReportDataset.Failure.invalidRow(index)
+                        throw Failure.invalid_source(
+                            dataset: draft.id,
+                            reason: "row \(index) has \(row.values.count) values for \(draft.columns.count) columns"
+                        )
                     }
                     let values = try zip(row.values, draft.columns).map { raw, column -> StructuredValue? in
                         if raw == .null { return nil }
@@ -278,55 +284,81 @@ public extension Standard.Tools {
             var byID: [String: ReportDataset] = [:]
             for dataset in datasets { byID[dataset.id] = dataset }
             let blocks = try input.blocks.enumerated().map { index, block -> ReportBlock in
-                func require(_ condition: Bool) throws {
-                    guard condition else { throw Failure.invalid_block(index) }
+                let kind = block.kind.rawValue
+                func fail(_ reason: String) -> Failure {
+                    .invalid_block(index: index, reason: reason)
                 }
-                let noTimeline = block.start == nil && block.end == nil && block.lane == nil
-                    && block.label == nil && block.mark == nil && block.time_zone == nil
-                try require(block.kind == .timeline || noTimeline)
-                let noData = block.dataset == nil && block.columns == nil && block.x == nil && block.y == nil
+                /// Fields set on the block that its kind does not use.
+                func only(_ allowed: Set<String>) throws {
+                    let present: [(String, Bool)] = [
+                        ("title", block.title != nil), ("text", block.text != nil),
+                        ("dataset", block.dataset != nil), ("columns", block.columns != nil),
+                        ("x", block.x != nil), ("y", block.y != nil),
+                        ("facts", block.facts != nil), ("tone", block.tone != nil),
+                        ("start", block.start != nil), ("end", block.end != nil),
+                        ("lane", block.lane != nil), ("label", block.label != nil),
+                        ("mark", block.mark != nil), ("time_zone", block.time_zone != nil),
+                    ]
+                    let extra = present.filter { $0.1 && !allowed.contains($0.0) }.map(\.0)
+                    guard extra.isEmpty else {
+                        throw fail("\(kind) does not take \(extra.joined(separator: ", ")); it takes \(allowed.sorted().joined(separator: ", "))")
+                    }
+                }
+                func dataset(_ id: String?) throws -> String {
+                    guard let id else { throw fail("\(kind) needs `dataset`") }
+                    guard byID[id] != nil else {
+                        throw fail("no dataset '\(id)'; declared: \(byID.keys.sorted().joined(separator: ", "))")
+                    }
+                    return id
+                }
                 switch block.kind {
                 case .narrative:
-                    guard let text = block.text else { throw Failure.invalid_block(index) }
-                    try require(block.title == nil && noData && block.facts == nil && block.tone == nil)
+                    guard let text = block.text else { throw fail("narrative needs `text` (Markdown) on the block") }
+                    try only(["text"])
                     return .narrative(MarkdownStructuredContentParser.parse(text))
                 case .callout:
-                    guard let text = block.text, let tone = block.tone else { throw Failure.invalid_block(index) }
-                    try require(noData && block.facts == nil)
+                    guard let text = block.text, let tone = block.tone else {
+                        throw fail("callout needs `text` and `tone` on the block itself, such as {\"kind\": \"callout\", \"tone\": \"warning\", \"text\": \"...\"}")
+                    }
+                    try only(["title", "text", "tone"])
                     return .callout(.init(
                         tone: callout(tone),
                         title: block.title,
                         content: MarkdownStructuredContentParser.parse(text)
                     ))
                 case .facts:
-                    guard let facts = block.facts, !facts.isEmpty else { throw Failure.invalid_block(index) }
-                    try require(noData && block.text == nil && block.tone == nil)
+                    guard let facts = block.facts, !facts.isEmpty else {
+                        throw fail("facts needs a non-empty `facts` list of {label, value}")
+                    }
+                    try only(["title", "facts"])
                     return .facts(.init(title: block.title, facts: facts.map { .init($0.label, $0.value) }))
                 case .table:
-                    guard let dataset = block.dataset, let columns = block.columns else {
-                        throw Failure.invalid_block(index)
+                    let id = try dataset(block.dataset)
+                    guard let columns = block.columns, !columns.isEmpty else {
+                        throw fail("table needs `columns`: names of the dataset's columns to show")
                     }
-                    try require(!columns.isEmpty && block.text == nil && block.x == nil && block.y == nil
-                        && block.facts == nil && block.tone == nil)
-                    return .table(.init(dataset: dataset, columns: columns, title: block.title))
+                    let missing = columns.filter { byID[id]?.columnIndex($0) == nil }
+                    guard missing.isEmpty else {
+                        throw fail("dataset '\(id)' has no column \(missing.joined(separator: ", "))")
+                    }
+                    try only(["title", "dataset", "columns"])
+                    return .table(.init(dataset: id, columns: columns, title: block.title))
                 case .bar, .line:
-                    guard let dataset = block.dataset, let x = block.x, let y = block.y else {
-                        throw Failure.invalid_block(index)
-                    }
-                    try require(block.text == nil && block.columns == nil && block.facts == nil && block.tone == nil)
-                    let kind: ReportBlock.Chart.Kind = block.kind == .bar ? .bar : .line
-                    return .chart(.init(dataset: dataset, kind: kind, x: x, y: y, title: block.title))
+                    let id = try dataset(block.dataset)
+                    guard let x = block.x, let y = block.y else { throw fail("\(kind) needs `x` and a numeric `y` column") }
+                    try only(["title", "dataset", "x", "y"])
+                    let chart: ReportBlock.Chart.Kind = block.kind == .bar ? .bar : .line
+                    return .chart(.init(dataset: id, kind: chart, x: x, y: y, title: block.title))
                 case .timeline:
-                    guard let id = block.dataset, let dataset = byID[id],
-                          let start = block.start, let end = block.end else {
-                        throw Failure.invalid_block(index)
+                    let id = try dataset(block.dataset)
+                    guard let start = block.start, let end = block.end else {
+                        throw fail("timeline needs `start` and `end`: date columns of the dataset")
                     }
-                    try require(block.text == nil && block.columns == nil && block.x == nil && block.y == nil
-                        && block.facts == nil && block.tone == nil)
-                    if let zone = block.time_zone {
-                        try require(TimeZone(identifier: zone) != nil)
+                    try only(["title", "dataset", "start", "end", "lane", "label", "mark", "time_zone"])
+                    if let zone = block.time_zone, TimeZone(identifier: zone) == nil {
+                        throw fail("unknown time zone '\(zone)'")
                     }
-                    return try timeline(block, dataset: dataset, start: start, end: end, index: index)
+                    return try timeline(block, dataset: byID[id]!, start: start, end: end, index: index)
                 }
             }
             return .init(document: try ReportDocument(title: input.title, datasets: datasets, blocks: blocks))
@@ -343,8 +375,14 @@ public extension Standard.Tools {
         ) throws -> ReportBlock {
             func column(_ name: String?, kinds: [StructuredValueKind]) throws -> Int? {
                 guard let name else { return nil }
-                guard let position = dataset.columnIndex(name), kinds.contains(dataset.columns[position].kind) else {
-                    throw Failure.invalid_block(index)
+                guard let position = dataset.columnIndex(name) else {
+                    throw Failure.invalid_block(index: index, reason: "dataset '\(dataset.id)' has no column '\(name)'")
+                }
+                guard kinds.contains(dataset.columns[position].kind) else {
+                    throw Failure.invalid_block(
+                        index: index,
+                        reason: "column '\(name)' must be \(kinds.map(\.rawValue).joined(separator: " or "))"
+                    )
                 }
                 return position
             }
@@ -415,16 +453,26 @@ public extension Standard.Tools {
             var resolved: [String: [ReportDataset.Row]] = [:]
             for draft in input.datasets {
                 guard let call = draft.from_call else { continue }
-                guard draft.rows.isEmpty else {
+                guard (draft.rows ?? []).isEmpty else {
                     throw Failure.invalid_source(dataset: draft.id, reason: "give either rows or from_call, not both")
                 }
                 guard let archive else {
                     throw Failure.invalid_source(dataset: draft.id, reason: "results of earlier calls are not available in this session")
                 }
-                guard let response = try await archive.response(call: call), !response.isError else {
-                    throw Failure.invalid_source(dataset: draft.id, reason: "no successful result recorded for call '\(call)'")
+                // A call identifier, or a tool name for its latest result.
+                let found: FunctionCall.Response?
+                if let response = try await archive.response(call: call), !response.isError {
+                    found = response
+                } else {
+                    found = try await archive.latest(tool: call)
                 }
-                resolved[draft.id] = try rows(draft, from: response.output, call: call)
+                guard let response = found else {
+                    throw Failure.invalid_source(
+                        dataset: draft.id,
+                        reason: "no successful result recorded for '\(call)'; give a call identifier or the name of a tool called earlier in this session"
+                    )
+                }
+                resolved[draft.id] = try rows(draft, from: response.output, call: response.call.id)
             }
             return resolved
         }

@@ -225,6 +225,29 @@ struct AgenticStructuresSmoke {
             ), in: context)
             throw SmokeFailure.expected_rejection
         } catch ReportTool.Failure.invalid_source {}
+
+        // Models see tool names, not call identifiers: a tool name reads
+        // its latest result, and `rows` may be left out entirely.
+        let named = ResultArchive(
+            { _ in nil },
+            latest: { tool in tool == "schedule_agenda" ? .init(call: .init(id: "agenda-7", name: tool), output: agenda) : nil }
+        )
+        let decoded = try JSONDecoder().decode(ReportTool.Input.self, from: Data("""
+            {"title": "Week", "datasets": [{"id": "e", "from_call": "schedule_agenda", "rows_path": "participants.*.entries",
+              "columns": [{"name": "title", "kind": "text"}]}],
+             "blocks": [{"kind": "table", "dataset": "e", "columns": ["title"]}]}
+            """.utf8))
+        let latest = try await ReportTool().call(decoded, in: ToolContext(services: try ToolServices().inserting(named)))
+        try check(latest.document.datasets[0].rows.count == 4, "tool name reads its latest result")
+        try check(latest.document.datasets[0].rows[0].sources[0].identifier.hasPrefix("agenda-7#"), "traced to the concrete call")
+
+        // Errors say what the block needs.
+        do {
+            _ = try ReportTool.evaluate(.init(title: "x", datasets: [], blocks: [.init(kind: .callout, tone: .warning)]))
+            throw SmokeFailure.expected_rejection
+        } catch ReportTool.Failure.invalid_block(_, let reason) {
+            try check(reason.contains("`text` and `tone` on the block itself"), "callout error explains the shape")
+        }
     }
 
     static func check(_ condition: @autoclosure () -> Bool, _ description: String) throws {

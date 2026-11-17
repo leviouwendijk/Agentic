@@ -3,11 +3,14 @@
 /// installs it when the session is logged.
 public struct ResultArchive: Sendable {
     private let lookup: @Sendable (String) async throws -> FunctionCall.Response?
+    private let latest: @Sendable (String) async throws -> FunctionCall.Response?
 
     public init(
-        _ lookup: @escaping @Sendable (String) async throws -> FunctionCall.Response?
+        _ lookup: @escaping @Sendable (String) async throws -> FunctionCall.Response?,
+        latest: @escaping @Sendable (String) async throws -> FunctionCall.Response? = { _ in nil }
     ) {
         self.lookup = lookup
+        self.latest = latest
     }
 
     /// The full response recorded for `call`, if any.
@@ -15,6 +18,15 @@ public struct ResultArchive: Sendable {
         call: String
     ) async throws -> FunctionCall.Response? {
         try await lookup(call)
+    }
+
+    /// The latest successful response of `tool` in the session, if any.
+    /// Models rarely see call identifiers; they do know which tool they
+    /// called.
+    public func latest(
+        tool: String
+    ) async throws -> FunctionCall.Response? {
+        try await latest(tool)
     }
 }
 
