@@ -32,4 +32,13 @@ public struct AgentModelTurnCostRecord: Sendable, Codable, Hashable, Identifiabl
         self.updatedAt = updatedAt
         self.metadata = metadata
     }
+
+    /// A request that ended before the provider reported its usage (a
+    /// cut-off stream). It keeps its own entry: the retry that follows
+    /// shares its turn index but is a second billed request.
+    var isUnfinished: Bool {
+        metadata[Self.unfinishedKey] == "true"
+    }
+
+    static let unfinishedKey = "unfinished"
 }

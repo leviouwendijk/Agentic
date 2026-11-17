@@ -10,7 +10,8 @@ public extension Context.Allocator {
         for workingSetID: String,
         using resolver: any Context.RecordResolving,
         modelContextLimit: Int,
-        compactions: [Context.Compaction] = []
+        compactions: [Context.Compaction] = [],
+        calibration: Context.InputCalibration? = nil
     ) async throws -> Context.InferencePreparation {
         let maximum = max(0, min(
             policy.maximumInputTokens,
@@ -29,10 +30,11 @@ public extension Context.Allocator {
             delivery: .dynamic,
             maximumInputTokens: maximum,
             historyPolicy: policy.history,
-            compactions: compactions
+            compactions: compactions,
+            calibration: calibration
         )
         let availableForEvidence = max(
-            0, maximum - baseline.measurement.estimatedInputTokens
+            0, maximum - baseline.measurement.inputTokens
         )
         let frame = try await prepareFrame(
             for: workingSetID,
@@ -45,7 +47,8 @@ public extension Context.Allocator {
             delivery: .dynamic,
             maximumInputTokens: maximum,
             historyPolicy: policy.history,
-            compactions: compactions
+            compactions: compactions,
+            calibration: calibration
         )
     }
 }

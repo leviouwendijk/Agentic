@@ -44,7 +44,9 @@ public extension AgentCostRecord {
         var record = self
         record.updatedAt = Date()
 
-        if let index = record.turns.firstIndex(where: { $0.turnIndex == turn.turnIndex }) {
+        if let index = record.turns.firstIndex(where: {
+            $0.turnIndex == turn.turnIndex && !$0.isUnfinished
+        }) {
             record.turns[index] = turn
         } else {
             record.turns.append(
@@ -70,6 +72,25 @@ public extension AgentCostRecord {
         return record
     }
 
+    /// Adds a request that ended before its usage, beside (not in place
+    /// of) the turn's other requests.
+    func appendingUnfinishedTurn(
+        _ turn: AgentModelTurnCostRecord
+    ) -> AgentCostRecord {
+        var record = self
+        var turn = turn
+        turn.metadata[AgentModelTurnCostRecord.unfinishedKey] = "true"
+        record.updatedAt = Date()
+        record.turns.append(turn)
+        record.turns.sort { lhs, rhs in
+            lhs.turnIndex < rhs.turnIndex
+        }
+        if record.model == nil {
+            record.model = turn.requestModel
+        }
+        return record
+    }
+
     func updatingTurnActual(
         turnIndex: Int,
         actual: AgentCostProjection
@@ -78,7 +99,9 @@ public extension AgentCostRecord {
         record.updatedAt = Date()
         record.actual = actual
 
-        if let index = record.turns.firstIndex(where: { $0.turnIndex == turnIndex }) {
+        if let index = record.turns.firstIndex(where: {
+            $0.turnIndex == turnIndex && !$0.isUnfinished
+        }) {
             record.turns[index].actual = actual
             record.turns[index].updatedAt = Date()
         } else {

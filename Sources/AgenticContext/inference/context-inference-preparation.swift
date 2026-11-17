@@ -77,8 +77,17 @@ public extension Context {
         public let toolCallCount: Int
         public let toolResultCount: Int
         public let serializedRequestBytes: Int
+        /// The lexical estimate of the request.
         public let estimatedInputTokens: Int
+        /// The estimate anchored to the provider's last count, when one
+        /// was available; nil in older records and on a first request.
+        public let calibratedInputTokens: Int?
         public let maximumInputTokens: Int
+
+        /// The input the budget is judged by: calibrated when possible.
+        public var inputTokens: Int {
+            calibratedInputTokens ?? estimatedInputTokens
+        }
 
         public init(
             selectedAllocations: Int,
@@ -90,6 +99,7 @@ public extension Context {
             toolResultCount: Int,
             serializedRequestBytes: Int,
             estimatedInputTokens: Int,
+            calibratedInputTokens: Int? = nil,
             maximumInputTokens: Int
         ) {
             self.selectedAllocations = selectedAllocations
@@ -101,6 +111,7 @@ public extension Context {
             self.toolResultCount = toolResultCount
             self.serializedRequestBytes = serializedRequestBytes
             self.estimatedInputTokens = estimatedInputTokens
+            self.calibratedInputTokens = calibratedInputTokens
             self.maximumInputTokens = maximumInputTokens
         }
     }
@@ -143,7 +154,8 @@ public extension Context {
             maximumInputTokens: Int,
             estimationOptions: TokenEstimationOptions = .agenticContext,
             historyPolicy: HistoryPolicy = .init(),
-            compactions: [Compaction] = []
+            compactions: [Compaction] = [],
+            calibration: InputCalibration? = nil
         ) throws -> InferencePreparation {
             guard maximumInputTokens > 0 else {
                 throw ContextInferenceError.invalidInputBudget(maximumInputTokens)
@@ -218,9 +230,11 @@ public extension Context {
                 options: estimationOptions,
                 source: "context.inference_request_json"
             )
-            guard estimate.estimatedTokens <= maximumInputTokens else {
+            let calibrated = calibration?.measure(estimate.estimatedTokens)
+            let input = calibrated ?? estimate.estimatedTokens
+            guard input <= maximumInputTokens else {
                 throw ContextInferenceError.inputBudgetExceeded(
-                    estimated: estimate.estimatedTokens,
+                    estimated: input,
                     maximum: maximumInputTokens
                 )
             }
@@ -235,6 +249,7 @@ public extension Context {
                 toolResultCount: counts.results,
                 serializedRequestBytes: encoded.count,
                 estimatedInputTokens: estimate.estimatedTokens,
+                calibratedInputTokens: calibrated,
                 maximumInputTokens: maximumInputTokens
             )
             let included = Set(assembled.map(\.id))
@@ -265,7 +280,7 @@ public extension Context {
                 measurement: measurement,
                 history: history,
                 pressure: .init(
-                    estimatedInputTokens: estimate.estimatedTokens,
+                    estimatedInputTokens: input,
                     softLimit: Int(Double(maximumInputTokens) * historyPolicy.softLimit),
                     hardLimit: maximumInputTokens
                 )

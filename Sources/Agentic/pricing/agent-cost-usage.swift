@@ -60,11 +60,12 @@ public struct AgentCostUsage: Sendable, Codable, Hashable {
         )
     }
 
+    /// Input of every kind plus output. Reasoning is part of output, not
+    /// added again.
     public var totalKnownTokens: Int {
         inputTokens
             + outputTokens
             + cachedInputReadTokens
             + cachedInputWriteTokens
-            + reasoningOutputTokens
     }
 }

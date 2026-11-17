@@ -6,8 +6,6 @@ Provider-agnostic semantic framework for building agent systems in Swift.
 
 > Under active development. APIs are intentionally still evolving.
 
-For a broader generated overview, see [AI summary](extra/ai-summary.md).
-
 ## This repository
 
 The package currently exposes:
