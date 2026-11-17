@@ -24,6 +24,12 @@ extension ModelRoutingImplementationTesting {
             model: "unknown"
         )
         try Expect.equal(frontier.tier, .frontier, "facts give the tier")
+        try Expect.equal(
+            [KnownModel.gpt.astra_6, KnownModel.gpt.sol_6_1, KnownModel.gpt.terra_6_1, KnownModel.gpt.luna_6]
+                .map { KnownModel.facts($0)?.tier },
+            [.frontier, .strong, .standard, .light],
+            "GPT-6 tiers are recorded"
+        )
         try Expect.equal(frontier.limits.inputTokens, 1_000_000, "facts give documented limits")
         try Expect.equal(standard.cost, .cheap, "facts give the cost class")
         try Expect.true(

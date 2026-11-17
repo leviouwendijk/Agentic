@@ -56,6 +56,12 @@ public extension KnownModel {
                 latency: .low
             ),
 
+            // Operator's judgement (2026-11-17); limits unpublished here.
+            gpt.astra_6: .init(tier: .frontier),
+            gpt.sol_6_1: .init(tier: .strong),
+            gpt.terra_6_1: .init(tier: .standard),
+            gpt.luna_6: .init(tier: .light),
+
             deepseek.v4_pro: .init(tier: .strong),
             deepseek.v4_pro_0813: .init(tier: .strong),
             deepseek.v4_flash: .init(tier: .standard),
