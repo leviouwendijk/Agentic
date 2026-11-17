@@ -384,6 +384,7 @@ let package = Package(
                 "AgenticStandard",
                 "AgenticTasks",
                 "AgenticHarness",
+                "AgenticSessions",
                 "AgenticLinkerCatalogFixture",
                 .product(
                     name: "Errors",
