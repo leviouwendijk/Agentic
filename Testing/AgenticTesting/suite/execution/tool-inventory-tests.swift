@@ -32,7 +32,7 @@ extension ExecutionTesting {
             >()
         }
 
-        var registry = try Agentic.tool.registry {
+        var registry = try ToolRegistry {
             bindings
         }
 
@@ -169,7 +169,7 @@ private func proveConflictingToolInventoryCollectionMetadataFails()
         }
     }
 
-    let registry = try Agentic.tool.registry {
+    let registry = try ToolRegistry {
         bindings
     }
 
