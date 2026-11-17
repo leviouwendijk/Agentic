@@ -1,5 +1,5 @@
 {
-  "originHash" : "69fd6cf95bfe1d3440b037602b712b58aad3d8a3378f2e515d191f0e39ea4362",
+  "originHash" : "7df64d3461ff761889f8d8ece99b197108c009051d44481aec26454893107e6d",
   "pins" : [
     {
       "identity" : "arguments",
@@ -152,6 +152,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "1a98599ae3c5d65eb5793e0f02b99e869dbfc9c5"
+      }
+    },
+    {
+      "identity" : "parsers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/Parsers.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "dc788020b89657e36896adbab3168bad10767ccc"
       }
     },
     {

@@ -166,6 +166,14 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Reporting.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/Parsers.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/DSL.git",
+            branch: "master"
+        ),
     ],
     targets: [
         .target(
@@ -252,6 +260,8 @@ let package = Package(
                 "Agentic",
                 .product(name: "Math", package: "Math"),
                 .product(name: "Reporting", package: "Reporting"),
+                .product(name: "ParsersStructuredContent", package: "Parsers"),
+                .product(name: "DSL", package: "DSL"),
                 .product(
                     name: "Primitives",
                     package: "Primitives"

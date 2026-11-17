@@ -1,3 +1,4 @@
+import Agentic
 import AgenticStandard
 import Foundation
 import Primitives
@@ -11,7 +12,7 @@ private enum SmokeFailure: Error {
 
 @main
 struct AgenticStructuresSmoke {
-    static func main() throws {
+    static func main() async throws {
         typealias GraphTool = Standard.Tools.CreateGraph
         let graphInput = GraphTool.Input(
             nodes: [
@@ -103,10 +104,76 @@ struct AgenticStructuresSmoke {
             ))
             throw SmokeFailure.expected_rejection
         } catch ReportDocument.Failure.invalidChartMeasure {}
+        try await tracedReport()
         try CallTreeSmoke.run()
         try AgenticPreflightTests.run()
         try ToolServicesSmoke.run()
         print("AgenticStructures smoke: passed")
+    }
+
+    /// Datasets read from an earlier call are complete and traced to it;
+    /// narrative is Markdown; facts and callouts are typed blocks.
+    static func tracedReport() async throws {
+        typealias ReportTool = Standard.Tools.CreateReport
+        let slots: JSONValue = .object([
+            "candidates": .array([
+                .object(["start": .string("2026-11-18T10:00:00+01:00"), "score": .double(0.82),
+                         "travel": .object(["minutes": .int(15)]), "optional_available": .array([.string("Anna")])]),
+                .object(["start": .string("2026-11-18T14:00:00+01:00"), "score": .int(1),
+                         "travel": .object(["minutes": .null]), "optional_available": .array([])]),
+            ]),
+        ])
+        let archive = ResultArchive { call in
+            call == "slots-1" ? .init(call: .init(id: call, name: "schedule_find_slots"), output: slots) : nil
+        }
+        let context = ToolContext(services: try ToolServices().inserting(archive))
+        let input = ReportTool.Input(
+            title: "Options",
+            datasets: [.init(
+                id: "slots",
+                columns: [
+                    .init(name: "start", kind: .date),
+                    .init(name: "score", kind: .decimal),
+                    .init(name: "travel", kind: .integer, field: "travel.minutes"),
+                    .init(name: "optional_available", kind: .text),
+                ],
+                from_call: "slots-1",
+                rows_path: "candidates"
+            )],
+            blocks: [
+                .init(kind: .facts, facts: [.init(label: "Recommended", value: "Tue 10:00")]),
+                .init(kind: .narrative, text: "Two options:\n\n- **morning**\n- afternoon"),
+                .init(kind: .callout, title: "Gap", text: "No location", tone: .warning),
+                .init(kind: .table, dataset: "slots", columns: ["start", "score", "travel"]),
+            ]
+        )
+        let output = try await ReportTool().call(input, in: context)
+        let dataset = output.document.datasets[0]
+        try check(dataset.coverage == .complete, "call-backed dataset is complete")
+        try check(dataset.rows.count == 2, "rows read from the call")
+        try check(dataset.rows[0].sources == [.init(namespace: "tool_call", identifier: "slots-1#candidates.0")], "row traced to call")
+        try check(dataset.rows[0].values[2] == .integer(15) && dataset.rows[1].values[2] == nil, "nested field path; null stays missing")
+        try check(dataset.rows[0].values[3] == .text("Anna"), "string arrays join as text")
+        guard case .narrative(.collection(let parts)) = output.document.blocks[1], parts.count == 2 else {
+            throw SmokeFailure.failed("markdown narrative parsed into blocks")
+        }
+        guard case .callout(let callout) = output.document.blocks[2], callout.tone == .warning else {
+            throw SmokeFailure.failed("callout block")
+        }
+        try check(ReportTool().render(output, input: input)?.contains("slots: 2 rows") == true, "model reads a summary")
+
+        do {
+            _ = try await ReportTool().call(.init(
+                title: "Missing", datasets: [.init(id: "x", columns: [], from_call: "nope")], blocks: []
+            ), in: context)
+            throw SmokeFailure.expected_rejection
+        } catch ReportTool.Failure.invalid_source {}
+        do {
+            _ = try await ReportTool().call(.init(
+                title: "Path", datasets: [.init(id: "x", columns: [], from_call: "slots-1", rows_path: "nothing")], blocks: []
+            ), in: context)
+            throw SmokeFailure.expected_rejection
+        } catch ReportTool.Failure.invalid_source {}
     }
 
     static func check(_ condition: @autoclosure () -> Bool, _ description: String) throws {
