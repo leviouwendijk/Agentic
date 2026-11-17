@@ -385,7 +385,9 @@ public struct ToolBinding: CapabilityBinding {
             )
         }
 
-        guard let arguments = object["arguments"] else {
+        // `{}` is a call without arguments, as models send for tools that
+        // take none; a tool that needs fields then names the missing one.
+        guard let arguments = object["arguments"] ?? (object.isEmpty ? .object([:]) : nil) else {
             throw ToolBindingError.invalidModelCall(
                 tool: definition.identifier.rawValue,
                 reason: "Model call is missing required 'arguments'."
