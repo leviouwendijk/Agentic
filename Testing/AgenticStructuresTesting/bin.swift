@@ -162,6 +162,57 @@ struct AgenticStructuresSmoke {
         }
         try check(ReportTool().render(output, input: input)?.contains("slots: 2 rows") == true, "model reads a summary")
 
+        // A team's agenda: rows across participants, lane from the parent,
+        // marks read from the tool's own words.
+        let agenda: JSONValue = .object(["participants": .array([
+            .object(["participant": .string("Levi"), "entries": .array([
+                .object(["start": .string("2026-11-24T09:00:00+01:00"), "end": .string("2026-11-24T10:00:00+01:00"),
+                         "title": .string("Standup"), "reading": .string("blocking")]),
+                .object(["start": .string("2026-11-24T14:00:00+01:00"), "end": .string("2026-11-24T15:30:00+01:00"),
+                         "title": .string("Office day"), "reading": .string("reserved")]),
+                .object(["start": .string("2026-11-24T00:00:00+01:00"), "end": .string("2026-11-25T00:00:00+01:00"),
+                         "title": .string("Holiday"), "reading": .string("marked_free")]),
+            ])]),
+            .object(["participant": .string("Anna"), "entries": .array([
+                .object(["start": .string("2026-11-24T11:00:00+01:00"), "end": .string("2026-11-24T12:00:00+01:00"),
+                         "title": .string("Open slot"), "reading": .string("offer")]),
+            ])]),
+        ])])
+        let teamArchive = ResultArchive { call in
+            call == "agenda-1" ? .init(call: .init(id: call, name: "schedule_agenda"), output: agenda) : nil
+        }
+        let week = try await ReportTool().call(.init(
+            title: "Week",
+            datasets: [.init(
+                id: "entries",
+                columns: [
+                    .init(name: "who", kind: .text, field: "../participant"),
+                    .init(name: "start", kind: .date), .init(name: "end", kind: .date),
+                    .init(name: "title", kind: .text), .init(name: "reading", kind: .text),
+                ],
+                from_call: "agenda-1",
+                rows_path: "participants.*.entries"
+            )],
+            blocks: [.init(kind: .timeline, dataset: "entries", start: "start", end: "end",
+                           lane: "who", label: "title", mark: "reading", time_zone: "Europe/Amsterdam")]
+        ), in: ToolContext(services: try ToolServices().inserting(teamArchive)))
+        try check(week.document.datasets[0].rows.count == 4, "rows flattened across participants")
+        try check(week.document.datasets[0].rows[3].sources[0].identifier == "agenda-1#participants.1.entries.0", "flattened rows keep their path")
+        guard case .timeline(let timeline) = week.document.blocks[0] else {
+            throw SmokeFailure.failed("timeline from rows")
+        }
+        try check(timeline.lanes.map(\.label) == ["Levi", "Anna"], "lanes from the parent, in order")
+        try check(timeline.lanes[0].spans.map(\.mark) == [.occupied, .reserved], "tool words read as marks; unknown left off")
+        try check(timeline.lanes[1].spans.first?.mark == .available && timeline.lanes[1].spans.first?.label == "Open slot", "offer is available")
+        try check(timeline.timeZone == "Europe/Amsterdam", "axis zone")
+        let window = ISO8601DateFormatter()
+        try check(timeline.start == window.date(from: "2026-11-24T08:00:00Z"), "window from the first start, in whole hours")
+        try check(timeline.end == window.date(from: "2026-11-24T15:00:00Z"), "window to the last end, in whole hours")
+        do {
+            _ = try ReportTool.evaluate(.init(title: "x", datasets: [], blocks: [.init(kind: .table, dataset: "d", columns: ["a"], start: "s")]))
+            throw SmokeFailure.expected_rejection
+        } catch ReportTool.Failure.invalid_block {}
+
         do {
             _ = try await ReportTool().call(.init(
                 title: "Missing", datasets: [.init(id: "x", columns: [], from_call: "nope")], blocks: []

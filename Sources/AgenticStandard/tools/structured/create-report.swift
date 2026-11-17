@@ -34,6 +34,9 @@ public extension Standard.Tools {
             case facts
             /// Markdown in `text`, set apart by `tone`.
             case callout
+            /// Rows of `dataset` as spans over time: `start` and `end` name
+            /// date columns; optional `lane`, `label` and `mark` columns.
+            case timeline
         }
 
         @JSONSchema
@@ -49,8 +52,9 @@ public extension Standard.Tools {
             public let name: String
             public let kind: ValueKind
             /// For a dataset read from a call: dotted path to the value
-            /// inside each row object, such as `estimate.minutes`. Defaults
-            /// to `name`.
+            /// inside each row object, such as `estimate.minutes`; each
+            /// leading `../` reads from the object one `*` up, such as
+            /// `../participant`. Defaults to `name`.
             public let field: String?
 
             public init(name: String, kind: ValueKind, field: String? = nil) {
@@ -94,8 +98,9 @@ public extension Standard.Tools {
             /// copying them: complete and traceable to that call.
             public let from_call: String?
             /// Dotted path to the array of row objects in that call's
-            /// result, such as `candidates`. Empty or absent: the result
-            /// itself is the array.
+            /// result, such as `candidates`; `*` takes every element of an
+            /// array on the way, such as `participants.*.entries`. Empty or
+            /// absent: the result itself is the array.
             public let rows_path: String?
 
             public init(
@@ -135,6 +140,22 @@ public extension Standard.Tools {
             public let y: String?
             public let facts: [Fact]?
             public let tone: Tone?
+            /// Timeline: the date column where each span starts.
+            public let start: String?
+            /// Timeline: the date column where each span ends.
+            public let end: String?
+            /// Timeline: the column naming each span's lane, such as a
+            /// person. Absent: one lane.
+            public let lane: String?
+            /// Timeline: the column labelling each span.
+            public let label: String?
+            /// Timeline: the column saying what a span is. Read as occupied
+            /// (also busy, blocking), reserved, available (also offer, open),
+            /// highlight (also proposed, candidate) or transit (also
+            /// travel); other values are left off. Absent: occupied.
+            public let mark: String?
+            /// Timeline: IANA zone for the axis.
+            public let time_zone: String?
 
             public init(
                 kind: BlockKind,
@@ -145,7 +166,13 @@ public extension Standard.Tools {
                 x: String? = nil,
                 y: String? = nil,
                 facts: [Fact]? = nil,
-                tone: Tone? = nil
+                tone: Tone? = nil,
+                start: String? = nil,
+                end: String? = nil,
+                lane: String? = nil,
+                label: String? = nil,
+                mark: String? = nil,
+                time_zone: String? = nil
             ) {
                 self.kind = kind
                 self.title = title
@@ -156,6 +183,12 @@ public extension Standard.Tools {
                 self.y = y
                 self.facts = facts
                 self.tone = tone
+                self.start = start
+                self.end = end
+                self.lane = lane
+                self.label = label
+                self.mark = mark
+                self.time_zone = time_zone
             }
         }
 
@@ -194,7 +227,7 @@ public extension Standard.Tools {
             case invalid_source(dataset: String, reason: String)
         }
 
-        public static let purpose = "Construct a validated structured ReportDocument containing datasets, Markdown narratives, callouts, facts, tables and bar/line charts. Prefer datasets read from a previous call (`from_call`, `rows_path`, column `field` paths) over copying values: those are complete and traced to the call. Inline decimal cells must be exact JSON strings; other cells must match declared types. Inline datasets have unknown completeness, regardless of source references. Does not persist; the user sees the report."
+        public static let purpose = "Construct a validated structured ReportDocument containing datasets, Markdown narratives, callouts, facts, tables, bar/line charts and timelines. Prefer datasets read from a previous call (`from_call`, `rows_path`, column `field` paths) over copying values: those are complete and traced to the call. Inline decimal cells must be exact JSON strings; other cells must match declared types. Inline datasets have unknown completeness, regardless of source references. Does not persist; the user sees the report."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -242,10 +275,15 @@ public extension Standard.Tools {
                 )
             }
 
+            var byID: [String: ReportDataset] = [:]
+            for dataset in datasets { byID[dataset.id] = dataset }
             let blocks = try input.blocks.enumerated().map { index, block -> ReportBlock in
                 func require(_ condition: Bool) throws {
                     guard condition else { throw Failure.invalid_block(index) }
                 }
+                let noTimeline = block.start == nil && block.end == nil && block.lane == nil
+                    && block.label == nil && block.mark == nil && block.time_zone == nil
+                try require(block.kind == .timeline || noTimeline)
                 let noData = block.dataset == nil && block.columns == nil && block.x == nil && block.y == nil
                 switch block.kind {
                 case .narrative:
@@ -278,9 +316,95 @@ public extension Standard.Tools {
                     try require(block.text == nil && block.columns == nil && block.facts == nil && block.tone == nil)
                     let kind: ReportBlock.Chart.Kind = block.kind == .bar ? .bar : .line
                     return .chart(.init(dataset: dataset, kind: kind, x: x, y: y, title: block.title))
+                case .timeline:
+                    guard let id = block.dataset, let dataset = byID[id],
+                          let start = block.start, let end = block.end else {
+                        throw Failure.invalid_block(index)
+                    }
+                    try require(block.text == nil && block.columns == nil && block.x == nil && block.y == nil
+                        && block.facts == nil && block.tone == nil)
+                    if let zone = block.time_zone {
+                        try require(TimeZone(identifier: zone) != nil)
+                    }
+                    return try timeline(block, dataset: dataset, start: start, end: end, index: index)
                 }
             }
             return .init(document: try ReportDocument(title: input.title, datasets: datasets, blocks: blocks))
+        }
+
+        /// Spans from rows; the window runs from the first start to the last
+        /// end, in whole hours. Rows without both times are left off.
+        static func timeline(
+            _ block: Block,
+            dataset: ReportDataset,
+            start: String,
+            end: String,
+            index: Int
+        ) throws -> ReportBlock {
+            func column(_ name: String?, kinds: [StructuredValueKind]) throws -> Int? {
+                guard let name else { return nil }
+                guard let position = dataset.columnIndex(name), kinds.contains(dataset.columns[position].kind) else {
+                    throw Failure.invalid_block(index)
+                }
+                return position
+            }
+            let startColumn = try column(start, kinds: [.date])!
+            let endColumn = try column(end, kinds: [.date])!
+            let laneColumn = try column(block.lane, kinds: [.text])
+            let labelColumn = try column(block.label, kinds: [.text, .integer, .decimal, .boolean, .date])
+            let markColumn = try column(block.mark, kinds: [.text])
+
+            var order: [String] = []
+            var lanes: [String: [ReportBlock.Timeline.Span]] = [:]
+            for row in dataset.rows {
+                guard case .date(let from)? = row.values[startColumn],
+                      case .date(let to)? = row.values[endColumn], from <= to else { continue }
+                var mark = ReportBlock.Timeline.Mark.occupied
+                if let markColumn {
+                    guard case .text(let value)? = row.values[markColumn], let read = Self.mark(value) else { continue }
+                    mark = read
+                }
+                let lane = laneColumn.flatMap { position -> String? in
+                    if case .text(let text)? = row.values[position] { return text }
+                    return nil
+                } ?? block.title ?? dataset.id
+                let label = labelColumn.flatMap { row.values[$0] }.map { value -> String in
+                    if case .text(let text) = value { return text }
+                    return "\(value)"
+                }
+                if lanes[lane] == nil { order.append(lane) }
+                lanes[lane, default: []].append(.init(start: from, end: to, mark: mark, label: label))
+            }
+            let spans = lanes.values.flatMap { $0 }
+            guard let first = spans.map(\.start).min(), let last = spans.map(\.end).max() else {
+                return .narrative(.paragraph([.text((block.title.map { "\($0): " } ?? "") + "no times to show.")]))
+            }
+            let zone = block.time_zone.flatMap(TimeZone.init(identifier:)) ?? .current
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = zone
+            let from = calendar.dateInterval(of: .hour, for: first)?.start ?? first
+            var to = calendar.dateInterval(of: .hour, for: last)?.end ?? last
+            if last > from, calendar.dateInterval(of: .hour, for: last)?.start == last { to = last }
+            if to <= from { to = from.addingTimeInterval(3600) }
+            return .timeline(.init(
+                title: block.title,
+                start: from,
+                end: to,
+                timeZone: zone.identifier,
+                lanes: order.map { .init(label: $0, spans: lanes[$0] ?? []) }
+            ))
+        }
+
+        /// The vocabulary tools use for time, read as timeline marks.
+        static func mark(_ value: String) -> ReportBlock.Timeline.Mark? {
+            switch value.lowercased() {
+            case "occupied", "busy", "blocking", "commitment", "tentative": .occupied
+            case "reserved": .reserved
+            case "available", "offer", "offered", "open", "free": .available
+            case "highlight", "proposed", "proposal", "candidate", "recommended": .highlight
+            case "transit", "travel": .transit
+            default: nil
+            }
         }
 
         /// Reads every `from_call` dataset from the session's recorded results.
@@ -305,14 +429,22 @@ public extension Standard.Tools {
             return resolved
         }
 
+        /// One row object found along `rows_path`, with the objects each
+        /// `*` passed through (nearest last) and its concrete path.
+        struct Located {
+            let item: JSONValue
+            let ancestors: [JSONValue]
+            let path: String
+        }
+
         static func rows(_ draft: Dataset, from output: JSONValue, call: String) throws -> [ReportDataset.Row] {
             let path = draft.rows_path ?? ""
-            guard case .array(let items)? = value(at: path, in: output) else {
+            guard let located = locate(path, in: output) else {
                 throw Failure.invalid_source(dataset: draft.id, reason: "'\(path)' is not an array in the result of '\(call)'")
             }
-            return try items.enumerated().map { index, item in
+            return try located.enumerated().map { index, row in
                 let values = try draft.columns.map { column -> StructuredValue? in
-                    guard let raw = value(at: column.field ?? column.name, in: item), raw != .null else {
+                    guard let raw = value(at: column.field ?? column.name, in: row), raw != .null else {
                         return nil
                     }
                     guard let value = try coerce(raw, as: column.kind) else {
@@ -320,9 +452,56 @@ public extension Standard.Tools {
                     }
                     return value
                 }
-                let identifier = path.isEmpty ? "\(call)#\(index)" : "\(call)#\(path).\(index)"
-                return .init(values: values, sources: [.init(namespace: "tool_call", identifier: identifier)])
+                return .init(values: values, sources: [.init(namespace: "tool_call", identifier: "\(call)#\(row.path)")])
             }
+        }
+
+        /// Every row object at `path`; `*` expands arrays. Nil when the path
+        /// does not end in an array.
+        static func locate(_ path: String, in root: JSONValue) -> [Located]? {
+            var frontier = [Located(item: root, ancestors: [], path: "")]
+            for segment in path.split(separator: ".").map(String.init) {
+                var next: [Located] = []
+                for entry in frontier {
+                    func join(_ part: String) -> String { entry.path.isEmpty ? part : entry.path + "." + part }
+                    if segment == "*" {
+                        guard case .array(let items) = entry.item else { return nil }
+                        for (offset, item) in items.enumerated() {
+                            next.append(.init(item: item, ancestors: entry.ancestors + [item], path: join(String(offset))))
+                        }
+                    } else {
+                        guard let child = value(at: segment, in: entry.item) else { return nil }
+                        next.append(.init(item: child, ancestors: entry.ancestors, path: join(segment)))
+                    }
+                }
+                frontier = next
+            }
+            // Ending in `*`: the elements themselves are the rows.
+            if path.split(separator: ".").last == "*" {
+                return frontier.map { .init(item: $0.item, ancestors: Array($0.ancestors.dropLast()), path: $0.path) }
+            }
+            var rows: [Located] = []
+            for entry in frontier {
+                guard case .array(let items) = entry.item else { return nil }
+                for (offset, item) in items.enumerated() {
+                    let path = entry.path.isEmpty ? String(offset) : entry.path + "." + String(offset)
+                    rows.append(.init(item: item, ancestors: entry.ancestors, path: path))
+                }
+            }
+            return rows
+        }
+
+        /// A field of a row; each leading `../` reads from one `*` further up.
+        static func value(at field: String, in row: Located) -> JSONValue? {
+            var rest = Substring(field)
+            var up = 0
+            while rest.hasPrefix("../") {
+                up += 1
+                rest = rest.dropFirst(3)
+            }
+            guard up > 0 else { return value(at: field, in: row.item) }
+            guard up <= row.ancestors.count else { return nil }
+            return value(at: String(rest), in: row.ancestors[row.ancestors.count - up])
         }
 
         /// Dotted path lookup; numeric segments index arrays.
