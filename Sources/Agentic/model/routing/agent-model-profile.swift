@@ -65,40 +65,54 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
     public func supports(
         _ selection: AgentModelSelection
     ) -> Bool {
+        rejection(for: selection) == nil
+    }
+
+    /// Why this profile cannot serve `selection`, in words an operator can
+    /// act on; nil when it can.
+    public func rejection(
+        for selection: AgentModelSelection
+    ) -> String? {
         guard operations.contains(selection.operation) else {
-            return false
+            return "does not perform \(selection.operation.rawValue)"
         }
 
-        guard purposes.contains(
-            selection.purpose
-        ) else {
-            return false
+        guard purposes.contains(selection.purpose) else {
+            return "does not serve the \(selection.purpose.rawValue) role"
         }
 
         let requirements = selection.requirements
         let constraints = selection.constraints
 
-        guard capabilities.isSuperset(
-            of: requirements.capabilities
-        ) else {
-            return false
+        let missing = requirements.capabilities.subtracting(capabilities)
+        guard missing.isEmpty else {
+            return "lacks " + missing.map(\.rawValue).sorted().joined(separator: ", ")
+        }
+
+        if let minimumTier = requirements.minimumTier {
+            guard let tier else {
+                return "has no declared tier; the role needs at least \(minimumTier.rawValue)"
+            }
+            guard tier >= minimumTier else {
+                return "is \(tier.rawValue); the role needs at least \(minimumTier.rawValue)"
+            }
         }
 
         if let allowedProfileIdentifiers = constraints.allowedProfileIdentifiers,
            !allowedProfileIdentifiers.contains(identifier) {
-            return false
+            return "is outside the allowed profiles"
         }
 
         if let allowedGatewayIdentifiers = constraints.allowedGatewayIdentifiers,
            !allowedGatewayIdentifiers.contains(gatewayIdentifier) {
-            return false
+            return "is served by a gateway outside the allowed ones"
         }
 
         if let allowedModelIDs = constraints.allowedModelIDs {
             guard let modelID,
                   allowedModelIDs.contains(modelID)
             else {
-                return false
+                return "is outside the allowed models"
             }
         }
 
@@ -106,31 +120,25 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
             guard let modelID,
                   allowedProviderIDs.contains(modelID.provider)
             else {
-                return false
+                return "is from a provider outside the allowed ones"
             }
         }
 
         if !constraints.allowsExternal,
            privacy.isExternal {
-            return false
+            return "is an external service, which is not allowed here"
         }
 
         if let minimumPrivacy = constraints.minimumPrivacy,
            privacy.rank < minimumPrivacy.rank {
-            return false
-        }
-
-        if let minimumTier = requirements.minimumTier {
-            guard let tier, tier >= minimumTier else {
-                return false
-            }
+            return "is less private than required (\(minimumPrivacy.rawValue))"
         }
 
         if let minimumInputCapacity = requirements.minimumInputCapacity {
             guard let inputTokens = limits.inputTokens,
                   inputTokens >= minimumInputCapacity
             else {
-                return false
+                return "reads fewer than \(minimumInputCapacity) input tokens, or its limit is unknown"
             }
         }
 
@@ -138,10 +146,10 @@ public struct AgentModelProfile: Sendable, Codable, Hashable, Identifiable {
             guard let outputTokens = limits.outputTokens,
                   outputTokens >= minimumOutputCapacity
             else {
-                return false
+                return "writes fewer than \(minimumOutputCapacity) output tokens, or its limit is unknown"
             }
         }
 
-        return true
+        return nil
     }
 }

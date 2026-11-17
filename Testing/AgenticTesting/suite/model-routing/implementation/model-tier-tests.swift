@@ -40,6 +40,11 @@ extension ModelRoutingImplementationTesting {
         try Expect.true(standard.supports(selection(.standard)), "the same model suits an agent asking less")
         try Expect.true(!unjudged.supports(selection(.light)), "an unjudged model is not assumed to qualify")
         try Expect.equal(
+            standard.rejection(for: selection(.strong)),
+            "is standard; the role needs at least strong",
+            "a rejection says why, for the menu and diagnostics"
+        )
+        try Expect.equal(
             AgentModelRequirements(minimumTier: .standard).merging(.init(minimumTier: .strong)).minimumTier,
             .strong,
             "merged requirements keep the stricter tier"
