@@ -243,5 +243,9 @@ public extension Standard.Tools {
         public func call(_ input: Input, in _: ToolContext) async throws -> Output {
             try Self.evaluate(input)
         }
+
+        public func present(_ output: Output, input _: Input) -> ReportDocument? {
+            output.document
+        }
     }
 }

@@ -1,8 +1,8 @@
 import Foundation
 import Macros
 import Primitives
+import Reporting
 import Schema
-import Primitives
 
 /// Canonical mechanical result of one tool execution operation.
 ///
@@ -22,21 +22,25 @@ public extension ToolExecution {
         public var observations: [ToolResultObservation]
         public var failure: ToolExecution.Failure?
         public var recovery: Recovery.Record?
+        /// What the user sees for the output; never sent to the model.
+        public var presentation: ReportDocument?
 
         public init(
             result: FunctionCall.Response,
             observations: [ToolResultObservation] = [],
             failure: ToolExecution.Failure? = nil,
-            recovery: Recovery.Record? = nil
+            recovery: Recovery.Record? = nil,
+            presentation: ReportDocument? = nil
         ) {
             self.result = result
             self.observations = observations
             self.failure = failure
             self.recovery = recovery
+            self.presentation = presentation
         }
 
         private enum CodingKeys: String, CodingKey {
-            case result, observations, failure, recovery
+            case result, observations, failure, recovery, presentation
         }
 
         public init(from decoder: any Decoder) throws {
@@ -45,7 +49,8 @@ public extension ToolExecution {
                 result: try values.decode(FunctionCall.Response.self, forKey: .result),
                 observations: try values.decodeIfPresent([ToolResultObservation].self, forKey: .observations) ?? [],
                 failure: try values.decodeIfPresent(ToolExecution.Failure.self, forKey: .failure),
-                recovery: try values.decodeIfPresent(Recovery.Record.self, forKey: .recovery)
+                recovery: try values.decodeIfPresent(Recovery.Record.self, forKey: .recovery),
+                presentation: try values.decodeIfPresent(ReportDocument.self, forKey: .presentation)
             )
         }
     }

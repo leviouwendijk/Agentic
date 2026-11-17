@@ -1,5 +1,5 @@
 {
-  "originHash" : "87f98cc94cbf2081ec81aa9f8195e8cb396054aed6127c67218baff4dafa32ab",
+  "originHash" : "69fd6cf95bfe1d3440b037602b712b58aad3d8a3378f2e515d191f0e39ea4362",
   "pins" : [
     {
       "identity" : "arguments",
@@ -223,7 +223,7 @@
       "location" : "https://github.com/leviouwendijk/Reporting.git",
       "state" : {
         "branch" : "master",
-        "revision" : "b469150bdd4f332a5fcf9496298f424742ecd02f"
+        "revision" : "6e4e3b1c5fbebe758172231bc2f17bddbb129aef"
       }
     },
     {

@@ -1,5 +1,6 @@
 import Foundation
 import Primitives
+import Reporting
 import Schema
 import Workspace
 
@@ -42,7 +43,8 @@ public struct ToolBinding: CapabilityBinding {
     private enum ReconciliationExecution: Sendable {
         case applied(
             output: JSONValue,
-            projection: ToolExecution.Projection?
+            projection: ToolExecution.Projection?,
+            presentation: ReportDocument?
         )
         case applied_without_output
         case not_applied
@@ -101,7 +103,8 @@ public struct ToolBinding: CapabilityBinding {
             output: JSONValue,
             projection: ToolExecution.Projection?,
             isError: Bool,
-            text: String?
+            text: String?,
+            presentation: ReportDocument?
         )
 
     private let reconcileHandler:
@@ -242,6 +245,10 @@ public struct ToolBinding: CapabilityBinding {
                 text: tool.render(
                     output,
                     input: input
+                ),
+                presentation: isError ? nil : tool.present(
+                    output,
+                    input: input
                 )
             )
         }
@@ -307,7 +314,11 @@ public struct ToolBinding: CapabilityBinding {
 
                 return .applied(
                     output: encodedOutput,
-                    projection: projection
+                    projection: projection,
+                    presentation: tool.present(
+                        output,
+                        input: input
+                    )
                 )
 
             case .applied_without_output:
@@ -497,7 +508,8 @@ public struct ToolBinding: CapabilityBinding {
                 projection: execution.projection,
                 isError: execution.isError,
                 text: execution.text
-            )
+            ),
+            presentation: execution.presentation
         )
     }
 
@@ -548,7 +560,7 @@ public struct ToolBinding: CapabilityBinding {
         }
 
         switch reconciliation {
-        case .applied(let output, let projection):
+        case .applied(let output, let projection, let presentation):
             return .applied(
                 ToolExecution.Result(
                     result: FunctionCall.Response(
@@ -556,7 +568,8 @@ public struct ToolBinding: CapabilityBinding {
                         output: output,
                         projection: projection,
                         isError: false
-                    )
+                    ),
+                    presentation: presentation
                 )
             )
 

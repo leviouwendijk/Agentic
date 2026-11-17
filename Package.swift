@@ -199,6 +199,10 @@ let package = Package(
                     name: "Errors",
                     package: "Errors"
                 ),
+                .product(
+                    name: "Reporting",
+                    package: "Reporting"
+                ),
                 "AgenticLinkerSupport",
                 "AgenticMacrosPlugin",
                 .product(

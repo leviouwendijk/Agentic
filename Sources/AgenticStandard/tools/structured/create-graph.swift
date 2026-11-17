@@ -1,6 +1,7 @@
 import Agentic
 import Macros
 import Primitives
+import Reporting
 import Schema
 
 public extension Standard.Tools {
@@ -9,10 +10,16 @@ public extension Standard.Tools {
         @JSONSchema
         public struct Node: HashableSource {
             public let id: String
+            /// Display text; the id when absent.
+            public let label: String?
+            /// A category such as `service` or `step`.
+            public let kind: String?
             public let value: JSONValue
 
-            public init(id: String, value: JSONValue) {
+            public init(id: String, label: String? = nil, kind: String? = nil, value: JSONValue) {
                 self.id = id
+                self.label = label
+                self.kind = kind
                 self.value = value
             }
         }
@@ -22,12 +29,15 @@ public extension Standard.Tools {
             public let id: String
             public let source: String
             public let destination: String
+            /// Display text for the relation, such as `calls`.
+            public let label: String?
             public let value: JSONValue
 
-            public init(id: String, source: String, destination: String, value: JSONValue) {
+            public init(id: String, source: String, destination: String, label: String? = nil, value: JSONValue) {
                 self.id = id
                 self.source = source
                 self.destination = destination
+                self.label = label
                 self.value = value
             }
         }
@@ -45,11 +55,13 @@ public extension Standard.Tools {
 
         @JSONSchema
         public struct Input: HashableSource {
+            public let title: String?
             public let nodes: [Node]
             public let edges: [Edge]
             public let references: [Reference]
 
-            public init(nodes: [Node], edges: [Edge], references: [Reference] = []) {
+            public init(title: String? = nil, nodes: [Node], edges: [Edge], references: [Reference] = []) {
+                self.title = title
                 self.nodes = nodes
                 self.edges = edges
                 self.references = references
@@ -116,6 +128,38 @@ public extension Standard.Tools {
 
         public func call(_ input: Input, in _: ToolContext) async throws -> Output {
             try Self.evaluate(input)
+        }
+
+        public func present(_ output: Output, input: Input) -> ReportDocument? {
+            let nodes = input.nodes.map { node in
+                ReportBlock.Graph.Node(
+                    id: node.id,
+                    label: node.label ?? Self.legacyLabel(node.value) ?? node.id,
+                    kind: node.kind
+                )
+            }
+            let edges = input.edges.map {
+                ReportBlock.Graph.Edge(id: $0.id, source: $0.source, destination: $0.destination, label: $0.label)
+            }
+            let references = input.references.map { ReportBlock.Graph.Reference(id: $0.id, target: $0.target) }
+            return try? ReportDocument(
+                title: input.title ?? "Graph",
+                datasets: [],
+                blocks: [.graph(.init(nodes: nodes, edges: edges, references: references))]
+            )
+        }
+
+        /// Graphs authored before typed labels carried them in `value`.
+        private static func legacyLabel(_ value: JSONValue) -> String? {
+            switch value {
+            case .string(let text):
+                return text
+            case .object(let properties):
+                if case .string(let text)? = properties["label"] { return text }
+                return nil
+            default:
+                return nil
+            }
         }
     }
 }
