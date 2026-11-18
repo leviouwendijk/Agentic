@@ -85,6 +85,7 @@ public extension Context.Agents {
                     members: [
                         Context.Tools.Index.identifier,
                         Context.Tools.Read.identifier,
+                        Context.Tools.Search.identifier,
                         Context.Tools.File.identifier,
                         Context.Tools.Check.identifier,
                         Context.Tools.Save.identifier,

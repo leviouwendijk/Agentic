@@ -114,3 +114,82 @@ enum ContextFilesTests {
         try Expect.true(!made.contains { $0.contains("safe-file-backups") || $0.contains(".bak") }, "no Writers backups: \(made)")
     }
 }
+
+extension ContextFilesTests {
+    static let team = """
+        import Context;
+
+        let defaults: Defaults = .{ .tags = ["northbank", "team"] };
+
+        let sam: Entry = .{
+            .title = "Sam",
+            .summary = "Co-owner; runs the workshops.",
+            .tags = ["people"],
+            .body = "Sam runs the workshops and most follow-ups.",
+        };
+
+        let alex: Entry = .{
+            .title = "Alex",
+            .summary = "Co-owner; home visits.",
+            .body = \"\"\"
+                Alex does most intake visits.
+                Alex keeps the invoicing.
+                \"\"\",
+        };
+        """
+
+    static func groupsDefaultsAwareness() async throws {
+        let (context, store, root) = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        _ = try store.save(ContextFrame.example, to: "business.frame")
+        _ = try store.save(team, to: "northbank/team.frame")
+        let library = store.library()
+        try Expect.equal(library.problems, [], "both hold")
+
+        try Expect.equal(library.item("northbank.team.sam")?.entry.tags, ["northbank", "team", "people"], "file tags first, then its own")
+        try Expect.equal(library.item("northbank.team.alex")?.entry.tags, ["northbank", "team"], "file tags alone")
+
+        try Expect.equal(library.groups.map(\.prefix), ["business", "northbank", "northbank.team"], "folders and files")
+        try Expect.equal(library.groups.map(\.entries), [3, 2, 2], "entries below each")
+
+        let index = try await Context.Tools.Index().call(.init(tags: ["team"]), in: context)
+        try Expect.equal(index.entries.map(\.id), ["northbank.team.sam", "northbank.team.alex"], "file tags select, in file order")
+        try Expect.equal(index.groups.count, 3, "groups of the whole library, whatever the filter")
+
+        let note = library.instructions ?? ""
+        try Expect.true(note.contains("5 context entries") && note.contains("business (3), northbank (2)"), "every agent learns what exists: \(note)")
+        try Expect.true(note.contains("Alex & Sam"), "and receives the always bodies")
+
+        let twice = team.replacingOccurrences(of: "let sam: Entry", with: "let again: Defaults = .{ };\nlet sam: Entry")
+        let check = try await Context.Tools.Check().call(.init(file: "northbank/team.frame", text: twice), in: context)
+        try Expect.true(check.problems.contains { $0.contains("at most one") }, "one Defaults per file: \(check.problems)")
+    }
+
+    static func search() async throws {
+        let (context, store, root) = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        _ = try store.save(ContextFrame.example, to: "business.frame")
+        _ = try store.save(team, to: "northbank/team.frame")
+        let search = Context.Tools.Search()
+
+        let invoicing = try await search.call(.init(queries: ["invoicing"]), in: context)
+        try Expect.equal(invoicing.matches.first?.id, "northbank.team.alex", "a body word finds its entry")
+        try Expect.equal(invoicing.matches.first?.lines.map(\.number), [2], "with the line: \(invoicing.matches)")
+
+        let prices = try await search.call(.init(queries: ["prices"]), in: context)
+        try Expect.equal(prices.matches.first?.id, "business.services", "a title match ranks first")
+        try Expect.true(prices.matches.first?.fields.contains("title") == true, "says where it matched")
+
+        let typo = try await search.call(.init(queries: ["worksops"]), in: context)
+        try Expect.true(typo.matches.contains { $0.id == "northbank.team.sam" }, "fuzzy by default: \(typo.matches.map(\.id))")
+
+        let exact = try await search.call(.init(queries: ["worksops"], strategy: .contains), in: context)
+        try Expect.equal(exact.matches.map(\.id), [], "contains is literal")
+
+        let scoped = try await search.call(.init(queries: ["visits"], under: "northbank.team"), in: context)
+        try Expect.true(scoped.matches.allSatisfy { $0.id.hasPrefix("northbank.team.") }, "under narrows")
+
+        let field = try await search.call(.init(queries: ["Sam"], fields: ["title"]), in: context)
+        try Expect.equal(field.matches.map(\.id), ["northbank.team.sam"], "fields narrow")
+    }
+}

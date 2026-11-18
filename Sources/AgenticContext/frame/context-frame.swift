@@ -11,12 +11,27 @@ import Frame
 public enum ContextFrame {
     public static let module = Frame.Module("Context", types: [
         .decodable(Entry.self, named: "Entry"),
+        .decodable(Defaults.self, named: "Defaults"),
     ])
 
     public static let environment = Frame.Environment([module])
 
     /// The type entries are bound as.
     public static let entryType = "Entry"
+
+    /// The type of a file's defaults binding.
+    public static let defaultsType = "Defaults"
+
+    /// What every entry in the file shares: `let defaults: Defaults = .{
+    /// .tags = ["hondenmeesters"] };`. At most one per file.
+    public struct Defaults: Sendable, Hashable, Decodable {
+        /// Added to every entry's own tags.
+        public let tags: [String]?
+
+        public init(tags: [String]? = nil) {
+            self.tags = tags
+        }
+    }
 
     /// One thing agents may know about the owner's world.
     public struct Entry: Sendable, Hashable, Decodable {
@@ -59,6 +74,15 @@ public enum ContextFrame {
     }
 }
 
+extension ContextFrame.Defaults: FrameDescribable {
+    public static var frameSchema: Frame.Schema {
+        .object([
+            .init("tags", .array(.string),
+                  summary: "Added to the tags of every entry in this file."),
+        ], summary: "What every entry in this file shares. At most one per file.")
+    }
+}
+
 extension ContextFrame.Entry: FrameDescribable {
     public static var frameSchema: Frame.Schema {
         .object([
@@ -78,5 +102,24 @@ extension ContextFrame.Entry: FrameDescribable {
             .init("related", .array(.string),
                   summary: "Other entries by identifier, such as \"people.sam.role\"; each must exist."),
         ], summary: "One thing agents may know about the owner's world.")
+    }
+}
+
+extension ContextFrame.Entry {
+    /// This entry with `tags` added before its own, without repeats.
+    func tagged(_ tags: [String]) -> Self {
+        var merged: [String] = []
+        for tag in tags + (self.tags ?? []) where !merged.contains(tag) {
+            merged.append(tag)
+        }
+        return .init(
+            title: title,
+            summary: summary,
+            body: body,
+            tags: merged,
+            load: load,
+            updated: updated,
+            related: related
+        )
     }
 }

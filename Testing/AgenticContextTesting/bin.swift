@@ -46,5 +46,13 @@ enum ContextFilesTestSuite {
         Test("check-and-save", tags: ["context", "tools", "archive"]) {
             try await ContextFilesTests.checkAndSave()
         }
+
+        Test("groups-defaults-awareness", tags: ["context", "library"]) {
+            try await ContextFilesTests.groupsDefaultsAwareness()
+        }
+
+        Test("search", tags: ["context", "tools", "search"]) {
+            try await ContextFilesTests.search()
+        }
     }
 }

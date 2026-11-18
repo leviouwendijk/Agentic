@@ -36,8 +36,19 @@ public extension Context.Tools {
         }
 
         @JSONSchema
+        public struct Group: HashableResult {
+            /// A folder or file, as an identifier prefix: `hondenmeesters`,
+            /// `hondenmeesters.team`. What `under` takes.
+            public let prefix: String
+            /// Entries below it.
+            public let entries: Int
+        }
+
+        @JSONSchema
         public struct Output: HashableResult {
             public let entries: [Item]
+            /// Every group of the whole library, whatever the filters.
+            public let groups: [Group]
             /// Files that do not hold; their entries are missing.
             public let problems: [String]
             /// Where the context files live.
@@ -52,12 +63,7 @@ public extension Context.Tools {
 
         public func call(_ input: Input, in context: ToolContext) async throws -> Output {
             let library = Context.store(in: context).library()
-            let tags = Set(input.tags ?? [])
-            let under = input.under.map { $0.hasSuffix(".") ? String($0.dropLast()) : $0 }
-            let selected = library.items.filter { item in
-                (tags.isEmpty || !tags.isDisjoint(with: item.entry.tags ?? []))
-                    && (under.map { item.id == $0 || item.id.hasPrefix("\($0).") } ?? true)
-            }
+            let selected = library.selecting(tags: input.tags, under: input.under)
             return .init(
                 entries: selected.map { item in
                     .init(
@@ -70,6 +76,7 @@ public extension Context.Tools {
                         tokens: TokenEstimator.estimate(item.entry.body).estimatedTokens
                     )
                 },
+                groups: library.groups.map { .init(prefix: $0.prefix, entries: $0.entries) },
                 problems: library.problems,
                 directory: library.directory.path
             )

@@ -52,19 +52,24 @@ public extension ContextFrame {
 }
 
 public extension Context.Library {
-    /// The `.always` entries as instructions; nil when there are none.
+    /// What every agent is told: which context exists, by top-level group,
+    /// and the bodies of the `.always` entries. Nil when there are no
+    /// entries.
     var instructions: String? {
-        let always = self.always
-        guard !always.isEmpty else { return nil }
-        let entries = always.map { item in
-            "## \(item.entry.title) (\(item.id))\n\n\(item.entry.body.trimmingCharacters(in: .whitespacesAndNewlines))"
-        }
-        return """
-            # About the owner's world
+        guard !items.isEmpty else { return nil }
+        let top = groups.filter { !$0.prefix.contains(".") }
+            .map { "\($0.prefix) (\($0.entries))" }
+        var text = """
+            # The owner's context
 
-            Context the owner keeps for every agent. More is listed by context_index and read with context_read.
-
-            \(entries.joined(separator: "\n\n"))
+            \(items.count) context entries describe the owner's world, by group: \(top.joined(separator: ", ")). \
+            List them with \(Context.Tools.Index.identifier.rawValue) (by tags or group), \
+            search them with \(Context.Tools.Search.identifier.rawValue), \
+            and read them with \(Context.Tools.Read.identifier.rawValue) when a task touches them.
             """
+        for item in always {
+            text += "\n\n## \(item.entry.title) (\(item.id))\n\n\(item.entry.body.trimmingCharacters(in: .whitespacesAndNewlines))"
+        }
+        return text
     }
 }

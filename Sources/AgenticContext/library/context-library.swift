@@ -31,6 +31,19 @@ public extension Context {
             items.filter { $0.entry.load == .always }
         }
 
+        /// Every identifier prefix above the entries (folders and files),
+        /// with how many entries lie below it, in order.
+        public var groups: [(prefix: String, entries: Int)] {
+            var counts: [String: Int] = [:]
+            for item in items {
+                let parts = item.id.split(separator: ".").dropLast()
+                for end in parts.indices {
+                    counts[parts[...end].joined(separator: "."), default: 0] += 1
+                }
+            }
+            return counts.keys.sorted().map { ($0, counts[$0] ?? 0) }
+        }
+
         public init(directory: URL, items: [Item], problems: [String]) {
             self.directory = directory
             self.items = items
@@ -142,9 +155,24 @@ public extension Context {
 
         var items: [Library.Item] = []
         var found: [String] = []
+        var shared: [String] = []
+        let defaults = document.bindings(ofType: ContextFrame.defaultsType)
+        if defaults.count > 1 {
+            found.append("\(file): at most one `Defaults` binding, not \(defaults.count).")
+        }
+        if let binding = defaults.first {
+            do {
+                shared = try document.decode(ContextFrame.Defaults.self, binding: binding.name).tags ?? []
+            } catch {
+                found.append("\(file): '\(binding.name)': \(error)")
+            }
+        }
         for binding in document.bindings(ofType: ContextFrame.entryType) {
             do {
-                let entry = try document.decode(ContextFrame.Entry.self, binding: binding.name)
+                var entry = try document.decode(ContextFrame.Entry.self, binding: binding.name)
+                if !shared.isEmpty {
+                    entry = entry.tagged(shared)
+                }
                 if let updated = entry.updated, !isDate(updated) {
                     found.append("\(file): '\(binding.name)': updated must be YYYY-MM-DD, not '\(updated)'.")
                     continue
@@ -166,5 +194,18 @@ public extension Context {
         formatter.timeZone = TimeZone(identifier: "UTC")
         formatter.dateFormat = "yyyy-MM-dd"
         return text.count == 10 && formatter.date(from: text) != nil
+    }
+}
+
+public extension Context.Library {
+    /// Entries carrying any of `tags` (all when nil or empty) whose
+    /// identifier lies below `under` (all when nil).
+    func selecting(tags: [String]?, under: String?) -> [Item] {
+        let tags = Set(tags ?? [])
+        let under = under.map { $0.hasSuffix(".") ? String($0.dropLast()) : $0 }
+        return items.filter { item in
+            (tags.isEmpty || !tags.isDisjoint(with: item.entry.tags ?? []))
+                && (under.map { item.id == $0 || item.id.hasPrefix("\($0).") } ?? true)
+        }
     }
 }

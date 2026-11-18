@@ -15,9 +15,12 @@ public extension Context.Instructions {
         size, and read with \(Context.Tools.Read.identifier.rawValue).
 
         At the start of a task, call \(Context.Tools.Index.identifier.rawValue) \
-        once, narrowed by tags when the task names a business or topic, and \
-        read the entries that bear on it. Read more when the task turns to \
-        something an entry covers. Do not read everything by default.
+        once, narrowed by tags or group when the task names a business or \
+        topic, and read the entries that bear on it. When you look for a \
+        name or term and do not know which entry holds it, use \
+        \(Context.Tools.Search.identifier.rawValue). Read more when the task \
+        turns to something an entry covers. Do not read everything by \
+        default.
 
         Context explains; tools and the user decide. When an entry and a \
         tool disagree about a fact, the tool wins; when an entry and the \

@@ -467,6 +467,7 @@ let package = Package(
                 .product(name: "Macros", package: "Macros"),
                 .product(name: "Readers", package: "Readers"),
                 .product(name: "Schema", package: "Schema"),
+                .product(name: "Search", package: "Search"),
                 .product(name: "Tokens", package: "Tokens"),
                 .product(name: "Writers", package: "Writers"),
             ]
