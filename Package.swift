@@ -30,9 +30,9 @@ let package = Package(
             ]
         ),
         .library(
-            name: "AgenticContext",
+            name: "AgenticContextWindow",
             targets: [
-                "AgenticContext",
+                "AgenticContextWindow",
             ]
         ),
 
@@ -88,7 +88,7 @@ let package = Package(
         .executable(
             name: "t_agentic_ctx",
             targets: [
-                "AgenticContextTesting",
+                "AgenticContextWindowTesting",
             ]
         ),
         .executable(
@@ -356,7 +356,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "AgenticContext",
+            name: "AgenticContextWindow",
             dependencies: [
                 "Agentic",
                 "AgenticSessions",
@@ -365,13 +365,13 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "AgenticContextTesting",
+            name: "AgenticContextWindowTesting",
             dependencies: [
                 "Agentic",
-                "AgenticContext",
+                "AgenticContextWindow",
                 .product(name: "Testing", package: "Testing"),
             ],
-            path: "Testing/AgenticContextTesting"
+            path: "Testing/AgenticContextWindowTesting"
         ),
         .executableTarget(
             name: "AgenticAssertionsTesting",

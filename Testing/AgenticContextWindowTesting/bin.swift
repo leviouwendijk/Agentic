@@ -1,5 +1,5 @@
 import Agentic
-import AgenticContext
+import AgenticContextWindow
 import Testing
 
 private enum ContextTestError: Error {
@@ -31,7 +31,7 @@ enum ContextDeterministicFlowTesting {}
 enum ContextDeterministicTestSuite {
     static let testSuite = TestSuite(
         "agentic-context",
-        title: "AgenticContext deterministic allocator tests"
+        title: "AgenticContextWindow deterministic allocator tests"
     ) {
         Test(
             "allocator-working-sets",
