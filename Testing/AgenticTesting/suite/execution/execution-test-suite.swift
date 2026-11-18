@@ -70,6 +70,18 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "check-environment-symbol",
+            tags: [
+                "agentic-execution",
+                "tools",
+                "environment",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runCheckEnvironmentSymbol()
+        }
+
+        diagnosticTest(
             "tool-inventory",
             tags: [
                 "agentic-execution",

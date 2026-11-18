@@ -336,6 +336,7 @@ let package = Package(
             dependencies: [
                 "Agentic",
                 .product(name: "Math", package: "Math"),
+                .product(name: "Milieu", package: "Milieu"),
                 .product(name: "Reporting", package: "Reporting"),
                 .product(name: "ParsersStructuredContent", package: "Parsers"),
                 .product(name: "DSL", package: "DSL"),
@@ -555,6 +556,18 @@ let package = Package(
                 .product(
                     name: "Workspace",
                     package: "Workspace"
+                ),
+                .product(
+                    name: "Milieu",
+                    package: "Milieu"
+                ),
+                .product(
+                    name: "IO",
+                    package: "IO"
+                ),
+                .product(
+                    name: "Writers",
+                    package: "Writers"
                 ),
                 .product(
                     name: "Testing",
