@@ -20,6 +20,7 @@ tests {
             "t_agentic_context_window"
             "t_agentic_context"
         }
+        frame { "t_agentic_frame" }
         math { "t_agentic_math" }
     }
 }

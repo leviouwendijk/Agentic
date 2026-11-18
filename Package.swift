@@ -43,6 +43,13 @@ let package = Package(
                 "AgenticConfiguration",
             ]
         ),
+        // the Frame configuration language as tools: modules, schemas, checks
+        .library(
+            name: "AgenticFrame",
+            targets: [
+                "AgenticFrame",
+            ]
+        ),
         // what the owner tells agents about their world: context/*.frame
         .library(
             name: "AgenticContext",
@@ -110,6 +117,12 @@ let package = Package(
             name: "t_agentic_context",
             targets: [
                 "AgenticContextTesting",
+            ]
+        ),
+        .executable(
+            name: "t_agentic_frame",
+            targets: [
+                "AgenticFrameTests",
             ]
         ),
         .executable(
@@ -423,10 +436,32 @@ let package = Package(
             ]
         ),
         .target(
+            name: "AgenticFrame",
+            dependencies: [
+                "Agentic",
+                .product(name: "Frame", package: "Frame"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Schema", package: "Schema"),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticFrameTests",
+            dependencies: [
+                "Agentic",
+                "AgenticFrame",
+                .product(name: "Frame", package: "Frame"),
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticFrameTests"
+        ),
+        .target(
             name: "AgenticContext",
             dependencies: [
                 "Agentic",
                 "AgenticConfiguration",
+                "AgenticFrame",
+                "AgenticStandard",
                 .product(name: "Frame", package: "Frame"),
                 .product(name: "IO", package: "IO"),
                 .product(name: "Macros", package: "Macros"),
