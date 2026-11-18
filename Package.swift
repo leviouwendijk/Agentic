@@ -62,11 +62,19 @@ let package = Package(
             targets: ["AgenticTasks"]
         ),
 
-        // known model library 
+        // known model library
         .library(
             name: "AgenticModels",
             targets: [
                 "AgenticModels",
+            ]
+        ),
+
+        // research bibliography
+        .library(
+            name: "AgenticReferences",
+            targets: [
+                "AgenticReferences",
             ]
         ),
 
@@ -174,6 +182,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/DSL.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/References.git",
+            branch: "master"
+        ),
     ],
     targets: [
         .target(
@@ -223,6 +235,13 @@ let package = Package(
             name: "AgenticModels",
             dependencies: [
                 "Agentic",
+            ]
+        ),
+        .target(
+            name: "AgenticReferences",
+            dependencies: [
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "References", package: "References"),
             ]
         ),
         .target(

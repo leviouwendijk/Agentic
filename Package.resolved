@@ -1,5 +1,5 @@
 {
-  "originHash" : "7df64d3461ff761889f8d8ece99b197108c009051d44481aec26454893107e6d",
+  "originHash" : "d7ed2b01781eafe8cec96e1eec2a5960fa9a895441ec4c631434a6a7306ee08a",
   "pins" : [
     {
       "identity" : "arguments",
@@ -224,6 +224,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "9fad46ff279471563215cc1202cc4854d361a199"
+      }
+    },
+    {
+      "identity" : "references",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leviouwendijk/References.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "7bdf6a9fdca3ccc0acd61ae5e51802cc25ea030f"
       }
     },
     {
