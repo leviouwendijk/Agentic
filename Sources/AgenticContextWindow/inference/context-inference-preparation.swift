@@ -40,7 +40,7 @@ extension ContextInferenceError: LocalizedError {
     }
 }
 
-public extension Context {
+public extension ContextWindow {
     /// Preparation changes one inference request, never the durable session state.
     enum InferenceDelivery: String, Sendable, Codable, Hashable {
         /// Keep the current dialogue and supplement it with selected evidence.

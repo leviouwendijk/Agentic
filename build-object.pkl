@@ -16,7 +16,10 @@ tests {
     primary = "t_agentic"
 
     groups {
-        context { "t_agentic_ctx" }
+        context {
+            "t_agentic_ctx"
+            "t_agentic_context"
+        }
         math { "t_agentic_math" }
     }
 }

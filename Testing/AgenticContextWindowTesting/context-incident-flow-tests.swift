@@ -47,7 +47,7 @@ struct ContextIncidentFixture {
         requests = [initial, pending, seen, pendingAgain, pendingAgain]
     }
 
-    func preparations() throws -> [Context.InferencePreparation] {
+    func preparations() throws -> [ContextWindow.InferencePreparation] {
         try requests.map {
             try Self.prepare($0, delivery: .dynamic, historyBudget: historyBudget)
         }
@@ -55,10 +55,10 @@ struct ContextIncidentFixture {
 
     static func prepare(
         _ request: AgentRequest,
-        delivery: Context.InferenceDelivery,
+        delivery: ContextWindow.InferenceDelivery,
         historyBudget: Int = 100_000
-    ) throws -> Context.InferencePreparation {
-        try Context.InferencePreparer.prepare(
+    ) throws -> ContextWindow.InferencePreparation {
+        try ContextWindow.InferencePreparer.prepare(
             request: request,
             frame: .init(
                 workingSetID: "incident", items: [], skippedAllocationIDs: [],
@@ -143,12 +143,12 @@ extension ContextDeterministicFlowTesting {
             "Repeated preparation produces identical decision evidence")
         let encoded = try JSONEncoder().encode(preparations[0].history)
         try Expect.equal(
-            try JSONDecoder().decode(Context.HistorySelection.self, from: encoded),
+            try JSONDecoder().decode(ContextWindow.HistorySelection.self, from: encoded),
             preparations[0].history, "Decision evidence survives serialization"
         )
         let legacy = Data(#"{"retained":[],"omitted":[],"elided":[]}"#.utf8)
         try Expect.equal(
-            try JSONDecoder().decode(Context.HistorySelection.self, from: legacy).changes,
+            try JSONDecoder().decode(ContextWindow.HistorySelection.self, from: legacy).changes,
             nil, "Old records do not invent historical decisions"
         )
         try Expect.equal(preparations[3].request, preparations[4].request,

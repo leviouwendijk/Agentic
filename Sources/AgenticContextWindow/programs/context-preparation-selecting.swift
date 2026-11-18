@@ -1,6 +1,6 @@
 import Agentic
 
-public extension Context {
+public extension ContextWindow {
     /// Preparation candidates must already have source-validated revisions.
     /// This is an opt-in invocation seam, not an authorization bypass.
     protocol PreparationSelecting: Sendable {

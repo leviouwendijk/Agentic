@@ -19,7 +19,7 @@ public enum ContextAllocatorError: Error, Equatable {
     case unknownPreset(String)
 }
 
-public extension Context {
+public extension ContextWindow {
     /// Deterministic allocation and preparation. No model calls, recursive
     /// inference or arbitrary source access occur inside this actor.
     actor Allocator {

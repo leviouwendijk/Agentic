@@ -3,7 +3,7 @@ import AgenticSessions
 import Foundation
 import Tokens
 
-public extension Context {
+public extension ContextWindow {
     /// An explicit, durable reduction of what later requests carry: an
     /// ordered list of pointers to tool results that stay fully preserved
     /// in the session and readable with the session tools. It replaces
@@ -152,7 +152,7 @@ public extension Context {
     }
 }
 
-public extension Context {
+public extension ContextWindow {
     /// One session's compactions, in the order they were made. A host
     /// keeps one per conversation and hands it to every run, so each
     /// request applies the same pointers.

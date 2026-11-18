@@ -2,8 +2,8 @@ import Agentic
 import AgenticContextWindow
 import Testing
 
-private struct ContextHistoryResolver: Context.RecordResolving {
-    func resolve(_ pointer: Context.Pointer) async throws -> Context.Resolved {
+private struct ContextHistoryResolver: ContextWindow.RecordResolving {
+    func resolve(_ pointer: ContextWindow.Pointer) async throws -> ContextWindow.Resolved {
         .init(pointer: .init(source: pointer.source, record: pointer.record,
             selection: pointer.selection, revision: .recorded("fixture-v1")),
             messages: [.init(id: "retained.fact", role: .assistant,
@@ -13,10 +13,10 @@ private struct ContextHistoryResolver: Context.RecordResolving {
 
 extension ContextDeterministicFlowTesting {
     static func runHistoryPolicies() async throws -> [TestDiagnostic] {
-        let policy = Context.Policy(preferredInputTokens: 2_000,
+        let policy = ContextWindow.Policy(preferredInputTokens: 2_000,
             maximumInputTokens: 8_000, reservedOutputTokens: 500,
             history: .init(maximumTurns: 2, maximumTokens: 3_500, mode: .fitted))
-        let allocator = try Context.Allocator(policy: policy)
+        let allocator = try ContextWindow.Allocator(policy: policy)
         try await allocator.createWorkingSet(id: "history")
         let request = AgentRequest(messages: [
             .init(id: "sys", role: .system, content: .init(text: "Follow the task")),
@@ -30,9 +30,9 @@ extension ContextDeterministicFlowTesting {
             ["sys", "first", "second", "third"], "Older turns stay while they fit")
         try Expect.equal(noEvidence.history.omitted.map(\.messageID), [],
             "Nothing is dropped within budget")
-        let empty = Context.Frame(workingSetID: "history", items: [],
+        let empty = ContextWindow.Frame(workingSetID: "history", items: [],
             skippedAllocationIDs: [], inputBudget: 8_000, estimatedInputTokens: 0)
-        let accumulating = try Context.InferencePreparer.prepare(request: request,
+        let accumulating = try ContextWindow.InferencePreparer.prepare(request: request,
             frame: empty, delivery: .supplement, maximumInputTokens: 8_000)
         try Expect.equal(accumulating.request.messages.map(\.id),
             ["sys", "first", "second", "third"], "Accumulating retains history")
@@ -45,7 +45,7 @@ extension ContextDeterministicFlowTesting {
             "Pinned finding is rehydrated")
         try Expect.equal(request.messages.count, 4, "Canonical request is untouched")
         let before = try await allocator.snapshot("history")
-        let replay = try Context.Allocator(policy: policy)
+        let replay = try ContextWindow.Allocator(policy: policy)
         try await replay.restore(before, transitions: await allocator.recordedOperations(for: "history"))
         try Expect.equal(try await replay.snapshot("history"), before,
             "Transition replay matches original")
@@ -74,11 +74,11 @@ extension ContextDeterministicFlowTesting {
             + [.init(id: "u2", role: .user, content: .init(text: "Now apply it."))]
             + exchange("fresh", output: "fresh\n" + bulky)
         let request = AgentRequest(messages: messages)
-        let empty = Context.Frame(workingSetID: "elision", items: [],
+        let empty = ContextWindow.Frame(workingSetID: "elision", items: [],
             skippedAllocationIDs: [], inputBudget: 0, estimatedInputTokens: 0)
 
         // Two full-fidelity turns; the oldest turn's bulky read is elided.
-        let roomy = try Context.InferencePreparer.prepare(request: request, frame: empty,
+        let roomy = try ContextWindow.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
             historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, mode: .fitted))
         try Expect.equal(roomy.request.messages.map(\.id), messages.map(\.id),
@@ -98,12 +98,12 @@ extension ContextDeterministicFlowTesting {
 
         // Batched: one aged turn waits for a second before eliding, so the
         // cached prefix is rewritten once per two turns.
-        let batched = try Context.InferencePreparer.prepare(request: request, frame: empty,
+        let batched = try ContextWindow.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
             historyPolicy: .init(maximumTurns: 2, maximumTokens: 50_000, elisionBatch: 2, mode: .fitted))
         try Expect.equal(batched.history.elided.map(\.messageID), [],
             "An incomplete batch leaves aged turns intact")
-        let batchedFull = try Context.InferencePreparer.prepare(request: request, frame: empty,
+        let batchedFull = try ContextWindow.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
             historyPolicy: .init(maximumTurns: 1, maximumTokens: 50_000, elisionBatch: 2, mode: .fitted))
         try Expect.equal(batchedFull.history.elided.map(\.messageID), ["t.old", "t.recent"],
@@ -111,7 +111,7 @@ extension ContextDeterministicFlowTesting {
 
         // Tight budget: room for one bulky read, not two. Seen results go
         // first; the unseen fresh read stays.
-        let tight = try Context.InferencePreparer.prepare(request: request, frame: empty,
+        let tight = try ContextWindow.InferencePreparer.prepare(request: request, frame: empty,
             delivery: .dynamic, maximumInputTokens: 100_000,
             historyPolicy: .init(
                 maximumTurns: 2,
@@ -151,7 +151,7 @@ extension ContextDeterministicFlowTesting {
             + exchange("other", output: listing + "\nnew.html")
             + exchange("small", output: "ok")
             + exchange("small2", output: "ok")
-        let prepared = try Context.InferencePreparer.prepare(
+        let prepared = try ContextWindow.InferencePreparer.prepare(
             request: AgentRequest(messages: messages),
             frame: .init(workingSetID: "pointers", items: [], skippedAllocationIDs: [],
                          inputBudget: 0, estimatedInputTokens: 0),

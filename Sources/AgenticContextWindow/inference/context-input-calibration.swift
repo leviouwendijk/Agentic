@@ -1,6 +1,6 @@
 import Agentic
 
-public extension Context {
+public extension ContextWindow {
     /// The provider's count for a request we estimated: anchors the next
     /// estimate to it. The lexical estimate drifts with content (source in
     /// tool results counts high), while the provider's count is exact, so

@@ -1,4 +1,4 @@
-public extension Context {
+public extension ContextWindow {
     struct Allocation: Sendable, Codable, Hashable {
         public enum Representation: String, Sendable, Codable, Hashable {
             case original

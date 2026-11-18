@@ -6,12 +6,12 @@ public enum ContextRestorationError: Error, Sendable, Equatable {
     case mismatchedWorkingSet
 }
 
-public extension Context.Allocator {
+public extension ContextWindow.Allocator {
     /// Restore from the recorded operations; refuse altered or partial state.
     /// Dynamic sessions in D1 create root working sets, not inherited sets.
     func restore(
-        _ saved: Context.WorkingSet,
-        transitions: [Context.Transition]
+        _ saved: ContextWindow.WorkingSet,
+        transitions: [ContextWindow.Transition]
     ) throws {
         if let parentID = saved.parentID {
             throw ContextRestorationError.inheritedWorkingSetRequiresParent(parentID)

@@ -7,9 +7,9 @@ extension ContextDeterministicFlowTesting {
     private static func appendOnly(
         _ request: AgentRequest,
         maximumInputTokens: Int = 100_000,
-        compactions: [Context.Compaction] = []
-    ) throws -> Context.InferencePreparation {
-        try Context.InferencePreparer.prepare(
+        compactions: [ContextWindow.Compaction] = []
+    ) throws -> ContextWindow.InferencePreparation {
+        try ContextWindow.InferencePreparer.prepare(
             request: request,
             frame: .init(
                 workingSetID: "append-only", items: [], skippedAllocationIDs: [],
@@ -76,14 +76,14 @@ extension ContextDeterministicFlowTesting {
     static func runCompaction() throws {
         func bulky(_ id: Int) -> String { String(repeating: "preserved source line \(id)\n", count: 300) }
         var request = AgentRequest(messages: turn("0", result: bulky(0)) + turn("1", result: bulky(1)) + turn("2", result: bulky(2)))
-        guard let compaction = Context.Compactor.plan(messages: request.messages) else {
+        guard let compaction = ContextWindow.Compactor.plan(messages: request.messages) else {
             try Expect.true(false, "An older bulky result can be compacted")
             return
         }
         try Expect.equal(compaction.pointers.map(\.call.id), ["call.0"], "Only turns before the previous one")
         try Expect.true(compaction.estimatedTokensSaved > 256, "It names what it saves")
         try Expect.true(
-            Context.Compactor.plan(messages: request.messages, excluding: [compaction]) == nil,
+            ContextWindow.Compactor.plan(messages: request.messages, excluding: [compaction]) == nil,
             "A compacted result is not compacted twice"
         )
 

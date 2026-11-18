@@ -20,13 +20,13 @@ public struct ContextPreparationProgram {
     @InferenceSite
     public static var select: Site<ContextEvidenceSelection>
 
-    public let index: Context.FindingIndex
-    public let resolver: any Context.RecordResolving
+    public let index: ContextWindow.FindingIndex
+    public let resolver: any ContextWindow.RecordResolving
     public let maximumFindings: Int
 
     public init(
-        index: Context.FindingIndex,
-        resolver: any Context.RecordResolving,
+        index: ContextWindow.FindingIndex,
+        resolver: any ContextWindow.RecordResolving,
         maximumFindings: Int = 4
     ) {
         self.index = index
@@ -66,12 +66,12 @@ public struct ContextPreparationProgram {
     public func allocations(
         ids: [String],
         query: String
-    ) async throws -> [Context.Allocation] {
+    ) async throws -> [ContextWindow.Allocation] {
         let candidates = try await index.eligible(for: query,
             maximum: maximumFindings * 4, using: resolver)
         let byID = Dictionary(uniqueKeysWithValues: candidates.map { ($0.record.id, $0) })
         return ids.prefix(maximumFindings).compactMap { id in
-            byID[id].map { Context.FindingIndex.allocation(for: $0) }
+            byID[id].map { ContextWindow.FindingIndex.allocation(for: $0) }
         }
     }
 }

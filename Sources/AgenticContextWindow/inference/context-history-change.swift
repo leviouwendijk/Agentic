@@ -1,6 +1,6 @@
 import Agentic
 
-public extension Context.HistorySelection {
+public extension ContextWindow.HistorySelection {
     /// Evidence of one transformation, in preparation order. Message and call
     /// identities resolve against canonical history; no source bodies are copied.
     struct Change: Sendable, Codable, Hashable {

@@ -1,6 +1,6 @@
 import Agentic
 
-public extension Context.Allocator {
+public extension ContextWindow.Allocator {
     /// Successfully resolved executable Agent, not an authority grant.
     /// Preferences are soft hints layered over the Agent's authored selection.
     struct Agent: Sendable {

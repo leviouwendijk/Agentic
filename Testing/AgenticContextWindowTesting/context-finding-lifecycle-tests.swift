@@ -2,12 +2,12 @@ import Agentic
 import AgenticContextWindow
 import Testing
 
-private actor FindingFixture: Context.RecordResolving {
+private actor FindingFixture: ContextWindow.RecordResolving {
     private var originalRevision = "v1"
 
     func reviseSource(to value: String) { originalRevision = value }
 
-    func resolve(_ pointer: Context.Pointer) async throws -> Context.Resolved {
+    func resolve(_ pointer: ContextWindow.Pointer) async throws -> ContextWindow.Resolved {
         let revision = pointer.record == "failure" ? originalRevision : "finding-v1"
         return .init(
             pointer: .init(source: pointer.source, record: pointer.record,
@@ -20,16 +20,16 @@ private actor FindingFixture: Context.RecordResolving {
 
 extension ContextDeterministicFlowTesting {
     static func runFindingLifecycle() async throws -> [TestDiagnostic] {
-        let evidence = Context.Pointer(source: "fixture", record: "failure",
+        let evidence = ContextWindow.Pointer(source: "fixture", record: "failure",
                                        revision: .recorded("v1"))
-        let finding = Context.Record(id: "corrected-tool-call", kind: "finding",
+        let finding = ContextWindow.Record(id: "corrected-tool-call", kind: "finding",
             pointer: .init(source: "fixture", record: "correction",
                            revision: .recorded("finding-v1")),
             derivedFrom: [evidence])
-        let irrelevant = Context.Record(id: "irrelevant-fact", kind: "finding",
+        let irrelevant = ContextWindow.Record(id: "irrelevant-fact", kind: "finding",
             pointer: .init(source: "fixture", record: "other",
                            revision: .recorded("finding-v1")), derivedFrom: [evidence])
-        let index = try Context.FindingIndex([
+        let index = try ContextWindow.FindingIndex([
             .init(record: finding, terms: ["tool", "correction", "safe mode"]),
             .init(record: irrelevant, terms: ["weather", "temperature"])
         ])
@@ -38,10 +38,10 @@ extension ContextDeterministicFlowTesting {
                                                 using: resolver)
         try Expect.equal(selected.map(\.record.id), ["corrected-tool-call"],
                          "Unrelated record is excluded")
-        let allocator = try Context.Allocator(policy: .init())
+        let allocator = try ContextWindow.Allocator(policy: .init())
         try await allocator.createWorkingSet(id: "finding-lifecycle")
         try await allocator.apply(selected.map {
-            .allocate(Context.FindingIndex.allocation(for: $0, required: true))
+            .allocate(ContextWindow.FindingIndex.allocation(for: $0, required: true))
         }, to: "finding-lifecycle")
         let frame = try await allocator.prepareFrame(for: "finding-lifecycle",
             using: resolver, modelContextLimit: 50_000)
@@ -54,10 +54,10 @@ extension ContextDeterministicFlowTesting {
         let stale = try await index.eligible(for: "tool correction", maximum: 2,
                                              using: resolver)
         try Expect.equal(stale.isEmpty, true, "Stale provenance excludes finding")
-        let optionalAllocator = try Context.Allocator(policy: .init())
+        let optionalAllocator = try ContextWindow.Allocator(policy: .init())
         try await optionalAllocator.createWorkingSet(id: "optional-stale")
         try await optionalAllocator.apply([
-            .allocate(Context.FindingIndex.allocation(for: selected[0]))
+            .allocate(ContextWindow.FindingIndex.allocation(for: selected[0]))
         ], to: "optional-stale")
         let withoutStale = try await optionalAllocator.prepareFrame(
             for: "optional-stale", using: resolver, modelContextLimit: 50_000)

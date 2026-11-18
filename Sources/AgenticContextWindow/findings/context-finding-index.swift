@@ -6,7 +6,7 @@ public enum ContextFindingError: Error, Sendable, Equatable {
     case invalidResolution(String)
 }
 
-public extension Context {
+public extension ContextWindow {
     /// An index of addressable facts, NOT storage for transcript or artifact data.
     /// Retrieval authority and materialization remain with RecordResolving.
     struct FindingIndex: Sendable, Codable, Hashable {

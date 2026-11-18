@@ -2,8 +2,8 @@ import Agentic
 import AgenticContextWindow
 import Testing
 
-private struct PreparationFixture: Context.RecordResolving {
-    func resolve(_ pointer: Context.Pointer) async throws -> Context.Resolved {
+private struct PreparationFixture: ContextWindow.RecordResolving {
+    func resolve(_ pointer: ContextWindow.Pointer) async throws -> ContextWindow.Resolved {
         .init(pointer: .init(source: pointer.source, record: pointer.record,
                              selection: pointer.selection, revision: .recorded("v1")),
               messages: [.init(id: "prepared.\(pointer.record)", role: .assistant,
@@ -13,8 +13,8 @@ private struct PreparationFixture: Context.RecordResolving {
 
 extension ContextDeterministicFlowTesting {
     static func runBoundedPreparation() async throws -> [TestDiagnostic] {
-        let index = try Context.FindingIndex((0..<9).map { offset in
-            .init(record: Context.Record(id: "record-\(offset)", kind: "finding",
+        let index = try ContextWindow.FindingIndex((0..<9).map { offset in
+            .init(record: ContextWindow.Record(id: "record-\(offset)", kind: "finding",
                 pointer: .init(source: "fixture", record: "record-\(offset)",
                                revision: .recorded("v1")),
                 derivedFrom: [.init(source: "fixture", record: "original",

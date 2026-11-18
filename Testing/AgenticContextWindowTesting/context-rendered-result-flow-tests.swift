@@ -48,7 +48,7 @@ extension ContextDeterministicFlowTesting {
             [.init(id: "u0", role: .user, content: .init(text: "Look around."))]
             + exchange("first", count: 1)
             + exchange("again", count: 2)
-        let prepared = try Context.InferencePreparer.prepare(
+        let prepared = try ContextWindow.InferencePreparer.prepare(
             request: AgentRequest(messages: messages),
             frame: .init(workingSetID: "rendered", items: [], skippedAllocationIDs: [],
                          inputBudget: 0, estimatedInputTokens: 0),

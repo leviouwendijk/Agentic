@@ -2,7 +2,7 @@ import Agentic
 
 /// Connects the authored preparation Program to the opt-in harness seam.
 /// ProgramContext supplies the inference invoker, if one is installed.
-public struct ContextProgramPreparation: Context.PreparationSelecting {
+public struct ContextProgramPreparation: ContextWindow.PreparationSelecting {
     public let program: ContextPreparationProgram
     public let context: ProgramContext
 
@@ -11,7 +11,7 @@ public struct ContextProgramPreparation: Context.PreparationSelecting {
         self.context = context
     }
 
-    public func allocations(for request: AgentRequest) async throws -> [Context.Allocation] {
+    public func allocations(for request: AgentRequest) async throws -> [ContextWindow.Allocation] {
         guard let message = request.messages.last(where: { $0.role == .user }) else {
             throw ContextInferenceError.noCurrentUserMessage
         }

@@ -3,14 +3,14 @@ import AgenticContextWindow
 import Foundation
 import Testing
 
-private struct ContextFixtureResolver: Context.RecordResolving {
+private struct ContextFixtureResolver: ContextWindow.RecordResolving {
     let content: [String: String]
 
-    func resolve(_ pointer: Context.Pointer) async throws -> Context.Resolved {
+    func resolve(_ pointer: ContextWindow.Pointer) async throws -> ContextWindow.Resolved {
         guard let text = content[pointer.record] else {
             throw ContextAllocatorError.invalidResolution(pointer.record)
         }
-        let observed = Context.Pointer(
+        let observed = ContextWindow.Pointer(
             source: pointer.source,
             record: pointer.record,
             selection: pointer.selection,
@@ -20,10 +20,10 @@ private struct ContextFixtureResolver: Context.RecordResolving {
     }
 }
 
-private struct ReenteringContextResolver: Context.RecordResolving {
-    let allocator: Context.Allocator
+private struct ReenteringContextResolver: ContextWindow.RecordResolving {
+    let allocator: ContextWindow.Allocator
 
-    func resolve(_ pointer: Context.Pointer) async throws -> Context.Resolved {
+    func resolve(_ pointer: ContextWindow.Pointer) async throws -> ContextWindow.Resolved {
         _ = try await allocator.prepareFrame(
             for: "recursion", using: self, modelContextLimit: 1_500
         )
@@ -33,21 +33,21 @@ private struct ReenteringContextResolver: Context.RecordResolving {
 
 extension ContextDeterministicFlowTesting {
     static func runContextAllocator() async throws -> [TestDiagnostic] {
-        let allocator = try Context.Allocator(policy: .init(
+        let allocator = try ContextWindow.Allocator(policy: .init(
             preferredInputTokens: 400,
             maximumInputTokens: 1_200,
             reservedOutputTokens: 50,
             maximumResolutions: 4
         ))
-        let a = Context.Allocation(
+        let a = ContextWindow.Allocation(
             id: "goal", pointer: .init(source: "session-A", record: "goal"),
             priority: 10, required: true
         )
-        let b = Context.Allocation(
+        let b = ContextWindow.Allocation(
             id: "failure", pointer: .init(source: "session-B", record: "failed-run"),
             representation: .facts
         )
-        let c = Context.Allocation(
+        let c = ContextWindow.Allocation(
             id: "source", pointer: .init(source: "repository", record: "large-source"),
             priority: -10
         )

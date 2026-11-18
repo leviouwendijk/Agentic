@@ -36,6 +36,21 @@ let package = Package(
             ]
         ),
 
+        // the home on disk: layout, settings.frame, domain files
+        .library(
+            name: "AgenticConfiguration",
+            targets: [
+                "AgenticConfiguration",
+            ]
+        ),
+        // what the owner tells agents about their world: context/*.frame
+        .library(
+            name: "AgenticContext",
+            targets: [
+                "AgenticContext",
+            ]
+        ),
+
         // session introspection: history, log, catalog, approvals, artifacts
         .library(
             name: "AgenticSessions",
@@ -89,6 +104,12 @@ let package = Package(
             name: "t_agentic_ctx",
             targets: [
                 "AgenticContextWindowTesting",
+            ]
+        ),
+        .executable(
+            name: "t_agentic_context",
+            targets: [
+                "AgenticContextTesting",
             ]
         ),
         .executable(
@@ -184,6 +205,30 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/leviouwendijk/References.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Frame.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Path.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Milieu.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/IO.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Readers.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Writers.git",
             branch: "master"
         ),
     ],
@@ -363,6 +408,42 @@ let package = Package(
                 .product(name: "Schema", package: "Schema"),
                 .product(name: "Tokens", package: "Tokens"),
             ]
+        ),
+        .target(
+            name: "AgenticConfiguration",
+            dependencies: [
+                .product(name: "Frame", package: "Frame"),
+                .product(name: "IO", package: "IO"),
+                .product(name: "Milieu", package: "Milieu"),
+                .product(name: "Path", package: "Path"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Version", package: "Version"),
+                .product(name: "Workspace", package: "Workspace"),
+                .product(name: "Writers", package: "Writers"),
+            ]
+        ),
+        .target(
+            name: "AgenticContext",
+            dependencies: [
+                "Agentic",
+                "AgenticConfiguration",
+                .product(name: "Frame", package: "Frame"),
+                .product(name: "IO", package: "IO"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Tokens", package: "Tokens"),
+                .product(name: "Writers", package: "Writers"),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticContextTesting",
+            dependencies: [
+                "Agentic",
+                "AgenticContext",
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticContextTesting"
         ),
         .executableTarget(
             name: "AgenticContextWindowTesting",

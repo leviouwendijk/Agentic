@@ -1,10 +1,10 @@
 import Foundation
 
-/// Context is an addressable view over records; it does not own their storage.
+/// The context window is an addressable view over records; it does not own their storage.
 @Domain
-public enum Context {}
+public enum ContextWindow {}
 
-public extension Context {
+public extension ContextWindow {
     struct Pointer: Sendable, Codable, Hashable {
         public enum Revision: Sendable, Codable, Hashable {
             case recorded(String)
