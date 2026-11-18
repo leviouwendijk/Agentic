@@ -191,5 +191,48 @@ extension ContextFilesTests {
 
         let field = try await search.call(.init(queries: ["Sam"], fields: ["title"]), in: context)
         try Expect.equal(field.matches.map(\.id), ["northbank.team.sam"], "fields narrow")
+
+        // Roles hold per entry: "Alex" in Alex's title, "invoicing" in his body.
+        let both = try await search.call(.init(probes: [
+            .init(text: "Alex", role: .required, strategy: .contains),
+            .init(text: "invoicing", role: .required, strategy: .contains),
+        ]), in: context)
+        try Expect.equal(both.matches.map(\.id), ["northbank.team.alex"], "every required term, across fields")
+
+        let owners = try await search.call(.init(probes: [
+            .init(text: "Co-owner", role: .required, strategy: .contains),
+            .init(text: "workshops", role: .excluded, strategy: .contains),
+        ]), in: context)
+        try Expect.equal(owners.matches.map(\.id), ["northbank.team.alex"], "excluded terms remove entries")
+
+        // Piping: narrow a previous result.
+        let broad = try await search.call(.init(queries: ["Alex"], strategy: .contains), in: context)
+        try Expect.true(broad.total > 1, "a broad first pass: \(broad.matches.map(\.id))")
+        let narrowed = try await search.call(.init(
+            queries: ["intake"],
+            within: broad.matches.map(\.id),
+            strategy: .contains
+        ), in: context)
+        try Expect.equal(narrowed.matches.map(\.id), ["northbank.team.alex"], "within narrows to the previous result")
+
+        let dated = try await search.call(.init(queries: ["Northbank"], updated_from: "2026-01-01"), in: context)
+        try Expect.true(dated.matches.allSatisfy { $0.id == "business.overview" }, "dates filter; undated entries fail a date filter: \(dated.matches.map(\.id))")
+
+        let first = try await search.call(.init(queries: ["e"], strategy: .contains, limit: 2), in: context)
+        try Expect.equal(first.matches.count, 2, "a page")
+        try Expect.equal(first.next_offset, 2, "with where the next starts")
+        let rest = try await search.call(.init(queries: ["e"], strategy: .contains, limit: 10, offset: 2), in: context)
+        try Expect.equal(rest.matches.count, first.total - 2, "the rest")
+        try Expect.equal(rest.next_offset, nil, "and no further page")
+        try Expect.true(Set(first.matches.map(\.id)).isDisjoint(with: rest.matches.map(\.id)), "pages do not overlap")
+
+        do {
+            _ = try await search.call(.init(probes: [.init(text: "x", role: .excluded)]), in: context)
+            throw ContextSearchTestError.unexpected("only excluded terms must fail")
+        } catch is Context.SearchFailure {}
     }
+}
+
+enum ContextSearchTestError: Error {
+    case unexpected(String)
 }

@@ -198,14 +198,31 @@ public extension Context {
 }
 
 public extension Context.Library {
-    /// Entries carrying any of `tags` (all when nil or empty) whose
-    /// identifier lies below `under` (all when nil).
-    func selecting(tags: [String]?, under: String?) -> [Item] {
+    /// Entries passing every filter given; a nil filter passes all.
+    /// - `tags`: carries any of them.
+    /// - `under`: identifier at or below this group.
+    /// - `within`: one of these identifiers, such as a previous result.
+    /// - `updatedFrom`/`updatedTo`: `updated` within these `YYYY-MM-DD`
+    ///   days, inclusive; an entry without a date fails a date filter.
+    /// - `load`: entries loaded this way.
+    func selecting(
+        tags: [String]? = nil,
+        under: String? = nil,
+        within: [String]? = nil,
+        updatedFrom: String? = nil,
+        updatedTo: String? = nil,
+        load: ContextFrame.Load? = nil
+    ) -> [Item] {
         let tags = Set(tags ?? [])
         let under = under.map { $0.hasSuffix(".") ? String($0.dropLast()) : $0 }
+        let within = within.map(Set.init)
         return items.filter { item in
             (tags.isEmpty || !tags.isDisjoint(with: item.entry.tags ?? []))
                 && (under.map { item.id == $0 || item.id.hasPrefix("\($0).") } ?? true)
+                && (within?.contains(item.id) ?? true)
+                && (updatedFrom.map { from in item.entry.updated.map { $0 >= from } ?? false } ?? true)
+                && (updatedTo.map { to in item.entry.updated.map { $0 <= to } ?? false } ?? true)
+                && (load.map { (item.entry.load ?? .onRequest) == $0 } ?? true)
         }
     }
 }
