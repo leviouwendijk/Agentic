@@ -54,5 +54,9 @@ enum ContextFilesTestSuite {
         Test("search", tags: ["context", "tools", "search"]) {
             try await ContextFilesTests.search()
         }
+
+        Test("mounts", tags: ["context", "library", "mount"]) {
+            try await ContextFilesTests.mounts()
+        }
     }
 }

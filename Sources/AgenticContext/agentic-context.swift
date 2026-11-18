@@ -37,13 +37,30 @@ public extension Context {
             .load(directory)
         }
 
-        /// `file` below the directory; refuses anything that leaves it or
+        /// Where `file` is on disk: below the directory, or below the
+        /// directory a mount brings in (`team/business.frame` when
+        /// `team.frame` mounts one). Refuses anything that leaves them or
         /// cannot name entries.
         public func url(_ file: String) throws -> URL {
+            try location(file).url
+        }
+
+        /// Whether `file` lies in a read-only mount.
+        public func isReadOnly(_ file: String) throws -> Bool {
+            try location(file).readOnly
+        }
+
+        private func location(_ file: String) throws -> (url: URL, readOnly: Bool) {
             guard Context.idPrefix(of: file) != nil else {
                 throw StoreFailure.invalidPath(file)
             }
-            return directory.appendingPathComponent(file)
+            if let mount = library().mount(containing: file) {
+                return (
+                    mount.directory.appendingPathComponent(String(file.dropFirst(mount.folder.count + 1))),
+                    mount.readOnly
+                )
+            }
+            return (directory.appendingPathComponent(file), false)
         }
 
         /// The file's text; nil when there is none.
@@ -53,9 +70,14 @@ public extension Context {
         }
 
         /// Archives the current file, if any, then writes `text` in its
-        /// place. Returns the archived copy.
+        /// place. Returns the archived copy, which stays in this home even
+        /// for a file in a mount.
         public func save(_ text: String, to file: String, now: Date = Date()) throws -> URL? {
-            let target = try url(file)
+            let location = try location(file)
+            guard !location.readOnly else {
+                throw StoreFailure.readOnly(file)
+            }
+            let target = location.url
             var archived: URL?
             if let current = try self.text(file) {
                 let formatter = DateFormatter()
@@ -79,11 +101,14 @@ public extension Context {
 
     enum StoreFailure: Error, LocalizedError, Sendable, Hashable {
         case invalidPath(String)
+        case readOnly(String)
 
         public var errorDescription: String? {
             switch self {
             case .invalidPath(let file):
                 return "'\(file)': a context file is a path below context/ such as business.frame or people/sam.frame; names hold only letters, digits, _ and -."
+            case .readOnly(let file):
+                return "'\(file)' is in a read-only mount; change it where that context is kept."
             }
         }
     }

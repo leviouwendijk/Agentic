@@ -12,6 +12,7 @@ public enum ContextFrame {
     public static let module = Frame.Module("Context", types: [
         .decodable(Entry.self, named: "Entry"),
         .decodable(Defaults.self, named: "Defaults"),
+        .decodable(Mount.self, named: "Mount"),
     ])
 
     public static let environment = Frame.Environment([module])
@@ -21,6 +22,27 @@ public enum ContextFrame {
 
     /// The type of a file's defaults binding.
     public static let defaultsType = "Defaults"
+
+    /// The type of a mount file's one binding.
+    public static let mountType = "Mount"
+
+    /// Another directory of context files, such as a team's shared one,
+    /// brought in where this file is: `context/team.frame` holding
+    /// `let shared: Mount = .{ .path = "~/Shared/team-context" };` makes
+    /// that directory's `business.frame` read as `team/business.frame`,
+    /// its entries `team.business.<name>`. A mount file holds nothing else,
+    /// and mounts inside a mounted directory are not followed.
+    public struct Mount: Sendable, Hashable, Decodable {
+        /// Absolute, `~`, or relative to this file's folder.
+        public let path: String
+        /// Never written by context_save. Defaults to false.
+        public let readOnly: Bool?
+
+        public init(path: String, readOnly: Bool? = nil) {
+            self.path = path
+            self.readOnly = readOnly
+        }
+    }
 
     /// What every entry in the file shares: `let defaults: Defaults = .{
     /// .tags = ["hondenmeesters"] };`. At most one per file.
@@ -71,6 +93,17 @@ public enum ContextFrame {
         case onRequest
         /// In every agent's instructions; for short, always-relevant facts.
         case always
+    }
+}
+
+extension ContextFrame.Mount: FrameDescribable {
+    public static var frameSchema: Frame.Schema {
+        .object([
+            .init("path", .string, required: true,
+                  summary: "The directory to bring in: absolute, ~, or relative to this file's folder."),
+            .init("readOnly", .boolean,
+                  summary: "Never written by context_save, such as shared context only some may change. Defaults to false."),
+        ], summary: "Another directory of context files, read as a folder named after this file. A mount file holds nothing else.")
     }
 }
 

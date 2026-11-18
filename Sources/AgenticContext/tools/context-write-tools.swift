@@ -90,6 +90,9 @@ extension Context {
         guard (try? store.url(file)) != nil else {
             return ([Context.StoreFailure.invalidPath(file).localizedDescription], [])
         }
+        if (try? store.isReadOnly(file)) == true {
+            return ([Context.StoreFailure.readOnly(file).localizedDescription], [])
+        }
         let replaced = store.library().replacing(file, with: text)
         let entries = replaced.library.items.filter { $0.file == file }.map(\.id)
         return (replaced.problems, entries)
