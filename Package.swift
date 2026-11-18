@@ -101,7 +101,7 @@ let package = Package(
             ]
         ),
         .executable(
-            name: "t_agentic_ctx",
+            name: "t_agentic_context_window",
             targets: [
                 "AgenticContextWindowTesting",
             ]

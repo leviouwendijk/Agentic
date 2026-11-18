@@ -17,7 +17,7 @@ tests {
 
     groups {
         context {
-            "t_agentic_ctx"
+            "t_agentic_context_window"
             "t_agentic_context"
         }
         math { "t_agentic_math" }
