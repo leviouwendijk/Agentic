@@ -264,17 +264,36 @@ public struct AgentCapabilities:
 {
     public var available: AgentCapabilityScope
     public var visible: AgentCapabilityScope
+    /// What the runtime adds before the first request: all grants unless
+    /// excluded here.
+    public var grants: AgentCapabilityGrants
 
     public init(
         available: AgentCapabilityScope = .none,
-        visible: AgentCapabilityScope = .none
+        visible: AgentCapabilityScope = .none,
+        grants: AgentCapabilityGrants = .standard
     ) {
         self.available = available
         self.visible = visible
+        self.grants = grants
     }
 
     public static let none = Self()
 
+    private enum CodingKeys: String, CodingKey {
+        case available, visible, grants
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            available: try container.decode(AgentCapabilityScope.self, forKey: .available),
+            visible: try container.decode(AgentCapabilityScope.self, forKey: .visible),
+            grants: try container.decodeIfPresent(AgentCapabilityGrants.self, forKey: .grants) ?? .standard
+        )
+    }
+
+    /// Exclusions combine: a grant either side excludes stays excluded.
     public static func + (
         lhs: Self,
         rhs: Self
@@ -285,7 +304,10 @@ public struct AgentCapabilities:
                 + rhs.available,
             visible:
                 lhs.visible
-                + rhs.visible
+                + rhs.visible,
+            grants: .init(
+                excluding: lhs.grants.excluded + rhs.grants.excluded
+            )
         )
     }
 }
