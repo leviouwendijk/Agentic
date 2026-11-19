@@ -37,6 +37,9 @@ enum ConfigurationTests {
         try Expect.true(configured.resolution.related("notes_read", "drafts_write"), "a declared family")
         try Expect.true(configured.resolution.related("read_files", "mutate_files"), "the standard family stays")
 
+        let example = try Privacy.Configuration(source: SensitivityFrame.example)
+        try Expect.equal(example.expiry, .unreferenced, "the example holds and keeps the defaults")
+
         try Expect.throwsError("afterDays needs days") {
             _ = try Privacy.Configuration(source: "import Sensitivity;\nlet vault: Vault = .{ .expire = .afterDays };")
         }
