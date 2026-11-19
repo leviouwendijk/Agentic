@@ -293,17 +293,11 @@ private extension ToolPreflight {
     var previewSection: ToolInspectionSection? {
         var items: [ToolInspectionItem] = []
 
-        appendOptionalField(
-            label: "command",
-            value: preview.command,
-            to: &items
-        )
-
-        if let difference = preview.difference {
+        for section in preview.sections {
             items.append(
                 .field(
-                    label: "diff",
-                    value: difference.changeSummary
+                    label: section.title.lowercased(),
+                    value: section.content.summary
                 )
             )
         }

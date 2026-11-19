@@ -58,7 +58,7 @@ enum AgenticPreflightTests {
             "typed graph edge count"
         )
 
-        let preview = ToolPreflight.Preview(difference: graphDifference)
+        let preview = ToolPreflight.Preview([.difference(graphDifference)])
         try check(!preview.isEmpty, "graph-only preflight preview")
 
         let preflight = ToolPreflight(
@@ -68,7 +68,7 @@ enum AgenticPreflightTests {
             preview: preview
         )
         try check(
-            preflight.description.contains("diff preview: graph: 1 changed of 2 nodes, 1 changed of 1 edges"),
+            preflight.description.contains("preview diff: graph: 1 changed of 2 nodes, 1 changed of 1 edges"),
             "description includes graph summary"
         )
 
@@ -88,7 +88,7 @@ enum AgenticPreflightTests {
         )
         try check(restoredPreflight == preflight, "graph preflight Codable roundtrip")
         try check(
-            restoredPreflight.preview.difference?.graph == graph,
+            restoredPreflight.preview.differences.first?.graph == graph,
             "graph data survives serialization"
         )
 
@@ -141,7 +141,7 @@ enum AgenticPreflightTests {
 
         let empty = ToolPreflight.Preview.Difference()
         try check(empty.isEmpty, "empty difference")
-        try check(ToolPreflight.Preview(difference: empty).isEmpty, "empty preview")
+        try check(ToolPreflight.Preview([.difference(empty)]).isEmpty, "empty preview")
         try check(empty.changeSummary == "no differences", "empty summary")
 
         let schemaData = try JSONEncoder().encode(

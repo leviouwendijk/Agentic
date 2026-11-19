@@ -1,6 +1,7 @@
 import Difference
 import Foundation
 import Macros
+import Reporting
 import Schema
 import Workspace
 
@@ -93,15 +94,9 @@ public struct ToolPreflight:
             )
         }
 
-        if let command = preview.command {
+        for section in preview.sections {
             lines.append(
-                "command: \(command)"
-            )
-        }
-
-        if let difference = preview.difference {
-            lines.append(
-                "diff preview: \(difference.changeSummary)"
+                "preview \(section.title.lowercased()): \(section.content.summary)"
             )
         }
 
@@ -337,28 +332,138 @@ public extension ToolPreflight {
         }
     }
 
-    @JSONSchema
+    /// What the call would do, as typed sections the reviewer sees before
+    /// approving. Each section names its own menu entry ("Diff", "Event");
+    /// renderers keep the content and lay it out when shown.
     struct Preview:
         Sendable,
         Codable,
-        Hashable
+        Hashable,
+        JSONSchemaProviding
     {
-        public let command: String?
-        public let difference: Difference?
+        public let sections: [Section]
 
         public init(
-            command: String? = nil,
-            difference: Difference? = nil
+            _ sections: [Section] = []
         ) {
-            self.command = command
-            self.difference = difference
+            self.sections = sections
         }
 
         public static let none = Self()
 
+        /// Presentation for the reviewer, never filled in by a model, so its
+        /// schema stays open; `Difference` keeps its own exact schema.
+        public static var jsonschema: JSONSchema {
+            .any
+        }
+
         public var isEmpty: Bool {
-            command == nil
-                && (difference?.isEmpty ?? true)
+            sections.allSatisfy(\.content.isEmpty)
+        }
+
+        public var differences: [Difference] {
+            sections.compactMap {
+                guard case .difference(let difference) = $0.content else { return nil }
+                return difference
+            }
+        }
+
+        public var commands: [Command] {
+            sections.compactMap {
+                guard case .command(let command) = $0.content else { return nil }
+                return command
+            }
+        }
+
+        public struct Section:
+            Sendable,
+            Codable,
+            Hashable
+        {
+            /// The menu entry, e.g. `Diff`, `Event`, `Command`.
+            public let title: String
+            public let content: Content
+
+            public init(
+                _ title: String,
+                content: Content
+            ) {
+                self.title = title
+                self.content = content
+            }
+
+            public static func difference(
+                _ difference: Difference,
+                title: String = "Diff"
+            ) -> Self {
+                .init(title, content: .difference(difference))
+            }
+
+            public static func command(
+                _ command: Command,
+                title: String = "Command"
+            ) -> Self {
+                .init(title, content: .command(command))
+            }
+
+            /// The document's own title names the entry unless one is given.
+            public static func report(
+                _ document: ReportDocument,
+                title: String? = nil
+            ) -> Self {
+                .init(title ?? document.title, content: .report(document))
+            }
+        }
+
+        public enum Content:
+            Sendable,
+            Codable,
+            Hashable
+        {
+            case command(Command)
+            case difference(Difference)
+            case report(ReportDocument)
+
+            public var isEmpty: Bool {
+                switch self {
+                case .command(let command):
+                    return command.line.isEmpty
+                case .difference(let difference):
+                    return difference.isEmpty
+                case .report(let document):
+                    return document.blocks.isEmpty
+                }
+            }
+
+            /// One line for logs and the model-facing preflight description.
+            public var summary: String {
+                switch self {
+                case .command(let command):
+                    return command.line
+                case .difference(let difference):
+                    return difference.changeSummary
+                case .report(let document):
+                    return document.title
+                }
+            }
+        }
+
+        /// A command line as it will run; renderers tokenize it for display.
+        public struct Command:
+            Sendable,
+            Codable,
+            Hashable
+        {
+            public let line: String
+            public let workingDirectory: String?
+
+            public init(
+                _ line: String,
+                workingDirectory: String? = nil
+            ) {
+                self.line = line
+                self.workingDirectory = workingDirectory
+            }
         }
 
         @JSONSchema
