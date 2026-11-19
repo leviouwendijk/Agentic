@@ -57,7 +57,7 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
-            "find-capabilities",
+            "search-capabilities",
             tags: [
                 "agentic-execution",
                 "capabilities",
@@ -66,7 +66,7 @@ enum ExecutionTestSuite {
             ]
         ) {
             try await ExecutionTesting
-                .runFindCapabilities()
+                .runSearchCapabilities()
         }
 
         diagnosticTest(

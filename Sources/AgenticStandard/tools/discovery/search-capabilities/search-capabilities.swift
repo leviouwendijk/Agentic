@@ -4,50 +4,22 @@ import Macros
 import Schema
 import Primitives
 
-public enum FindCapabilitiesError:
-    Error,
-    Sendable
-{
-    case agentCapabilityStateRequired
-}
-
 public extension Standard.Tools {
     @Tool
-    struct FindCapabilities: Tool {
-        public enum Kind:
-            String,
-            Sendable,
-            Codable,
-            Hashable,
-            CaseIterable,
-            JSONSchemaProviding
-        {
-            case all
-            case tool
-            case program
-            case inference
-            case agent
-
-            public static var jsonschema: JSONSchema {
-                .string(
-                    cases: allCases.map(\.rawValue)
-                )
-            }
-        }
-
+    struct SearchCapabilities: Tool {
         public struct Input: HashableSource, CodableInvariant {
             @JSONSchema
             public struct Raw: HashableSource {
                 public var query: String?
                 /// Defaults to `all`.
-                public var kind: Kind?
+                public var kind: CapabilityKind?
                 public var domain: String?
                 /// Defaults to 5; clamped to 1...8.
                 public var maximumResults: Int?
 
                 public init(
                     query: String? = nil,
-                    kind: Kind? = nil,
+                    kind: CapabilityKind? = nil,
                     domain: String? = nil,
                     maximumResults: Int? = nil
                 ) {
@@ -59,7 +31,7 @@ public extension Standard.Tools {
             }
 
             public let query: String?
-            public let kind: Kind
+            public let kind: CapabilityKind
             public let domain: String?
             public let maximumResults: Int
 
@@ -72,7 +44,7 @@ public extension Standard.Tools {
 
             public init(
                 query: String? = nil,
-                kind: Kind? = nil,
+                kind: CapabilityKind? = nil,
                 domain: String? = nil,
                 maximumResults: Int? = nil
             ) {
@@ -97,40 +69,16 @@ public extension Standard.Tools {
         }
 
         @JSONSchema
-        public struct Entry: HashableProduct
-        {
-            public let kind: Kind
-            public let identifier: String
-            public let namespace: String?
-            public let purpose: String
-            public let wasVisible: Bool
-
-            public init(
-                kind: Kind,
-                identifier: String,
-                namespace: String?,
-                purpose: String,
-                wasVisible: Bool
-            ) {
-                self.kind = kind
-                self.identifier = identifier
-                self.namespace = namespace
-                self.purpose = purpose
-                self.wasVisible = wasVisible
-            }
-        }
-
-        @JSONSchema
         public struct Output: HashableResult
         {
             public let totalMatches: Int
             public let returnedCount: Int
-            public let entries: [Entry]
+            public let entries: [CapabilityEntry]
 
             public init(
                 totalMatches: Int,
                 returnedCount: Int,
-                entries: [Entry]
+                entries: [CapabilityEntry]
             ) {
                 self.totalMatches = totalMatches
                 self.returnedCount = returnedCount
@@ -139,7 +87,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Find capabilities already available to this Agent without changing authorization or model projection."
+            "Search the capabilities available to this Agent by query, kind or domain, without changing authorization or model projection."
 
         public static let risk: ActionRisk = .observe
 
@@ -150,7 +98,7 @@ public extension Standard.Tools {
             in context: ToolContext
         ) async throws -> Output {
             guard let capabilities = context.capabilities else {
-                throw FindCapabilitiesError
+                throw CapabilityDiscoveryError
                     .agentCapabilityStateRequired
             }
 
@@ -181,7 +129,7 @@ public extension Standard.Tools {
                 totalMatches: candidates.count,
                 returnedCount: selected.count,
                 entries: selected.map { candidate in
-                    Entry(
+                    CapabilityEntry(
                         kind: candidate.kind,
                         identifier: candidate.identifier,
                         namespace: candidate.namespace,
@@ -194,12 +142,23 @@ public extension Standard.Tools {
                 }
             )
         }
+
+        public func render(_ output: Output, input: Input) -> String? {
+            guard !output.entries.isEmpty else {
+                return "No available capability matches. list_capabilities shows them all."
+            }
+            let header = output.returnedCount < output.totalMatches
+                ? "\(output.returnedCount) of \(output.totalMatches) matches, best first:"
+                : "\(output.totalMatches) match\(output.totalMatches == 1 ? "" : "es"):"
+            return header + "\n" + CapabilityEntry.rendered(output.entries)
+                + "\ninspect_capability returns a contract."
+        }
     }
 }
 
-private extension Standard.Tools.FindCapabilities {
+private extension Standard.Tools.SearchCapabilities {
     struct Candidate {
-        let kind: Kind
+        let kind: CapabilityKind
         let identifier: String
         let namespace: String?
         let purpose: String
@@ -209,11 +168,11 @@ private extension Standard.Tools.FindCapabilities {
     func candidate(
         _ inspection: CapabilityInspection,
         available: AgentCapabilitySet,
-        kind: Kind,
+        kind: CapabilityKind,
         domain: String?,
         query: String?
     ) -> Candidate? {
-        guard let resolvedKind = Kind(rawValue: inspection.kind),
+        guard let resolvedKind = CapabilityKind(rawValue: inspection.kind),
               kind == .all || resolvedKind == kind else { return nil }
         if let domain, inspection.namespace?.lowercased() != domain {
             return nil

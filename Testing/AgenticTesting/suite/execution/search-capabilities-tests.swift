@@ -3,7 +3,7 @@ import AgenticStandard
 import Testing
 
 extension ExecutionTesting {
-    static func runFindCapabilities()
+    static func runSearchCapabilities()
         async throws
         -> [TestDiagnostic]
     {
@@ -104,7 +104,7 @@ extension ExecutionTesting {
             visible: AgentCapabilitySet.none
         )
         let tool =
-            Standard.Tools.FindCapabilities()
+            Standard.Tools.SearchCapabilities()
         let context = ToolContext(
             catalog: catalog,
             capabilities: state,
@@ -183,7 +183,7 @@ extension ExecutionTesting {
         try Expect.equal(
             snapshot.visible,
             .none,
-            "find_capabilities must not modify direct model visibility"
+            "search_capabilities must not modify direct model visibility"
         )
 
         let listed = try await Standard.Tools.ListCapabilities().call(
@@ -191,6 +191,20 @@ extension ExecutionTesting {
         )
         try Expect.equal(listed.total, 1,
             "list enumerates only available installed Tool bindings")
+        let page = try await Standard.Tools.ListCapabilities().call(
+            .init(maximumResults: 2), in: context
+        )
+        try Expect.equal(
+            Standard.Tools.ListCapabilities().render(page, input: .init(maximumResults: 2)),
+            """
+            1–2 of 4:
+            fixture
+              fixture.hidden_agent [agent] — Hidden Agent capability
+              fixture.hidden_inference [inference] — Hidden Inference capability
+            list_capabilities {"offset": 2} continues.
+            """,
+            "list renders one line per entry under its namespace and names the next page"
+        )
         let inspected = try await Standard.Tools.InspectCapability().call(
             .init(kind: .program, identifier: hiddenProgram.identifier.rawValue),
             in: context
@@ -200,7 +214,7 @@ extension ExecutionTesting {
         try Expect.equal(inspected.output, .string("program-output"),
             "inspection returns the exact binding-provided output contract")
         try Expect.equal((await state.snapshot()).visible, .none,
-            "list/find/inspect leave visibility unchanged")
+            "list/search/inspect leave visibility unchanged")
 
         return [
             .field(

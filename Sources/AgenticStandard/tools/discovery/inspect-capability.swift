@@ -13,9 +13,9 @@ public extension Standard.Tools {
     struct InspectCapability: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            public let kind: FindCapabilities.Kind
+            public let kind: CapabilityKind
             public let identifier: String
-            public init(kind: FindCapabilities.Kind, identifier: String) {
+            public init(kind: CapabilityKind, identifier: String) {
                 self.kind = kind
                 self.identifier = identifier
             }
@@ -23,7 +23,7 @@ public extension Standard.Tools {
 
         @JSONSchema
         public struct Output: HashableResult {
-            public let kind: FindCapabilities.Kind
+            public let kind: CapabilityKind
             public let identifier: String
             public let namespace: String?
             public let purpose: String
@@ -36,7 +36,7 @@ public extension Standard.Tools {
             public let revealed: Bool
 
             public init(
-                kind: FindCapabilities.Kind,
+                kind: CapabilityKind,
                 identifier: String,
                 namespace: String?,
                 purpose: String,

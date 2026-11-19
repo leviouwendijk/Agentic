@@ -7,7 +7,7 @@ enum CapabilityDiscovery {
         in context: ToolContext
     ) async throws -> (AgentCapabilityState.Snapshot, [CapabilityInspection]) {
         guard let state = context.capabilities else {
-            throw FindCapabilitiesError.agentCapabilityStateRequired
+            throw CapabilityDiscoveryError.agentCapabilityStateRequired
         }
         let snapshot = await state.snapshot()
         let allowed = snapshot.available.intersecting(snapshot.installed)
