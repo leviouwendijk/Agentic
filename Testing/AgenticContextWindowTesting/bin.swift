@@ -106,6 +106,10 @@ enum ContextDeterministicTestSuite {
             try ContextDeterministicFlowTesting.runCompaction()
         }
 
+        Test("cache-miss-causes", tags: ["context", "cache"]) {
+            try await ContextDeterministicFlowTesting.runCacheMisses()
+        }
+
         Test(
             "incident-refuses-rather-than-drops",
             tags: ["context", "history", "incident"]
