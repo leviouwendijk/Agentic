@@ -1,3 +1,5 @@
+import Errors
+
 public extension Recovery {
     struct Match:
         Sendable,
@@ -9,19 +11,28 @@ public extension Recovery {
         public let scope: Scope.Kind?
         public let effectState: EffectState?
         public let retrySafety: RetrySafety?
+        /// An error identity (`mail.imap.command_failed`) or a namespace
+        /// (`mail.imap`) anywhere in the incident's report.
+        public let code: String?
+        /// The report's effective disposition.
+        public let disposition: ErrorDisposition?
 
         public init(
             kind: Kind? = nil,
             stage: Stage? = nil,
             scope: Scope.Kind? = nil,
             effectState: EffectState? = nil,
-            retrySafety: RetrySafety? = nil
+            retrySafety: RetrySafety? = nil,
+            code: String? = nil,
+            disposition: ErrorDisposition? = nil
         ) {
             self.kind = kind
             self.stage = stage
             self.scope = scope
             self.effectState = effectState
             self.retrySafety = retrySafety
+            self.code = code
+            self.disposition = disposition
         }
 
         public func matches(
@@ -57,6 +68,26 @@ public extension Recovery {
                 return false
             }
 
+            if let code {
+                guard let report = incident.report,
+                      report.first(where: {
+                          guard let identity = $0.diagnostic.identity else {
+                              return false
+                          }
+                          return identity.raw == code
+                              || identity.isWithin(code)
+                      }) != nil
+                else {
+                    return false
+                }
+            }
+
+            if let disposition,
+               disposition != incident.report?.effectiveDisposition
+            {
+                return false
+            }
+
             return true
         }
 
@@ -80,6 +111,14 @@ public extension Recovery {
             }
 
             if retrySafety != nil {
+                value += 1
+            }
+
+            if code != nil {
+                value += 1
+            }
+
+            if disposition != nil {
                 value += 1
             }
 

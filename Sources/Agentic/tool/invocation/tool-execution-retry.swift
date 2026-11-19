@@ -12,7 +12,7 @@ extension ToolExecutionEngine {
         if preparedOperation != nil {
             let error = Error.prepared_retry_requires_reconciliation
             return .complete(ToolExecution.Result(
-                result: try makeErrorResult(for: call, error: error),
+                result: try await makeErrorResult(for: call, error: error),
                 recovery: recovery.record(outcome: .failed)
             ))
         }
@@ -38,7 +38,7 @@ extension ToolExecutionEngine {
 
                     return .complete(
                         ToolExecution.Result(
-                            result: try makeErrorResult(
+                            result: try await makeErrorResult(
                                 for: call,
                                 error: recoveryError
                             ),
@@ -60,7 +60,7 @@ extension ToolExecutionEngine {
 
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: error
                         ),
@@ -103,7 +103,10 @@ extension ToolExecutionEngine {
             )
         } catch {
             let accepted = recovery.absorb(
-                error
+                Self.classified(
+                    error,
+                    preflight: preflight
+                )
             )
 
             recovery.attempts.append(
@@ -118,7 +121,7 @@ extension ToolExecutionEngine {
             guard accepted else {
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: error
                         ),
@@ -135,7 +138,7 @@ extension ToolExecutionEngine {
             ) else {
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: error
                         ),
@@ -154,7 +157,7 @@ extension ToolExecutionEngine {
 
             return .complete(
                 ToolExecution.Result(
-                    result: try makeErrorResult(
+                    result: try await makeErrorResult(
                         for: call,
                         error: error
                     ),

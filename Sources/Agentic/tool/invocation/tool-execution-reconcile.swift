@@ -25,7 +25,7 @@ extension ToolExecutionEngine {
 
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: recoveryError
                         ),
@@ -63,7 +63,7 @@ extension ToolExecutionEngine {
 
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: recoveryError
                         ),
@@ -91,7 +91,7 @@ extension ToolExecutionEngine {
 
                 return .complete(
                     ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: recoveryError
                         ),
@@ -119,7 +119,7 @@ extension ToolExecutionEngine {
 
             return .complete(
                 ToolExecution.Result(
-                    result: try makeErrorResult(
+                    result: try await makeErrorResult(
                         for: call,
                         error: error
                     ),

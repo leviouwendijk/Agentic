@@ -50,7 +50,11 @@ internal struct ToolExecutionEngine: Sendable {
                 preparedOperation: preparedOperation,
                 preflight: preflight
             )
-        } catch {
+        } catch let thrown {
+            let error = Self.classified(
+                thrown,
+                preflight: preflight
+            )
             let propagatedRecovery: Recovery.Record?
 
             if let toolError = error as? ToolExecution.Error,
@@ -71,7 +75,7 @@ internal struct ToolExecutionEngine: Sendable {
                 policy: recovery
             ) else {
                 return ToolExecution.Result(
-                    result: try makeErrorResult(
+                    result: try await makeErrorResult(
                         for: call,
                         error: error
                     ),
@@ -93,7 +97,7 @@ internal struct ToolExecutionEngine: Sendable {
                         )
 
                     return ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: recoveryError
                         ),
@@ -110,7 +114,7 @@ internal struct ToolExecutionEngine: Sendable {
                         Error.recovery_exhausted
 
                     return ToolExecution.Result(
-                        result: try makeErrorResult(
+                        result: try await makeErrorResult(
                             for: call,
                             error: recoveryError
                         ),
@@ -160,7 +164,7 @@ internal struct ToolExecutionEngine: Sendable {
 
                     outcome = .complete(
                         ToolExecution.Result(
-                            result: try makeErrorResult(
+                            result: try await makeErrorResult(
                                 for: call,
                                 error: recoveryError
                             ),
@@ -184,7 +188,7 @@ internal struct ToolExecutionEngine: Sendable {
                 Error.recovery_exhausted
 
             return ToolExecution.Result(
-                result: try makeErrorResult(
+                result: try await makeErrorResult(
                     for: call,
                     error: recoveryError
                 ),

@@ -325,6 +325,33 @@ enum ExecutionTestSuite {
         }
 
         diagnosticTest(
+            "tool-error-payload-semantics",
+            tags: [
+                "agentic-execution",
+                "tools",
+                "failure",
+                "errors",
+                "privacy",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runToolErrorPayloadSemantics()
+        }
+
+        diagnosticTest(
+            "tool-recovery-by-disposition",
+            tags: [
+                "agentic-execution",
+                "tools",
+                "recovery",
+                "errors",
+            ]
+        ) {
+            try await ExecutionTesting
+                .runToolRecoveryByDisposition()
+        }
+
+        diagnosticTest(
             "tool-mechanical-observe-retry",
             tags: [
                 "agentic-execution",

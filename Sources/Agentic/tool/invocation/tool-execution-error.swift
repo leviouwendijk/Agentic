@@ -1,3 +1,4 @@
+import Errors
 import Foundation
 import Primitives
 
@@ -39,52 +40,66 @@ extension ToolExecutionEngine {
         }
     }
 
+    /// The model's answer for a failed call, through the session's
+    /// payload guard like any other result.
     func makeErrorResult(
         for call: ToolInvocation,
         error: any Swift.Error
-    ) throws -> FunctionCall.Response {
-        let payload = Error.Payload(
-            kind: "tool_error",
-            callID: call.id,
-            toolName: call.tool.rawValue,
-            message: localizedDescription(
-                for: error
-            )
-        )
-
-        return FunctionCall.Response(
+    ) async throws -> FunctionCall.Response {
+        try await FunctionCall.Response.toolError(
             call: .init(call.reference),
-            output: try JSONValue.encoding(
-                payload
-            ),
-            isError: true
-        )
-    }
-
-    func localizedDescription(
-        for error: any Swift.Error
-    ) -> String {
-        if let localizedError = error as? LocalizedError,
-           let description = localizedError.errorDescription,
-           !description.isEmpty
-        {
-            return description
-        }
-
-        return String(
-            describing: error
+            error: error,
+            guard: context.payloadGuard
         )
     }
 }
 
-extension ToolExecutionEngine.Error {
-    struct Payload:
-        Encodable,
-        Sendable
-    {
-        let kind: String
-        let callID: String
-        let toolName: String
-        let message: String
+extension ToolExecutionEngine.Error:
+    ErrorNamespaced,
+    ErrorDispositionProviding
+{
+    static let errorNamespace = "agentic.tool_execution"
+
+    var errorCode: String {
+        switch self {
+        case .reconciliation_unsupported:
+            return "reconciliation_unsupported"
+
+        case .reconciliation_unresolved:
+            return "reconciliation_unresolved"
+
+        case .applied_without_output:
+            return "applied_without_output"
+
+        case .preflight_changed:
+            return "preflight_changed"
+
+        case .prepared_retry_requires_reconciliation:
+            return "prepared_retry_requires_reconciliation"
+
+        case .recovery_exhausted:
+            return "recovery_exhausted"
+
+        case .action_unsupported:
+            return "action_unsupported"
+        }
+    }
+
+    var errorDisposition: ErrorDisposition? {
+        switch self {
+        case .preflight_changed:
+            // The changed call needs fresh approval.
+            return .requires_access
+
+        case .recovery_exhausted,
+             .action_unsupported,
+             .reconciliation_unsupported,
+             .reconciliation_unresolved,
+             .prepared_retry_requires_reconciliation:
+            return .permanent
+
+        case .applied_without_output:
+            return nil
+        }
     }
 }

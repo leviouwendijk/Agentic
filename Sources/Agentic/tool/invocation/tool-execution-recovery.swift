@@ -1,5 +1,51 @@
 
+import Errors
+
 extension ToolExecutionEngine {
+    /// A call failure no tool classified, given an incident when its error
+    /// says it is transient and the call changes nothing: retrying is then
+    /// safe, and a recovery policy's rules decide whether to.
+    static func classified(
+        _ error: any Swift.Error,
+        preflight: ToolPreflight
+    ) -> any Swift.Error {
+        guard
+            let execution = error as? ToolExecution.Error,
+            execution.failure.phase == .call,
+            execution.failure.incident == nil,
+            !preflight.risk.isMutating,
+            let underlying = execution.underlying,
+            underlying.report(
+                policy: .model
+            ).effectiveDisposition == .transient
+        else {
+            return error
+        }
+
+        let failure = execution.failure
+
+        return ToolExecution.Error(
+            failure: .init(
+                call: failure.call,
+                phase: failure.phase,
+                message: failure.message,
+                errorType: failure.errorType,
+                incident: Recovery.Incident(
+                    capturing: underlying,
+                    kind: .transport_transient,
+                    stage: .execution,
+                    effectState: .none,
+                    retrySafety: .safe,
+                    scope: .init(
+                        kind: .tool,
+                        identifier: failure.call.tool.rawValue
+                    )
+                )
+            ),
+            underlying: underlying
+        )
+    }
+
     struct RecoveryState {
         let incident: Recovery.Incident
         let plan: Recovery.Plan
