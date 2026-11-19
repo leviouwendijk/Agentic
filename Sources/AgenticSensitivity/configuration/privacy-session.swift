@@ -32,8 +32,8 @@ public extension Privacy {
     private static let vaults = VaultRegistry()
 
     /// The guard and lease for a session, as configured in the home's
-    /// `domains/sensitivity.frame`. For `.unreferenced`, values no recorded
-    /// session holds any more are dropped in the background.
+    /// `domains/sensitivity.frame`. For `.unreferenced`, values nothing in
+    /// history references any more are dropped in the background.
     static func session(
         _ sessionID: String?,
         home: AgentHome = AgentHomeLocator().resolveHome(),
@@ -44,9 +44,9 @@ public extension Privacy {
         let installed = Guard(vault: vault, shieldPolicy: loaded.shield, policy: loaded.resolution, session: sessionID)
 
         if loaded.expiry == .unreferenced {
-            let sessions = home.layout.runtimeStorage.sessionsdir
+            let roots = loaded.historyRoots(in: home)
             Task.detached(priority: .utility) {
-                let referenced = References.collect(below: sessions)
+                let referenced = roots.reduce(into: Set<String>()) { $0.formUnion(References.collect(below: $1)) }
                 await vault.retain(referenced: referenced)
             }
         }
@@ -54,7 +54,7 @@ public extension Privacy {
         return (ToolPayloadGuarding(installed), lease, problem)
     }
 
-    /// Handle ids written in recorded sessions.
+    /// Handle ids written anywhere below a directory.
     enum References {
         public static func collect(below directory: URL) -> Set<String> {
             var ids: Set<String> = []

@@ -9,6 +9,7 @@ import Frame
 ///     let vault: Vault = .{
 ///         .store = .keychain,
 ///         .expire = .unreferenced,
+///         .references = .history,
 ///     };
 ///
 ///     let policy: Policy = .{
@@ -35,7 +36,7 @@ public enum SensitivityFrame {
 
     /// When a value is forgotten.
     public enum Expire: String, Sendable, Hashable, Decodable, CaseIterable {
-        /// Once no recorded session holds its handle any more.
+        /// Once nothing in history references its handle any more.
         case unreferenced
         /// When the sessions that saw it close.
         case onSessionClose
@@ -43,11 +44,25 @@ public enum SensitivityFrame {
         case afterDays
     }
 
+    /// Where a handle counts as still referenced, for `.unreferenced`.
+    public enum References: String, Sendable, Hashable, Decodable, CaseIterable {
+        /// Anywhere in history: every file in the agentic home (sessions,
+        /// transcripts, approvals, tasks, artifacts, archives, context).
+        case history
+        /// Only in recorded sessions.
+        case sessions
+    }
+
     public struct Vault: Sendable, Hashable, Decodable {
         public let store: Store?
         public let expire: Expire?
         /// For `.afterDays`.
         public let days: Int?
+        /// Where a reference keeps a value, for `.unreferenced`.
+        public let references: References?
+        /// More directories whose files count as history, such as a
+        /// provenance store or exports kept elsewhere.
+        public let roots: [String]?
     }
 
     public struct Policy: Sendable, Hashable, Decodable {
@@ -72,11 +87,17 @@ extension SensitivityFrame.Vault: FrameDescribable {
                 .memory: "In memory: values end with the process, so recorded handles stop resolving.",
             ]), summary: "Where handle values are kept."),
             .init("expire", .members(of: SensitivityFrame.Expire.self, summaries: [
-                .unreferenced: "Once no recorded session holds the handle any more. The default.",
+                .unreferenced: "Once nothing in history (see references) holds the handle any more. The default.",
                 .onSessionClose: "When the sessions that saw the value close.",
                 .afterDays: "`days` after the value was first seen.",
             ]), summary: "When a value is forgotten."),
             .init("days", .integer, summary: "For .afterDays."),
+            .init("references", .members(of: SensitivityFrame.References.self, summaries: [
+                .history: "Anywhere in history: every file in the agentic home. The default.",
+                .sessions: "Only in recorded sessions.",
+            ]), summary: "Where a handle counts as still referenced, for .unreferenced."),
+            .init("roots", .array(.string),
+                  summary: "More directories whose files count as history (absolute or ~), such as a provenance store."),
         ], summary: "The vault behind handles: where values are kept and how long.")
     }
 }

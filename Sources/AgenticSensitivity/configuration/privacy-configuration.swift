@@ -5,10 +5,11 @@ import Frame
 import IO
 import Readers
 import Sensitivity
+import Writers
 
 public extension Privacy {
     /// `domains/sensitivity.frame`, with defaults for what it leaves out:
-    /// a Keychain vault whose values live while a recorded session holds
+    /// a Keychain vault whose values live while anything in history holds
     /// their handle.
     struct Configuration: Sendable {
         public static let fileName = "sensitivity.frame"
@@ -21,17 +22,25 @@ public extension Privacy {
 
         public var store: SensitivityFrame.Store
         public var expiry: Expiry
+        /// Where a reference keeps a value, for `.unreferenced`.
+        public var references: SensitivityFrame.References
+        /// More directories counted as history.
+        public var roots: [URL]
         public var shield: Sensitivity.ShieldPolicy
         public var resolution: ResolutionPolicy
 
         public init(
             store: SensitivityFrame.Store = .keychain,
             expiry: Expiry = .unreferenced,
+            references: SensitivityFrame.References = .history,
+            roots: [URL] = [],
             shield: Sensitivity.ShieldPolicy = .standard,
             resolution: ResolutionPolicy = .init()
         ) {
             self.store = store
             self.expiry = expiry
+            self.references = references
+            self.roots = roots
             self.shield = shield
             self.resolution = resolution
         }
@@ -86,14 +95,31 @@ public extension Privacy {
                 resolution.families = ResolutionPolicy.standardFamilies + families.map(Set.init)
             }
 
-            self.init(store: vault?.store ?? .keychain, expiry: expiry, shield: shield, resolution: resolution)
+            let roots = (vault?.roots ?? []).map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath, isDirectory: true) }
+            self.init(
+                store: vault?.store ?? .keychain,
+                expiry: expiry,
+                references: vault?.references ?? .history,
+                roots: roots,
+                shield: shield,
+                resolution: resolution
+            )
         }
 
-        /// The home's file, or the defaults when there is none; a file that
-        /// does not hold gives the defaults and its problem.
+        /// The directories whose files count as history in `home`.
+        public func historyRoots(in home: AgentHome) -> [URL] {
+            let base = references == .history ? home.layout.root : home.layout.runtimeStorage.sessionsdir
+            return [base] + roots
+        }
+
+        /// The home's file; a missing one is written from the template
+        /// first, and a file that does not hold gives the defaults and its
+        /// problem.
         public static func load(home: AgentHome) -> (configuration: Configuration, problem: String?) {
             let file = home.layout.domainfile(fileName)
             guard let read = try? TextFileReader(file).read(options: .init(missingFilePolicy: .returnEmpty)), read.existed else {
+                // Create-only: a file written meanwhile is never replaced.
+                _ = try? FileWriter(file).write(SensitivityFrame.template)
                 return (.standard, nil)
             }
             do {
