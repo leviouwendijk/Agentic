@@ -10,7 +10,7 @@ public extension Standard.Tools {
     struct ReadGuideline: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// Exact guideline reference returned by guideline_index or find_guidelines.
+            /// Exact guideline reference returned by guideline_index or search_guidelines.
             public let reference: String
 
             public init(

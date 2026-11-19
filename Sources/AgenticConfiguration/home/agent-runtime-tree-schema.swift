@@ -174,6 +174,12 @@ public struct AgentHomeTreeSchema: Sendable, Codable, Hashable {
         root.directory("context")
     }
 
+    /// Findings from run retrospectives: short claims about the harness,
+    /// each backed by session references. `.frame` files of `Finding`s.
+    public var improvementsdir: PathTreeDirectoryAddress {
+        root.directory("improvements")
+    }
+
     public var tree: PathTree {
         PathTree(root: root.path) {
             PathTreeNode.file("settings.frame")

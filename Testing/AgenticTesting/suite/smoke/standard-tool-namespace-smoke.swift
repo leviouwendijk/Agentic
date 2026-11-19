@@ -18,7 +18,7 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.SearchCapabilities.self
     )
     ContractProof.tool(
-        Standard.Tools.FindGuidelines.self
+        Standard.Tools.SearchGuidelines.self
     )
     ContractProof.tool(
         Standard.Tools.GuidelineIndex.self
@@ -61,10 +61,10 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.SearchCapabilities.Output.self
     )
     ContractProof.source(
-        Standard.Tools.FindGuidelines.Input.self
+        Standard.Tools.SearchGuidelines.Input.self
     )
     ContractProof.result(
-        Standard.Tools.FindGuidelines.Output.self
+        Standard.Tools.SearchGuidelines.Output.self
     )
     ContractProof.source(
         Standard.Tools.GuidelineIndex.Input.self
@@ -221,8 +221,8 @@ func runStandardToolNamespaceSmoke() throws {
         expected: "list_capabilities"
     )
     try ContractProof.identifier(
-        Standard.Tools.FindGuidelines.definition.identifier.rawValue,
-        expected: "find_guidelines"
+        Standard.Tools.SearchGuidelines.definition.identifier.rawValue,
+        expected: "search_guidelines"
     )
     try ContractProof.identifier(
         Standard.Tools.GuidelineIndex.definition.identifier.rawValue,

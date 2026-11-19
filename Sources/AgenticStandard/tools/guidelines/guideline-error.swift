@@ -14,7 +14,7 @@ public enum GuidelineError:
     public var errorDescription: String? {
         switch self {
         case .emptyQuery:
-            "Tool 'find_guidelines' requires a non-empty query."
+            "Tool 'search_guidelines' requires a non-empty query."
 
         case .invalidArea(let area):
             "Unknown guideline area '\(area)'."

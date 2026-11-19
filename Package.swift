@@ -387,6 +387,12 @@ let package = Package(
             name: "AgenticHarness",
             dependencies: [
                 "Agentic",
+                "AgenticConfiguration",
+                "AgenticSessions",
+                .product(name: "Frame", package: "Frame"),
+                .product(name: "IO", package: "IO"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Writers", package: "Writers"),
                 .product(
                     name: "Macros",
                     package: "Macros"

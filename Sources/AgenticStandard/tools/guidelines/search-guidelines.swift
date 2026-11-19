@@ -6,7 +6,7 @@ import Macros
 
 public extension Standard.Tools {
     @Tool
-    struct FindGuidelines: Tool {
+    struct SearchGuidelines: Tool {
         @JSONSchema
         public struct Input: HashableSource {
             /// Natural-language intent, guideline title, summary text, or exact guideline reference.

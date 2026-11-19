@@ -17,6 +17,9 @@ public enum AgentCapabilityGrant:
     case session_readers
     /// `read_result`, when results can be shortened.
     case result_reader
+    /// `note_friction`: a one-line note on what got in the way, for the
+    /// run's retrospective.
+    case friction_notes
 }
 
 /// The grants an Agent takes: all, unless it excludes some.

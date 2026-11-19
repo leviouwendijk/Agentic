@@ -1,5 +1,7 @@
 import Agentic
 import AgenticHarness
+import Foundation
+import IO
 import Testing
 
 enum HarnessTestSuite {
@@ -104,7 +106,76 @@ enum HarnessTestSuite {
                 "includeHidden is forwarded to the source"
             )
         }
+
+        Test(
+            "findings-record-extend-list"
+        ) { _ in
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("harness-findings-\(UUID().uuidString)", isDirectory: true)
+            defer { try? FileSystem.default.remove(directory) }
+            let store = Harness.Improvements(directory: directory)
+            let context = ToolContext(services: try ToolServices().inserting(store))
+
+            do {
+                _ = try await Harness.Tools.RecordFinding().call(
+                    .init(category: .context, title: "x", detail: "x", evidence: [" "], proposal: "x"),
+                    in: context
+                )
+                throw HarnessFindingTestFailure.recordedWithoutEvidence
+            } catch HarnessFindingError.noEvidence {}
+
+            let recorded = try await Harness.Tools.RecordFinding().call(
+                .init(
+                    category: .context,
+                    title: "Shortened results are read again",
+                    detail: "3 of 4 shortened results were read back with read_result within two turns.",
+                    evidence: ["s1 step 12", "s1 step 19"],
+                    effect: "≈2.1k input tokens per session",
+                    proposal: "Raise the result budget for read_files to 1.5k tokens."
+                ),
+                in: context
+            )
+            try Expect.true(
+                recorded.file.hasSuffix("-shortened-results-are-read-again.frame") && !recorded.extended,
+                "a new finding gets a dated file named after its claim: \(recorded.file)"
+            )
+            let source = try Harness.Improvements.source(try store.finding(recorded.file))
+            try Expect.true(
+                source.hasPrefix("import Improvements;") && source.contains("let finding: Finding = "),
+                "it is a Frame file of one Finding: \(source)"
+            )
+
+            let extended = try await Harness.Tools.RecordFinding().call(
+                .init(
+                    category: .context, title: "same", detail: "same",
+                    evidence: ["s1 step 19", "s2 step 4"], proposal: "same",
+                    extends: recorded.file
+                ),
+                in: context
+            )
+            try Expect.equal(extended.evidence, 3, "extending adds only new evidence")
+            let finding = try store.finding(recorded.file)
+            try Expect.equal(finding.title, "Shortened results are read again", "and keeps the claim")
+            try Expect.equal(finding.status, .open, "and its status")
+
+            let listed = try await Harness.Tools.ListFindings().call(.init(), in: context)
+            try Expect.equal(listed.entries.map(\.file), [recorded.file], "the list names every finding")
+            try Expect.equal(
+                try await Harness.Tools.ListFindings().call(.init(category: .routing), in: context).entries.count,
+                0,
+                "and filters by category"
+            )
+            let noted = try await Harness.Tools.NoteFriction().call(
+                .init(kind: .missing_capability, note: "no tool to read a PDF"),
+                in: context
+            )
+            try Expect.true(noted.noted, "a friction note is acknowledged and changes nothing")
+        }
     }
+}
+
+private enum HarnessFindingTestFailure: Error {
+    case recordedWithoutEvidence
 }
 
 private struct HarnessInstallationInspectionSource:
