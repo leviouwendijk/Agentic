@@ -114,6 +114,46 @@ public extension Privacy {
             return segments
         }
 
+        /// `text` with each shown value marked as scrubbed, `⟨sam@example.com ✉⟩`,
+        /// so it never reads as ordinary text; handles shown as handles, and
+        /// unknown ones, stay as they are. For text-only surfaces: the
+        /// terminal UI, `agentic log --reveal`.
+        public func marked(
+            _ text: String
+        ) -> String {
+            guard mode != .handles, text.contains("⟦") else {
+                return text
+            }
+            return segments(in: text).map { segment in
+                switch segment {
+                case .text(let text):
+                    return text
+                case .handle(let display):
+                    switch display.state {
+                    case .revealed, .masked:
+                        return "⟨\(display.text) \(Self.mark(display.kind))⟩"
+                    case .handle, .unknown:
+                        return display.text
+                    }
+                }
+            }.joined()
+        }
+
+        /// One mark per kind.
+        public static func mark(
+            _ kind: Sensitivity.Kind
+        ) -> String {
+            switch kind {
+            case .secret: return "⚿"
+            case .contact: return "✉"
+            case .financial: return "¤"
+            case .network: return "⇄"
+            case .link: return "↗"
+            case .identifier: return "#"
+            case .identity: return "◉"
+            }
+        }
+
         /// `text` with each handle replaced by its display text and no
         /// marking, for surfaces that cannot style a run.
         public func plain(

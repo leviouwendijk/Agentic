@@ -31,6 +31,7 @@ enum RevealTests {
         try Expect.equal(unknown.text, gone.token, "stays a handle")
         try Expect.equal(segments.last, .text(" ⟦contact:zz⟧ end"), "a malformed handle is text")
         try Expect.equal(revealed.plain("to \(sam.token)"), "to sam@example.com", "plain text for unstyled surfaces")
+        try Expect.equal(revealed.marked("to \(sam.token), \(gone.token)"), "to ⟨sam@example.com ✉⟩, \(gone.token)", "marked as scrubbed; unknown left as a handle")
 
         let masked = Privacy.Reveal(mode: .masked, entries: entries)
         try Expect.false(masked.plain(sam.token).contains("sam@example.com"), "masked mode shows previews only")
