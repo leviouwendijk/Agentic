@@ -49,6 +49,53 @@ extension ToolPayloadGuard {
         return try? protected.decode(Value.self)
     }
 
+    /// `review` protected. Text is always protected; access, estimates and
+    /// preview are kept only when their protected form still decodes and
+    /// are otherwise withheld with a warning, so no unprotected review
+    /// reaches an approval or a journal.
+    func protectingReview(_ review: ToolPreflight, from tool: ToolIdentifier) async -> ToolPreflight {
+        if let whole = await protectingEncoded(review, from: tool) {
+            return whole
+        }
+        var withheld: [String] = []
+        let access = await protectingEncoded(review.access, from: tool)
+        if access == nil { withheld.append("access") }
+        let estimates = await protectingEncoded(review.estimates, from: tool)
+        if estimates == nil { withheld.append("estimates") }
+        let preview = await protectingEncoded(review.preview, from: tool)
+        if preview == nil { withheld.append("preview") }
+
+        var warnings: [String] = []
+        for warning in review.warnings {
+            warnings.append(await protecting(warning, from: tool))
+        }
+        if !withheld.isEmpty {
+            warnings.append(
+                "Part of this review (\(withheld.joined(separator: ", "))) held a sensitive value in a typed field and is withheld."
+            )
+        }
+        var sideEffects: [String] = []
+        for effect in review.sideEffects {
+            sideEffects.append(await protecting(effect, from: tool))
+        }
+        var policyChecks: [String] = []
+        for check in review.policyChecks {
+            policyChecks.append(await protecting(check, from: tool))
+        }
+        return ToolPreflight(
+            tool: review.tool,
+            risk: review.risk,
+            summary: await protecting(review.summary, from: tool),
+            access: access ?? .none,
+            estimates: estimates ?? .none,
+            preview: preview ?? .none,
+            mayChangeSource: review.mayChangeSource,
+            sideEffects: sideEffects,
+            policyChecks: policyChecks,
+            warnings: warnings
+        )
+    }
+
     func resolvingCall(_ call: ToolInvocation) async throws -> ToolInvocation {
         ToolInvocation(
             id: call.id,

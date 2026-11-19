@@ -39,6 +39,10 @@ enum AgenticSensitivityTestSuite {
             try await GuardTests.relatedToolsUseValues()
         }
 
+        Test("reviews-show-handles", tags: ["guard", "review"]) {
+            try await GuardTests.reviewsShowHandles()
+        }
+
         Test("other-domains-need-a-grant", tags: ["guard", "grant"]) {
             try await GuardTests.otherDomainsNeedAGrant()
         }

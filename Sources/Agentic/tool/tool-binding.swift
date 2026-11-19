@@ -462,7 +462,7 @@ public struct ToolBinding: CapabilityBinding {
         // journal keeps gets handles back.
         let preparation = try await preparationHandler(try await shield.resolvingCall(call), context)
         return CapabilityPreparation(
-            review: await shield.protectingEncoded(preparation.review, from: call.tool) ?? preparation.review,
+            review: await shield.protectingReview(preparation.review, from: call.tool),
             operation: preparation.operation
         )
     }

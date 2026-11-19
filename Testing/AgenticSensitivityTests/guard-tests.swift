@@ -72,6 +72,11 @@ extension FixtureMail.Tools {
 
         init() {}
 
+        func preflight(_ input: Input, in context: ToolContext) async throws -> ToolPreflight {
+            await Received.shared.append("preflight \(input.to)")
+            return .init(tool: Self.identifier, risk: Self.risk, summary: "Send to \(input.to)", warnings: ["Recipient \(input.to) is external."])
+        }
+
         func call(_ input: Input, in context: ToolContext) async throws -> Output {
             await Received.shared.append(input.to)
             return .init(sent: "sent to \(input.to)")
@@ -144,6 +149,23 @@ enum GuardTests {
         try Expect.equal(await Received.shared.last(), "sam@example.com", "the related tool works with the value")
         try Expect.equal(sent.modelText.contains(address.token), true, "and its own result shows the same handle: \(sent.modelText)")
         try Expect.false(sent.modelText.contains("sam@example.com"), "never the value")
+    }
+
+    static func reviewsShowHandles() async throws {
+        let (context, _) = try context()
+        let lookup = try await run(FixtureMail.Tools.Lookup(), .object(["name": .string("Sam")]), in: context)
+        let address = try handle(in: lookup, kind: .contact)
+
+        let binding = ToolBinding(FixtureMail.Tools.Send())
+        let call = ToolInvocation(
+            id: "review",
+            tool: binding.definition.identifier,
+            arguments: .object(["to": .string(address.token), "body": .string("Hi")])
+        )
+        let review = try await binding.prepare(call, context: context).review
+        try Expect.equal(await Received.shared.last(), "preflight sam@example.com", "preflight works with the value")
+        try Expect.equal(review.summary, "Send to \(address.token)", "the review an approval shows holds the handle")
+        try Expect.equal(review.warnings, ["Recipient \(address.token) is external."], "warnings too")
     }
 
     static func otherDomainsNeedAGrant() async throws {
