@@ -161,13 +161,6 @@ public extension ContextWindow {
         /// stays in the session log. Applies only while `read_result` can
         /// be revealed and the session is logged. Nil shows results whole.
         public let resultBudget: Int?
-        /// A capability that becomes visible mid-session is declared to the
-        /// provider while the request is at most this many estimated tokens:
-        /// that rewrites the cached prompt once, cheaply, since the tools
-        /// come before the system prompt and the history. Above it, the
-        /// capability is called through `call_capability`, its contract in
-        /// the history, and the cached prompt holds. Nil always declares.
-        public let deferRevealsAbove: Int?
 
         public init(
             preferredInputTokens: Int = 12_000,
@@ -176,8 +169,7 @@ public extension ContextWindow {
             maximumResolutions: Int = 32,
             history: HistoryPolicy = .init(),
             schemas: SchemaDetail = .full,
-            resultBudget: Int? = 4_000,
-            deferRevealsAbove: Int? = 16_000
+            resultBudget: Int? = 4_000
         ) {
             self.preferredInputTokens = preferredInputTokens
             self.maximumInputTokens = maximumInputTokens
@@ -186,7 +178,6 @@ public extension ContextWindow {
             self.history = history
             self.schemas = schemas
             self.resultBudget = resultBudget.map { max(1, $0) }
-            self.deferRevealsAbove = deferRevealsAbove.map { max(0, $0) }
         }
     }
 
