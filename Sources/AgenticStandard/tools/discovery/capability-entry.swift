@@ -59,11 +59,13 @@ public struct CapabilityEntry: HashableProduct
 public extension Standard.Tools {
     /// The discovery set. Listing says what exists, searching narrows it,
     /// inspecting returns one contract; inspection alone needs an identifier
-    /// the model already has. The runtime exposes every installed one.
+    /// the model already has. What is revealed is called through
+    /// `call_capability`. The runtime exposes every installed one.
     static let discovery: [ToolIdentifier] = [
         ListCapabilities.identifier,
         SearchCapabilities.identifier,
         InspectCapability.identifier,
+        CallCapability.identifier,
     ]
 }
 

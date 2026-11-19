@@ -32,8 +32,12 @@ public extension Standard.Tools {
             public let modelInputSchema: JSONValue?
             public let risk: String?
             public let wasVisible: Bool
-            /// Advertised from the next turn on, with its full schema.
+            /// Callable from now on: this is its contract.
             public let revealed: Bool
+            /// `call_capability` when it is called through the dispatcher
+            /// rather than by its own name: the tool definitions stay as
+            /// the session opened, so the provider's cache holds.
+            public let callWith: String?
 
             public init(
                 kind: CapabilityKind,
@@ -45,7 +49,8 @@ public extension Standard.Tools {
                 modelInputSchema: JSONValue?,
                 risk: String?,
                 wasVisible: Bool,
-                revealed: Bool = false
+                revealed: Bool = false,
+                callWith: String? = nil
             ) {
                 self.kind = kind
                 self.identifier = identifier
@@ -57,11 +62,12 @@ public extension Standard.Tools {
                 self.risk = risk
                 self.wasVisible = wasVisible
                 self.revealed = revealed
+                self.callWith = callWith
             }
         }
 
         public static let purpose =
-            "Return one available capability's full contract, including optional fields and guidance; it is then advertised from the next turn on."
+            "Return one available capability's full contract, including optional fields and guidance; a hidden one becomes callable, through call_capability when `callWith` says so."
         public static let risk: ActionRisk = .observe
         public init() {}
 
@@ -88,7 +94,13 @@ public extension Standard.Tools {
                 modelInputSchema: selected.modelInputSchema,
                 risk: selected.risk.map { String(describing: $0) },
                 wasVisible: wasVisible,
-                revealed: revealed
+                revealed: revealed,
+                // The runtime keeps a session's tool definitions as they
+                // opened; what is revealed later is called through the
+                // dispatcher, when there is one.
+                callWith: revealed && snapshot.visible.tools.contains(CallCapability.identifier)
+                    ? CallCapability.identifier.rawValue
+                    : nil
             )
         }
     }

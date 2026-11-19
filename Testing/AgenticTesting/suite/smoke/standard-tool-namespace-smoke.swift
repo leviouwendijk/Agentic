@@ -221,6 +221,10 @@ func runStandardToolNamespaceSmoke() throws {
         expected: "list_capabilities"
     )
     try ContractProof.identifier(
+        Standard.Tools.CallCapability.definition.identifier.rawValue,
+        expected: "call_capability"
+    )
+    try ContractProof.identifier(
         Standard.Tools.SearchGuidelines.definition.identifier.rawValue,
         expected: "search_guidelines"
     )
