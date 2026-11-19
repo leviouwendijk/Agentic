@@ -131,11 +131,12 @@ public extension ContextWindow {
             self.tolerance = tolerance
         }
 
-        /// Whether a request starting now could still read a cached prefix:
-        /// some model's previous request started within the lifetime. False
-        /// before any request, when there is nothing to lose.
-        public func isWarm(at now: Date = Date()) -> Bool {
-            previous.values.contains { now.timeIntervalSince($0.startedAt) <= lifetime }
+        /// Whether a request starting now finds no cached prefix: every
+        /// model's previous request started longer ago than the lifetime.
+        /// False when nothing was observed, since then nothing is known.
+        public func hasExpired(at now: Date = Date()) -> Bool {
+            !previous.isEmpty
+                && previous.values.allSatisfy { now.timeIntervalSince($0.startedAt) > lifetime }
         }
 
         /// Records the request and returns the miss it made, if any. Nil
