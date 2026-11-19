@@ -38,7 +38,7 @@ struct AgenticStructuresSmoke {
         try check(graph.references.target(for: "external") == "not_in_snapshot", "off-graph reference")
         let graphRestored = try JSONDecoder().decode(GraphTool.Output.self, from: JSONEncoder().encode(graph))
         try check(graphRestored == graph, "typed graph JSON roundtrip")
-        guard case .graph(let presented)? = GraphTool().present(graph, input: graphInput)?.document.blocks.first else {
+        guard case .graph(let presented)? = GraphTool().present(graph, input: graphInput, preflight: nil)?.document.blocks.first else {
             throw SmokeFailure.failed("graph presentation")
         }
         try check(presented.nodes.map(\.label) == ["Root", "Left branch", "Right branch", "Merge"], "legacy value labels presented")

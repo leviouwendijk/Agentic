@@ -653,7 +653,7 @@ public extension Standard.Tools {
                 + " The user sees it as an attachment."
         }
 
-        public func present(_ output: Output, input _: Input) -> ToolPresentation? {
+        public func present(_ output: Output, input _: Input, preflight _: ToolPreflight?) -> ToolPresentation? {
             .init(output.document)
         }
     }

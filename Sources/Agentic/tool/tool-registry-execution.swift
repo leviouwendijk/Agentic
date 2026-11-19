@@ -28,7 +28,8 @@ public extension ToolRegistry {
     func execute(
         _ call: ToolInvocation,
         context: ToolContext,
-        preparedOperation: PreparedOperation.Envelope? = nil
+        preparedOperation: PreparedOperation.Envelope? = nil,
+        preflight: ToolPreflight? = nil
     ) async throws -> ToolExecution.Result {
         guard let registered =
             registeredTool(
@@ -43,7 +44,8 @@ public extension ToolRegistry {
         return try await registered.execute(
             call,
             context: executionContext(context),
-            preparedOperation: preparedOperation
+            preparedOperation: preparedOperation,
+            preflight: preflight
         )
     }
 

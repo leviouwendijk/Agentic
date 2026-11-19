@@ -1,6 +1,7 @@
 import Agentic
 import Foundation
 import Primitives
+import Reporting
 import Schema
 import Testing
 
@@ -88,6 +89,11 @@ extension ExecutionTesting {
             "process sees both typed Input and typed Output"
         )
         try Expect.equal(
+            result.presentation?.document.title,
+            "unreviewed",
+            "a call without a review presents without one"
+        )
+        try Expect.equal(
             await probe.preflightValues(),
             [
                 "hello",
@@ -100,6 +106,17 @@ extension ExecutionTesting {
                 "hello",
             ],
             "stateful tool dependencies survive registration erasure"
+        )
+
+        let reviewed = try await registry.execute(
+            call,
+            context: .init(),
+            preflight: preflight
+        )
+        try Expect.equal(
+            reviewed.presentation?.document.title,
+            "approved: Typed preflight for hello.",
+            "present receives the preflight the call was approved from"
         )
 
         return [
@@ -216,6 +233,17 @@ private struct TypedAgentToolContractTool: Tool {
         return Output(
             value: input.value.uppercased()
         )
+    }
+
+    func present(
+        _ output: Output,
+        input _: Input,
+        preflight: ToolPreflight?
+    ) -> ToolPresentation? {
+        let title = preflight.map { "approved: \($0.summary)" } ?? "unreviewed"
+        return (try? ReportDocument(title: title, datasets: [], blocks: [])).map {
+            ToolPresentation($0)
+        }
     }
 
     func process(

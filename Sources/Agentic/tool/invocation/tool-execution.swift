@@ -47,7 +47,8 @@ internal struct ToolExecutionEngine: Sendable {
             return try await registry.execute(
                 call,
                 context: context,
-                preparedOperation: preparedOperation
+                preparedOperation: preparedOperation,
+                preflight: preflight
             )
         } catch {
             let propagatedRecovery: Recovery.Record?

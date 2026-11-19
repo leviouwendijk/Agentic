@@ -130,7 +130,7 @@ public extension Standard.Tools {
             try Self.evaluate(input)
         }
 
-        public func present(_ output: Output, input: Input) -> ToolPresentation? {
+        public func present(_ output: Output, input: Input, preflight _: ToolPreflight?) -> ToolPresentation? {
             let nodes = input.nodes.map { node in
                 ReportBlock.Graph.Node(
                     id: node.id,

@@ -97,6 +97,7 @@ public struct ToolBinding: CapabilityBinding {
         @Sendable (
             ToolInvocation,
             PreparedOperation.Envelope?,
+            ToolPreflight?,
             ToolContext
         ) async throws -> (
             output: JSONValue,
@@ -165,7 +166,7 @@ public struct ToolBinding: CapabilityBinding {
             return preparation
         }
 
-        self.callHandler = { call, preparedOperation, context in
+        self.callHandler = { call, preparedOperation, preflight, context in
             let input: T.Input
 
             do {
@@ -247,7 +248,8 @@ public struct ToolBinding: CapabilityBinding {
                 ),
                 presentation: isError ? nil : tool.present(
                     output,
-                    input: input
+                    input: input,
+                    preflight: preflight
                 )
             )
         }
@@ -316,7 +318,8 @@ public struct ToolBinding: CapabilityBinding {
                     projection: projection,
                     presentation: tool.present(
                         output,
-                        input: input
+                        input: input,
+                        preflight: nil
                     )
                 )
 
@@ -477,13 +480,15 @@ public struct ToolBinding: CapabilityBinding {
     public func execute(
         _ call: ToolInvocation,
         context: ToolContext,
-        preparedOperation: PreparedOperation.Envelope? = nil
+        preparedOperation: PreparedOperation.Envelope? = nil,
+        preflight: ToolPreflight? = nil
     ) async throws -> ToolExecution.Result {
         let (value, observations) = try await ToolExecutionObservations.capture(call: call.reference) {
             try await executeObserved(
                 call,
                 context: context,
-                preparedOperation: preparedOperation
+                preparedOperation: preparedOperation,
+                preflight: preflight
             )
         }
         var result = value
@@ -494,11 +499,13 @@ public struct ToolBinding: CapabilityBinding {
     private func executeObserved(
         _ call: ToolInvocation,
         context: ToolContext,
-        preparedOperation: PreparedOperation.Envelope?
+        preparedOperation: PreparedOperation.Envelope?,
+        preflight: ToolPreflight?
     ) async throws -> ToolExecution.Result {
         let execution = try await callHandler(
             call,
             preparedOperation,
+            preflight,
             context
         )
 
