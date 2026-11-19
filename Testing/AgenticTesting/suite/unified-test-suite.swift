@@ -14,6 +14,11 @@ enum UnifiedAgenticTestSuite {
                 Test($0)
             )
         }
+        agentForkFlows.map {
+            TestNode.test(
+                Test($0)
+            )
+        }
         domainCatalogFlows.map {
             TestNode.test(
                 Test($0)

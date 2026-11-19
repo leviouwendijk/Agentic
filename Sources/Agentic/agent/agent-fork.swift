@@ -17,6 +17,8 @@ where
     Output == Base.Output
 {
     associatedtype Base: Agent
+    associatedtype Input = Base.Input
+    associatedtype Output = Base.Output
     static var fork: AgentDerivation { get }
 }
 
