@@ -22,6 +22,7 @@ tests {
         }
         frame { "t_agentic_frame" }
         math { "t_agentic_math" }
+        sensitivity { "t_agentic_sensitivity" }
     }
 }
 details = ""

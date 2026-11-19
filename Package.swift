@@ -58,6 +58,14 @@ let package = Package(
             ]
         ),
 
+        // sensitive values as handles: guard, vault, privacy_* tools
+        .library(
+            name: "AgenticSensitivity",
+            targets: [
+                "AgenticSensitivity",
+            ]
+        ),
+
         // session introspection: history, log, catalog, approvals, artifacts
         .library(
             name: "AgenticSessions",
@@ -117,6 +125,12 @@ let package = Package(
             name: "t_agentic_context",
             targets: [
                 "AgenticContextTesting",
+            ]
+        ),
+        .executable(
+            name: "t_agentic_sensitivity",
+            targets: [
+                "AgenticSensitivityTests",
             ]
         ),
         .executable(
@@ -242,6 +256,10 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/leviouwendijk/Writers.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Sensitivity.git",
             branch: "master"
         ),
     ],
@@ -478,6 +496,35 @@ let package = Package(
                 .product(name: "Tokens", package: "Tokens"),
                 .product(name: "Writers", package: "Writers"),
             ]
+        ),
+        .target(
+            name: "AgenticSensitivity",
+            dependencies: [
+                "Agentic",
+                "AgenticConfiguration",
+                "AgenticStandard",
+                .product(name: "IO", package: "IO"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Sensitivity", package: "Sensitivity"),
+                .product(name: "Writers", package: "Writers"),
+            ]
+        ),
+        .executableTarget(
+            name: "AgenticSensitivityTests",
+            dependencies: [
+                "Agentic",
+                "AgenticConfiguration",
+                "AgenticSensitivity",
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Sensitivity", package: "Sensitivity"),
+                .product(name: "Testing", package: "Testing"),
+            ],
+            path: "Testing/AgenticSensitivityTests"
         ),
         .executableTarget(
             name: "AgenticContextTesting",

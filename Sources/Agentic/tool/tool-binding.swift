@@ -455,7 +455,16 @@ public struct ToolBinding: CapabilityBinding {
         _ call: ToolInvocation,
         context: ToolContext
     ) async throws -> CapabilityPreparation<ToolPreflight> {
-        try await preparationHandler(call, context)
+        guard let shield = context.payloadGuard else {
+            return try await preparationHandler(call, context)
+        }
+        // Preflight works with values; the review an approval shows and a
+        // journal keeps gets handles back.
+        let preparation = try await preparationHandler(try await shield.resolvingCall(call), context)
+        return CapabilityPreparation(
+            review: await shield.protectingEncoded(preparation.review, from: call.tool) ?? preparation.review,
+            operation: preparation.operation
+        )
     }
 
     public func preflight(
@@ -502,14 +511,15 @@ public struct ToolBinding: CapabilityBinding {
         preparedOperation: PreparedOperation.Envelope?,
         preflight: ToolPreflight?
     ) async throws -> ToolExecution.Result {
+        let shield = context.payloadGuard
         let execution = try await callHandler(
-            call,
+            try await shield?.resolvingCall(call) ?? call,
             preparedOperation,
             preflight,
             context
         )
 
-        return ToolExecution.Result(
+        let result = ToolExecution.Result(
             result: FunctionCall.Response(
                 call: .init(call.reference),
                 output: execution.output,
@@ -519,6 +529,12 @@ public struct ToolBinding: CapabilityBinding {
             ),
             presentation: execution.presentation
         )
+        // Protected before anything else sees it: observers, journals, the
+        // recorder and the model.
+        if let shield {
+            return await shield.protectingResult(result, from: call.tool)
+        }
+        return result
     }
 
     public func reconcile(
@@ -538,6 +554,9 @@ public struct ToolBinding: CapabilityBinding {
         }
         if case .some(.applied(var result)) = value {
             result.observations = observations
+            if let shield = context.payloadGuard {
+                result = await shield.protectingResult(result, from: call.tool)
+            }
             return .applied(result)
         }
         return value
