@@ -33,10 +33,10 @@ public extension Standard.Tools {
             public let risk: String?
             /// Among the tool definitions: called by its own name.
             public let wasVisible: Bool
-            /// `call_capability` when it is not among the tool definitions:
-            /// it is callable all the same, through the dispatcher, and the
-            /// definitions stay as the conversation opened, so the
-            /// provider's cache holds.
+            /// How to call it when it is not among the tool definitions: its
+            /// own name where the model's route takes such calls, else
+            /// `call_capability`. The definitions stay as the conversation
+            /// opened, so the provider's cache holds.
             public let callWith: String?
 
             public init(
@@ -65,7 +65,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Return one available capability's full contract, including optional fields and guidance. Reading it changes nothing. Call a capability among your tools by its own name; only one that is not among them goes through call_capability, as `callWith` says."
+            "Return one available capability's full contract, including optional fields and guidance. Reading it changes nothing. Call a capability among your tools by its own name; one that is not among them is called as `callWith` says."
         public static let risk: ActionRisk = .observe
         public init() {}
 
@@ -88,13 +88,33 @@ public extension Standard.Tools {
                 modelInputSchema: selected.modelInputSchema,
                 risk: selected.risk.map { String(describing: $0) },
                 wasVisible: wasVisible,
-                // The runtime keeps a conversation's tool definitions as
-                // they opened; the rest is called through the dispatcher,
-                // when there is one.
-                callWith: !wasVisible && snapshot.visible.tools.contains(CallCapability.identifier)
-                    ? CallCapability.identifier.rawValue
-                    : nil
+                callWith: Self.callWith(
+                    input.kind,
+                    identifier: selected.identifier,
+                    declared: wasVisible,
+                    dispatcher: snapshot.visible.tools.contains(CallCapability.identifier),
+                    byName: (try? context.require(UndeclaredCallForm.self))?.byName == true
+                )
             )
         }
+
+    /// Nil for a declared capability, called by its name as usual. A
+    /// tool outside the definitions is called by its own name where the
+    /// route takes such calls; the rest go through the dispatcher, the
+    /// only form every gateway takes (programs, inferences and agents have
+    /// provider names the model never sees).
+    private static func callWith(
+        _ kind: CapabilityKind,
+        identifier: String,
+        declared: Bool,
+        dispatcher: Bool,
+        byName: Bool
+    ) -> String? {
+        guard !declared else { return nil }
+        if byName, kind == .tool {
+            return identifier
+        }
+        return dispatcher ? CallCapability.identifier.rawValue : nil
+    }
     }
 }
