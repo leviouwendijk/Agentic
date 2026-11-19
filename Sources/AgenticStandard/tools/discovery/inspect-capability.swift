@@ -65,7 +65,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Return one available capability's full contract, including optional fields and guidance. Reading it changes nothing: every available capability is callable, by its own name when it is among your tools, otherwise through call_capability as `callWith` says."
+            "Return one available capability's full contract, including optional fields and guidance. Reading it changes nothing. Call a capability among your tools by its own name; only one that is not among them goes through call_capability, as `callWith` says."
         public static let risk: ActionRisk = .observe
         public init() {}
 

@@ -49,7 +49,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Call an available capability that is not among your tools, with its identifier and its input as inspect_capability's contract describes; call tools in your definitions by their own names."
+            "Only for a capability that is not among your tools: call it here with its identifier and its input as inspect_capability's contract describes. Call every tool you have by its own name, never through this one."
         public static let risk: ActionRisk = .observe
 
         public init() {}
