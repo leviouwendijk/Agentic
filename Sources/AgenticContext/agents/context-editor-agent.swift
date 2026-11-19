@@ -87,7 +87,6 @@ public extension Context.Agents {
                 tools: .init(
                     members: [
                         Standard.Tools.ClarifyWithUser.identifier,
-                        Standard.Tools.InspectCapability.identifier,
                     ]
                 )
             ),
@@ -104,7 +103,6 @@ public extension Context.Agents {
                         FrameLang.Tools.ModuleSchema.identifier,
 
                         Standard.Tools.ClarifyWithUser.identifier,
-                        Standard.Tools.InspectCapability.identifier,
                     ]
                 )
             )
