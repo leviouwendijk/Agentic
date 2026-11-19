@@ -2,37 +2,52 @@ import Foundation
 import Frame
 import IO
 import Readers
+import Roots
 
 public extension Context {
     /// Every entry below a `context/` directory, read from its files on
     /// each load: identifiers come from where entries are, so there is no
-    /// index to keep in step. A mount file brings in another directory,
-    /// such as a team's shared context, as if it were a folder.
+    /// index to keep in step. Each shared root (Frame's `Roots`, declared in
+    /// `~/.config/roots.frame`) brings in its `.agentic/context/` as if it
+    /// were a folder named after the root.
     struct Library: Sendable {
         public struct Item: Sendable, Hashable {
             /// `business.services`, `people.sam.role`.
             public let id: String
             /// The file below the context directory, such as
-            /// `people/sam.frame`; below a mount, through its folder:
+            /// `people/sam.frame`; in a shared root, through its folder:
             /// `team/business.frame`.
             public let file: String
             public let entry: ContextFrame.Entry
         }
 
-        /// A mount file and the directory it brings in.
-        public struct MountPoint: Sendable, Hashable {
-            /// The mount file below the context directory: `team.frame`.
-            public let file: String
-            /// Where its entries appear: `team`, so `team/business.frame`
-            /// and `team.business.overview`.
+        /// A shared root's context directory and the folder it appears as.
+        public struct SharedFolder: Sendable, Hashable {
+            /// The root's name: `team`, so `team/business.frame` and
+            /// `team.business.overview`.
             public let folder: String
             public let directory: URL
+            /// The root is not declared writable: nothing is saved there.
             public let readOnly: Bool
+
+            public init(folder: String, directory: URL, readOnly: Bool) {
+                self.folder = folder
+                self.directory = directory.standardizedFileURL
+                self.readOnly = readOnly
+            }
+
+            /// The `.agentic/context` of every shared root in `roots`
+            /// that has one.
+            public static func roots(_ roots: RootSet = Roots.load()) -> [SharedFolder] {
+                roots.shared
+                    .map { SharedFolder(folder: $0.name, directory: $0.url(.agenticContext), readOnly: !$0.writable) }
+                    .filter { FileSystem.default.exists($0.directory) }
+            }
         }
 
         public let directory: URL
         public let items: [Item]
-        public let mounts: [MountPoint]
+        public let shared: [SharedFolder]
         /// `file:line:column: message`; a file with problems contributes no
         /// entries.
         public let problems: [String]
@@ -41,9 +56,9 @@ public extension Context {
             items.first { $0.id == id }
         }
 
-        /// The mount `file` lies below, if any.
-        public func mount(containing file: String) -> MountPoint? {
-            mounts.first { file.hasPrefix("\($0.folder)/") }
+        /// The shared folder `file` lies below, if any.
+        public func shared(containing file: String) -> SharedFolder? {
+            shared.first { file.hasPrefix("\($0.folder)/") }
         }
 
         /// Entries every agent receives.
@@ -64,19 +79,18 @@ public extension Context {
             return counts.keys.sorted().map { ($0, counts[$0] ?? 0) }
         }
 
-        public init(directory: URL, items: [Item], mounts: [MountPoint] = [], problems: [String]) {
+        public init(directory: URL, items: [Item], shared: [SharedFolder] = [], problems: [String]) {
             self.directory = directory
             self.items = items
-            self.mounts = mounts
+            self.shared = shared
             self.problems = problems
         }
 
-        /// Reads every `.frame` file below `directory`, following mount
-        /// files; hidden files and folders are skipped. A missing
+        /// Reads every `.frame` file below `directory` and below each
+        /// shared folder; hidden files and folders are skipped. A missing
         /// directory is an empty library.
-        public static func load(_ directory: URL) -> Library {
+        public static func load(_ directory: URL, shared: [SharedFolder] = []) -> Library {
             var items: [Item] = []
-            var mounts: [MountPoint] = []
             var problems: [String] = []
             let files = frameFiles(in: directory, problems: &problems)
             for file in files {
@@ -85,23 +99,19 @@ public extension Context {
                 }
                 let result = Context.read(text, file: file)
                 problems += result.problems
-                guard let mount = result.mount else {
-                    items += result.items
+                items += result.items
+            }
+            var folders: [SharedFolder] = []
+            for folder in shared {
+                if files.contains(where: { $0.hasPrefix("\(folder.folder)/") || $0 == "\(folder.folder).frame" }) {
+                    problems.append("\(folder.folder)/: the shared root '\(folder.folder)' and a local file or folder of that name; rename the local one.")
                     continue
                 }
-                let folder = String(file.dropLast(".frame".count))
-                if files.contains(where: { $0.hasPrefix("\(folder)/") }) {
-                    problems.append("\(file): mounts at \(folder)/, which is also a folder here; rename one.")
-                    continue
-                }
-                guard let point = mountPoint(mount, file: file, in: directory, problems: &problems) else {
-                    continue
-                }
-                mounts.append(point)
-                items += mounted(point, problems: &problems)
+                folders.append(folder)
+                items += sharedItems(folder, problems: &problems)
             }
             problems += unresolvedRelations(in: items)
-            return .init(directory: directory, items: items, mounts: mounts, problems: problems)
+            return .init(directory: directory, items: items, shared: folders, problems: problems)
         }
 
         /// This library with `file` holding `text` instead, as it would be
@@ -109,25 +119,10 @@ public extension Context {
         public func replacing(_ file: String, with text: String) -> (library: Library, problems: [String]) {
             let result = Context.read(text, file: file)
             var problems = result.problems
-            let folder = String(file.dropLast(".frame".count))
-            let replaced = mounts.first { $0.file == file }
-            var others = items.filter { $0.file != file }
-            if let replaced {
-                others.removeAll { $0.file.hasPrefix("\(replaced.folder)/") }
+            if shared(containing: file) == nil, shared.contains(where: { "\($0.folder).frame" == file }) {
+                problems.append("\(file): has the name of a shared root; pick another.")
             }
-            var added = result.items
-            var nextMounts = mounts.filter { $0.file != file }
-            if let declared = result.mount {
-                if self.mount(containing: file) != nil {
-                    problems.append("\(file): a mount inside a mount is not followed.")
-                } else if items.contains(where: { $0.file.hasPrefix("\(folder)/") && self.mount(containing: $0.file) == nil }) {
-                    problems.append("\(file): mounts at \(folder)/, which is also a folder here; rename one.")
-                } else if let point = Self.mountPoint(declared, file: file, in: directory, problems: &problems) {
-                    nextMounts.append(point)
-                    added = Self.mounted(point, problems: &problems)
-                }
-            }
-            let merged = others + added
+            let merged = items.filter { $0.file != file } + result.items
             // Its own broken relations, and those of other files it breaks.
             let before = Set(Self.unresolvedRelations(in: items))
             problems += Self.unresolvedRelations(in: merged).filter {
@@ -137,7 +132,7 @@ public extension Context {
                 .init(
                     directory: directory,
                     items: merged,
-                    mounts: nextMounts,
+                    shared: shared,
                     problems: self.problems.filter { !$0.hasPrefix("\(file):") }
                 ),
                 problems
@@ -153,51 +148,15 @@ public extension Context {
             }
         }
 
-        /// Where `mount`, declared in `file`, points; nil with a problem
-        /// when it cannot be followed.
-        private static func mountPoint(
-            _ mount: ContextFrame.Mount,
-            file: String,
-            in directory: URL,
-            problems: inout [String]
-        ) -> MountPoint? {
-            let expanded = (mount.path as NSString).expandingTildeInPath
-            let target = (expanded.hasPrefix("/")
-                ? URL(fileURLWithPath: expanded, isDirectory: true)
-                : directory.appendingPathComponent(file).deletingLastPathComponent()
-                    .appendingPathComponent(expanded, isDirectory: true)
-            ).standardizedFileURL
-            guard (try? FileInspector(target).inspect(followingSymlinks: true))?.kind == .directory else {
-                problems.append("\(file): mounts '\(mount.path)', which is not a directory (\(target.path)).")
-                return nil
-            }
-            let root = directory.standardizedFileURL.path
-            if target.path == root || target.path.hasPrefix(root + "/") {
-                problems.append("\(file): mounts '\(mount.path)', which is inside this context directory.")
-                return nil
-            }
-            return .init(
-                file: file,
-                folder: String(file.dropLast(".frame".count)),
-                directory: target,
-                readOnly: mount.readOnly ?? false
-            )
-        }
-
-        /// The entries of a mounted directory, under its folder; mounts
-        /// inside it are not followed.
-        private static func mounted(_ point: MountPoint, problems: inout [String]) -> [Item] {
+        /// The entries of a shared folder, under its name.
+        private static func sharedItems(_ folder: SharedFolder, problems: inout [String]) -> [Item] {
             var items: [Item] = []
-            for inner in frameFiles(in: point.directory, problems: &problems) {
-                let file = "\(point.folder)/\(inner)"
-                guard let text = read(point.directory.appendingPathComponent(inner), file: file, problems: &problems) else {
+            for inner in frameFiles(in: folder.directory, problems: &problems) {
+                let file = "\(folder.folder)/\(inner)"
+                guard let text = read(folder.directory.appendingPathComponent(inner), file: file, problems: &problems) else {
                     continue
                 }
                 let result = Context.read(text, file: file)
-                if result.mount != nil {
-                    problems.append("\(file): a mount inside a mount is not followed.")
-                    continue
-                }
                 items += result.items
                 problems += result.problems
             }
@@ -253,35 +212,20 @@ public extension Context {
         !name.isEmpty && name.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
     }
 
-    /// What one file holds: its entries, or a mount; or why it does not
-    /// hold.
-    static func read(_ text: String, file: String) -> (items: [Library.Item], problems: [String], mount: ContextFrame.Mount?) {
+    /// What one file holds: its entries, or why it does not hold.
+    static func read(_ text: String, file: String) -> (items: [Library.Item], problems: [String]) {
         guard let prefix = idPrefix(of: file) else {
-            return ([], ["\(file): file and folder names may hold only letters, digits, _ and -, and the file must end in .frame."], nil)
+            return ([], ["\(file): file and folder names may hold only letters, digits, _ and -, and the file must end in .frame."])
         }
         let document: Frame.Document
         do {
             document = try Frame.parse(text, filePath: file)
         } catch {
-            return ([], ["\(file): \(error)"], nil)
+            return ([], ["\(file): \(error)"])
         }
         let problems = Frame.problems(in: document, environment: ContextFrame.environment)
             .map { "\(file):\($0.located(in: text).description)" }
-        guard problems.isEmpty else { return ([], problems, nil) }
-
-        let mounts = document.bindings(ofType: ContextFrame.mountType)
-        if let binding = mounts.first {
-            let others = document.bindings.filter { $0.type?.components.last == ContextFrame.entryType
-                || $0.type?.components.last == ContextFrame.defaultsType }
-            guard mounts.count == 1, others.isEmpty else {
-                return ([], ["\(file): a mount file holds one `Mount` and nothing else."], nil)
-            }
-            do {
-                return ([], [], try document.decode(ContextFrame.Mount.self, binding: binding.name))
-            } catch {
-                return ([], ["\(file): '\(binding.name)': \(error)"], nil)
-            }
-        }
+        guard problems.isEmpty else { return ([], problems) }
 
         var items: [Library.Item] = []
         var found: [String] = []
@@ -315,7 +259,7 @@ public extension Context {
         if found.isEmpty, items.isEmpty {
             found.append("\(file): no `let name: Entry` bindings.")
         }
-        return found.isEmpty ? (items, [], nil) : ([], found, nil)
+        return found.isEmpty ? (items, []) : ([], found)
     }
 
     private static func isDate(_ text: String) -> Bool {

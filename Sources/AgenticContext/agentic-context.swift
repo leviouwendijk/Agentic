@@ -3,6 +3,7 @@ import AgenticConfiguration
 import Foundation
 import IO
 import Readers
+import Roots
 import Writers
 
 /// What the owner tells agents about their world (business, people,
@@ -14,38 +15,41 @@ import Writers
 public enum Context {}
 
 public extension Context {
-    /// Where the context files live, and where replaced files are kept.
-    /// Insert one into `ToolServices` to point the tools elsewhere; without
-    /// one they use the resolved home's.
+    /// Where the context files live, the shared roots' context folders, and
+    /// where replaced files are kept. Insert one into `ToolServices` to
+    /// point the tools elsewhere; without one they use the resolved home's
+    /// and the shared roots in `~/.config/roots.frame`.
     struct Store: Sendable {
         public let directory: URL
         public let archiveDirectory: URL
+        public let shared: [Library.SharedFolder]
 
-        public init(directory: URL, archiveDirectory: URL) {
+        public init(directory: URL, archiveDirectory: URL, shared: [Library.SharedFolder] = []) {
             self.directory = directory
             self.archiveDirectory = archiveDirectory
+            self.shared = shared
         }
 
-        public init(home: AgentHome) {
+        public init(home: AgentHome, roots: RootSet = Roots.load()) {
             self.init(
                 directory: home.layout.contextdir,
-                archiveDirectory: home.layout.archivedir.appendingPathComponent("context", isDirectory: true)
+                archiveDirectory: home.layout.archivedir.appendingPathComponent("context", isDirectory: true),
+                shared: Library.SharedFolder.roots(roots)
             )
         }
 
         public func library() -> Library {
-            .load(directory)
+            .load(directory, shared: shared)
         }
 
-        /// Where `file` is on disk: below the directory, or below the
-        /// directory a mount brings in (`team/business.frame` when
-        /// `team.frame` mounts one). Refuses anything that leaves them or
-        /// cannot name entries.
+        /// Where `file` is on disk: below the directory, or below a shared
+        /// root's context (`team/business.frame` for the root `team`).
+        /// Refuses anything that leaves them or cannot name entries.
         public func url(_ file: String) throws -> URL {
             try location(file).url
         }
 
-        /// Whether `file` lies in a read-only mount.
+        /// Whether `file` lies in a shared root not declared writable.
         public func isReadOnly(_ file: String) throws -> Bool {
             try location(file).readOnly
         }
@@ -54,10 +58,10 @@ public extension Context {
             guard Context.idPrefix(of: file) != nil else {
                 throw StoreFailure.invalidPath(file)
             }
-            if let mount = library().mount(containing: file) {
+            if let folder = shared.first(where: { file.hasPrefix("\($0.folder)/") }) {
                 return (
-                    mount.directory.appendingPathComponent(String(file.dropFirst(mount.folder.count + 1))),
-                    mount.readOnly
+                    folder.directory.appendingPathComponent(String(file.dropFirst(folder.folder.count + 1))),
+                    folder.readOnly
                 )
             }
             return (directory.appendingPathComponent(file), false)
@@ -71,7 +75,7 @@ public extension Context {
 
         /// Archives the current file, if any, then writes `text` in its
         /// place. Returns the archived copy, which stays in this home even
-        /// for a file in a mount.
+        /// for a file in a shared root.
         public func save(_ text: String, to file: String, now: Date = Date()) throws -> URL? {
             let location = try location(file)
             guard !location.readOnly else {
@@ -108,7 +112,7 @@ public extension Context {
             case .invalidPath(let file):
                 return "'\(file)': a context file is a path below context/ such as business.frame or people/sam.frame; names hold only letters, digits, _ and -."
             case .readOnly(let file):
-                return "'\(file)' is in a read-only mount; change it where that context is kept."
+                return "'\(file)' is in a shared root not declared writable (~/.config/roots.frame); change it where that context is kept."
             }
         }
     }

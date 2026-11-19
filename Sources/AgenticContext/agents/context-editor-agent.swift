@@ -50,14 +50,14 @@ public extension Context.Agents {
 
                 SHARED CONTEXT
 
-                A file holding only a `Mount` brings in another directory, \
-                such as a team's shared context: `team.frame` mounting one \
+                Each shared root in ~/.config/roots.frame, such as a team's \
+                synced folder, brings in its own context: the root `team` \
                 makes its files read as `team/...` and its entries \
                 `team.<file>.<name>`. Saving such a file writes into the \
-                shared directory, so everyone who mounts it sees the change; \
-                say so before saving, and keep personal facts out of it. A \
-                shared `.load = .always` entry reaches every teammate's \
-                agents. A read-only mount cannot be saved to.
+                shared folder, so every teammate sees the change; say so \
+                before saving, and keep personal facts out of it. A shared \
+                `.load = .always` entry reaches every teammate's agents. A \
+                root not declared writable cannot be saved to.
 
                 Write only what the owner said or a source they pointed at \
                 states. Never invent facts; when something is unclear, ask \

@@ -1,5 +1,5 @@
 {
-  "originHash" : "ed0660d27819a7884ccf313c84f677f461e8d5704f7fd64c05c6dd056085a4af",
+  "originHash" : "56db5331ebf004e48e69e2941de5096ded069d1fcd18a2811fcc3df78ff816ba",
   "pins" : [
     {
       "identity" : "arguments",
@@ -70,7 +70,7 @@
       "location" : "https://github.com/leviouwendijk/Frame.git",
       "state" : {
         "branch" : "master",
-        "revision" : "f86a019072fde4c8640f7b89a51c50c79f36b3ad"
+        "revision" : "e21da60ab8d1caad875bd5340db94a54c1096b3b"
       }
     },
     {

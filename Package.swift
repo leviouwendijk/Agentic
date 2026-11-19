@@ -491,6 +491,7 @@ let package = Package(
                 .product(name: "IO", package: "IO"),
                 .product(name: "Macros", package: "Macros"),
                 .product(name: "Readers", package: "Readers"),
+                .product(name: "Roots", package: "Frame"),
                 .product(name: "Schema", package: "Schema"),
                 .product(name: "Search", package: "Search"),
                 .product(name: "Tokens", package: "Tokens"),

@@ -55,8 +55,12 @@ enum ContextFilesTestSuite {
             try await ContextFilesTests.search()
         }
 
-        Test("mounts", tags: ["context", "library", "mount"]) {
-            try await ContextFilesTests.mounts()
+        Test("shared-roots", tags: ["context", "library", "roots"]) {
+            try await ContextFilesTests.sharedRoots()
+        }
+
+        Test("shared-root-read-only", tags: ["context", "library", "roots"]) {
+            try await ContextFilesTests.readOnlyRoot()
         }
     }
 }
