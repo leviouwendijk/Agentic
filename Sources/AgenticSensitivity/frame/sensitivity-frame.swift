@@ -19,12 +19,29 @@ public enum SensitivityFrame {
     public static let module = Frame.Module("Sensitivity", types: [
         .decodable(Vault.self, named: "Vault"),
         .decodable(Policy.self, named: "Policy"),
+        .decodable(Display.self, named: "Display"),
     ])
 
     public static let environment = Frame.Environment([module])
 
     public static let vaultBinding = "vault"
     public static let policyBinding = "policy"
+    public static let displayBinding = "display"
+
+    /// How the owner's own screens show handles. Models and records always
+    /// keep handles; this never changes what they see.
+    public enum DisplayMode: String, Sendable, Hashable, Decodable, CaseIterable {
+        /// The value, marked as a scrubbed value; secrets stay masked.
+        case revealed
+        /// The masked preview, such as `s…@gmail.com`: for screen sharing.
+        case masked
+        /// The handle itself, as the model sees it.
+        case handles
+    }
+
+    public struct Display: Sendable, Hashable, Decodable {
+        public let mode: DisplayMode?
+    }
 
     /// Where handle values are kept.
     public enum Store: String, Sendable, Hashable, Decodable, CaseIterable {
@@ -110,5 +127,17 @@ extension SensitivityFrame.Policy: FrameDescribable {
             .init("never", .array(.string), summary: "Public values never replaced, such as the business's public address and phone."),
             .init("families", .array(.array(.string)), summary: "Groups of tool names that share values besides a shared name prefix."),
         ], summary: "Which findings become handles, and which tools may use them.")
+    }
+}
+
+extension SensitivityFrame.Display: FrameDescribable {
+    public static var frameSchema: Frame.Schema {
+        .object([
+            .init("mode", .members(of: SensitivityFrame.DisplayMode.self, summaries: [
+                .revealed: "Values, marked as scrubbed; secrets stay masked until revealed one by one. The default.",
+                .masked: "Masked previews such as s…@gmail.com: for screen sharing.",
+                .handles: "The handles themselves, as the model sees them.",
+            ]), summary: "What your screens show for a handle."),
+        ], summary: "How your own screens show handles. Models and session records always keep handles.")
     }
 }

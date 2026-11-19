@@ -28,6 +28,8 @@ public extension Privacy {
         public var roots: [URL]
         public var shield: Sensitivity.ShieldPolicy
         public var resolution: ResolutionPolicy
+        /// How the owner's screens show handles.
+        public var display: SensitivityFrame.DisplayMode
 
         public init(
             store: SensitivityFrame.Store = .keychain,
@@ -35,7 +37,8 @@ public extension Privacy {
             references: SensitivityFrame.References = .history,
             roots: [URL] = [],
             shield: Sensitivity.ShieldPolicy = .standard,
-            resolution: ResolutionPolicy = .init()
+            resolution: ResolutionPolicy = .init(),
+            display: SensitivityFrame.DisplayMode = .revealed
         ) {
             self.store = store
             self.expiry = expiry
@@ -43,6 +46,7 @@ public extension Privacy {
             self.roots = roots
             self.shield = shield
             self.resolution = resolution
+            self.display = display
         }
 
         public static let standard = Self()
@@ -71,6 +75,9 @@ public extension Privacy {
             }
             let policy: SensitivityFrame.Policy? = try document.binding(named: SensitivityFrame.policyBinding).map { _ in
                 try document.decode(SensitivityFrame.Policy.self, binding: SensitivityFrame.policyBinding)
+            }
+            let display: SensitivityFrame.Display? = try document.binding(named: SensitivityFrame.displayBinding).map { _ in
+                try document.decode(SensitivityFrame.Display.self, binding: SensitivityFrame.displayBinding)
             }
 
             let expiry: Expiry
@@ -102,7 +109,8 @@ public extension Privacy {
                 references: vault?.references ?? .history,
                 roots: roots,
                 shield: shield,
-                resolution: resolution
+                resolution: resolution,
+                display: display?.mode ?? .revealed
             )
         }
 

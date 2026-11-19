@@ -29,7 +29,7 @@ public extension Privacy {
 
     /// One vault per process for each store, so sessions in one host share
     /// handles and the Keychain item is opened once.
-    private static let vaults = VaultRegistry()
+    internal static let vaults = VaultRegistry()
 
     /// The guard and lease for a session, as configured in the home's
     /// `domains/sensitivity.frame`. For `.unreferenced`, values nothing in
@@ -94,7 +94,7 @@ public extension Privacy {
     }
 }
 
-private final class VaultRegistry: @unchecked Sendable {
+final class VaultRegistry: @unchecked Sendable {
     private let lock = NSLock()
     private var vaults: [String: Sensitivity.Vault] = [:]
 

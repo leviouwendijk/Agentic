@@ -82,5 +82,11 @@ enum AgenticSensitivityTestSuite {
         Test("seal-and-unseal", tags: ["pin", "seal"]) {
             try await PinTests.sealAndUnseal()
         }
+        Test("reveal-segments-and-modes", tags: ["reveal"]) {
+            try await RevealTests.segmentsAndModes()
+        }
+        Test("reveal-display-configuration", tags: ["reveal"]) {
+            try RevealTests.displayConfiguration()
+        }
     }
 }

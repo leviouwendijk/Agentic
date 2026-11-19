@@ -18,6 +18,10 @@ public extension SensitivityFrame {
             .never = ["info@example.com"],     // public values, never replaced
             .families = [["notes_read", "drafts_write"]],   // tools sharing values besides a name prefix
         };
+
+        let display: Display = .{
+            .mode = .revealed,           // your screens show values, marked; or .masked, or .handles
+        };
         """
 }
 
@@ -42,6 +46,11 @@ public extension SensitivityFrame {
             .handleAt = 80,              // findings scoring this or more become handles
             .softAt = 60,                // soft handles any tool may use; lower ones are flagged
             .never = [],                 // public values never replaced, such as the business's public address
+        };
+
+        // Only your own screens: models and records always keep handles.
+        let display: Display = .{
+            .mode = .revealed,           // values, marked as scrubbed; or .masked (previews), or .handles
         };
 
         """
