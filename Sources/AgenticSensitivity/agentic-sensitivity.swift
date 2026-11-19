@@ -41,7 +41,8 @@ public extension Privacy {
             }
         }
 
-        func related(_ source: String, _ tool: String) -> Bool {
+        /// Whether `tool` may use what `source` produced: same tool, name prefix or family.
+        public func related(_ source: String, _ tool: String) -> Bool {
             source == tool
                 || Self.prefix(source) == Self.prefix(tool)
                 || families.contains { $0.contains(source) && $0.contains(tool) }
@@ -66,12 +67,14 @@ public extension Privacy {
         public let shield: Sensitivity.Shield
         public let policy: ResolutionPolicy
 
+        /// `session` is recorded on every value it sees, for `.onSessionClose`.
         public init(
             vault: Sensitivity.Vault = .init(),
             shieldPolicy: Sensitivity.ShieldPolicy = .standard,
-            policy: ResolutionPolicy = .init()
+            policy: ResolutionPolicy = .init(),
+            session: String? = nil
         ) {
-            self.shield = Sensitivity.Shield(vault: vault, policy: shieldPolicy)
+            self.shield = Sensitivity.Shield(vault: vault, policy: shieldPolicy, session: session)
             self.policy = policy
         }
 

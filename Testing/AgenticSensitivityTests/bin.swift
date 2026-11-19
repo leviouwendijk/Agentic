@@ -50,5 +50,17 @@ enum AgenticSensitivityTestSuite {
         Test("scrub-session", tags: ["tools", "sessions"]) {
             try await GuardTests.scrubSession()
         }
+
+        Test("configuration-defaults-and-file", tags: ["configuration"]) {
+            try ConfigurationTests.defaultsAndFile()
+        }
+
+        Test("unreferenced-values-are-swept", tags: ["configuration", "vault"]) {
+            try await ConfigurationTests.unreferencedValuesAreSwept()
+        }
+
+        Test("session-close-releases", tags: ["configuration", "vault"]) {
+            try await ConfigurationTests.sessionCloseReleases()
+        }
     }
 }

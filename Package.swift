@@ -503,6 +503,7 @@ let package = Package(
                 "Agentic",
                 "AgenticConfiguration",
                 "AgenticStandard",
+                .product(name: "Frame", package: "Frame"),
                 .product(name: "IO", package: "IO"),
                 .product(name: "Macros", package: "Macros"),
                 .product(name: "Primitives", package: "Primitives"),

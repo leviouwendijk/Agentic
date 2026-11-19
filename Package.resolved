@@ -1,5 +1,5 @@
 {
-  "originHash" : "f6a119e067cf64632414dea0bcbaf27a9b2c4b1b0375ed61f7a0847f725ba9c3",
+  "originHash" : "ed0660d27819a7884ccf313c84f677f461e8d5704f7fd64c05c6dd056085a4af",
   "pins" : [
     {
       "identity" : "arguments",
@@ -295,7 +295,7 @@
       "location" : "https://github.com/leviouwendijk/Sensitivity.git",
       "state" : {
         "branch" : "master",
-        "revision" : "a32c848ea15699f43f85c16abfedc70f0aa46ec3"
+        "revision" : "a8583cbab54c0ddf629cd769f36341f1040b325c"
       }
     },
     {
