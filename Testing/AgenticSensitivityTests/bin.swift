@@ -47,6 +47,10 @@ enum AgenticSensitivityTestSuite {
             try await GuardTests.otherDomainsNeedAGrant()
         }
 
+        Test("owner-values-go-anywhere", tags: ["guard", "owner"]) {
+            try await GuardTests.ownerValuesGoAnywhere()
+        }
+
         Test("handles-and-preview-never-show-values", tags: ["tools"]) {
             try await GuardTests.handlesAndPreviewNeverShowValues()
         }

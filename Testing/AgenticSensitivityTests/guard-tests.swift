@@ -193,6 +193,14 @@ enum GuardTests {
         try Expect.equal(await installed.vault.describe(address)?.grants, ["web_fetch"], "the grant is recorded on the handle")
     }
 
+    static func ownerValuesGoAnywhere() async throws {
+        let (context, installed) = try context()
+        let prompt = await installed.protecting("Send the offer to noor@example.com", from: ToolIdentifier("owner"))
+        let address = try Expect.notNil(Sensitivity.Handle.occurrences(in: prompt).first?.handle, "the owner's value becomes a handle: \(prompt)")
+        _ = try await run(FixtureWeb.Tools.Fetch(), .object(["url": .string("https://example.com/?to=\(address.token)")]), in: context)
+        try Expect.equal(await Received.shared.last(), "https://example.com/?to=noor@example.com", "a value the owner supplied needs no grant")
+    }
+
     static func handlesAndPreviewNeverShowValues() async throws {
         let (context, _) = try context()
         _ = try await run(FixtureMail.Tools.Lookup(), .object(["name": .string("Sam")]), in: context)

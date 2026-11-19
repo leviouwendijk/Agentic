@@ -16,6 +16,7 @@ public extension Privacy {
     /// Which tool may resolve which handle.
     ///
     /// - Soft handles (private addresses, identifiers): any tool.
+    /// - Values the owner supplied (their messages, their context): any tool.
     /// - Other handles: tools related to one that produced the value (same
     ///   name prefix, as `mail_read` and `mail_send`, or one family), or a
     ///   tool the owner granted it to.
@@ -32,8 +33,15 @@ public extension Privacy {
             ["read_files", "mutate_files", "search_sources", "create_text", "edit_text"],
         ]
 
+        /// Sources whose values the owner supplied (their messages, their
+        /// context): any tool may use them, though the model never sees them.
+        public static let ownerSources: Set<String> = ["owner", "context"]
+
         public func permits(_ handle: Sensitivity.HandleDescription, tool: String) -> Bool {
             if handle.tier == .soft || handle.grants.contains(tool) {
+                return true
+            }
+            if handle.sources.contains(where: { Self.ownerSources.contains(String($0.split(separator: " ").first ?? "")) }) {
                 return true
             }
             return handle.sources.contains { source in
