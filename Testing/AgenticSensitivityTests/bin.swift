@@ -70,5 +70,17 @@ enum AgenticSensitivityTestSuite {
         Test("session-close-releases", tags: ["configuration", "vault"]) {
             try await ConfigurationTests.sessionCloseReleases()
         }
+
+        Test("pinned-sessions-are-deliberate", tags: ["pin", "scrub"]) {
+            try await PinTests.pinnedSessionsAreDeliberate()
+        }
+
+        Test("pinned-handles-are-collected", tags: ["pin"]) {
+            try await PinTests.pinnedHandlesAreCollected()
+        }
+
+        Test("seal-and-unseal", tags: ["pin", "seal"]) {
+            try await PinTests.sealAndUnseal()
+        }
     }
 }

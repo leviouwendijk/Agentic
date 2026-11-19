@@ -43,12 +43,15 @@ public extension Privacy {
         let vault = vaults.vault(for: loaded)
         let installed = Guard(vault: vault, shieldPolicy: loaded.shield, policy: loaded.resolution, session: sessionID)
 
-        if loaded.expiry == .unreferenced {
-            let roots = loaded.historyRoots(in: home)
-            Task.detached(priority: .utility) {
-                let referenced = roots.reduce(into: Set<String>()) { $0.formUnion(References.collect(below: $1)) }
-                await vault.retain(referenced: referenced)
-            }
+        // In every mode, values pinned sessions reference are kept; for
+        // .unreferenced, the rest go once nothing in history holds them.
+        let storage = home.layout.runtimeStorage
+        let roots = loaded.expiry == .unreferenced ? loaded.historyRoots(in: home) : []
+        Task.detached(priority: .utility) {
+            await vault.pin(only: References.pinned(in: storage))
+            guard !roots.isEmpty else { return }
+            let referenced = roots.reduce(into: Set<String>()) { $0.formUnion(References.collect(below: $1)) }
+            await vault.retain(referenced: referenced)
         }
         let lease = sessionID.map { SessionLease(session: $0, vault: vault, releasesOnClose: loaded.expiry == .onSessionClose) }
         return (ToolPayloadGuarding(installed), lease, problem)
@@ -56,6 +59,13 @@ public extension Privacy {
 
     /// Handle ids written anywhere below a directory.
     enum References {
+        /// Handle ids written in pinned sessions.
+        public static func pinned(in storage: AgentRuntimeStorageLayout) -> Set<String> {
+            storage.pinnedSessions().reduce(into: Set<String>()) {
+                $0.formUnion(collect(below: storage.sessiondir(sessionID: $1)))
+            }
+        }
+
         public static func collect(below directory: URL) -> Set<String> {
             var ids: Set<String> = []
             for file in files(below: directory) {

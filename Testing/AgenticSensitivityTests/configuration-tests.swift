@@ -116,3 +116,83 @@ private extension JSONValue {
         return nil
     }
 }
+
+/// Pinned sessions: kept, refused for routine scrubs, sealed.
+enum PinTests {
+    static func home() throws -> (AgentHome, URL) {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("agentic-home-\(UUID().uuidString)", isDirectory: true)
+        setenv("AGENTIC_HOME", root.path, 1)
+        return (AgentHomeLocator().resolveHome(), root)
+    }
+
+    static func pinnedSessionsAreDeliberate() async throws {
+        let (home, root) = try home()
+        defer { try? FileManager.default.removeItem(at: root); unsetenv("AGENTIC_HOME") }
+        let storage = home.layout.runtimeStorage
+        let session = "PINNED-FIXTURE"
+        let log = storage.sessiondir(sessionID: session).appendingPathComponent("log.jsonl")
+        try FileManager.default.createDirectory(at: log.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try "{\"text\":\"Mail sam@example.com\"}\n".write(to: log, atomically: true, encoding: .utf8)
+        try storage.pinSession(session, SessionPin(reason: "cited by a fixture page"))
+        try Expect.equal(storage.pinnedSessions(), [session], "the pin is found")
+
+        let (context, installed) = try GuardTests.context()
+        var refused: (any Error)?
+        do {
+            _ = try await Privacy.Tools.ScrubSession().call(.init(session: session, dry_run: false), in: context)
+        } catch {
+            refused = error
+        }
+        try Expect.true(refused?.localizedDescription.contains("pinned") == true, "a routine scrub of a pinned session is refused")
+
+        let scrubbed = try await Privacy.Tools.ScrubSession().call(
+            .init(session: session, dry_run: false, reason: "deletion request"),
+            in: context
+        )
+        try Expect.true(scrubbed.deliberate, "deliberate with a reason")
+        let text = try String(contentsOf: log, encoding: .utf8)
+        try Expect.false(text.contains("sam@example.com"), "the value is gone from the record")
+        let handle = try Expect.notNil(Sensitivity.Handle.occurrences(in: text).first?.handle, "a handle in its place")
+        try Expect.isNil(await installed.vault.value(of: handle), "and the vault forgot it: a deletion leaves no way back")
+
+        let tombstones = try String(contentsOf: log.deletingLastPathComponent().appendingPathComponent("tombstones.jsonl"), encoding: .utf8)
+        try Expect.true(tombstones.contains("deletion request") && tombstones.contains("sha256:") && tombstones.contains("\"contact\":1"), "a tombstone: reason, previous digest, kinds: \(tombstones)")
+        try Expect.false(tombstones.contains("example.com"), "never values")
+        try Expect.equal(storage.pin(sessionID: session)?.reason, "cited by a fixture page", "the pin itself stays")
+    }
+
+    static func pinnedHandlesAreCollected() async throws {
+        let (home, root) = try home()
+        defer { try? FileManager.default.removeItem(at: root); unsetenv("AGENTIC_HOME") }
+        let storage = home.layout.runtimeStorage
+        for (session, id) in [("A", "0000000a"), ("B", "0000000b")] {
+            let directory = storage.sessiondir(sessionID: session)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try "⟦contact:\(id)⟧".write(to: directory.appendingPathComponent("log.jsonl"), atomically: true, encoding: .utf8)
+        }
+        try storage.pinSession("A", SessionPin(reason: "fixture"))
+        try Expect.equal(Privacy.References.pinned(in: storage), ["0000000a"], "only what pinned sessions reference")
+        try storage.unpinSession("A")
+        try Expect.equal(storage.pinnedSessions(), [], "unpinned")
+    }
+
+    static func sealAndUnseal() async throws {
+        guard ProcessInfo.processInfo.environment["AGENTIC_SENSITIVITY_KEYCHAIN_TEST"] == "1" else { return }
+        let (home, root) = try home()
+        defer { try? FileManager.default.removeItem(at: root); unsetenv("AGENTIC_HOME") }
+        let storage = home.layout.runtimeStorage
+        let here = Sensitivity.Vault(lifetime: nil)
+        let handle = await here.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_read", session: "S")
+        let directory = storage.sessiondir(sessionID: "S")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try "Mail \(handle.token)".write(to: directory.appendingPathComponent("log.jsonl"), atomically: true, encoding: .utf8)
+
+        try Expect.equal(try await Privacy.seal(session: "S", storage: storage, vault: here), 1, "one value sealed")
+        let sealed = try String(contentsOf: directory.appendingPathComponent("vault.sealed"), encoding: .utf8)
+        try Expect.false(sealed.contains("sam@example.com"), "encrypted")
+
+        let elsewhere = Sensitivity.Vault(lifetime: nil)
+        try Expect.equal(try await Privacy.unseal(session: "S", storage: storage, vault: elsewhere), 1, "one value unsealed")
+        try Expect.equal(await elsewhere.value(of: handle), "sam@example.com", "the handle resolves there")
+    }
+}
