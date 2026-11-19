@@ -123,6 +123,8 @@ private extension GovernedFunctionCallResolver {
         let toolName: String
         let requirement: String
         let summary: String
+        /// The preflight's warnings on a denial, often why and how to proceed.
+        var warnings: [String]? = nil
     }
 
     func deniedResult(
@@ -137,7 +139,8 @@ private extension GovernedFunctionCallResolver {
                     callID: call.id,
                     toolName: call.name,
                     requirement: review.requirement.rawValue,
-                    summary: review.preflight.summary
+                    summary: review.preflight.summary,
+                    warnings: review.preflight.warnings.isEmpty ? nil : review.preflight.warnings
                 )
             ),
             isError: true
