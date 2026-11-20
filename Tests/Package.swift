@@ -159,6 +159,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Agentic", package: "Agentic"),
                 .product(name: "AgenticContext", package: "Agentic"),
+                .product(name: "Errors", package: "Errors"),
                 .product(name: "Testing", package: "Testing"),
             ]
         ),

@@ -1,3 +1,4 @@
+import Errors
 import Agentic
 import AgenticConfiguration
 import Foundation
@@ -103,22 +104,57 @@ public extension Context {
         }
     }
 
-    enum StoreFailure: Error, LocalizedError, Sendable, Hashable {
+    enum StoreFailure: Error, Sendable, Hashable {
         case invalidPath(String)
         case readOnly(String)
-
-        public var errorDescription: String? {
-            switch self {
-            case .invalidPath(let file):
-                return "'\(file)': a context file is a path below context/ such as business.frame or people/sam.frame; names hold only letters, digits, _ and -."
-            case .readOnly(let file):
-                return "'\(file)' is in a shared root not declared writable (~/.config/roots.frame); change it where that context is kept."
-            }
-        }
     }
 
     /// The session's store, or the resolved home's.
     static func store(in context: ToolContext) -> Store {
         (try? context.require(Store.self)) ?? Store(home: AgentHomeLocator().resolveHome())
+    }
+}
+
+extension Context.StoreFailure:
+    SemanticError,
+    ErrorNamespaced,
+    ErrorDispositionProviding
+{
+    public static let errorNamespace = "agentic_context.store"
+
+    public var errorCode: String {
+        switch self {
+        case .invalidPath: return "invalid_path"
+        case .readOnly: return "read_only"
+        }
+    }
+
+    public var errorPresentation: ErrorPresentation {
+        switch self {
+        case .invalidPath(let file):
+            return .init(
+                message: "'\(file)' is not a context file path.",
+                reason: "A context file is a path below context/ such as business.frame or people/sam.frame; names hold only letters, digits, _ and -."
+            )
+        case .readOnly(let file):
+            return .init(
+                message: "'\(file)' is in a shared root not declared writable (~/.config/roots.frame).",
+                recoverySuggestion: "Change it where that context is kept."
+            )
+        }
+    }
+
+    public var errorDiagnosticFields: [ErrorDiagnosticField] {
+        switch self {
+        case .invalidPath(let file), .readOnly(let file):
+            return [.init(key: "context.file", value: file)]
+        }
+    }
+
+    public var errorDisposition: ErrorDisposition? {
+        switch self {
+        case .invalidPath: return .invalid_input
+        case .readOnly: return .requires_access
+        }
     }
 }

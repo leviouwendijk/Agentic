@@ -1,3 +1,4 @@
+import Errors
 import Agentic
 import Foundation
 import Macros
@@ -88,10 +89,10 @@ public extension Context.Tools {
 extension Context {
     static func check(_ text: String, file: String, in store: Store) -> (problems: [String], entries: [String]) {
         guard (try? store.url(file)) != nil else {
-            return ([Context.StoreFailure.invalidPath(file).localizedDescription], [])
+            return ([Context.StoreFailure.invalidPath(file).explanation], [])
         }
         if (try? store.isReadOnly(file)) == true {
-            return ([Context.StoreFailure.readOnly(file).localizedDescription], [])
+            return ([Context.StoreFailure.readOnly(file).explanation], [])
         }
         let replaced = store.library().replacing(file, with: text)
         let entries = replaced.library.items.filter { $0.file == file }.map(\.id)

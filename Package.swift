@@ -399,6 +399,7 @@ let package = Package(
                 "AgenticConfiguration",
                 "AgenticFrame",
                 "AgenticStandard",
+                .product(name: "Errors", package: "Errors"),
                 .product(name: "Frame", package: "Frame"),
                 .product(name: "IO", package: "IO"),
                 .product(name: "Macros", package: "Macros"),

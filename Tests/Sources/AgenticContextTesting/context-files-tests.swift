@@ -1,5 +1,6 @@
 import Agentic
 import AgenticContext
+import Errors
 import Foundation
 import Testing
 
@@ -49,6 +50,15 @@ enum ContextFilesTests {
         let library = store.library()
         try Expect.equal(library.items.map(\.id).sorted(), ["business.overview", "business.services", "business.voice", "people.sam.role"], "folders become identifier segments")
         try Expect.true(library.problems.contains { $0.hasPrefix("broken.frame:") }, "a broken file is reported: \(library.problems)")
+
+        _ = try store.save("let = 1;\n", to: "unparsed.frame")
+        let unparsed = store.library().problems.filter { $0.hasPrefix("unparsed.frame:") }
+        try Expect.equal(unparsed, ["unparsed.frame: Frame syntax error at 1:5. Expected terminal 'identifier'."], "a syntax error is located")
+        try Expect.equal(
+            Context.StoreFailure.readOnly("people/sam.frame").report.diagnostic.identity?.raw,
+            "agentic_context.store.read_only",
+            "store failures have codes"
+        )
         try Expect.equal(library.always.map(\.id), ["business.voice"], "always entries")
         try Expect.true(library.instructions?.contains("Alex & Sam") == true, "always bodies become instructions")
     }

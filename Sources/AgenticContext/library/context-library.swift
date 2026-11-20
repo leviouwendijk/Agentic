@@ -1,3 +1,4 @@
+import Errors
 import Foundation
 import Frame
 import IO
@@ -143,7 +144,7 @@ public extension Context {
             do {
                 return try TextFileReader(url).read().text
             } catch {
-                problems.append("\(file): \(error.localizedDescription)")
+                problems.append("\(file): \(error.explanation)")
                 return nil
             }
         }
@@ -169,7 +170,7 @@ public extension Context {
             do {
                 entries = try DirectoryInspector(directory).entries()
             } catch {
-                problems.append("\(prefix.isEmpty ? "." : prefix): \(error.localizedDescription)")
+                problems.append("\(prefix.isEmpty ? "." : prefix): \(error.explanation)")
                 return []
             }
             var files: [String] = []
@@ -221,7 +222,7 @@ public extension Context {
         do {
             document = try Frame.parse(text, filePath: file)
         } catch {
-            return ([], ["\(file): \(error)"])
+            return ([], ["\(file): \(error.explanation)"])
         }
         let problems = Frame.problems(in: document, environment: ContextFrame.environment)
             .map { "\(file):\($0.located(in: text).description)" }
@@ -238,7 +239,7 @@ public extension Context {
             do {
                 shared = try document.decode(ContextFrame.Defaults.self, binding: binding.name).tags ?? []
             } catch {
-                found.append("\(file): '\(binding.name)': \(error)")
+                found.append("\(file): '\(binding.name)': \(error.explanation)")
             }
         }
         for binding in document.bindings(ofType: ContextFrame.entryType) {
@@ -253,7 +254,7 @@ public extension Context {
                 }
                 items.append(.init(id: "\(prefix).\(binding.name)", file: file, entry: entry))
             } catch {
-                found.append("\(file): '\(binding.name)': \(error)")
+                found.append("\(file): '\(binding.name)': \(error.explanation)")
             }
         }
         if found.isEmpty, items.isEmpty {
