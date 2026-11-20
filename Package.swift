@@ -74,12 +74,6 @@ let package = Package(
             ]
         ),
 
-        // opt-in declarative assertions
-        .library(
-            name: "AgenticAssertions",
-            targets: ["AgenticAssertions"]
-        ),
-
         // opt-in deterministic calculations
         .library(
             name: "AgenticMath",
@@ -106,52 +100,6 @@ let package = Package(
             targets: [
                 "AgenticReferences",
             ]
-        ),
-
-        // testing
-        .executable(
-            name: "t_agentic",
-            targets: [
-                "AgenticTesting",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_context_window",
-            targets: [
-                "AgenticContextWindowTesting",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_context",
-            targets: [
-                "AgenticContextTesting",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_sensitivity",
-            targets: [
-                "AgenticSensitivityTests",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_frame",
-            targets: [
-                "AgenticFrameTests",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_math",
-            targets: [
-                "AgenticMathTesting",
-            ]
-        ),
-        .executable(
-            name: "t_agentic_assertions",
-            targets: ["AgenticAssertionsTesting"]
-        ),
-        .executable(
-            name: "t_agentic_structures",
-            targets: ["AgenticStructuresTesting"]
         ),
     ],
     dependencies: [
@@ -193,11 +141,6 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/leviouwendijk/Search.git",
-            branch: "master"
-        ),
-
-        .package(
-            url: "https://github.com/leviouwendijk/Testing.git",
             branch: "master"
         ),
 
@@ -321,16 +264,6 @@ let package = Package(
             ]
         ),
         .target(
-            name: "AgenticAssertions",
-            dependencies: [
-                "Agentic",
-                .product(name: "Testing", package: "Testing"),
-                .product(name: "Macros", package: "Macros"),
-                .product(name: "Schema", package: "Schema"),
-                .product(name: "Workspace", package: "Workspace"),
-            ]
-        ),
-        .target(
             name: "AgenticMath",
             dependencies: [
                 "Agentic",
@@ -387,19 +320,6 @@ let package = Package(
                     package: "Search"
                 ),
             ]
-        ),
-        .executableTarget(
-            name: "AgenticStructuresTesting",
-            dependencies: [
-                "Agentic",
-                "AgenticStandard",
-                .product(name: "Difference", package: "Difference"),
-                .product(name: "Primitives", package: "Primitives"),
-                .product(name: "Reporting", package: "Reporting"),
-                .product(name: "Schema", package: "Schema"),
-                .product(name: "Search", package: "Search"),
-            ],
-            path: "Testing/AgenticStructuresTesting"
         ),
         .target(
             name: "AgenticHarness",
@@ -470,16 +390,6 @@ let package = Package(
                 .product(name: "Schema", package: "Schema"),
             ]
         ),
-        .executableTarget(
-            name: "AgenticFrameTests",
-            dependencies: [
-                "Agentic",
-                "AgenticFrame",
-                .product(name: "Frame", package: "Frame"),
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticFrameTests"
-        ),
         .target(
             name: "AgenticContext",
             dependencies: [
@@ -513,123 +423,6 @@ let package = Package(
                 .product(name: "Sensitivity", package: "Sensitivity"),
                 .product(name: "Writers", package: "Writers"),
             ]
-        ),
-        .executableTarget(
-            name: "AgenticSensitivityTests",
-            dependencies: [
-                "Agentic",
-                "AgenticConfiguration",
-                "AgenticSensitivity",
-                .product(name: "Macros", package: "Macros"),
-                .product(name: "Primitives", package: "Primitives"),
-                .product(name: "Schema", package: "Schema"),
-                .product(name: "Sensitivity", package: "Sensitivity"),
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticSensitivityTests"
-        ),
-        .executableTarget(
-            name: "AgenticContextTesting",
-            dependencies: [
-                "Agentic",
-                "AgenticContext",
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticContextTesting"
-        ),
-        .executableTarget(
-            name: "AgenticContextWindowTesting",
-            dependencies: [
-                "Agentic",
-                "AgenticContextWindow",
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticContextWindowTesting"
-        ),
-        .executableTarget(
-            name: "AgenticAssertionsTesting",
-            dependencies: [
-                "Agentic",
-                "AgenticAssertions",
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticAssertionsTesting"
-        ),
-        .executableTarget(
-            name: "AgenticMathTesting",
-            dependencies: [
-                "AgenticMath",
-                .product(name: "Testing", package: "Testing"),
-            ],
-            path: "Testing/AgenticMathTesting"
-        ),
-        .target(
-            name: "AgenticLinkerCatalogFixture",
-            dependencies: [
-                "Agentic",
-                .product(
-                    name: "Macros",
-                    package: "Macros"
-                ),
-                .product(
-                    name: "Schema",
-                    package: "Schema"
-                ),
-                .product(
-                    name: "Workspace",
-                    package: "Workspace"
-                ),
-            ],
-            path: "Testing/AgenticLinkerCatalogFixture"
-        ),
-        .executableTarget(
-            name: "AgenticTesting",
-            dependencies: [
-                "Agentic",
-                "AgenticModels",
-                "AgenticStandard",
-                "AgenticTasks",
-                "AgenticHarness",
-                "AgenticSessions",
-                "AgenticLinkerCatalogFixture",
-                .product(
-                    name: "Errors",
-                    package: "Errors"
-                ),
-                .product(
-                    name: "Primitives",
-                    package: "Primitives"
-                ),
-                .product(
-                    name: "Macros",
-                    package: "Macros"
-                ),
-                .product(
-                    name: "Schema",
-                    package: "Schema"
-                ),
-                .product(
-                    name: "Workspace",
-                    package: "Workspace"
-                ),
-                .product(
-                    name: "Milieu",
-                    package: "Milieu"
-                ),
-                .product(
-                    name: "IO",
-                    package: "IO"
-                ),
-                .product(
-                    name: "Writers",
-                    package: "Writers"
-                ),
-                .product(
-                    name: "Testing",
-                    package: "Testing"
-                ),
-            ],
-            path: "Testing/AgenticTesting"
         ),
         .target(
             name: "AgenticLinkerSupport",
