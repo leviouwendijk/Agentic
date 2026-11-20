@@ -1,0 +1,11 @@
+import Executable;
+
+let tests: Tests = .{
+    .primary = "t_agentic",
+    .groups = .{
+        .context = ["t_agentic_context_window", "t_agentic_context"],
+        .frame = ["t_agentic_frame"],
+        .math = ["t_agentic_math"],
+        .sensitivity = ["t_agentic_sensitivity"],
+    },
+};
