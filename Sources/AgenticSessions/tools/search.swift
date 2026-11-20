@@ -209,7 +209,7 @@ public extension Sessions.Tools {
 }
 
 public extension Sessions {
-    enum SearchError: Error, Sendable, LocalizedError {
+    enum SearchError: Error, Sendable, Equatable, LocalizedError {
         case query
         case pattern(String)
 

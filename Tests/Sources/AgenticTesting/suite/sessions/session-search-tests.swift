@@ -46,12 +46,6 @@ enum SessionSearchTestSuite {
     }
 }
 
-extension Sessions.SearchError: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.localizedDescription == rhs.localizedDescription
-    }
-}
-
 private struct SearchCatalog: Sessions.CatalogReading {
     func summary(_ id: String, _ title: String, updated: TimeInterval) -> Sessions.Summary {
         .init(
