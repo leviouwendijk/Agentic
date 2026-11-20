@@ -1,3 +1,4 @@
+import Foundation
 import Agentic
 import Macros
 import Schema
@@ -17,7 +18,6 @@ public enum CapabilityKind:
     CaseIterable,
     JSONSchemaProviding
 {
-    case all
     case tool
     case program
     case inference
@@ -27,6 +27,84 @@ public enum CapabilityKind:
         .string(
             cases: allCases.map(\.rawValue)
         )
+    }
+}
+
+/// Whether a capability is among the tool definitions, and so called by its
+/// own name, or callable without one.
+public enum CapabilityVisibility:
+    String,
+    Sendable,
+    Codable,
+    Hashable,
+    CaseIterable,
+    JSONSchemaProviding
+{
+    case visible
+    case hidden
+
+    public static var jsonschema: JSONSchema {
+        .string(
+            cases: allCases.map(\.rawValue)
+        )
+    }
+}
+
+/// What `list_capabilities` and `search_capabilities` narrow to. Fields
+/// combine with AND, the values within one with OR; an absent or empty
+/// field narrows nothing. A risk filter matches only capabilities that
+/// declare an effect level.
+public struct CapabilityFilter: Sendable, Hashable {
+    public let kinds: [CapabilityKind]
+    public let domains: [String]
+    public let visibility: CapabilityVisibility?
+    public let risks: [ActionRisk]
+
+    public init(
+        kinds: [CapabilityKind]? = nil,
+        domains: [String]? = nil,
+        visibility: CapabilityVisibility? = nil,
+        risks: [ActionRisk]? = nil
+    ) {
+        self.kinds = kinds ?? []
+        self.domains = (domains ?? [])
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+        self.visibility = visibility
+        self.risks = risks ?? []
+    }
+
+    func matches(
+        _ inspection: CapabilityInspection,
+        visible: AgentCapabilitySet
+    ) -> Bool {
+        if !kinds.isEmpty, !kinds.contains(where: { $0.rawValue == inspection.kind }) {
+            return false
+        }
+        if !domains.isEmpty, !domains.contains(inspection.namespace?.lowercased() ?? "") {
+            return false
+        }
+        if let visibility,
+           CapabilityDiscovery.contains(inspection.reference, in: visible) != (visibility == .visible) {
+            return false
+        }
+        if !risks.isEmpty {
+            guard let risk = inspection.risk, risks.contains(risk) else { return false }
+        }
+        return true
+    }
+
+    /// The filter as arguments, for a call that continues a listing.
+    var arguments: [String] {
+        func list(_ values: [String]) -> String {
+            "[" + values.map { "\"\($0)\"" }.joined(separator: ", ") + "]"
+        }
+        var arguments: [String] = []
+        if !kinds.isEmpty { arguments.append("\"kinds\": " + list(kinds.map(\.rawValue))) }
+        if !domains.isEmpty { arguments.append("\"domains\": " + list(domains)) }
+        if let visibility { arguments.append("\"visibility\": \"\(visibility.rawValue)\"") }
+        if !risks.isEmpty { arguments.append("\"risks\": " + list(risks.map(\.rawValue))) }
+        return arguments
     }
 }
 
@@ -59,8 +137,9 @@ public struct CapabilityEntry: HashableProduct
 public extension Standard.Tools {
     /// The discovery set. Listing says what exists, searching narrows it,
     /// inspecting returns one contract; inspection alone needs an identifier
-    /// the model already has. What is revealed is called through
-    /// `call_capability`. The runtime exposes every installed one.
+    /// the model already has. A capability outside the tool definitions is
+    /// called as inspection says: by name, or through `call_capability`.
+    /// The runtime exposes every installed one.
     static let discovery: [ToolIdentifier] = [
         ListCapabilities.identifier,
         SearchCapabilities.identifier,

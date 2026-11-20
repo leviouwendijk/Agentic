@@ -11,48 +11,64 @@ public extension Standard.Tools {
             @JSONSchema
             public struct Raw: HashableSource {
                 public var query: String?
-                /// Defaults to `all`.
-                public var kind: CapabilityKind?
-                public var domain: String?
+                /// Any of these kinds; all when omitted.
+                public var kinds: [CapabilityKind]?
+                /// Any of these domains (namespaces).
+                public var domains: [String]?
+                /// Only those among your tools (`visible`) or only the others.
+                public var visibility: CapabilityVisibility?
+                /// Any of these effect levels; capabilities without one do not match.
+                public var risks: [ActionRisk]?
                 /// Defaults to 5; clamped to 1...8.
                 public var maximumResults: Int?
 
                 public init(
                     query: String? = nil,
-                    kind: CapabilityKind? = nil,
-                    domain: String? = nil,
+                    kinds: [CapabilityKind]? = nil,
+                    domains: [String]? = nil,
+                    visibility: CapabilityVisibility? = nil,
+                    risks: [ActionRisk]? = nil,
                     maximumResults: Int? = nil
                 ) {
                     self.query = query
-                    self.kind = kind
-                    self.domain = domain
+                    self.kinds = kinds
+                    self.domains = domains
+                    self.visibility = visibility
+                    self.risks = risks
                     self.maximumResults = maximumResults
                 }
             }
 
             public let query: String?
-            public let kind: CapabilityKind
-            public let domain: String?
+            public let filter: CapabilityFilter
             public let maximumResults: Int
 
             public init(_ raw: Raw) {
                 self.query = raw.query
-                self.kind = raw.kind ?? .all
-                self.domain = raw.domain
+                self.filter = .init(
+                    kinds: raw.kinds,
+                    domains: raw.domains,
+                    visibility: raw.visibility,
+                    risks: raw.risks
+                )
                 self.maximumResults = min(8, max(1, raw.maximumResults ?? 5))
             }
 
             public init(
                 query: String? = nil,
-                kind: CapabilityKind? = nil,
-                domain: String? = nil,
+                kinds: [CapabilityKind]? = nil,
+                domains: [String]? = nil,
+                visibility: CapabilityVisibility? = nil,
+                risks: [ActionRisk]? = nil,
                 maximumResults: Int? = nil
             ) {
                 self.init(
                     Raw(
                         query: query,
-                        kind: kind,
-                        domain: domain,
+                        kinds: kinds,
+                        domains: domains,
+                        visibility: visibility,
+                        risks: risks,
                         maximumResults: maximumResults
                     )
                 )
@@ -61,8 +77,10 @@ public extension Standard.Tools {
             public var raw: Raw {
                 Raw(
                     query: query,
-                    kind: kind,
-                    domain: domain,
+                    kinds: filter.kinds.isEmpty ? nil : filter.kinds,
+                    domains: filter.domains.isEmpty ? nil : filter.domains,
+                    visibility: filter.visibility,
+                    risks: filter.risks.isEmpty ? nil : filter.risks,
                     maximumResults: maximumResults
                 )
             }
@@ -87,7 +105,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Search the capabilities available to this Agent by query, kind or domain, without changing authorization or model projection."
+            "Search the capabilities available to this Agent by query, narrowed by kinds, domains, visibility or effect levels, without changing authorization or model projection."
 
         public static let risk: ActionRisk = .observe
 
@@ -106,16 +124,13 @@ public extension Standard.Tools {
             let query = normalized(
                 input.query
             )
-            let domain = normalized(
-                input.domain
-            )
             let candidates = context.inspections
                 .compactMap { inspection in
                     candidate(
                         inspection,
                         available: before.available.intersecting(before.installed),
-                        kind: input.kind,
-                        domain: domain,
+                        filter: input.filter,
+                        visible: before.visible,
                         query: query
                     )
                 }
@@ -168,15 +183,12 @@ private extension Standard.Tools.SearchCapabilities {
     func candidate(
         _ inspection: CapabilityInspection,
         available: AgentCapabilitySet,
-        kind: CapabilityKind,
-        domain: String?,
+        filter: CapabilityFilter,
+        visible: AgentCapabilitySet,
         query: String?
     ) -> Candidate? {
         guard let resolvedKind = CapabilityKind(rawValue: inspection.kind),
-              kind == .all || resolvedKind == kind else { return nil }
-        if let domain, inspection.namespace?.lowercased() != domain {
-            return nil
-        }
+              filter.matches(inspection, visible: visible) else { return nil }
         guard CapabilityDiscovery.contains(inspection.reference, in: available) else {
             return nil
         }
@@ -287,9 +299,6 @@ private extension Standard.Tools.SearchCapabilities {
         in capabilities: AgentCapabilitySet
     ) -> Bool {
         switch candidate.kind {
-        case .all:
-            return false
-
         case .tool:
             return capabilities.tools.contains(
                 ToolIdentifier(

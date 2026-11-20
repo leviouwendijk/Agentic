@@ -5,7 +5,6 @@ import Schema
 
 public enum InspectCapabilityError: Error, Sendable {
     case notAvailable
-    case invalidKind
 }
 
 public extension Standard.Tools {
@@ -70,7 +69,6 @@ public extension Standard.Tools {
         public init() {}
 
         public func call(_ input: Input, in context: ToolContext) async throws -> Output {
-            guard input.kind != .all else { throw InspectCapabilityError.invalidKind }
             let (snapshot, available) = try await CapabilityDiscovery.available(in: context)
             guard let selected = available.first(where: {
                 $0.kind == input.kind.rawValue && $0.identifier == input.identifier
@@ -89,8 +87,7 @@ public extension Standard.Tools {
                 risk: selected.risk.map { String(describing: $0) },
                 wasVisible: wasVisible,
                 callWith: Self.callWith(
-                    input.kind,
-                    identifier: selected.identifier,
+                    selected.reference,
                     declared: wasVisible,
                     dispatcher: snapshot.visible.tools.contains(CallCapability.identifier),
                     byName: (try? context.require(UndeclaredCallForm.self))?.byName == true
@@ -98,21 +95,19 @@ public extension Standard.Tools {
             )
         }
 
-    /// Nil for a declared capability, called by its name as usual. A
-    /// tool outside the definitions is called by its own name where the
-    /// route takes such calls; the rest go through the dispatcher, the
-    /// only form every gateway takes (programs, inferences and agents have
-    /// provider names the model never sees).
+    /// Nil for a declared capability, called by its name as usual. One
+    /// outside the definitions is called by its provider name where the
+    /// route takes such calls, else through the dispatcher, the only form
+    /// every gateway takes.
     private static func callWith(
-        _ kind: CapabilityKind,
-        identifier: String,
+        _ reference: CapabilityReference,
         declared: Bool,
         dispatcher: Bool,
         byName: Bool
     ) -> String? {
         guard !declared else { return nil }
-        if byName, kind == .tool {
-            return identifier
+        if byName {
+            return reference.providerName
         }
         return dispatcher ? CallCapability.identifier.rawValue : nil
     }

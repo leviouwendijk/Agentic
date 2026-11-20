@@ -124,8 +124,8 @@ extension ExecutionTesting {
 
         let programOnly = try await tool.call(
             .init(
-                kind: .program,
-                domain: namespace.rawValue
+                kinds: [.program],
+                domains: [namespace.rawValue]
             ),
             in: context
         )
@@ -136,6 +136,48 @@ extension ExecutionTesting {
                 hiddenProgram.identifier.rawValue,
             ],
             "kind/domain browsing returns only available matching capabilities"
+        )
+
+        // Kinds are any of; fields combine. Nothing is among the tools here,
+        // so `visible` matches none and `hidden` every one.
+        let programsAndAgents = try await tool.call(
+            .init(kinds: [.program, .agent], maximumResults: 8), in: context
+        )
+        try Expect.equal(
+            Set(programsAndAgents.entries.map(\.kind)), [.program, .agent],
+            "several kinds match any of them"
+        )
+        let visibleOnly = try await tool.call(.init(visibility: .visible, maximumResults: 8), in: context)
+        try Expect.equal(visibleOnly.totalMatches, 0, "none is among the tools")
+        let hiddenTools = try await tool.call(
+            .init(kinds: [.tool], visibility: .hidden, maximumResults: 8), in: context
+        )
+        try Expect.equal(
+            hiddenTools.entries.map(\.identifier), [hiddenTool.identifier.rawValue],
+            "kind and visibility combine"
+        )
+        let privileged = try await tool.call(.init(risks: [.privileged], maximumResults: 8), in: context)
+        try Expect.equal(privileged.totalMatches, 0, "a risk filter matches only declared levels")
+
+        // Names a provider is sent: a tool keeps its identifier; other kinds
+        // read as theirs behind their kind; a long one ends in a hash.
+        try Expect.equal(CapabilityReference.tool(hiddenTool.identifier).providerName, "fixture.hidden_tool", "a tool keeps its name")
+        try Expect.equal(
+            CapabilityReference.program(hiddenProgram.identifier).providerName,
+            "program_fixture_hidden_program",
+            "a program's name reads as its identifier"
+        )
+        let long = CapabilityReference.agent(AgentIdentifier(rawValue: String(repeating: "worker.", count: 12)))
+        try Expect.true(
+            long.providerName.count == CapabilityReference.providerNameLimit && long.providerName.hasPrefix("agent_worker_"),
+            "a long name is cut and hashed: \(long.providerName)"
+        )
+        try Expect.equal(long.hashedProviderName, long.providerName, "a cut name is already the hashed form")
+        let program = CapabilityReference.program(hiddenProgram.identifier)
+        try Expect.true(
+            program.hashedProviderName.hasPrefix("program_fixture_hidden_program_")
+                && program.hashedProviderName.count == "program_fixture_hidden_program_".count + 8,
+            "the collision fallback ends in the hash: \(program.hashedProviderName)"
         )
 
         let discovered = try await tool.call(
@@ -187,7 +229,7 @@ extension ExecutionTesting {
         )
 
         let listed = try await Standard.Tools.ListCapabilities().call(
-            .init(kind: .tool, maximumResults: 1), in: context
+            .init(kinds: [.tool], maximumResults: 1), in: context
         )
         try Expect.equal(listed.total, 1,
             "list enumerates only available installed Tool bindings")

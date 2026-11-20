@@ -8,21 +8,35 @@ public extension Standard.Tools {
     struct ListCapabilities: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            public let kind: CapabilityKind?
-            public let domain: String?
+            /// Any of these kinds; all when omitted.
+            public let kinds: [CapabilityKind]?
+            /// Any of these domains (namespaces).
+            public let domains: [String]?
+            /// Only those among your tools (`visible`) or only the others.
+            public let visibility: CapabilityVisibility?
+            /// Any of these effect levels; capabilities without one do not match.
+            public let risks: [ActionRisk]?
             public let offset: Int?
             public let maximumResults: Int?
 
             public init(
-                kind: CapabilityKind? = nil,
-                domain: String? = nil,
+                kinds: [CapabilityKind]? = nil,
+                domains: [String]? = nil,
+                visibility: CapabilityVisibility? = nil,
+                risks: [ActionRisk]? = nil,
                 offset: Int? = nil,
                 maximumResults: Int? = nil
             ) {
-                self.kind = kind
-                self.domain = domain
+                self.kinds = kinds
+                self.domains = domains
+                self.visibility = visibility
+                self.risks = risks
                 self.offset = offset
                 self.maximumResults = maximumResults
+            }
+
+            var filter: CapabilityFilter {
+                .init(kinds: kinds, domains: domains, visibility: visibility, risks: risks)
             }
         }
 
@@ -40,20 +54,16 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Enumerate available executable capabilities by domain, paginated, without changing visibility or authority."
+            "Enumerate available capabilities, paginated, narrowed by kinds, domains, visibility or effect levels, without changing visibility or authority."
         public static let risk: ActionRisk = .observe
         public init() {}
 
         public func call(_ input: Input, in context: ToolContext) async throws -> Output {
             let (snapshot, available) = try await CapabilityDiscovery.available(in: context)
-            let domain = input.domain?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let filter = input.filter
             let selected = available.filter { entry in
-                guard let kind = CapabilityKind(rawValue: entry.kind) else { return false }
-                if let wanted = input.kind, wanted != .all && wanted != kind { return false }
-                if let domain, !domain.isEmpty, entry.namespace?.lowercased() != domain {
-                    return false
-                }
-                return true
+                CapabilityKind(rawValue: entry.kind) != nil
+                    && filter.matches(entry, visible: snapshot.visible)
             }.sorted { lhs, rhs in
                 // Pages read as domains: grouped by namespace, then kind and name.
                 if lhs.namespace != rhs.namespace { return (lhs.namespace ?? "") < (rhs.namespace ?? "") }
@@ -86,9 +96,7 @@ public extension Standard.Tools {
             var text = "\(output.offset + 1)–\(end) of \(output.total):\n"
                 + CapabilityEntry.rendered(output.entries)
             if end < output.total {
-                var arguments = ["\"offset\": \(end)"]
-                if let kind = input.kind { arguments.insert("\"kind\": \"\(kind.rawValue)\"", at: 0) }
-                if let domain = input.domain { arguments.insert("\"domain\": \"\(domain)\"", at: 0) }
+                let arguments = input.filter.arguments + ["\"offset\": \(end)"]
                 text += "\nlist_capabilities {\(arguments.joined(separator: ", "))} continues."
             }
             return text
