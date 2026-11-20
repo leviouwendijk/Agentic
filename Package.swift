@@ -101,6 +101,7 @@ let package = Package(
                 "AgenticReferences",
             ]
         ),
+        .library(name: "AgenticAssertions", targets: ["AgenticAssertions"]),
     ],
     dependencies: [
         .package(
@@ -205,6 +206,7 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Sensitivity.git",
             branch: "master"
         ),
+        .package(url: "https://github.com/leviouwendijk/Testing.git", branch: "master"),
     ],
     targets: [
         .target(
@@ -458,6 +460,16 @@ let package = Package(
                 ),
             ],
             path: "Macros/AgenticMacrosPlugin"
+        ),
+        .target(
+            name: "AgenticAssertions",
+            dependencies: [
+                "Agentic",
+                .product(name: "Testing", package: "Testing"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Workspace", package: "Workspace"),
+            ]
         ),
     ]
 )

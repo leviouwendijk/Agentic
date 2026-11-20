@@ -10,12 +10,6 @@ let package = Package(
     ],
     products: [
 
-        // opt-in declarative assertions
-        .library(
-            name: "AgenticAssertions",
-            targets: ["AgenticAssertions"]
-        ),
-
         // testing
         .executable(
             name: "t_agentic",
@@ -126,16 +120,6 @@ let package = Package(
         .package(path: ".."),
     ],
     targets: [
-        .target(
-            name: "AgenticAssertions",
-            dependencies: [
-                .product(name: "Agentic", package: "Agentic"),
-                .product(name: "Testing", package: "Testing"),
-                .product(name: "Macros", package: "Macros"),
-                .product(name: "Schema", package: "Schema"),
-                .product(name: "Workspace", package: "Workspace"),
-            ]
-        ),
         .executableTarget(
             name: "AgenticStructuresTesting",
             dependencies: [
@@ -190,7 +174,7 @@ let package = Package(
             name: "AgenticAssertionsTesting",
             dependencies: [
                 .product(name: "Agentic", package: "Agentic"),
-                "AgenticAssertions",
+                .product(name: "AgenticAssertions", package: "Agentic"),
                 .product(name: "Testing", package: "Testing"),
             ]
         ),
