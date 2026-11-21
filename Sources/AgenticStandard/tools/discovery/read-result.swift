@@ -6,24 +6,29 @@ import Schema
 public enum ReadResultError: Error, Sendable {
     case notRecorded(String)
     case archiveUnavailable
+    /// The call's result has no such segment; the ones it has.
+    case noSegment(String, available: [String])
 }
 
 public extension Standard.Tools {
-    /// Reads a result the model was shown only in part, by line, from the
-    /// session's record.
+    /// Reads a result by line from the session's record: what the model was
+    /// shown, or one segment of the full output.
     @Tool
     struct ReadResult: Tool {
         @JSONSchema
         public struct Input: HashableSource {
             /// The call whose result to read, as named in the shortened result.
             public let call: String
+            /// A segment of the full output, as search_results names it (stdout, stderr, …). Defaults to what you were shown.
+            public let segment: String?
             /// First line to read, from 1. Defaults to 1.
             public let offset: Int?
             /// Lines to read. Defaults to 200.
             public let limit: Int?
 
-            public init(call: String, offset: Int? = nil, limit: Int? = nil) {
+            public init(call: String, segment: String? = nil, offset: Int? = nil, limit: Int? = nil) {
                 self.call = call
+                self.segment = segment
                 self.offset = offset
                 self.limit = limit
             }
@@ -32,6 +37,7 @@ public extension Standard.Tools {
         @JSONSchema
         public struct Output: HashableResult {
             public let call: String
+            public let segment: String?
             /// First line returned, from 1.
             public let from: Int
             /// Last line returned.
@@ -39,8 +45,9 @@ public extension Standard.Tools {
             public let total: Int
             public let text: String
 
-            public init(call: String, from: Int, to: Int, total: Int, text: String) {
+            public init(call: String, segment: String? = nil, from: Int, to: Int, total: Int, text: String) {
                 self.call = call
+                self.segment = segment
                 self.from = from
                 self.to = to
                 self.total = total
@@ -49,7 +56,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Read the rest of a result that was shown only in part, by line; the shortened result names the call and where to continue."
+            "Read a result by line: the rest of one shown only in part (the shortened result names the call and where to continue), or a segment of its full output (search_results names them)."
         public static let risk: ActionRisk = .observe
         public static let defaultLimit = 200
 
@@ -62,11 +69,21 @@ public extension Standard.Tools {
             guard let response = try await archive.response(call: input.call) else {
                 throw ReadResultError.notRecorded(input.call)
             }
-            let lines = ResultLines.lines(of: response.modelText)
+            let lines: [Substring]
+            if let name = input.segment {
+                let recorded = RecordedOutput(response)
+                guard let segment = recorded.segment(named: name) else {
+                    throw ReadResultError.noSegment(name, available: recorded.segments.map(\.name))
+                }
+                lines = segment.elements.map { Substring($0.text) }
+            } else {
+                lines = ResultLines.lines(of: response.modelText)
+            }
             let from = min(max(1, input.offset ?? 1), max(1, lines.count))
             let to = min(lines.count, from - 1 + max(1, input.limit ?? Self.defaultLimit))
             return Output(
                 call: input.call,
+                segment: input.segment,
                 from: from,
                 to: to,
                 total: lines.count,
@@ -78,8 +95,9 @@ public extension Standard.Tools {
             guard output.to < output.total else {
                 return output.text
             }
+            let segment = output.segment.map { ", \"segment\": \"\($0)\"" } ?? ""
             return output.text + "\n[Lines \(output.from)–\(output.to) of \(output.total). "
-                + "read_result {\"call\": \"\(output.call)\", \"offset\": \(output.to + 1)} continues.]"
+                + "read_result {\"call\": \"\(output.call)\"\(segment), \"offset\": \(output.to + 1)} continues.]"
         }
     }
 }

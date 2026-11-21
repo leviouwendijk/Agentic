@@ -4,13 +4,23 @@
 public struct ResultArchive: Sendable {
     private let lookup: @Sendable (String) async throws -> FunctionCall.Response?
     private let latest: @Sendable (String) async throws -> FunctionCall.Response?
+    private let recent: @Sendable (Int) async throws -> [FunctionCall.Response]
 
     public init(
         _ lookup: @escaping @Sendable (String) async throws -> FunctionCall.Response?,
-        latest: @escaping @Sendable (String) async throws -> FunctionCall.Response? = { _ in nil }
+        latest: @escaping @Sendable (String) async throws -> FunctionCall.Response? = { _ in nil },
+        recent: @escaping @Sendable (Int) async throws -> [FunctionCall.Response] = { _ in [] }
     ) {
         self.lookup = lookup
         self.latest = latest
+        self.recent = recent
+    }
+
+    /// The session's latest `limit` responses, newest first.
+    public func recent(
+        limit: Int
+    ) async throws -> [FunctionCall.Response] {
+        try await recent(limit)
     }
 
     /// The full response recorded for `call`, if any.
