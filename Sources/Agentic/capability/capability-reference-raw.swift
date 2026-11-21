@@ -17,7 +17,8 @@ public extension CapabilityReference {
     /// - an identifier on offer, exactly (`swift_tool_build`, or an authored
     ///   identifier of a domain without a primary name yet);
     /// - the full form with an alias for the domain (`sbm_tool_build`);
-    /// - `domain.name`, with the primary name or an alias (`swift.build`, `sbm.build`);
+    /// - `domain.name`, with the primary name or an alias (`swift.build`,
+    ///   `sbm.build`); a prefix that is not a domain leaves the text a name;
     /// - a bare name (`build`), narrowed by `domain` when given.
     struct Raw: Sendable, Hashable {
         public var text: String
@@ -70,8 +71,10 @@ extension CapabilityReference: Invariant {
 
         let wantedDomain: DomainName?
         let wantedName: String
-        if let dot = text.firstIndex(of: ".") {
-            let written = try raw.primary(for: String(text[..<dot]))
+        if let dot = text.firstIndex(of: "."),
+           let written = try? raw.primary(for: String(text[..<dot])) {
+            // A prefix that is no domain leaves the whole text a name: agent
+            // and program identifiers have dots of their own.
             if let given, given != written {
                 throw .conflictingDomain(given: given.raw, written: written.raw)
             }
@@ -161,7 +164,9 @@ public enum CapabilityReferenceError:
     public var errorDescription: String? {
         switch self {
         case .unknownDomain(let name, let known):
-            "'\(name)' is not a domain. Domains: \(known.joined(separator: ", "))."
+            known.isEmpty
+                ? "'\(name)' is not a domain; no domain has a name yet."
+                : "'\(name)' is not a domain. Domains: \(known.joined(separator: ", "))."
         case .notFound(let text):
             "No capability on offer is called '\(text)'. Find it with list_capabilities or search_capabilities."
         case .ambiguous(let text, let candidates, let domains):

@@ -96,7 +96,13 @@ let capabilityNameFlows: [TestFlow] = [
                 "the message says how to disambiguate"
             )
         }
-        try Expect.throwsError("an unknown domain") { _ = try resolve("nope.build") }
+        try Expect.throwsError("an unknown domain given explicitly") { _ = try resolve("build", domain: "nope") }
+        do {
+            _ = try resolve("nope.build")
+            throw ExpectationFailure("a dotted name that matches nothing is not found")
+        } catch let error as CapabilityReferenceError {
+            try Expect.equal(error, .notFound("nope.build"), "a prefix that is no domain leaves the text a name")
+        }
         try Expect.throwsError("domain and name disagree") { _ = try resolve("other.build", domain: "fx") }
         try Expect.throwsError("nothing by that name") { _ = try resolve("deploy") }
         try Expect.throwsError("an authored id that parses is not a domain") { _ = try resolve("transcript", domain: "read") }
