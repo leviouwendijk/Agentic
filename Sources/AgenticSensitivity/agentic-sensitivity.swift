@@ -30,7 +30,7 @@ public extension Privacy {
 
         /// The workspace file tools: what one reads another may write back.
         public static let standardFamilies: [Set<String>] = [
-            ["read_files", "mutate_files", "search_sources", "create_text", "edit_text"],
+            ["read", "mutate", "search", "create_text", "edit_text"],
         ]
 
         /// Sources whose values the owner supplied (their messages, their
