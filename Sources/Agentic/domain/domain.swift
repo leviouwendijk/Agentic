@@ -62,7 +62,7 @@ public struct DomainDefinition:
     public func toolIdentifier(
         _ name: String
     ) -> ToolIdentifier {
-        ToolIdentifier(rawValue: identity(.tool, name)?.string ?? name)
+        ToolIdentifier(rawValue: identity(.tool, name)?.raw ?? name)
     }
 }
 

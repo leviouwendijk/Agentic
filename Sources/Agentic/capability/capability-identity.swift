@@ -70,14 +70,14 @@ public struct CapabilityName:
     public static func < (lhs: Self, rhs: Self) -> Bool { lhs.raw < rhs.raw }
 }
 
-/// A capability as three values. Its `string`, `<domain>_<kind>_<name>`
+/// A capability as three values. Its `raw` string, `<domain>_<kind>_<name>`
 /// (`swift_tool_build`), is the name the model sees and calls, and the
 /// identifier everything stores (logs, permissions, profiles). People see
 /// it rendered from the parts instead.
 public struct CapabilityIdentity:
+    CodableInvariant,
     Sendable,
     Hashable,
-    Codable,
     CustomStringConvertible
 {
     /// The strictest provider's limit on a function name. A longer string is
@@ -93,9 +93,9 @@ public struct CapabilityIdentity:
         kind: CapabilityKind,
         name: CapabilityName
     ) throws(CapabilityNameError) {
-        let string = Self.string(domain: domain, kind: kind, name: name)
-        guard string.count <= Self.limit else {
-            throw .tooLong(string)
+        let raw = Self.raw(domain: domain, kind: kind, name: name)
+        guard raw.count <= Self.limit else {
+            throw .tooLong(raw)
         }
         self.domain = domain
         self.kind = kind
@@ -104,15 +104,16 @@ public struct CapabilityIdentity:
 
     /// Parses the full form `<domain>_<kind>_<name>` and nothing else. It
     /// never accepts an alias, `domain.name` or a bare name: those are
-    /// accepted only by `CapabilityResolver`, the one place that turns
-    /// human or model input into a capability. A string that parses is not
-    /// necessarily a capability; check its domain against the installed ones.
-    public init(parsing text: String) throws(CapabilityNameError) {
-        let parts = text.split(separator: "_", maxSplits: 2, omittingEmptySubsequences: false)
+    /// accepted only by `CapabilityReference.init(_: CapabilityReference.Raw)`,
+    /// the one place that turns human or model input into a capability. A
+    /// string that parses is not necessarily a capability; check its domain
+    /// against the installed ones.
+    public init(_ raw: String) throws(CapabilityNameError) {
+        let parts = raw.split(separator: "_", maxSplits: 2, omittingEmptySubsequences: false)
         guard parts.count == 3,
               let kind = CapabilityKind(rawValue: String(parts[1]))
         else {
-            throw .notQualified(text)
+            throw .notQualified(raw)
         }
         try self.init(
             domain: DomainName(String(parts[0])),
@@ -121,27 +122,19 @@ public struct CapabilityIdentity:
         )
     }
 
-    public var string: String {
-        Self.string(domain: domain, kind: kind, name: name)
+    /// `<domain>_<kind>_<name>`.
+    public var raw: String {
+        Self.raw(domain: domain, kind: kind, name: name)
     }
 
-    public var description: String { string }
+    public var description: String { raw }
 
-    private static func string(
+    private static func raw(
         domain: DomainName,
         kind: CapabilityKind,
         name: CapabilityName
     ) -> String {
         "\(domain.raw)_\(kind.rawValue)_\(name.raw)"
-    }
-
-    public init(from decoder: any Decoder) throws {
-        try self.init(parsing: decoder.singleValueContainer().decode(String.self))
-    }
-
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(string)
     }
 }
 

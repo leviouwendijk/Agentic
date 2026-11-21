@@ -29,19 +29,19 @@ let capabilityNameFlows: [TestFlow] = [
         )
         try Expect.isNil(LinkerCatalogFixture.definition.name, "@Domain without arguments has no primary name")
 
-        let parsed = try CapabilityIdentity(parsing: "fixture_tool_run_product")
+        let parsed = try CapabilityIdentity("fixture_tool_run_product")
         try Expect.equal(parsed.domain.raw, "fixture", "domain is up to the first underscore")
         try Expect.equal(parsed.kind, .tool, "kind is the second part")
         try Expect.equal(parsed.name.raw, "run_product", "name is the rest")
-        try Expect.equal(parsed.string, "fixture_tool_run_product", "the string round-trips")
+        try Expect.equal(parsed.raw, "fixture_tool_run_product", "the string round-trips")
         try Expect.throwsError("the parser takes the full form only") {
-            _ = try CapabilityIdentity(parsing: "fixture.build")
+            _ = try CapabilityIdentity("fixture.build")
         }
         try Expect.throwsError("an unknown kind") {
-            _ = try CapabilityIdentity(parsing: "swift_build")
+            _ = try CapabilityIdentity("swift_build")
         }
         try Expect.throwsError("past the provider limit") {
-            _ = try CapabilityIdentity(parsing: "fixture_tool_" + String(repeating: "x", count: 60))
+            _ = try CapabilityIdentity("fixture_tool_" + String(repeating: "x", count: 60))
         }
         try Expect.throwsError("an underscore in a domain name") {
             _ = try DomainName("swift_lang")
@@ -52,14 +52,14 @@ let capabilityNameFlows: [TestFlow] = [
         ]
     },
     TestFlow(
-        "capability-resolver-accepts-aliases-and-bare-names",
+        "capability-reference-raw-accepts-aliases-and-bare-names",
         tags: ["agentic", "capability", "naming", "resolver"]
     ) {
-        let resolver = CapabilityResolver(domains: [
+        let domains = [
             NamedCatalogFixture.definition,
             OtherCatalogFixture.definition,
             LinkerCatalogFixture.definition,
-        ])
+        ]
         let candidates = [
             "fixture_tool_build",
             "fixture_tool_run_product",
@@ -67,8 +67,11 @@ let capabilityNameFlows: [TestFlow] = [
             "linker_fixture_alpha",
             "read_agent_transcript",
         ]
+        let offered = candidates.map { CapabilityReference.tool(ToolIdentifier(rawValue: $0)) }
         func resolve(_ text: String, domain: String? = nil) throws -> String {
-            try resolver.resolve(text, domain: domain, among: candidates)
+            let reference = try CapabilityReference(.init(text, domain: domain, domains: domains, offered: offered))
+            guard case .tool(let identifier) = reference else { return "" }
+            return identifier.rawValue
         }
 
         try Expect.equal(try resolve("fixture_tool_build"), "fixture_tool_build", "the full string, exactly")

@@ -69,7 +69,7 @@ public extension Catalog {
             guard case .tool(let definition) = entry.declaration else { continue }
             tools[definition.identifier.rawValue, default: []].insert(definition)
             guard let namespace = entry.namespace, let domain = named[namespace] else { continue }
-            let identity = try? CapabilityIdentity(parsing: definition.identifier.rawValue)
+            let identity = try? CapabilityIdentity(definition.identifier.rawValue)
             if identity?.domain != domain || identity?.kind != .tool {
                 problems.append(.uncomputedIdentifier(definition.identifier.rawValue, domain: domain.raw))
             }

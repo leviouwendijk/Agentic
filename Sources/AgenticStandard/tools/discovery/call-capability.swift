@@ -28,13 +28,17 @@ public extension Standard.Tools {
     struct CallCapability: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// The capability, as inspect_capability named it.
+            /// The capability, as inspect_capability named it. A shorter form
+            /// (`domain.name`, or a bare name) works when it is unambiguous.
             public let identifier: String
+            /// Its domain, only when a bare name is shared by several domains.
+            public let domain: String?
             /// Its input, as its contract describes.
             public let input: JSONValue
 
-            public init(identifier: String, input: JSONValue) {
+            public init(identifier: String, domain: String? = nil, input: JSONValue) {
                 self.identifier = identifier
+                self.domain = domain
                 self.input = input
             }
         }
