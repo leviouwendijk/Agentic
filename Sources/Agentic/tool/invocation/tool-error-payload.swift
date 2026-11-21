@@ -39,8 +39,7 @@ public struct ToolErrorPayload:
 
         let summary =
             subject.summary(
-                capture: .model,
-                redaction: .internal_diagnostic
+                for: .trusted
             )
 
         self.kind = "tool_error"

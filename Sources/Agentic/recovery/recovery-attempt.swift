@@ -48,8 +48,8 @@ public extension Recovery {
             message: String? = nil
         ) {
             // Kept with the session's records: secrets never are.
-            let report = error.report.redacted(
-                policy: .internal_diagnostic
+            let report = error.report(
+                for: .diagnostic
             )
 
             self.init(
