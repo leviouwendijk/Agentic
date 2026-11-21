@@ -33,6 +33,9 @@ public extension Context.Tools {
             public let updated: String?
             /// The body's size, estimated.
             public let tokens: Int
+            /// An agent's memory (below memories/): unreviewed, weighed
+            /// below curated entries.
+            public let memory: Bool
         }
 
         @JSONSchema
@@ -56,7 +59,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "What the owner has told agents about their world (business, people, clients, projects): every context entry with its summary and size. Read the bodies you need with context_read. Narrow with tags or an identifier prefix."
+            "What the owner has told agents about their world (business, people, clients, projects): every context entry with its summary and size, and agents' memories (memory: true, under memories). Read the bodies you need with context_read. Narrow with tags or an identifier prefix."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -73,7 +76,8 @@ public extension Context.Tools {
                         tags: item.entry.tags ?? [],
                         load: (item.entry.load ?? .onRequest).rawValue,
                         updated: item.entry.updated,
-                        tokens: TokenEstimator.estimate(item.entry.body).estimatedTokens
+                        tokens: TokenEstimator.estimate(item.entry.body).estimatedTokens,
+                        memory: Context.isMemoryFile(item.file)
                     )
                 },
                 groups: library.groups.map { .init(prefix: $0.prefix, entries: $0.entries) },
@@ -104,6 +108,8 @@ public extension Context.Tools {
             public let related: [String]
             /// The file that defines it, for context_file.
             public let file: String
+            /// Where it came from; set on memories.
+            public let source: String?
         }
 
         @JSONSchema
@@ -134,7 +140,8 @@ public extension Context.Tools {
                     body: item.entry.body,
                     updated: item.entry.updated,
                     related: item.entry.related ?? [],
-                    file: item.file
+                    file: item.file,
+                    source: item.entry.source
                 ))
             }
             return .init(entries: entries, missing: missing)

@@ -39,6 +39,18 @@ enum ContextFilesTestSuite {
             try ContextFilesTests.libraryIdentifiers()
         }
 
+        Test("memory-rules", tags: ["context", "memory"]) {
+            try ContextMemoryTests.rules()
+        }
+
+        Test("memory-render-round-trip", tags: ["context", "memory"]) {
+            try ContextMemoryTests.renderRoundTrip()
+        }
+
+        Test("memory-remember-and-forget", tags: ["context", "memory"]) {
+            try await ContextMemoryTests.rememberAndForget()
+        }
+
         Test("index-and-read", tags: ["context", "tools"]) {
             try await ContextFilesTests.indexAndRead()
         }

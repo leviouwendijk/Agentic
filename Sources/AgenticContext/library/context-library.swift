@@ -140,6 +140,23 @@ public extension Context {
             )
         }
 
+        /// This library without `file`, as it would be after removing it:
+        /// what other files' relations it would break.
+        public func removing(_ file: String) -> (library: Library, problems: [String]) {
+            let remaining = items.filter { $0.file != file }
+            let before = Set(Self.unresolvedRelations(in: items))
+            let problems = Self.unresolvedRelations(in: remaining).filter { !before.contains($0) }
+            return (
+                .init(
+                    directory: directory,
+                    items: remaining,
+                    shared: shared,
+                    problems: self.problems.filter { !$0.hasPrefix("\(file):") }
+                ),
+                problems
+            )
+        }
+
         private static func read(_ url: URL, file: String, problems: inout [String]) -> String? {
             do {
                 return try TextFileReader(url).read().text
@@ -213,6 +230,15 @@ public extension Context {
         !name.isEmpty && name.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
     }
 
+    /// The folder agents' memories live in, in the home's context or a
+    /// shared root's.
+    static let memoriesFolder = "memories"
+
+    /// Whether `file` holds memories: it lies in a `memories/` folder.
+    static func isMemoryFile(_ file: String) -> Bool {
+        file.split(separator: "/").dropLast().contains { $0 == memoriesFolder }
+    }
+
     /// What one file holds: its entries, or why it does not hold.
     static func read(_ text: String, file: String) -> (items: [Library.Item], problems: [String]) {
         guard let prefix = idPrefix(of: file) else {
@@ -251,6 +277,16 @@ public extension Context {
                 if let updated = entry.updated, !isDate(updated) {
                     found.append("\(file): '\(binding.name)': updated must be YYYY-MM-DD, not '\(updated)'.")
                     continue
+                }
+                if isMemoryFile(file) {
+                    if entry.load == .always {
+                        found.append("\(file): '\(binding.name)': a memory is never loaded always; only curated entries are.")
+                        continue
+                    }
+                    if entry.source?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+                        found.append("\(file): '\(binding.name)': a memory needs .source, the session and date it came from.")
+                        continue
+                    }
                 }
                 items.append(.init(id: "\(prefix).\(binding.name)", file: file, entry: entry))
             } catch {

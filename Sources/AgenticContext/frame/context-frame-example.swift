@@ -53,10 +53,11 @@ public extension ContextFrame {
 
 public extension Context.Library {
     /// What every agent is told: which context exists, by top-level group,
-    /// and the bodies of the `.always` entries. Nil when there are no
-    /// entries.
+    /// the bodies of the `.always` entries, and how to remember. Nil when
+    /// there are no entries.
     var instructions: String? {
         guard !items.isEmpty else { return nil }
+        let remembering = "# Remembering\n\n" + Context.Instructions.Remembering.content
         let top = groups.filter { !$0.prefix.contains(".") }
             .map { "\($0.prefix) (\($0.entries))" }
         var text = """
@@ -70,6 +71,6 @@ public extension Context.Library {
         for item in always {
             text += "\n\n## \(item.entry.title) (\(item.id))\n\n\(item.entry.body.trimmingCharacters(in: .whitespacesAndNewlines))"
         }
-        return text
+        return text + "\n\n" + remembering
     }
 }

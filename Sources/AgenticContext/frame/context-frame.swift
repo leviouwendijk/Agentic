@@ -33,8 +33,9 @@ public enum ContextFrame {
         }
     }
 
-    /// One thing agents may know about the owner's world.
-    public struct Entry: Sendable, Hashable, Decodable {
+    /// One thing agents may know about the owner's world. Encodable so the
+    /// memory tools can write a file back from its entries.
+    public struct Entry: Sendable, Hashable, Codable {
         public let title: String
         /// What the index shows; enough to decide whether to read the body.
         public let summary: String
@@ -45,6 +46,9 @@ public enum ContextFrame {
         public let updated: String?
         /// Other entries by identifier.
         public let related: [String]?
+        /// Where it came from: for a memory, the session and date that
+        /// established it. Required below `memories/`.
+        public let source: String?
 
         public init(
             title: String,
@@ -53,7 +57,8 @@ public enum ContextFrame {
             tags: [String]? = nil,
             load: Load? = nil,
             updated: String? = nil,
-            related: [String]? = nil
+            related: [String]? = nil,
+            source: String? = nil
         ) {
             self.title = title
             self.summary = summary
@@ -62,6 +67,7 @@ public enum ContextFrame {
             self.load = load
             self.updated = updated
             self.related = related
+            self.source = source
         }
     }
 
@@ -101,11 +107,27 @@ extension ContextFrame.Entry: FrameDescribable {
                   summary: "YYYY-MM-DD: when it was last known to hold."),
             .init("related", .array(.string),
                   summary: "Other entries by identifier, such as \"people.sam.role\"; each must exist."),
+            .init("source", .string,
+                  summary: "Where it came from; for a memory (below memories/, where it is required) the session and date that established it."),
         ], summary: "One thing agents may know about the owner's world.")
     }
 }
 
 extension ContextFrame.Entry {
+    /// In the order entries are written by hand: what it is, how it is
+    /// found, then the body.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(title, forKey: .title)
+        try container.encode(summary, forKey: .summary)
+        try container.encodeIfPresent(tags, forKey: .tags)
+        try container.encodeIfPresent(load, forKey: .load)
+        try container.encodeIfPresent(updated, forKey: .updated)
+        try container.encodeIfPresent(source, forKey: .source)
+        try container.encodeIfPresent(related, forKey: .related)
+        try container.encode(body, forKey: .body)
+    }
+
     /// This entry with `tags` added before its own, without repeats.
     func tagged(_ tags: [String]) -> Self {
         var merged: [String] = []
@@ -119,7 +141,8 @@ extension ContextFrame.Entry {
             tags: merged,
             load: load,
             updated: updated,
-            related: related
+            related: related,
+            source: source
         )
     }
 }

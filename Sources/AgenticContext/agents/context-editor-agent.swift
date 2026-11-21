@@ -16,7 +16,8 @@ public extension Context.Agents {
         public static let purpose = """
         Context editor: adds, corrects and reorganises the owner's context \
         entries (business, people, clients, projects, conventions) in the \
-        context/ files, and saves them once they check out.
+        context/ files, and saves them once they check out; reviews agents' \
+        memories, promoting, merging and forgetting them.
         """
 
         public static let instructions: AgentInstructions = [
@@ -64,6 +65,19 @@ public extension Context.Agents {
                 with \(Standard.Tools.ClarifyWithUser.identifier.rawValue), \
                 grouping questions.
 
+                MEMORIES
+
+                Files below memories/ hold what agents learned across \
+                sessions, unreviewed, each with a .source. When the owner \
+                asks for a review, go through them by area: promote a memory \
+                that has held up by writing it into the curated file it \
+                belongs to (memories/sbm.frame into tools/sbm.frame), shown \
+                and saved like any change, then \
+                \(Context.Tools.Forget.identifier.rawValue) it; merge \
+                near-duplicates with \(Context.Tools.Remember.identifier.rawValue); \
+                forget stale or contradicted ones and say why. Never promote \
+                a memory into a shared root's file without saying so.
+
                 CHECK, SHOW, SAVE
 
                 Run \(Context.Tools.Check.identifier.rawValue) on the whole \
@@ -99,6 +113,8 @@ public extension Context.Agents {
                         Context.Tools.File.identifier,
                         Context.Tools.Check.identifier,
                         Context.Tools.Save.identifier,
+                        Context.Tools.Remember.identifier,
+                        Context.Tools.Forget.identifier,
 
                         FrameLang.Tools.ModuleSchema.identifier,
 

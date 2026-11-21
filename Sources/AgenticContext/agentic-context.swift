@@ -82,25 +82,44 @@ public extension Context {
             guard !location.readOnly else {
                 throw StoreFailure.readOnly(file)
             }
-            let target = location.url
-            var archived: URL?
-            if let current = try self.text(file) {
-                let formatter = DateFormatter()
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-                let stem = "\(file.dropLast(".frame".count).replacingOccurrences(of: "/", with: "."))-\(formatter.string(from: now))"
-                // Saves within one second get -2, -3, ...
-                var archive = archiveDirectory.appendingPathComponent("\(stem).frame")
-                var count = 1
-                while FileSystem.default.exists(archive) {
-                    count += 1
-                    archive = archiveDirectory.appendingPathComponent("\(stem)-\(count).frame")
-                }
-                try FileWriter(archive).write(current)
-                archived = archive
-            }
-            try FileWriter(target).write(text, options: .overwriteWithoutBackup)
+            let archived = try archive(file, now: now)
+            try FileWriter(location.url).write(text, options: .overwriteWithoutBackup)
             return archived
+        }
+
+        /// Archives the file, then removes it. Returns the archived copy;
+        /// nil when there was no file.
+        public func remove(_ file: String, now: Date = Date()) throws -> URL? {
+            let location = try location(file)
+            guard !location.readOnly else {
+                throw StoreFailure.readOnly(file)
+            }
+            guard let archived = try archive(file, now: now) else {
+                return nil
+            }
+            try FileSystem.default.remove(location.url)
+            return archived
+        }
+
+        /// A copy of the current file in the archive, named after it and
+        /// the time; nil when there is no file.
+        private func archive(_ file: String, now: Date) throws -> URL? {
+            guard let current = try text(file) else {
+                return nil
+            }
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+            let stem = "\(file.dropLast(".frame".count).replacingOccurrences(of: "/", with: "."))-\(formatter.string(from: now))"
+            // Saves within one second get -2, -3, ...
+            var archive = archiveDirectory.appendingPathComponent("\(stem).frame")
+            var count = 1
+            while FileSystem.default.exists(archive) {
+                count += 1
+                archive = archiveDirectory.appendingPathComponent("\(stem)-\(count).frame")
+            }
+            try FileWriter(archive).write(current)
+            return archive
         }
     }
 
