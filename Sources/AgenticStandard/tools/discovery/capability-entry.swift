@@ -10,26 +10,6 @@ public enum CapabilityDiscoveryError:
     case agentCapabilityStateRequired
 }
 
-public enum CapabilityKind:
-    String,
-    Sendable,
-    Codable,
-    Hashable,
-    CaseIterable,
-    JSONSchemaProviding
-{
-    case tool
-    case program
-    case inference
-    case agent
-
-    public static var jsonschema: JSONSchema {
-        .string(
-            cases: allCases.map(\.rawValue)
-        )
-    }
-}
-
 /// Whether a capability is among the tool definitions, and so called by its
 /// own name, or callable without one.
 public enum CapabilityVisibility:

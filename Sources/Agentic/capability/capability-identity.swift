@@ -1,6 +1,7 @@
 import Errors
 import Foundation
 import Primitives
+import Schema
 
 /// The middle part of `<domain>_<kind>_<name>`: what a capability is.
 public enum CapabilityKind:
@@ -8,12 +9,19 @@ public enum CapabilityKind:
     Sendable,
     Codable,
     Hashable,
-    CaseIterable
+    CaseIterable,
+    JSONSchemaProviding
 {
     case tool
     case program
-    case agent
     case inference
+    case agent
+
+    public static var jsonschema: JSONSchema {
+        .string(
+            cases: allCases.map(\.rawValue)
+        )
+    }
 }
 
 /// A domain's primary name or one of its aliases: `[a-z][a-z0-9]*`, with no

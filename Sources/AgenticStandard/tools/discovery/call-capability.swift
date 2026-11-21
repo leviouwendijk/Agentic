@@ -63,6 +63,27 @@ public extension Standard.Tools {
                visible.tools.contains(ToolIdentifier(input.identifier)) {
                 throw CallCapabilityError.direct(input.identifier)
             }
+            // The runtime dispatches every call that names exactly one
+            // capability; this one did not. Say why when the reason is the
+            // name itself (ambiguous, unknown domain).
+            if let (_, available) = try? await CapabilityDiscovery.available(in: context) {
+                let kinds: [CapabilityKind] = (try? CapabilityIdentity(input.identifier)).map { [$0.kind] } ?? CapabilityKind.allCases
+                for kind in kinds {
+                    do {
+                        _ = try CapabilityReference(.init(
+                            input.identifier,
+                            domain: input.domain,
+                            kind: kind,
+                            domains: context.catalog.domains,
+                            offered: available.map(\.reference)
+                        ))
+                    } catch CapabilityReferenceError.notFound {
+                        continue
+                    } catch {
+                        throw error
+                    }
+                }
+            }
             throw CallCapabilityError.notAvailable(input.identifier)
         }
     }
