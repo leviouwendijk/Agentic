@@ -88,7 +88,7 @@ public extension Standard.Tools {
             public let probes: [Probe]?
             /// Only these calls' results, by call id.
             public let calls: [String]?
-            /// Only results of these tools, such as swift_build.
+            /// Only results of these tools, such as swift_tool_build.
             public let tools: [String]?
             /// Only these segments, such as stdout, stderr or text (what you were shown).
             public let segments: [String]?
@@ -272,7 +272,7 @@ public extension Standard.Tools {
                 lines.append("[\(output.hits.count) of \(output.total) hits; offset \(shown) continues.]")
             }
             if let hit = output.hits.first {
-                lines.append("read_result {\"call\": \"\(hit.call)\", \"segment\": \"\(hit.segment)\", \"offset\": \(max(1, hit.line - 5))} reads around a hit.")
+                lines.append("standard_tool_read_result {\"call\": \"\(hit.call)\", \"segment\": \"\(hit.segment)\", \"offset\": \(max(1, hit.line - 5))} reads around a hit.")
             }
             return lines.joined(separator: "\n")
         }

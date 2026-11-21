@@ -5,7 +5,7 @@ import Macros
 import Schema
 
 public extension FrameLang.Tools {
-    @Tool("frame_check")
+    @Tool("check")
     struct Check {
         @JSONSchema
         public struct Input: HashableSource {

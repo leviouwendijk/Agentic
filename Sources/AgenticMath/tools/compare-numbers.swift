@@ -4,7 +4,7 @@ import Math
 import Schema
 
 public extension Math.Tools {
-    @Tool("compare_numbers")
+    @Tool("compare")
     struct CompareNumbers: Tool {
         @JSONSchema
         public struct Input: HashableSource {

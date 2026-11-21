@@ -5,7 +5,7 @@ import Math
 import Schema
 
 public extension Math.Tools {
-    @Tool("aggregate_numbers")
+    @Tool("aggregate")
     struct AggregateNumbers: Tool {
         @JSONSchema
         public enum Operation: String, Codable, Sendable, Hashable, CaseIterable {

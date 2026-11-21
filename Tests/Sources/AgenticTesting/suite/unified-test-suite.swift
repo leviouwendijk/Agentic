@@ -173,7 +173,7 @@ enum UserInputSchemaTestSuite {
             try Expect.equal(
                 input.required,
                 true,
-                "clarify_with_user requires its semantic input specification"
+                "standard_tool_clarify_with_user requires its semantic input specification"
             )
             try Expect.equal(
                 input.description?.contains(
@@ -190,7 +190,7 @@ enum UserInputSchemaTestSuite {
             try Expect.equal(
                 variants.count,
                 5,
-                "clarify_with_user exposes the complete UserInputSpec discriminated union to the model"
+                "standard_tool_clarify_with_user exposes the complete UserInputSpec discriminated union to the model"
             )
         }
     }

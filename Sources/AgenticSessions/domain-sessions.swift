@@ -7,5 +7,5 @@ import Agentic
 /// Tools resolve their sources from the invocation's services, so the host
 /// decides which (if any) an Agent may read: `Sessions.HistoryStore`,
 /// `any Sessions.LogReading` and `any Sessions.CatalogReading`.
-@Domain
+@Domain("sessions", aliases: ["session"])
 public enum Sessions {}

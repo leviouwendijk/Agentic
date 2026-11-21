@@ -1,4 +1,4 @@
 import Agentic
 
-@Domain
+@Domain("assertions")
 public enum Assertions {}

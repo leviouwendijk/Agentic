@@ -2,7 +2,7 @@ import Agentic
 
 /// Durable task graph tools. Tools resolve `AgentTaskManager` and, when the
 /// host supplies one, `AgentTaskScope` from trusted session services.
-@Domain
+@Domain("tasks", aliases: ["task"])
 public enum Tasks {}
 
 extension ToolContext {

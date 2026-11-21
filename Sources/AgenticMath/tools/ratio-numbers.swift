@@ -5,7 +5,7 @@ import Math
 import Schema
 
 public extension Math.Tools {
-    @Tool("ratio_numbers")
+    @Tool("ratio")
     struct RatioNumbers: Tool {
         @JSONSchema
         public enum Operation: String, Codable, Sendable, Hashable, CaseIterable {

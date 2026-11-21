@@ -225,7 +225,7 @@ extension ExecutionTesting {
         try Expect.equal(
             snapshot.visible,
             .none,
-            "search_capabilities must not modify direct model visibility"
+            "standard_tool_search_capabilities must not modify direct model visibility"
         )
 
         let listed = try await Standard.Tools.ListCapabilities().call(
@@ -243,7 +243,7 @@ extension ExecutionTesting {
             fixture
               fixture.hidden_agent [agent] — Hidden Agent capability
               fixture.hidden_inference [inference] — Hidden Inference capability
-            list_capabilities {"offset": 2} continues.
+            standard_tool_list_capabilities {"offset": 2} continues.
             """,
             "list renders one line per entry under its namespace and names the next page"
         )

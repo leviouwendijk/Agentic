@@ -9,7 +9,7 @@ import Sensitivity
 /// IBANs, keys and the like; tools that may use a handle get its value
 /// inside their own call. The values stay in a vault outside the agentic
 /// home and expire.
-@Domain
+@Domain("privacy")
 public enum Privacy {}
 
 public extension Privacy {
@@ -18,20 +18,19 @@ public extension Privacy {
     /// - Soft handles (private addresses, identifiers): any tool.
     /// - Values the owner supplied (their messages, their context): any tool.
     /// - Other handles: tools related to one that produced the value (same
-    ///   name prefix, as `mail_read` and `mail_send`, or one family), or a
-    ///   tool the owner granted it to.
+    ///   domain, the name prefix of `mail_tool_read` and `mail_tool_send`, or
+    ///   one family), or a tool the owner granted it to.
     struct ResolutionPolicy: Sendable {
-        /// Tools that share values besides those sharing a name prefix.
+        /// Tools that share values besides those of one domain.
         public var families: [Set<String>]
 
         public init(families: [Set<String>] = Self.standardFamilies) {
             self.families = families
         }
 
-        /// The workspace file tools: what one reads another may write back.
-        public static let standardFamilies: [Set<String>] = [
-            ["read", "mutate", "search", "create_text", "edit_text"],
-        ]
+        /// None: the workspace file tools (`io_tool_read`, `io_tool_mutate`,
+        /// `io_tool_search`) already share their domain.
+        public static let standardFamilies: [Set<String>] = []
 
         /// Sources whose values the owner supplied (their messages, their
         /// context): any tool may use them, though the model never sees them.
@@ -49,7 +48,8 @@ public extension Privacy {
             }
         }
 
-        /// Whether `tool` may use what `source` produced: same tool, name prefix or family.
+        /// Whether `tool` may use what `source` produced: same tool, same domain
+        /// (`<domain>_<kind>_<name>`), or one family.
         public func related(_ source: String, _ tool: String) -> Bool {
             source == tool
                 || Self.prefix(source) == Self.prefix(tool)
@@ -66,7 +66,12 @@ public extension Privacy {
         public let failure: Sensitivity.ShieldFailure
 
         public var errorDescription: String? {
-            failure.description
+            switch failure {
+            case .notPermitted:
+                failure.description + " The owner grants it through \(Privacy.Tools.Grant.identifier.rawValue)."
+            case .unknown:
+                failure.description
+            }
         }
     }
 

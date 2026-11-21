@@ -19,7 +19,7 @@ public extension Standard.Tools {
         public struct Input: HashableSource {
             /// The call whose result to read, as named in the shortened result.
             public let call: String
-            /// A segment of the full output, as search_results names it (stdout, stderr, …). Defaults to what you were shown.
+            /// A segment of the full output, as standard_tool_search_results names it (stdout, stderr, …). Defaults to what you were shown.
             public let segment: String?
             /// First line to read, from 1. Defaults to 1.
             public let offset: Int?
@@ -56,7 +56,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Read a result by line: the rest of one shown only in part (the shortened result names the call and where to continue), or a segment of its full output (search_results names them)."
+            "Read a result by line: the rest of one shown only in part (the shortened result names the call and where to continue), or a segment of its full output (standard_tool_search_results names them)."
         public static let risk: ActionRisk = .observe
         public static let defaultLimit = 200
 
@@ -97,7 +97,7 @@ public extension Standard.Tools {
             }
             let segment = output.segment.map { ", \"segment\": \"\($0)\"" } ?? ""
             return output.text + "\n[Lines \(output.from)–\(output.to) of \(output.total). "
-                + "read_result {\"call\": \"\(output.call)\"\(segment), \"offset\": \(output.to + 1)} continues.]"
+                + "standard_tool_read_result {\"call\": \"\(output.call)\"\(segment), \"offset\": \(output.to + 1)} continues.]"
         }
     }
 }

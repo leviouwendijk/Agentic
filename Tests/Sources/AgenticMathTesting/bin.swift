@@ -64,7 +64,7 @@ enum AgenticMathTestSuite {
             )
             try Expect.equal(
                 Math.Tools.Calculate.definition.identifier.rawValue,
-                "calculate",
+                "math_tool_calculate",
                 "Tool identifier"
             )
         }
@@ -105,14 +105,14 @@ enum AgenticMathTestSuite {
         Test("compare-tool-identifier") {
             try Expect.equal(
                 Math.Tools.CompareNumbers.definition.identifier.rawValue,
-                "compare_numbers", "Compare tool identifier"
+                "math_tool_compare", "Compare tool identifier"
             )
         }
 
 
         Test("ratio-and-aggregate-tool-contract") {
-            try Expect.equal(Math.Tools.RatioNumbers.definition.identifier.rawValue, "ratio_numbers", "Ratio ID")
-            try Expect.equal(Math.Tools.AggregateNumbers.definition.identifier.rawValue, "aggregate_numbers", "Aggregate ID")
+            try Expect.equal(Math.Tools.RatioNumbers.definition.identifier.rawValue, "math_tool_ratio", "Ratio ID")
+            try Expect.equal(Math.Tools.AggregateNumbers.definition.identifier.rawValue, "math_tool_aggregate", "Aggregate ID")
             let result = try Math.Tools.RatioNumbers.evaluate(.init(
                 operation: .percentage_change, lhs: "100", rhs: "115"
             ))
@@ -130,7 +130,7 @@ enum AgenticMathTestSuite {
 
 
         Test("allocation-tool-reconciles") {
-            try Expect.equal(Math.Tools.AllocateNumbers.definition.identifier.rawValue, "allocate_numbers", "Allocation ID")
+            try Expect.equal(Math.Tools.AllocateNumbers.definition.identifier.rawValue, "math_tool_allocate", "Allocation ID")
             let output = try Math.Tools.AllocateNumbers.evaluate(.init(total: "100", weights: ["1", "1", "1"]))
             try Expect.equal(output.allocations, ["33.34", "33.33", "33.33"], "Deterministic fair remainder")
             try Expect.equal(output.reconciled_total, "100", "Exact total")
@@ -138,7 +138,7 @@ enum AgenticMathTestSuite {
 
 
         Test("plot-ready-series-tool-keeps-x-alignment") {
-            try Expect.equal(Math.Tools.AnalyzeSeries.definition.identifier.rawValue, "analyze_series", "Series ID")
+            try Expect.equal(Math.Tools.AnalyzeSeries.definition.identifier.rawValue, "math_tool_analyze_series", "Series ID")
             let points: [Math.Tools.AnalyzeSeries.Point] = [
                 .init(x: "jan", value: "10"),
                 .init(x: "feb", value: "20"),
@@ -156,7 +156,7 @@ enum AgenticMathTestSuite {
         }
 
         Test("verify-numbers-exact-and-tolerance") {
-            try Expect.equal(Math.Tools.VerifyNumbers.definition.identifier.rawValue, "verify_numbers", "Tool ID")
+            try Expect.equal(Math.Tools.VerifyNumbers.definition.identifier.rawValue, "math_tool_verify", "Tool ID")
             let exact = try Math.Tools.VerifyNumbers.evaluate(.init(
                 operation: .expected, observed: "21", expected: "21"
             ))

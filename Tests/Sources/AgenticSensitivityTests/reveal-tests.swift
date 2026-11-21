@@ -8,7 +8,7 @@ import Testing
 enum RevealTests {
     static func segmentsAndModes() async throws {
         let vault = Sensitivity.Vault(lifetime: .seconds(60))
-        let sam = await vault.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "email", reason: "address", score: 90, source: "mail_read")
+        let sam = await vault.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "email", reason: "address", score: 90, source: "mail_tool_read")
         let key = await vault.handle(for: "sk-test-1234567890abcdef", kind: .secret, tier: .handle, detector: "token", reason: "key", score: 95, source: "read_file")
         let entries = await vault.displayEntries()
         let gone = Sensitivity.Handle(kind: .contact, id: "00000000")
@@ -23,7 +23,7 @@ enum RevealTests {
         }
         try Expect.equal(shown.state, .revealed, "a contact is revealed")
         try Expect.equal(shown.text, "sam@example.com", "as its value")
-        try Expect.equal(shown.description?.sources, ["mail_read"], "with where it was seen, for a hover")
+        try Expect.equal(shown.description?.sources, ["mail_tool_read"], "with where it was seen, for a hover")
         try Expect.equal(secret.state, .masked, "a secret stays masked inline")
         try Expect.false(secret.text.contains("1234567890"), "no secret value inline: \(secret.text)")
         try Expect.equal(revealed.value(of: key), "sk-test-1234567890abcdef", "only on an explicit reveal")

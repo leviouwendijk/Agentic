@@ -27,7 +27,7 @@ public extension Sessions {
 
     /// Every session's canonical message history, including what
     /// compaction took out of later requests. Hosts feed it as runs settle
-    /// and install it as a service for `read_session_history`.
+    /// and install it as a service for `sessions_tool_read_history`.
     actor HistoryStore {
         private var messagesBySessionID: [String: [Message]]
 

@@ -87,7 +87,7 @@ public extension Context {
             }
             let read = Context.read(text, file: file)
             guard read.problems.isEmpty else {
-                return ([], read.problems.map { "\($0) Fix the file with context_file and context_save first." })
+                return ([], read.problems.map { "\($0) Fix the file with context_tool_file and context_tool_save first." })
             }
             return (read.items.map { (String($0.id.dropFirst(prefix.count + 1)), $0.entry) }, [])
         }
@@ -100,7 +100,7 @@ public extension Context {
                 bindings: bindings.map { (name: $0.name, type: ContextFrame.entryType, value: $0.entry) }
             )
             return """
-                // Agents' memories, written by context_remember and context_forget.
+                // Agents' memories, written by context_tool_remember and context_tool_forget.
                 // Unreviewed: the context editor promotes, merges and forgets them.
 
                 \(document.source)
@@ -110,7 +110,7 @@ public extension Context {
 }
 
 public extension Context.Tools {
-    @Tool("context_remember")
+    @Tool("remember")
     struct Remember {
         @JSONSchema
         public struct Input: HashableSource {
@@ -226,7 +226,7 @@ public extension Context.Tools {
         }
     }
 
-    @Tool("context_forget")
+    @Tool("forget")
     struct Forget {
         @JSONSchema
         public struct Input: HashableSource {

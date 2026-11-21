@@ -25,7 +25,7 @@ let domainCatalogFlows: [TestFlow] = [
             Standard.catalog.tools.contains(
                 where: { definition in
                     definition.identifier.rawValue
-                        == "advisor_ask"
+                        == "standard_tool_advisor_ask"
                 }
             ),
             true,

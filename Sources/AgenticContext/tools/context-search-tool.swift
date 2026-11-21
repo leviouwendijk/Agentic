@@ -5,7 +5,7 @@ import Schema
 import Search
 
 public extension Context.Tools {
-    @Tool("context_search")
+    @Tool("search")
     struct Search {
         @JSONSchema
         public enum Strategy: String, Sendable, Codable, Hashable, CaseIterable {
@@ -129,7 +129,7 @@ public extension Context.Tools {
             /// body matches.
             public let score: Int
             /// Body lines that matched; read the whole entry with
-            /// context_read.
+            /// context_tool_read.
             public let lines: [Line]
         }
 
@@ -145,7 +145,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "Search the owner's context entries (title, summary, tags and body), ranked, with the body lines that matched. Combine required, preferred and excluded terms; narrow by tags, group, date or a previous result's ids (within). Then read the best matches with context_read."
+            "Search the owner's context entries (title, summary, tags and body), ranked, with the body lines that matched. Combine required, preferred and excluded terms; narrow by tags, group, date or a previous result's ids (within). Then read the best matches with context_tool_read."
         public static let risk: ActionRisk = .observe
 
         public init() {}

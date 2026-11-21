@@ -20,7 +20,7 @@ extension ExecutionTesting {
         }
         // Newest first, as the archive returns them.
         let responses = [
-            response("c5", "read_result", output: .object(["text": .string("\(error)\nmore")])),
+            response("c5", "standard_tool_read_result", output: .object(["text": .string("\(error)\nmore")])),
             response("c4", "list_items", output: .object(["items": .array([
                 .object(["name": .string("alpha"), "size": .int(3)]),
                 .object(["name": .string("beta"), "size": .int(5)]),
@@ -28,14 +28,14 @@ extension ExecutionTesting {
             response("c3", "count", output: .object(["count": .int(2)])),
             response(
                 "c2",
-                "swift_build",
+                "swift_tool_build",
                 output: .object(["stdout": .string("Compiling B\n\(error)\nBuild failed"), "exitCode": .int(1)]),
                 isError: true,
                 text: "✗ build failed\n\(error)"
             ),
             response(
                 "c1",
-                "swift_build",
+                "swift_tool_build",
                 output: .object(["stdout": .string("Compiling A\n\(error)\nBuild failed"), "exitCode": .int(1)]),
                 isError: true
             ),
@@ -58,11 +58,11 @@ extension ExecutionTesting {
         try Expect.equal(count.segments.map(\.name), ["output"], "nothing derived: the record as JSON lines")
 
         // A literal query across results, newest first; the rendering's copy
-        // of a stdout line is left out; read_result is not searched.
+        // of a stdout line is left out; standard_tool_read_result is not searched.
         let found = try await search.call(.init(query: "cannot find"), in: context)
         try Expect.equal(found.hits.map(\.call), ["c2", "c1"], "both builds, newest first, once each")
         try Expect.equal(found.hits.map(\.segment), ["stdout", "stdout"], "the record's segment wins over the rendering")
-        try Expect.equal(found.searched, 4, "read_result's own results are not searched")
+        try Expect.equal(found.searched, 4, "standard_tool_read_result's own results are not searched")
 
         // unique: one hit per text, counted.
         let unique = try await search.call(.init(query: "cannot find", unique: true), in: context)
@@ -93,10 +93,10 @@ extension ExecutionTesting {
 
         // The rendering names where to read around a hit.
         let rendered = search.render(found, input: .init(query: "cannot find")) ?? ""
-        try Expect.contains(rendered, "c2 swift_build · stdout", "grouped by result and segment")
-        try Expect.contains(rendered, "\"segment\": \"stdout\"", "points read_result at the segment")
+        try Expect.contains(rendered, "c2 swift_tool_build · stdout", "grouped by result and segment")
+        try Expect.contains(rendered, "\"segment\": \"stdout\"", "points standard_tool_read_result at the segment")
 
-        // read_result pages a segment of the full output.
+        // standard_tool_read_result pages a segment of the full output.
         let reader = Standard.Tools.ReadResult()
         let page = try await reader.call(.init(call: "c1", segment: "stdout", offset: 2, limit: 1), in: context)
         try Expect.equal(page.text, error, "one line of stdout")

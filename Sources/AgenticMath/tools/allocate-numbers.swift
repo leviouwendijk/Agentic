@@ -5,7 +5,7 @@ import Math
 import Schema
 
 public extension Math.Tools {
-    @Tool("allocate_numbers")
+    @Tool("allocate")
     struct AllocateNumbers: Tool {
         @JSONSchema
         public struct Input: HashableSource {

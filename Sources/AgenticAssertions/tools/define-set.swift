@@ -3,7 +3,7 @@ import Macros
 import Schema
 
 public extension Assertions.Tools {
-    @Tool("assertions.define_set")
+    @Tool("define_set")
     struct DefineSet: Tool {
         @JSONSchema
         public struct Input: HashableSource {

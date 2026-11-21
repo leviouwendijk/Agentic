@@ -181,7 +181,7 @@ enum GuardTests {
             refusal = error
         }
         try Expect.true(refusal is Privacy.GuardFailure, "another domain is refused: \(String(describing: refusal))")
-        try Expect.true((refusal as? Privacy.GuardFailure)?.errorDescription?.contains("privacy_grant") == true, "the refusal says how to ask")
+        try Expect.true((refusal as? Privacy.GuardFailure)?.errorDescription?.contains("privacy_tool_grant") == true, "the refusal says how to ask")
 
         let granted = try await Privacy.Tools.Grant().call(
             .init(handle: address.token, tool: "web_fetch", purpose: "check the address"),

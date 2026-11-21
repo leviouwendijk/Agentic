@@ -43,7 +43,7 @@ public extension ContextWindow {
             /// and how to read it back.
             public var text: String {
                 "[Compacted: the result of \(call.name) call \(call.id) (≈\(estimatedTokens) tokens) is preserved. "
-                    + "Read it with read_session_history(fromMessageID: \"\(messageID)\", "
+                    + "Read it with sessions_tool_read_history(fromMessageID: \"\(messageID)\", "
                     + "throughMessageID: \"\(messageID)\"). Preview: \(preview)]"
             }
         }

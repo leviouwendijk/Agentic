@@ -1,7 +1,7 @@
 import Foundation
 
 /// The context window is an addressable view over records; it does not own their storage.
-@Domain
+@Domain("window", aliases: ["contextwindow"])
 public enum ContextWindow {}
 
 public extension ContextWindow {

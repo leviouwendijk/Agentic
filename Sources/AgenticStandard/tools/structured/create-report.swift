@@ -96,7 +96,7 @@ public extension Standard.Tools {
             public let rows: [Row]?
             /// A previous call whose result supplies the rows, instead of
             /// copying them: complete and traceable to that call. Either the
-            /// call's identifier or a tool name, such as `schedule_agenda`,
+            /// call's identifier or a tool name, such as `schedule_tool_agenda`,
             /// for that tool's latest successful result.
             public let from_call: String?
             /// Dotted path to the array of row objects in that call's

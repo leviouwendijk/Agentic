@@ -11,7 +11,7 @@ import Schema
 /// `FrameLang.Modules` in the session's tool services, and the module files
 /// editors read (`~/.config/frame/modules`). A compiled module always wins
 /// over a file of the same name, so a stale file cannot misreport.
-@Domain
+@Domain("frame", aliases: ["framelang"])
 public enum FrameLang {}
 
 public extension FrameLang {

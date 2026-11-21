@@ -10,7 +10,7 @@ public enum CallCapabilityError: Error, Sendable, CustomStringConvertible {
     public var description: String {
         switch self {
         case .notAvailable(let identifier):
-            "'\(identifier)' is not available to call: find it with list_capabilities or search_capabilities, then read its contract with inspect_capability."
+            "'\(identifier)' is not available to call: find it with standard_tool_list_capabilities or standard_tool_search_capabilities, then read its contract with standard_tool_inspect_capability."
         case .direct(let identifier):
             "'\(identifier)' is in your tool definitions: call it by its own name."
         }
@@ -28,7 +28,7 @@ public extension Standard.Tools {
     struct CallCapability: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// The capability, as inspect_capability named it. A shorter form
+            /// The capability, as standard_tool_inspect_capability named it. A shorter form
             /// (`domain.name`, or a bare name) works when it is unambiguous.
             public let identifier: String
             /// Its domain, only when a bare name is shared by several domains.
@@ -53,7 +53,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Only for a capability that is not among your tools: call it here with its identifier and its input as inspect_capability's contract describes. Call every tool you have by its own name, never through this one."
+            "Only for a capability that is not among your tools: call it here with its identifier and its input as standard_tool_inspect_capability's contract describes. Call every tool you have by its own name, never through this one."
         public static let risk: ActionRisk = .observe
 
         public init() {}

@@ -124,7 +124,7 @@ struct AgenticStructuresSmoke {
             ]),
         ])
         let archive = ResultArchive { call in
-            call == "slots-1" ? .init(call: .init(id: call, name: "schedule_find_slots"), output: slots) : nil
+            call == "slots-1" ? .init(call: .init(id: call, name: "schedule_tool_find_slots"), output: slots) : nil
         }
         let context = ToolContext(services: try ToolServices().inserting(archive))
         let input = ReportTool.Input(
@@ -179,7 +179,7 @@ struct AgenticStructuresSmoke {
             ])]),
         ])])
         let teamArchive = ResultArchive { call in
-            call == "agenda-1" ? .init(call: .init(id: call, name: "schedule_agenda"), output: agenda) : nil
+            call == "agenda-1" ? .init(call: .init(id: call, name: "schedule_tool_agenda"), output: agenda) : nil
         }
         let week = try await ReportTool().call(.init(
             title: "Week",
@@ -230,10 +230,10 @@ struct AgenticStructuresSmoke {
         // its latest result, and `rows` may be left out entirely.
         let named = ResultArchive(
             { _ in nil },
-            latest: { tool in tool == "schedule_agenda" ? .init(call: .init(id: "agenda-7", name: tool), output: agenda) : nil }
+            latest: { tool in tool == "schedule_tool_agenda" ? .init(call: .init(id: "agenda-7", name: tool), output: agenda) : nil }
         )
         let decoded = try JSONDecoder().decode(ReportTool.Input.self, from: Data("""
-            {"title": "Week", "datasets": [{"id": "e", "from_call": "schedule_agenda", "rows_path": "participants.*.entries",
+            {"title": "Week", "datasets": [{"id": "e", "from_call": "schedule_tool_agenda", "rows_path": "participants.*.entries",
               "columns": [{"name": "title", "kind": "text"}]}],
              "blocks": [{"kind": "table", "dataset": "e", "columns": ["title"]}]}
             """.utf8))

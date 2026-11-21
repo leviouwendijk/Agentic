@@ -11,8 +11,8 @@ enum CallTreeSmoke {
     static func run() throws {
         typealias Tool = Standard.Tools.CreateCallTree
         try AgenticStructuresSmoke.check(
-            Tool.definition.identifier.rawValue == "create_call_tree",
-            "create_call_tree tool identifier"
+            Tool.definition.identifier.rawValue == "standard_tool_create_call_tree",
+            "standard_tool_create_call_tree tool identifier"
         )
         let before = try Tool.evaluate(.init(calls: [
             .init(id: "entry", symbol_id: "run", label: "run()"),
@@ -133,6 +133,6 @@ enum CallTreeSmoke {
             _ = try Tool.evaluate(.init(calls: calls))
             throw CallTreeSmokeFailure.expected_rejection
         } catch Tool.Failure.too_many_calls {}
-        print("PASS create_call_tree: ordering, provenance, identity, diffs, validation, Codable")
+        print("PASS standard_tool_create_call_tree: ordering, provenance, identity, diffs, validation, Codable")
     }
 }

@@ -1,4 +1,4 @@
 import Agentic
 
-@Domain
+@Domain("standard")
 public enum Standard {}

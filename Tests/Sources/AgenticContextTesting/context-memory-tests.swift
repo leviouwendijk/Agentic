@@ -4,7 +4,7 @@ import Foundation
 import Testing
 
 /// Memories: entries below memories/, written one at a time by
-/// context_remember and context_forget.
+/// context_tool_remember and context_tool_forget.
 enum ContextMemoryTests {
     static func memory(load: String? = nil, source: String? = "session T, 2026-11-21") -> String {
         """

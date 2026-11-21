@@ -6,7 +6,7 @@ public enum AgentAdvisorError: Error, Sendable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .emptyPrompt:
-            return "Tool 'advisor_ask' requires a non-empty prompt."
+            return "Tool 'standard_tool_advisor_ask' requires a non-empty prompt."
         }
     }
 }

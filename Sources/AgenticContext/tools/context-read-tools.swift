@@ -5,7 +5,7 @@ import Schema
 import Tokens
 
 public extension Context.Tools {
-    @Tool("context_index")
+    @Tool("index")
     struct Index {
         @JSONSchema
         public struct Input: HashableSource {
@@ -23,7 +23,7 @@ public extension Context.Tools {
 
         @JSONSchema
         public struct Item: HashableResult {
-            /// What context_read takes: `business.services`.
+            /// What context_tool_read takes: `business.services`.
             public let id: String
             public let title: String
             public let summary: String
@@ -59,7 +59,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "What the owner has told agents about their world (business, people, clients, projects): every context entry with its summary and size, and agents' memories (memory: true, under memories). Read the bodies you need with context_read. Narrow with tags or an identifier prefix."
+            "What the owner has told agents about their world (business, people, clients, projects): every context entry with its summary and size, and agents' memories (memory: true, under memories). Read the bodies you need with context_tool_read. Narrow with tags or an identifier prefix."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -87,11 +87,11 @@ public extension Context.Tools {
         }
     }
 
-    @Tool("context_read")
+    @Tool("read")
     struct Read {
         @JSONSchema
         public struct Input: HashableSource {
-            /// Identifiers from context_index.
+            /// Identifiers from context_tool_index.
             public let ids: [String]
 
             public init(ids: [String]) {
@@ -106,7 +106,7 @@ public extension Context.Tools {
             public let body: String
             public let updated: String?
             public let related: [String]
-            /// The file that defines it, for context_file.
+            /// The file that defines it, for context_tool_file.
             public let file: String
             /// Where it came from; set on memories.
             public let source: String?
@@ -120,7 +120,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "The full text of context entries, by identifier from context_index."
+            "The full text of context entries, by identifier from context_tool_index."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -148,7 +148,7 @@ public extension Context.Tools {
         }
     }
 
-    @Tool("context_file")
+    @Tool("file")
     struct File {
         @JSONSchema
         public struct Input: HashableSource {
@@ -170,7 +170,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "A context file's text, to change it with context_save; or, when it does not exist yet, an example to start from."
+            "A context file's text, to change it with context_tool_save; or, when it does not exist yet, an example to start from."
         public static let risk: ActionRisk = .observe
 
         public init() {}

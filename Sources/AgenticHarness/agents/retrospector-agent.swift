@@ -36,7 +36,7 @@ public extension Harness.Agents {
                 estimate, and whether the tools changed and the cache was \
                 written again), `context_changed` (what a request carried less \
                 of), `context_pressure`, `context_usage`, `cost_actual`, \
-                `model_routed`. Calls to `note_friction` are the model's own \
+                `model_routed`. Calls to `harness_tool_note_friction` are the model's own \
                 notes on what got in its way.
 
                 LOOK THROUGH FIVE LENSES

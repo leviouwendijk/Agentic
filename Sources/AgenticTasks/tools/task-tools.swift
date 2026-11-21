@@ -4,7 +4,7 @@ import Schema
 import Macros
 
 public extension Tasks.Tools {
-    @Tool("task_create")
+    @Tool("create")
     struct CreateTask: Tool {
         /// Create a new agent task.
         @JSONSchema
@@ -87,7 +87,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_update")
+    @Tool("update")
     struct UpdateTask: Tool {
         /// Update mutable fields on an existing agent task.
         @JSONSchema
@@ -180,7 +180,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_list")
+    @Tool("list")
     struct ListTasks: Tool {
         /// List agent tasks with optional status, owner, readiness, and completion filters.
         @JSONSchema
@@ -258,7 +258,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_get")
+    @Tool("get")
     struct GetTask: Tool {
         /// Read one agent task by identifier.
         @JSONSchema
@@ -315,7 +315,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_claim")
+    @Tool("claim")
     struct ClaimTask: Tool {
         /// Claim an agent task for an owner.
         @JSONSchema
@@ -381,7 +381,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_complete")
+    @Tool("complete")
     struct CompleteTask: Tool {
         /// Mark an agent task complete.
         @JSONSchema
@@ -406,7 +406,7 @@ public extension Tasks.Tools {
             }
         }
 
-        public static let purpose = "Complete a durable Agentic task that needs no attempt review, and unblock dependents. Use task_accept for submitted attempts."
+        public static let purpose = "Complete a durable Agentic task that needs no attempt review, and unblock dependents. Use tasks_tool_accept for submitted attempts."
 
         public static let risk: ActionRisk = .boundedmutate
 

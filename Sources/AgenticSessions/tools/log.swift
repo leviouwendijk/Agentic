@@ -9,7 +9,7 @@ import Macros
 /// the model's context. The host installs the session's log as a service
 /// (`any Sessions.LogReading`).
 public extension Sessions.Tools {
-    @Tool("read_session_log")
+    @Tool("read_log")
     struct Log: Tool {
         @JSONSchema
         public struct Input: HashableSource {
@@ -52,7 +52,7 @@ public extension Sessions.Tools {
         }
 
         public static let purpose =
-            "List the steps of this session's durable log: requests, messages, calls, responses, approvals, denials, skips, failures, command output. One line each; read a step in full with read_session_step."
+            "List the steps of this session's durable log: requests, messages, calls, responses, approvals, denials, skips, failures, command output. One line each; read a step in full with sessions_tool_read_step."
         public static let risk: ActionRisk = .observe
 
         public init() {}
@@ -92,11 +92,11 @@ public extension Sessions.Tools {
         }
     }
 
-    @Tool("read_session_step")
+    @Tool("read_step")
     struct Step: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// The step's sequence number from read_session_log.
+            /// The step's sequence number from sessions_tool_read_log.
             public let seq: Int
 
             public init(seq: Int) {
@@ -109,7 +109,7 @@ public extension Sessions.Tools {
             public let line: Sessions.LogLine
             /// The entry with its stored bodies filled in. A request lists
             /// its messages by id, role and digest; read one with
-            /// read_session_payload.
+            /// sessions_tool_read_payload.
             public let detail: JSONValue
         }
 
@@ -146,11 +146,11 @@ public extension Sessions.Tools {
         }
     }
 
-    @Tool("read_session_payload")
+    @Tool("read_payload")
     struct Payload: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// A digest named by read_session_step.
+            /// A digest named by sessions_tool_read_step.
             public let digest: String
 
             public init(digest: String) {

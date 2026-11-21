@@ -34,7 +34,7 @@ public extension Privacy.Tools {
         }
     }
 
-    @Tool("privacy_handles")
+    @Tool("handles")
     struct Handles {
         @JSONSchema
         public struct Input: HashableSource {
@@ -73,13 +73,13 @@ public extension Privacy.Tools {
         }
     }
 
-    @Tool("privacy_grant")
+    @Tool("grant")
     struct Grant {
         @JSONSchema
         public struct Input: HashableSource {
             /// The handle, as written (⟦kind:id⟧).
             public let handle: String
-            /// The tool that will use its value, such as mail_send.
+            /// The tool that will use its value, such as mail_tool_send.
             public let tool: String
             /// What the value is needed for, for the owner deciding.
             public let purpose: String

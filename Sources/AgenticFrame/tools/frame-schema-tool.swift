@@ -5,11 +5,11 @@ import Macros
 import Schema
 
 public extension FrameLang.Tools {
-    @Tool("frame_schema")
+    @Tool("schema")
     struct ModuleSchema {
         @JSONSchema
         public struct Input: HashableSource {
-            /// A module name from frame_modules, such as `Agentic` or
+            /// A module name from frame_tool_modules, such as `Agentic` or
             /// `Scheduling`.
             public let module: String
 

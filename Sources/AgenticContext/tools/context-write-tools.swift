@@ -5,7 +5,7 @@ import Macros
 import Schema
 
 public extension Context.Tools {
-    @Tool("context_check")
+    @Tool("check")
     struct Check {
         @JSONSchema
         public struct Input: HashableSource {
@@ -41,7 +41,7 @@ public extension Context.Tools {
         }
     }
 
-    @Tool("context_save")
+    @Tool("save")
     struct Save {
         @JSONSchema
         public struct Input: HashableSource {
@@ -68,7 +68,7 @@ public extension Context.Tools {
         }
 
         public static let purpose =
-            "Save a context file, replacing the current one (which is archived). Checks it first exactly as context_check does and refuses one that does not hold. Only after the owner has seen what will be saved."
+            "Save a context file, replacing the current one (which is archived). Checks it first exactly as context_tool_check does and refuses one that does not hold. Only after the owner has seen what will be saved."
         public static let risk: ActionRisk = .privileged
 
         public init() {}

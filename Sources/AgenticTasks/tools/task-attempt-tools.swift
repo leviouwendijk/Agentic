@@ -4,7 +4,7 @@ import Schema
 import Macros
 
 public extension Tasks.Tools {
-    @Tool("task_record_attempt")
+    @Tool("record_attempt")
     struct RecordAttempt: Tool {
         /// Submit an assignee's report for a task; the task then awaits acceptance.
         @JSONSchema
@@ -35,7 +35,7 @@ public extension Tasks.Tools {
             }
         }
 
-        public static let purpose = "Submit the report of one attempt at a task. The task waits for task_accept or task_reject; recording never completes it."
+        public static let purpose = "Submit the report of one attempt at a task. The task waits for tasks_tool_accept or tasks_tool_reject; recording never completes it."
 
         public static let risk: ActionRisk = .boundedmutate
 
@@ -72,7 +72,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_accept")
+    @Tool("accept")
     struct AcceptTask: Tool {
         /// Accept a submitted attempt, complete the task, and unblock dependents.
         @JSONSchema
@@ -137,7 +137,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_reject")
+    @Tool("reject")
     struct RejectTask: Tool {
         /// Reject a submitted attempt and return the task to pending.
         @JSONSchema
@@ -201,7 +201,7 @@ public extension Tasks.Tools {
         }
     }
 
-    @Tool("task_fail")
+    @Tool("fail")
     struct FailTask: Tool {
         /// Mark a submitted attempt, and its task, failed.
         @JSONSchema

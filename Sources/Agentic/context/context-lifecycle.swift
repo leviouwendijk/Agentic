@@ -157,8 +157,8 @@ public extension ContextWindow {
         /// How much of each capability schema is advertised.
         public let schemas: SchemaDetail
         /// A result the model reads beyond this many estimated tokens shows
-        /// its beginning and where `read_result` continues; the full result
-        /// stays in the session log. Applies only while `read_result` can
+        /// its beginning and where `standard_tool_read_result` continues; the full result
+        /// stays in the session log. Applies only while `standard_tool_read_result` can
         /// be revealed and the session is logged. Nil shows results whole.
         public let resultBudget: Int?
 
@@ -185,7 +185,7 @@ public extension ContextWindow {
         /// Every schema in full.
         case full
         /// Required properties in full, optional ones abbreviated
-        /// (`ToolDescriptor.core`); full detail through `inspect_capability`.
+        /// (`ToolDescriptor.core`); full detail through `standard_tool_inspect_capability`.
         case core
     }
 

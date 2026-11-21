@@ -23,14 +23,14 @@ enum HarnessTestSuite {
                     Harness.Tools.InspectInstallation.identifier
                 ),
                 true,
-                "Harness catalog contains inspect_installation"
+                "Harness catalog contains harness_tool_inspect_installation"
             )
             try Expect.equal(
                 identifiers.contains(
                     Harness.Tools.InspectExposure.identifier
                 ),
                 true,
-                "Harness catalog contains inspect_exposure"
+                "Harness catalog contains harness_tool_inspect_exposure"
             )
         }
 
@@ -128,7 +128,7 @@ enum HarnessTestSuite {
                 .init(
                     category: .context,
                     title: "Shortened results are read again",
-                    detail: "3 of 4 shortened results were read back with read_result within two turns.",
+                    detail: "3 of 4 shortened results were read back with standard_tool_read_result within two turns.",
                     evidence: ["s1 step 12", "s1 step 19"],
                     effect: "≈2.1k input tokens per session",
                     proposal: "Raise the result budget for read_files to 1.5k tokens."

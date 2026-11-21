@@ -150,10 +150,10 @@ enum AssertionTestSuite {
         }
 
         Test("tool-identity") {
-            try Expect.equal(Assertions.Tools.Evaluate.definition.identifier.rawValue, "assertions.evaluate", "Evaluate identifier")
-            try Expect.equal(Assertions.Tools.DefineSet.definition.identifier.rawValue, "assertions.define_set", "Define identifier")
-            try Expect.equal(Assertions.Tools.EvaluateSet.definition.identifier.rawValue, "assertions.evaluate_set", "Run identifier")
-            try Expect.equal(Assertions.Tools.InspectSet.definition.identifier.rawValue, "assertions.inspect_set", "Inspect identifier")
+            try Expect.equal(Assertions.Tools.Evaluate.definition.identifier.rawValue, "assertions_tool_evaluate", "Evaluate identifier")
+            try Expect.equal(Assertions.Tools.DefineSet.definition.identifier.rawValue, "assertions_tool_define_set", "Define identifier")
+            try Expect.equal(Assertions.Tools.EvaluateSet.definition.identifier.rawValue, "assertions_tool_evaluate_set", "Run identifier")
+            try Expect.equal(Assertions.Tools.InspectSet.definition.identifier.rawValue, "assertions_tool_inspect_set", "Inspect identifier")
         }
     }
 }

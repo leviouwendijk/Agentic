@@ -7,7 +7,7 @@ import Macros
 public extension Sessions.Tools {
     /// Reads the complete message history of a session, including messages
     /// that compaction removed from the model's context.
-    @Tool("read_session_history")
+    @Tool("read_history")
     struct History: Tool {
         @JSONSchema
         public struct Input: HashableSource {

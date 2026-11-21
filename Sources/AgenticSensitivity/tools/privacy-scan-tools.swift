@@ -18,7 +18,7 @@ public extension Privacy.Tools {
         public let score: Int
     }
 
-    @Tool("privacy_scan")
+    @Tool("scan")
     struct Scan {
         @JSONSchema
         public struct Input: HashableSource {
@@ -65,7 +65,7 @@ public extension Privacy.Tools {
         }
     }
 
-    @Tool("privacy_preview")
+    @Tool("preview")
     struct Preview {
         @JSONSchema
         public struct Input: HashableSource {

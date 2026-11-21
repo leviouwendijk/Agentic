@@ -160,13 +160,13 @@ public extension Standard.Tools {
 
         public func render(_ output: Output, input: Input) -> String? {
             guard !output.entries.isEmpty else {
-                return "No available capability matches. list_capabilities shows them all."
+                return "No available capability matches. standard_tool_list_capabilities shows them all."
             }
             let header = output.returnedCount < output.totalMatches
                 ? "\(output.returnedCount) of \(output.totalMatches) matches, best first:"
                 : "\(output.totalMatches) match\(output.totalMatches == 1 ? "" : "es"):"
             return header + "\n" + CapabilityEntry.rendered(output.entries)
-                + "\ninspect_capability returns a contract."
+                + "\n\(Standard.Tools.InspectCapability.identifier.rawValue) returns a contract."
         }
     }
 }

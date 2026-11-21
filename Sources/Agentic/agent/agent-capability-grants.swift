@@ -15,9 +15,9 @@ public enum AgentCapabilityGrant:
     case discovery
     /// Reading back compacted history, in dynamic context mode.
     case session_readers
-    /// `read_result` and `search_results`, when the session is logged.
+    /// `standard_tool_read_result` and `standard_tool_search_results`, when the session is logged.
     case result_reader
-    /// `note_friction`: a one-line note on what got in the way, for the
+    /// `harness_tool_note_friction`: a one-line note on what got in the way, for the
     /// run's retrospective.
     case friction_notes
 }

@@ -72,7 +72,7 @@ let capabilitySelectionCompositionFlows: [TestFlow] = [
             rawValue: "mutate_files"
         )
         let build = ToolIdentifier(
-            rawValue: "swift_build"
+            rawValue: "swift_tool_build"
         )
 
         let left = AgentCapabilitySelection<ToolIdentifier>(

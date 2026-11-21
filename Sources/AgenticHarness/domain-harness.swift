@@ -1,4 +1,4 @@
 import Agentic
 
-@Domain
+@Domain("harness")
 public enum Harness {}

@@ -97,7 +97,7 @@ public extension Standard.Tools {
                 + CapabilityEntry.rendered(output.entries)
             if end < output.total {
                 let arguments = input.filter.arguments + ["\"offset\": \(end)"]
-                text += "\nlist_capabilities {\(arguments.joined(separator: ", "))} continues."
+                text += "\n\(Self.identifier.rawValue) {\(arguments.joined(separator: ", "))} continues."
             }
             return text
         }

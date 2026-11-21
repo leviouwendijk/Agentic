@@ -56,7 +56,7 @@ public extension Privacy {
             case .keychain(let status):
                 return "The seal key is not available from the Keychain (\(status))."
             case .noSealedVault(let session):
-                return "'\(session)' has no sealed vault; seal it with privacy_seal_session first."
+                return "'\(session)' has no sealed vault; seal it with privacy_tool_seal_session first."
             case .unreadable(let session):
                 return "The sealed vault of '\(session)' does not open with this machine's key."
             }
@@ -100,7 +100,7 @@ public extension Privacy {
 }
 
 public extension Privacy.Tools {
-    @Tool("privacy_seal_session")
+    @Tool("seal_session")
     struct SealSession {
         @JSONSchema
         public struct Input: HashableSource {
@@ -135,7 +135,7 @@ public extension Privacy.Tools {
         }
     }
 
-    @Tool("privacy_unseal_session")
+    @Tool("unseal_session")
     struct UnsealSession {
         @JSONSchema
         public struct Input: HashableSource {

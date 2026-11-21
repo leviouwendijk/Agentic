@@ -6,7 +6,7 @@ import Testing
 enum SessionSearchTestSuite {
     static let testSuite = TestSuite(
         "session-search",
-        title: "search_sessions tests"
+        title: "sessions_tool_search tests"
     ) {
         Test("search finds lines across sessions, newest first") {
             let context = ToolContext(services: try ToolServices().inserting(

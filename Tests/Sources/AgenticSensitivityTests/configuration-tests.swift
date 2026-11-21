@@ -40,7 +40,7 @@ enum ConfigurationTests {
         try Expect.equal(configured.shield.softAt, 65, "soft threshold")
         try Expect.true(configured.shield.never.contains("info@example.com"), "never, ignoring case")
         try Expect.true(configured.resolution.related("notes_read", "drafts_write"), "a declared family")
-        try Expect.true(configured.resolution.related("read", "mutate"), "the standard family stays")
+        try Expect.true(configured.resolution.related("io_tool_read", "io_tool_mutate"), "tools of one domain are related")
 
         let example = try Privacy.Configuration(source: SensitivityFrame.example)
         try Expect.equal(example.expiry, .unreferenced, "the example holds and keeps the defaults")
@@ -61,8 +61,8 @@ enum ConfigurationTests {
         let home = AgentHomeLocator().resolveHome()
 
         let vault = Sensitivity.Vault(lifetime: nil)
-        let kept = await vault.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_read", session: "s1")
-        let gone = await vault.handle(for: "alex@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_read", session: "s1")
+        let kept = await vault.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_tool_read", session: "s1")
+        let gone = await vault.handle(for: "alex@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_tool_read", session: "s1")
 
         let session = home.layout.runtimeStorage.sessiondir(sessionID: "s1")
         try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
@@ -75,7 +75,7 @@ enum ConfigurationTests {
         try Expect.equal(try Privacy.Configuration(source: SensitivityFrame.template).expiry, .unreferenced, "the template holds the defaults")
 
         // Also referenced, outside sessions: a transcript.
-        let elsewhere = await vault.handle(for: "noor@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_read", session: "s1")
+        let elsewhere = await vault.handle(for: "noor@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_tool_read", session: "s1")
         try FileManager.default.createDirectory(at: home.layout.runtimeStorage.transcriptsdir, withIntermediateDirectories: true)
         try "Reply to \(elsewhere.token)".write(to: home.layout.runtimeStorage.transcriptsdir.appendingPathComponent("t.md"), atomically: true, encoding: .utf8)
 
@@ -98,7 +98,7 @@ enum ConfigurationTests {
         let configuration = Privacy.Configuration(store: .memory, expiry: .onSessionClose)
         var setup: (guarding: ToolPayloadGuarding, lease: Privacy.SessionLease?, problem: String?)? = Privacy.session("close-fixture", configuration: configuration)
         let installed = try Expect.notNil(setup?.guarding.shield as? Privacy.Guard, "the privacy guard")
-        let protected = await installed.protecting(.string("Mail sam@example.com"), from: ToolIdentifier("mail_read"))
+        let protected = await installed.protecting(.string("Mail sam@example.com"), from: ToolIdentifier("mail_tool_read"))
         let handle = try Expect.notNil(Sensitivity.Handle.occurrences(in: protected.stringValue ?? "").first?.handle, "a handle")
         try Expect.notNil(await installed.vault.value(of: handle), "held while the session runs")
 
@@ -182,7 +182,7 @@ enum PinTests {
         defer { try? FileManager.default.removeItem(at: root); unsetenv("AGENTIC_HOME") }
         let storage = home.layout.runtimeStorage
         let here = Sensitivity.Vault(lifetime: nil)
-        let handle = await here.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_read", session: "S")
+        let handle = await here.handle(for: "sam@example.com", kind: .contact, tier: .handle, detector: "t", reason: "t", score: 90, source: "mail_tool_read", session: "S")
         let directory = storage.sessiondir(sessionID: "S")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try "Mail \(handle.token)".write(to: directory.appendingPathComponent("log.jsonl"), atomically: true, encoding: .utf8)

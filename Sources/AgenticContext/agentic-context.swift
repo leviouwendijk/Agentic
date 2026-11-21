@@ -12,7 +12,7 @@ import Writers
 /// home's `context/` directory. Agents see an index of summaries and read
 /// bodies when they need them; entries marked `.always` are in every
 /// agent's instructions.
-@Domain
+@Domain("context")
 public enum Context {}
 
 public extension Context {

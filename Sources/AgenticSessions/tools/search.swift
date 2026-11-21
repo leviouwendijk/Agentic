@@ -7,8 +7,8 @@ import Macros
 public extension Sessions.Tools {
     /// Finds text across recorded sessions, as `rg` would over their
     /// transcripts: each hit is a line with the session and message it is
-    /// in, so `read_session_history` can open it there.
-    @Tool("search_sessions")
+    /// in, so `sessions_tool_read_history` can open it there.
+    @Tool("search")
     struct Search: Tool {
         @JSONSchema
         public struct Input: HashableSource {
@@ -142,7 +142,7 @@ public extension Sessions.Tools {
         }
 
         /// Hits grouped by session; each line names its event, as
-        /// `read_session_history(fromMessageID:)` takes it.
+        /// `sessions_tool_read_history(fromMessageID:)` takes it.
         public func render(
             _ output: Output,
             input _: Input

@@ -94,7 +94,7 @@ extension ContextDeterministicFlowTesting {
             return
         }
         try Expect.true(
-            pointed.modelText.contains("read_session_history(fromMessageID: \"tool.0\""),
+            pointed.modelText.contains("sessions_tool_read_history(fromMessageID: \"tool.0\""),
             "The pointer says how to read the result back: \(pointed.modelText)"
         )
         try Expect.equal(compacted.history.changes?.map(\.reason), [.compacted], "The change is named")

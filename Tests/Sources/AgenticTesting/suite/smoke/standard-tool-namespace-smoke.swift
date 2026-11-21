@@ -198,55 +198,55 @@ func runStandardToolNamespaceSmoke() throws {
 
     try ContractProof.identifier(
         Standard.Tools.AskAdvisor.definition.identifier.rawValue,
-        expected: "advisor_ask"
+        expected: "standard_tool_advisor_ask"
     )
     try ContractProof.identifier(
         Standard.Tools.EmitArtifact.definition.identifier.rawValue,
-        expected: "emit_artifact"
+        expected: "standard_tool_emit_artifact"
     )
     try ContractProof.identifier(
         Standard.Tools.ListArtifacts.definition.identifier.rawValue,
-        expected: "list_artifacts"
+        expected: "standard_tool_list_artifacts"
     )
     try ContractProof.identifier(
         Standard.Tools.ReadArtifact.definition.identifier.rawValue,
-        expected: "read_artifact"
+        expected: "standard_tool_read_artifact"
     )
     try ContractProof.identifier(
         Standard.Tools.SearchCapabilities.definition.identifier.rawValue,
-        expected: "search_capabilities"
+        expected: "standard_tool_search_capabilities"
     )
     try ContractProof.identifier(
         Standard.Tools.ListCapabilities.definition.identifier.rawValue,
-        expected: "list_capabilities"
+        expected: "standard_tool_list_capabilities"
     )
     try ContractProof.identifier(
         Standard.Tools.CallCapability.definition.identifier.rawValue,
-        expected: "call_capability"
+        expected: "standard_tool_call_capability"
     )
     try ContractProof.identifier(
         Standard.Tools.SearchGuidelines.definition.identifier.rawValue,
-        expected: "search_guidelines"
+        expected: "standard_tool_search_guidelines"
     )
     try ContractProof.identifier(
         Standard.Tools.GuidelineIndex.definition.identifier.rawValue,
-        expected: "guideline_index"
+        expected: "standard_tool_guideline_index"
     )
     try ContractProof.identifier(
         Standard.Tools.ReadGuideline.definition.identifier.rawValue,
-        expected: "read_guideline"
+        expected: "standard_tool_read_guideline"
     )
     try ContractProof.identifier(
         Standard.Tools.ReadGuidelineChapter.definition.identifier.rawValue,
-        expected: "read_guideline_chapter"
+        expected: "standard_tool_read_guideline_chapter"
     )
     try ContractProof.identifier(
         Standard.Tools.InspectValues.definition.identifier.rawValue,
-        expected: "inspect_values"
+        expected: "standard_tool_inspect_values"
     )
     try ContractProof.identifier(
         Standard.Tools.ConvertCase.definition.identifier.rawValue,
-        expected: "convert_case"
+        expected: "standard_tool_convert_case"
     )
     try ContractProof.identifier(
         Standard.Tools.ConvertCase.transform(
@@ -268,42 +268,42 @@ func runStandardToolNamespaceSmoke() throws {
     )
     try ContractProof.identifier(
         Standard.Tools.ClarifyWithUser.definition.identifier.rawValue,
-        expected: "clarify_with_user"
+        expected: "standard_tool_clarify_with_user"
     )
     try ContractProof.identifier(
         Tasks.Tools.CreateTask.definition.identifier.rawValue,
-        expected: "task_create"
+        expected: "tasks_tool_create"
     )
     try ContractProof.identifier(
         Tasks.Tools.UpdateTask.definition.identifier.rawValue,
-        expected: "task_update"
+        expected: "tasks_tool_update"
     )
     try ContractProof.identifier(
         Tasks.Tools.ListTasks.definition.identifier.rawValue,
-        expected: "task_list"
+        expected: "tasks_tool_list"
     )
     try ContractProof.identifier(
         Tasks.Tools.GetTask.definition.identifier.rawValue,
-        expected: "task_get"
+        expected: "tasks_tool_get"
     )
     try ContractProof.identifier(
         Tasks.Tools.ClaimTask.definition.identifier.rawValue,
-        expected: "task_claim"
+        expected: "tasks_tool_claim"
     )
     try ContractProof.identifier(
         Tasks.Tools.CompleteTask.definition.identifier.rawValue,
-        expected: "task_complete"
+        expected: "tasks_tool_complete"
     )
     try ContractProof.identifier(
         Standard.Tools.ReadTranscriptEvents.definition.identifier.rawValue,
-        expected: "read_transcript_events"
+        expected: "standard_tool_read_transcript_events"
     )
     try ContractProof.identifier(
         Standard.Tools.SearchTranscript.definition.identifier.rawValue,
-        expected: "search_transcript"
+        expected: "standard_tool_search_transcript"
     )
     try ContractProof.identifier(
         Standard.Tools.SummarizeTranscriptWindow.definition.identifier.rawValue,
-        expected: "summarize_transcript_window"
+        expected: "standard_tool_summarize_transcript_window"
     )
 }

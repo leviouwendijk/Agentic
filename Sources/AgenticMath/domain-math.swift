@@ -1,4 +1,4 @@
 import Agentic
 
-@Domain
+@Domain("math")
 public enum Math {}

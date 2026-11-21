@@ -4,7 +4,7 @@ import Schema
 import Macros
 
 public extension Sessions.Tools {
-    @Tool("read_agent_artifact")
+    @Tool("read_artifact")
     struct Artifact: Tool {
         @JSONSchema
         public struct Input: HashableSource {

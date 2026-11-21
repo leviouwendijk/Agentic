@@ -86,7 +86,7 @@ public extension RecordedOutput {
         }
 
         /// One element per line, split as `ResultLines` splits them, so a
-        /// segment's line numbers match what `read_result` pages.
+        /// segment's line numbers match what `standard_tool_read_result` pages.
         public static func lines(
             _ name: String,
             text: String

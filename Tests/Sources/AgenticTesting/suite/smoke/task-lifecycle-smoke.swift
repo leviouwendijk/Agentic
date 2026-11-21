@@ -40,7 +40,7 @@ func runTaskLifecycleSmoke() async throws {
         in: context
     ).task
 
-    try Expect.equal(upstream.sessionID, "session.a", "task_create stamps the host session")
+    try Expect.equal(upstream.sessionID, "session.a", "tasks_tool_create stamps the host session")
     try Expect.equal(upstream.contract, contract, "the typed contract persists")
     try Expect.true(downstream.isBlocked, "dependents start blocked")
 
@@ -101,7 +101,7 @@ func runTaskLifecycleSmoke() async throws {
     _ = try await manager.create(subject: "Elsewhere", sessionID: "session.b")
     let scoped = try await Tasks.Tools.ListTasks().call(.init(), in: context)
     let everything = try await Tasks.Tools.ListTasks().call(.init(allSessions: true), in: context)
-    try Expect.equal(scoped.count, 2, "task_list defaults to the current session")
+    try Expect.equal(scoped.count, 2, "tasks_tool_list defaults to the current session")
     try Expect.equal(everything.count, 3, "allSessions widens the listing")
 
     let legacy = try JSONDecoder().decode(

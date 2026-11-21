@@ -5,7 +5,7 @@ import Macros
 import Schema
 
 public extension FrameLang.Tools {
-    @Tool("frame_modules")
+    @Tool("modules")
     struct ListModules {
         @JSONSchema
         public struct Input: HashableSource {
@@ -36,7 +36,7 @@ public extension FrameLang.Tools {
         }
 
         public static let purpose =
-            "The Frame modules a .frame file may import (`import Name;`), with their types. Use before writing or checking a Frame configuration file, then frame_schema for a module's fields."
+            "The Frame modules a .frame file may import (`import Name;`), with their types. Use before writing or checking a Frame configuration file, then frame_tool_schema for a module's fields."
         public static let risk: ActionRisk = .observe
 
         public init() {}

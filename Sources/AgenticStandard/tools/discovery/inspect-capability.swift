@@ -34,7 +34,7 @@ public extension Standard.Tools {
             public let wasVisible: Bool
             /// How to call it when it is not among the tool definitions: its
             /// own name where the model's route takes such calls, else
-            /// `call_capability`. The definitions stay as the conversation
+            /// `standard_tool_call_capability`. The definitions stay as the conversation
             /// opened, so the provider's cache holds.
             public let callWith: String?
 

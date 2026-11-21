@@ -5,7 +5,7 @@ import Milieu
 import Schema
 
 /// Owner-granted: the .env files whose declared names
-/// `check_environment_symbol` may report. Hosts choose them; the model never
+/// `standard_tool_check_environment_symbol` may report. Hosts choose them; the model never
 /// supplies paths.
 public struct EnvironmentSymbolSources: Sendable {
     public let declarations: [EnvironmentDeclarationSource]

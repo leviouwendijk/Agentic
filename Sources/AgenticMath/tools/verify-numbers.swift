@@ -4,7 +4,7 @@ import Math
 import Schema
 
 public extension Math.Tools {
-    @Tool("verify_numbers")
+    @Tool("verify")
     struct VerifyNumbers: Tool {
         @JSONSchema
         public enum Operation: String, Codable, Sendable, Hashable, CaseIterable {

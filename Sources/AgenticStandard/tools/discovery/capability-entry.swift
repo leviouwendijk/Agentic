@@ -30,7 +30,7 @@ public enum CapabilityVisibility:
     }
 }
 
-/// What `list_capabilities` and `search_capabilities` narrow to. Fields
+/// What `standard_tool_list_capabilities` and `standard_tool_search_capabilities` narrow to. Fields
 /// combine with AND, the values within one with OR; an absent or empty
 /// field narrows nothing. A risk filter matches only capabilities that
 /// declare an effect level.
@@ -89,7 +89,7 @@ public struct CapabilityFilter: Sendable, Hashable {
 }
 
 /// One available capability as discovery reports it: enough to choose it
-/// and to name it to `inspect_capability`, nothing of its contract.
+/// and to name it to `standard_tool_inspect_capability`, nothing of its contract.
 @JSONSchema
 public struct CapabilityEntry: HashableProduct
 {
@@ -118,7 +118,7 @@ public extension Standard.Tools {
     /// The discovery set. Listing says what exists, searching narrows it,
     /// inspecting returns one contract; inspection alone needs an identifier
     /// the model already has. A capability outside the tool definitions is
-    /// called as inspection says: by name, or through `call_capability`.
+    /// called as inspection says: by name, or through `standard_tool_call_capability`.
     /// The runtime exposes every installed one.
     static let discovery: [ToolIdentifier] = [
         ListCapabilities.identifier,

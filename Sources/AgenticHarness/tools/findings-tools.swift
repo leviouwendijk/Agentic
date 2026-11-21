@@ -13,7 +13,7 @@ public enum HarnessFindingError: Error, LocalizedError, Sendable {
         case .noEvidence:
             "A finding needs at least one evidence reference: `<session> step <seq>` or a payload digest."
         case .unknownFinding(let file):
-            "No finding '\(file)'; list_findings names them."
+            "No finding '\(file)'; harness_tool_list_findings names them."
         }
     }
 }

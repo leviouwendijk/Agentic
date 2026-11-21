@@ -21,7 +21,7 @@ public extension Privacy.Tools {
     /// values. The values go to the vault, never into this tool's output or
     /// its own record: the report is counts and file names only, so
     /// scrubbing leaves nothing to scrub.
-    @Tool("privacy_scrub_session")
+    @Tool("scrub_session")
     struct ScrubSession {
         @JSONSchema
         public struct Input: HashableSource {
@@ -131,7 +131,7 @@ public extension Privacy.Tools {
             var errorDescription: String? {
                 switch self {
                 case .invalidSession(let session):
-                    return "'\(session)' is not a recorded session; list them with list_agent_sessions."
+                    return "'\(session)' is not a recorded session; list them with sessions_tool_list."
                 case .pinned(let session, let why):
                     return "'\(session)' is pinned (\(why)) and kept as the faithful record. Scrub it only deliberately: give a reason, such as a deletion request."
                 }
