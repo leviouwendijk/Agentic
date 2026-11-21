@@ -1,6 +1,7 @@
 import Agentic
 import Foundation
 import Macros
+import Matching
 import Primitives
 import Schema
 import Search
@@ -20,6 +21,8 @@ public extension Standard.Tools {
         public enum Strategy: String, Sendable, Codable, Hashable, CaseIterable {
             /// The text as written, anywhere. The default.
             case contains
+            /// The whole field, as written: for a record field such as severity.
+            case exact
             /// Tolerates typos and partial words.
             case fuzzy
             /// Whole identifier-like words.
@@ -30,6 +33,7 @@ public extension Standard.Tools {
             var search: SearchStrategy {
                 switch self {
                 case .contains: .contains
+                case .exact: .exact
                 case .fuzzy: .fuzzy
                 case .identifier: .identifier
                 case .regex: .regex
@@ -62,11 +66,14 @@ public extension Standard.Tools {
             public let role: Role?
             /// contains by default.
             public let strategy: Strategy?
+            /// Match one field of a record (such as severity or file) instead of the whole text.
+            public let field: String?
 
-            public init(text: String, role: Role? = nil, strategy: Strategy? = nil) {
+            public init(text: String, role: Role? = nil, strategy: Strategy? = nil, field: String? = nil) {
                 self.text = text
                 self.role = role
                 self.strategy = strategy
+                self.field = field
             }
         }
 
@@ -202,12 +209,10 @@ public extension Standard.Tools {
                 throw SearchResultsError.noTerms
             }
             let outputs = try await Self.outputs(input, archive: archive)
-            let elements = Self.elements(of: outputs, segments: input.segments)
+            let candidates = Self.candidates(of: outputs, segments: input.segments)
             let result = TextSearch.search(
                 probes: probes,
-                in: SearchCorpus(documents: elements.enumerated().map { index, element in
-                    SearchDocument(id: index, text: element.element.text)
-                }),
+                in: candidates,
                 options: SearchOptions(
                     mode: .exhaustive,
                     strategy: .contains,
@@ -216,12 +221,18 @@ public extension Standard.Tools {
                     maximumResults: nil
                 )
             )
+            // Exhaustive results keep candidate order: newest result first,
+            // then segment and line. Preferred terms rank instead.
             let ranked = probes.contains { $0.role == .preferred }
+            let order = Dictionary(
+                candidates.enumerated().map { ($1.matchID, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
             let matched = ranked
-                ? result.hits.map(\.documentID)
-                : result.hits.map(\.documentID).sorted()
+                ? result.hits.compactMap { order[$0.documentID] }
+                : result.hits.compactMap { order[$0.documentID] }.sorted()
             let hits = Self.hits(
-                matched.map { elements[$0] },
+                matched.map { candidates[$0] },
                 unique: input.unique ?? false,
                 context: max(0, input.contextLines ?? 0)
             )
@@ -269,11 +280,7 @@ public extension Standard.Tools {
 }
 
 extension Standard.Tools.SearchResults {
-    struct Located {
-        let output: RecordedOutput
-        let segment: RecordedOutput.Segment
-        let element: RecordedOutput.Element
-    }
+    typealias Located = RecordedOutput.Candidate
 
     static func probes(
         _ input: Input
@@ -289,7 +296,8 @@ extension Standard.Tools.SearchResults {
             probes.append(SearchProbe(
                 probe.text,
                 role: (probe.role ?? .required).search,
-                strategy: (probe.strategy ?? .contains).search
+                strategy: (probe.strategy ?? .contains).search,
+                field: probe.field
             ))
         }
         return probes
@@ -320,17 +328,13 @@ extension Standard.Tools.SearchResults {
             .map(RecordedOutput.init)
     }
 
-    static func elements(
+    static func candidates(
         of outputs: [RecordedOutput],
         segments: [String]?
     ) -> [Located] {
         let named = segments.map(Set.init)
         return outputs.flatMap { output in
-            output.segments
-                .filter { named?.contains($0.name) ?? true }
-                .flatMap { segment in
-                    segment.elements.map { Located(output: output, segment: segment, element: $0) }
-                }
+            output.candidates().filter { named?.contains($0.segment.name) ?? true }
         }
     }
 

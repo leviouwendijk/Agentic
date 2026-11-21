@@ -144,6 +144,10 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Search.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/leviouwendijk/Matching.git",
+            branch: "master"
+        ),
 
         .package(
             url: "https://github.com/swiftlang/swift-syntax.git",
@@ -320,6 +324,10 @@ let package = Package(
                 .product(
                     name: "Search",
                     package: "Search"
+                ),
+                .product(
+                    name: "Matching",
+                    package: "Matching"
                 ),
             ]
         ),

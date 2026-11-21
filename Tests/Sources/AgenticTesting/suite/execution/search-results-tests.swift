@@ -78,6 +78,16 @@ extension ExecutionTesting {
         let records = try await search.call(.init(query: "beta", tools: ["list_items"]), in: context)
         try Expect.equal(records.hits.map(\.segment), ["items"], "a record hit")
         try Expect.equal(records.hits.first?.line, 2, "the record's position")
+        let byField = try await search.call(
+            .init(probes: [.init(text: "5", strategy: .exact, field: "size")]),
+            in: context
+        )
+        try Expect.equal(byField.hits.map(\.line), [2], "a probe scoped to a record field, matched exactly")
+        let wrongField = try await search.call(
+            .init(probes: [.init(text: "beta", field: "size")]),
+            in: context
+        )
+        try Expect.equal(wrongField.hits.count, 0, "a term in another field does not match a scoped probe")
         let pattern = try await search.call(.init(pattern: "^Build failed$", failed: true), in: context)
         try Expect.equal(pattern.hits.map(\.call), ["c2", "c1"], "a regex over failed results")
 
