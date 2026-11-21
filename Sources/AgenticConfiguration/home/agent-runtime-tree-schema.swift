@@ -30,8 +30,8 @@ public struct AgentRuntimeStorageTreeSchema: Sendable, Codable, Hashable {
         root.directory("artifacts")
     }
 
-    public var preparedintentsdir: PathTreeDirectoryAddress {
-        root.directory("prepared-intents")
+    public var intentsdir: PathTreeDirectoryAddress {
+        root.directory("intents")
     }
 
     public var cachedir: PathTreeDirectoryAddress {
@@ -103,7 +103,7 @@ public struct AgentRuntimeStorageTreeSchema: Sendable, Codable, Hashable {
             approvalsdir,
             tasksdir,
             artifactsdir,
-            preparedintentsdir,
+            intentsdir,
             cachedir,
             tmpdir
         ]
@@ -129,7 +129,7 @@ public struct AgentRuntimeStorageTreeSchema: Sendable, Codable, Hashable {
             .directory("approvals"),
             .directory("tasks"),
             .directory("artifacts"),
-            .directory("prepared-intents"),
+            .directory("intents"),
             .directory("cache"),
             .directory("tmp")
         ]

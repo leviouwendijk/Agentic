@@ -75,7 +75,7 @@ public extension Sessions {
         public let hasTranscript: Bool
         public let hasApprovals: Bool
         public let artifactCount: Int
-        public let preparedIntentCount: Int
+        public let intentCount: Int
 
         public init(
             metadata: Metadata,
@@ -83,14 +83,14 @@ public extension Sessions {
             hasTranscript: Bool,
             hasApprovals: Bool,
             artifactCount: Int,
-            preparedIntentCount: Int = 0
+            intentCount: Int = 0
         ) {
             self.metadata = metadata
             self.hasCheckpoint = hasCheckpoint
             self.hasTranscript = hasTranscript
             self.hasApprovals = hasApprovals
             self.artifactCount = artifactCount
-            self.preparedIntentCount = preparedIntentCount
+            self.intentCount = intentCount
         }
 
         public var id: String {
@@ -108,7 +108,7 @@ public extension Sessions {
         public let transcriptEventCount: Int
         public let approvalEventCount: Int
         public let artifactCount: Int
-        public let preparedIntentCount: Int
+        public let intentCount: Int
         public let childBranchCount: Int
 
         public init(
@@ -116,14 +116,14 @@ public extension Sessions {
             transcriptEventCount: Int,
             approvalEventCount: Int,
             artifactCount: Int? = nil,
-            preparedIntentCount: Int? = nil,
+            intentCount: Int? = nil,
             childBranchCount: Int
         ) {
             self.summary = summary
             self.transcriptEventCount = transcriptEventCount
             self.approvalEventCount = approvalEventCount
             self.artifactCount = artifactCount ?? summary.artifactCount
-            self.preparedIntentCount = preparedIntentCount ?? summary.preparedIntentCount
+            self.intentCount = intentCount ?? summary.intentCount
             self.childBranchCount = childBranchCount
         }
     }

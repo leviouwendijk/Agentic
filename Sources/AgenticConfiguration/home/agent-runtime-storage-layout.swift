@@ -33,8 +33,8 @@ public struct AgentRuntimeStorageLayout: Sendable, Codable, Hashable {
         directoryURL(for: schema.artifactsdir)
     }
 
-    public var preparedintentsdir: URL {
-        directoryURL(for: schema.preparedintentsdir)
+    public var intentsdir: URL {
+        directoryURL(for: schema.intentsdir)
     }
 
     public var cachedir: URL {
