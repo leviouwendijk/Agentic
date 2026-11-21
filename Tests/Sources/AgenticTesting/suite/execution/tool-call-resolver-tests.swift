@@ -166,7 +166,7 @@ extension ExecutionTesting {
         return [
             .field(
                 "cases",
-                "observe,exposure,approved,needshuman,denied"
+                "observe,exposure,approved,needs_human,denied"
             ),
             .field(
                 "executions",

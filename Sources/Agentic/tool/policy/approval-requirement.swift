@@ -23,7 +23,7 @@ public extension ApprovalRequirement {
             return .approved
 
         case .needs_human_review:
-            return .needshuman
+            return .needs_human
 
         case .denied_forbidden:
             return .denied

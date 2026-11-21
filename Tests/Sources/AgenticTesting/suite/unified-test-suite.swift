@@ -44,6 +44,7 @@ enum UnifiedAgenticTestSuite {
         HarnessTestSuite.testSuite
         UserInputSchemaTestSuite.testSuite
         ExecutionTestSuite.testSuite
+        IntentsTestSuite.testSuite
         ContextContractSuite.testSuite
         SessionSearchTestSuite.testSuite
     }

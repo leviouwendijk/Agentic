@@ -144,7 +144,10 @@ public struct ToolExecutor: Sendable {
                 outcome: .skipped
             )
 
-        case .needshuman:
+        case .needs_human,
+             .deferred:
+            // Deferral needs a durable intent store, which only a runtime
+            // has; here it is an unresolved review like `needs_human`.
             return .init(
                 review: review,
                 outcome: .interrupted(

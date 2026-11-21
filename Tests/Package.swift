@@ -211,6 +211,7 @@ let package = Package(
                 .product(name: "AgenticModels", package: "Agentic"),
                 .product(name: "AgenticStandard", package: "Agentic"),
                 .product(name: "AgenticTasks", package: "Agentic"),
+                .product(name: "AgenticIntents", package: "Agentic"),
                 .product(name: "AgenticHarness", package: "Agentic"),
                 .product(name: "AgenticSessions", package: "Agentic"),
                 "AgenticLinkerCatalogFixture",

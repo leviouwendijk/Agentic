@@ -14,15 +14,6 @@ private struct PreparedOperationFixture:
         let value: String
     }
 
-    struct Result:
-        Sendable,
-        Codable,
-        Hashable
-    {
-        let value: String
-        let sessionID: String?
-    }
-
     static let schema = PreparedOperation.Schema(
         identifier: "fixture.prepared_operation",
         version: ObjectVersion(
@@ -31,16 +22,6 @@ private struct PreparedOperationFixture:
             patch: 0
         )
     )
-
-    func execute(
-        _ plan: Plan,
-        context: PreparedOperation.Context
-    ) async throws -> Result {
-        .init(
-            value: "executed:\(plan.value)",
-            sessionID: context.sessionID
-        )
-    }
 }
 
 extension ExecutionTesting {
@@ -91,25 +72,6 @@ extension ExecutionTesting {
             decoded,
             source,
             "prepared operation restores the exact typed Plan from its durable envelope"
-        )
-
-        let result = try await PreparedOperationFixture().execute(
-            decoded,
-            context: .init(
-                sessionID: "prepared-operation-fixture",
-                metadata: [
-                    "source": "test_flow",
-                ]
-            )
-        )
-
-        try Expect.equal(
-            result,
-            .init(
-                value: "executed:durable-plan",
-                sessionID: "prepared-operation-fixture"
-            ),
-            "prepared operation executes with typed Plan and typed Result"
         )
 
         let incompatible = PreparedOperation.Envelope(
@@ -167,10 +129,6 @@ extension ExecutionTesting {
             .field(
                 "typed_plan",
                 decoded.value
-            ),
-            .field(
-                "typed_result",
-                result.value
             ),
         ]
     }

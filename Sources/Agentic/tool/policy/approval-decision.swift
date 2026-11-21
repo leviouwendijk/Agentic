@@ -6,7 +6,11 @@ public enum ApprovalDecision: String, Sendable, Codable, Hashable, CaseIterable 
     case approved
     case denied
     case skipped
-    case needshuman
+    /// Wait for a person: the run suspends until one decides.
+    case needs_human
+    /// Store the call for later review and continue without it. Hosts that
+    /// cannot store it treat this as `needs_human`.
+    case deferred
 }
 
 public extension ApprovalDecision {
@@ -23,6 +27,10 @@ public extension ApprovalDecision {
     }
 
     var requiresHumanReview: Bool {
-        self == .needshuman
+        self == .needs_human
+    }
+
+    var isDeferred: Bool {
+        self == .deferred
     }
 }

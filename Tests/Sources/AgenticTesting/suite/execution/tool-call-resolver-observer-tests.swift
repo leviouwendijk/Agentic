@@ -94,7 +94,7 @@ extension ExecutionTesting {
 
         try Expect.equal(
             observedReview.decision,
-            .needshuman,
+            .needs_human,
             "resolver observer sees unresolved human review"
         )
         try Expect.equal(

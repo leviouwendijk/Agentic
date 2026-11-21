@@ -1,22 +1,14 @@
 import Primitives
 
+/// A typed plan a Tool prepares during review and executes exactly in
+/// `call(_:prepared:in:)`. The schema versions the plan's encoding.
 public protocol AgentPreparedOperation: Sendable {
     associatedtype Plan:
         Sendable &
         Codable &
         Hashable
 
-    associatedtype Result:
-        Sendable &
-        Codable &
-        Hashable
-
     static var schema: PreparedOperation.Schema { get }
-
-    func execute(
-        _ plan: Plan,
-        context: PreparedOperation.Context
-    ) async throws -> Result
 }
 
 public extension AgentPreparedOperation {

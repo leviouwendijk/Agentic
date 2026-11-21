@@ -186,7 +186,7 @@ public extension ToolInvocation {
                 return .skipped
 
             case .interrupted(.human_review):
-                return .needshuman
+                return .needs_human
             }
         }
 

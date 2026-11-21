@@ -86,6 +86,12 @@ let package = Package(
             targets: ["AgenticTasks"]
         ),
 
+        // opt-in deferred tool calls: stored for review, run later
+        .library(
+            name: "AgenticIntents",
+            targets: ["AgenticIntents"]
+        ),
+
         // known model library
         .library(
             name: "AgenticModels",
@@ -277,6 +283,18 @@ let package = Package(
                 .product(name: "Macros", package: "Macros"),
                 .product(name: "Primitives", package: "Primitives"),
                 .product(name: "Schema", package: "Schema"),
+            ]
+        ),
+        .target(
+            name: "AgenticIntents",
+            dependencies: [
+                "Agentic",
+                .product(name: "IO", package: "IO"),
+                .product(name: "Macros", package: "Macros"),
+                .product(name: "Primitives", package: "Primitives"),
+                .product(name: "Readers", package: "Readers"),
+                .product(name: "Schema", package: "Schema"),
+                .product(name: "Writers", package: "Writers"),
             ]
         ),
         .target(
