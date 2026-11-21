@@ -75,22 +75,19 @@ public extension Sessions {
         public let hasTranscript: Bool
         public let hasApprovals: Bool
         public let artifactCount: Int
-        public let intentCount: Int
 
         public init(
             metadata: Metadata,
             hasCheckpoint: Bool,
             hasTranscript: Bool,
             hasApprovals: Bool,
-            artifactCount: Int,
-            intentCount: Int = 0
+            artifactCount: Int
         ) {
             self.metadata = metadata
             self.hasCheckpoint = hasCheckpoint
             self.hasTranscript = hasTranscript
             self.hasApprovals = hasApprovals
             self.artifactCount = artifactCount
-            self.intentCount = intentCount
         }
 
         public var id: String {
@@ -108,6 +105,7 @@ public extension Sessions {
         public let transcriptEventCount: Int
         public let approvalEventCount: Int
         public let artifactCount: Int
+        /// Deferred tool calls stored for this session.
         public let intentCount: Int
         public let childBranchCount: Int
 
@@ -116,14 +114,14 @@ public extension Sessions {
             transcriptEventCount: Int,
             approvalEventCount: Int,
             artifactCount: Int? = nil,
-            intentCount: Int? = nil,
+            intentCount: Int = 0,
             childBranchCount: Int
         ) {
             self.summary = summary
             self.transcriptEventCount = transcriptEventCount
             self.approvalEventCount = approvalEventCount
             self.artifactCount = artifactCount ?? summary.artifactCount
-            self.intentCount = intentCount ?? summary.intentCount
+            self.intentCount = intentCount
             self.childBranchCount = childBranchCount
         }
     }
