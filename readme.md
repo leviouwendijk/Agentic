@@ -54,7 +54,7 @@ AgenticCLI
 - [AgenticInterfaces](https://github.com/leviouwendijk/AgenticInterfaces) — Human-facing interaction and presentation contracts.
 - [AgenticHost](https://github.com/leviouwendijk/AgenticHost) — Host orchestration across runtime and interfaces.
 - [AgenticDomains](https://github.com/leviouwendijk/AgenticDomains) — Domain-specific integrations.
-- [AgenticCLI](https://github.com/leviouwendijk/AgenticCLI) — Ready-made command-line composition for the Agentic stack.
+- [AgenticCLI](https://github.com/leviouwendijk/AgenticApplication) — Ready-made command-line composition for the Agentic stack.
 
 ## Superseded package boundaries
 
