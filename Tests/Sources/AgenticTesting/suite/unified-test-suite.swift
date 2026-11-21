@@ -29,6 +29,11 @@ enum UnifiedAgenticTestSuite {
                 Test($0)
             )
         }
+        capabilityNameFlows.map {
+            TestNode.test(
+                Test($0)
+            )
+        }
         ModelRoutingFlowSuite.testSuite
         ModelRoutingImplementationTestSuite.testSuite
         AgenticInferenceFlowSuite.testSuite

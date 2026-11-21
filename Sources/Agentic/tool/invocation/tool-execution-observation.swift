@@ -80,7 +80,7 @@ public enum ToolExecutionObservations {
             observer: inheritedObserver
         )
         do {
-            let value = try await $current.withValue(buffer, operation: operation)
+            let value = try await $current.withValue(buffer) { try await operation() }
             let observations = await buffer.finish()
             await parent?.append(contentsOf: observations)
             return (value, observations)

@@ -200,10 +200,18 @@ public struct ToolMacro:
             let access = semanticMemberAccessPrefix(
                 declarationContext
             )
+            // Inside a domain (`extension SwiftLang.Tools`), the domain computes
+            // the identifier: `swift_tool_build` once it has a primary name, the
+            // authored string until then.
+            let lexicalPath = declarationContext.lexicalPath
+            let identifierExpression =
+                lexicalPath.count >= 3 && lexicalPath[1] == "Tools"
+                    ? "\(lexicalPath[0]).definition.toolIdentifier(\"\(identifier)\")"
+                    : ".init(rawValue: \"\(identifier)\")"
             return [
                 DeclSyntax(
                     stringLiteral:
-                        "\(access)static let identifier: ToolIdentifier = .init(rawValue: \"\(identifier)\")"
+                        "\(access)static let identifier: ToolIdentifier = \(identifierExpression)"
                 ),
                 DeclSyntax(
                     stringLiteral:
