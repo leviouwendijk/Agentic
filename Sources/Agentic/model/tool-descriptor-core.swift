@@ -4,7 +4,7 @@ public extension ToolDescriptor {
     /// The schema a call needs: required properties in full (with their
     /// calling guidance), optional properties without their prose; every
     /// field stays named and typed.
-    /// `standard_tool_inspect_capability` returns the full schema. Unchanged when nothing
+    /// `capabilities_tool_inspect` returns the full schema. Unchanged when nothing
     /// is optional.
     var core: ToolDescriptor {
         guard let input else { return self }
@@ -20,7 +20,7 @@ public extension ToolDescriptor {
 }
 
 enum SchemaCore {
-    static let notice = "(Optional fields abbreviated; standard_tool_inspect_capability returns full details.)"
+    static let notice = "(Optional fields abbreviated; capabilities_tool_inspect returns full details.)"
     /// Explanatory keys dropped from optional subtrees. Everything else
     /// (types, enums, properties, items, required) is kept, so every field
     /// stays named and typed at any depth.

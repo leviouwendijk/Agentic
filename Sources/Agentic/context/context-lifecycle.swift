@@ -185,7 +185,7 @@ public extension ContextWindow {
         /// Every schema in full.
         case full
         /// Required properties in full, optional ones abbreviated
-        /// (`ToolDescriptor.core`); full detail through `standard_tool_inspect_capability`.
+        /// (`ToolDescriptor.core`); full detail through `capabilities_tool_inspect`.
         case core
     }
 

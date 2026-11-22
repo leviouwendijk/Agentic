@@ -104,7 +104,7 @@ extension ExecutionTesting {
             visible: AgentCapabilitySet.none
         )
         let tool =
-            Standard.Tools.SearchCapabilities()
+            Capabilities.Tools.Search()
         let context = ToolContext(
             catalog: catalog,
             capabilities: state,
@@ -148,7 +148,7 @@ extension ExecutionTesting {
             "several kinds match any of them"
         )
         let visibleOnly = try await tool.call(.init(visibility: .visible, maximumResults: 8), in: context)
-        try Expect.equal(visibleOnly.totalMatches, 0, "none is among the tools")
+        try Expect.equal(visibleOnly.total, 0, "none is among the tools")
         let hiddenTools = try await tool.call(
             .init(kinds: [.tool], visibility: .hidden, maximumResults: 8), in: context
         )
@@ -157,7 +157,7 @@ extension ExecutionTesting {
             "kind and visibility combine"
         )
         let privileged = try await tool.call(.init(risks: [.privileged], maximumResults: 8), in: context)
-        try Expect.equal(privileged.totalMatches, 0, "a risk filter matches only declared levels")
+        try Expect.equal(privileged.total, 0, "a risk filter matches only declared levels")
 
         // Names a provider is sent: a tool keeps its identifier; other kinds
         // read as theirs behind their kind; a long one ends in a hash.
@@ -225,29 +225,39 @@ extension ExecutionTesting {
         try Expect.equal(
             snapshot.visible,
             .none,
-            "standard_tool_search_capabilities must not modify direct model visibility"
+            "capabilities_tool_search must not modify direct model visibility"
         )
 
-        let listed = try await Standard.Tools.ListCapabilities().call(
+        let listed = try await Capabilities.Tools.Search().call(
             .init(kinds: [.tool], maximumResults: 1), in: context
         )
         try Expect.equal(listed.total, 1,
             "list enumerates only available installed Tool bindings")
-        let page = try await Standard.Tools.ListCapabilities().call(
+        let page = try await Capabilities.Tools.Search().call(
             .init(maximumResults: 2), in: context
         )
         try Expect.equal(
-            Standard.Tools.ListCapabilities().render(page, input: .init(maximumResults: 2)),
+            Capabilities.Tools.Search().render(page, input: .init(maximumResults: 2)),
             """
             1–2 of 4:
             fixture
               fixture.hidden_agent [agent] — Hidden Agent capability
               fixture.hidden_inference [inference] — Hidden Inference capability
-            standard_tool_list_capabilities {"offset": 2} continues.
+            capabilities_tool_search {"offset": 2} continues.
+            capabilities_tool_inspect returns a contract.
             """,
             "list renders one line per entry under its namespace and names the next page"
         )
-        let inspected = try await Standard.Tools.InspectCapability().call(
+        let ranked = try await Capabilities.Tools.Search().call(
+            .init(query: "hidden", maximumResults: 1), in: context
+        )
+        try Expect.true(ranked.ranked && ranked.total > 1, "a query ranks its matches")
+        let next = try await Capabilities.Tools.Search().call(
+            .init(query: "hidden", offset: 1, maximumResults: 1), in: context
+        )
+        try Expect.equal(next.offset, 1, "a ranking pages like a listing")
+        try Expect.true(next.entries.first?.identifier != ranked.entries.first?.identifier, "the next page goes on")
+        let inspected = try await Capabilities.Tools.Inspect().call(
             .init(kind: .program, identifier: hiddenProgram.identifier.rawValue),
             in: context
         )
@@ -262,7 +272,7 @@ extension ExecutionTesting {
             .field(
                 "returned",
                 String(
-                    discovered.returnedCount
+                    discovered.entries.count
                 )
             ),
             .field(

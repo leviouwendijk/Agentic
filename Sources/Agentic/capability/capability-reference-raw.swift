@@ -168,7 +168,7 @@ public enum CapabilityReferenceError:
                 ? "'\(name)' is not a domain; no domain has a name yet."
                 : "'\(name)' is not a domain. Domains: \(known.joined(separator: ", "))."
         case .notFound(let text):
-            "No capability on offer is called '\(text)'. Find it with standard_tool_list_capabilities or standard_tool_search_capabilities."
+            "No capability on offer is called '\(text)'. Find it with capabilities_tool_search or capabilities_tool_search."
         case .ambiguous(let text, let candidates, let domains):
             "'\(text)' is ambiguous: \(candidates.map { "`\($0)`" }.joined(separator: ", ")). "
                 + "Pass domain (\(domains.map { "\"\($0)\"" }.joined(separator: " or "))), or use the full name."

@@ -7,16 +7,23 @@ public enum InspectCapabilityError: Error, Sendable {
     case notAvailable
 }
 
-public extension Standard.Tools {
-    @Tool
-    struct InspectCapability: Tool {
+public extension Capabilities.Tools {
+    @Tool("inspect")
+    struct Inspect: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            public let kind: CapabilityKind
+            /// Its kind; needed only for a name that does not say it.
+            public let kind: CapabilityKind?
+            /// The capability, as search names it. A shorter form
+            /// (`domain.name`, or a bare name) works when it is unambiguous.
             public let identifier: String
-            public init(kind: CapabilityKind, identifier: String) {
+            /// Its domain, only when a bare name is shared by several domains.
+            public let domain: String?
+
+            public init(kind: CapabilityKind? = nil, identifier: String, domain: String? = nil) {
                 self.kind = kind
                 self.identifier = identifier
+                self.domain = domain
             }
         }
 
@@ -34,7 +41,7 @@ public extension Standard.Tools {
             public let wasVisible: Bool
             /// How to call it when it is not among the tool definitions: its
             /// own name where the model's route takes such calls, else
-            /// `standard_tool_call_capability`. The definitions stay as the conversation
+            /// `capabilities_tool_call`. The definitions stay as the conversation
             /// opened, so the provider's cache holds.
             public let callWith: String?
 
@@ -70,14 +77,10 @@ public extension Standard.Tools {
 
         public func call(_ input: Input, in context: ToolContext) async throws -> Output {
             let (snapshot, available) = try await CapabilityDiscovery.available(in: context)
-            guard let selected = available.first(where: {
-                $0.kind == input.kind.rawValue && $0.identifier == input.identifier
-            }) else {
-                throw InspectCapabilityError.notAvailable
-            }
+            let selected = try Self.select(input, among: available, domains: context.catalog.domains)
             let wasVisible = CapabilityDiscovery.contains(selected.reference, in: snapshot.visible)
             return Output(
-                kind: input.kind,
+                kind: selected.reference.capabilityKind,
                 identifier: selected.identifier,
                 namespace: selected.namespace,
                 purpose: selected.purpose,
@@ -89,11 +92,45 @@ public extension Standard.Tools {
                 callWith: Self.callWith(
                     selected.reference,
                     declared: wasVisible,
-                    dispatcher: snapshot.visible.tools.contains(CallCapability.identifier),
+                    dispatcher: snapshot.visible.tools.contains(Call.identifier),
                     byName: (try? context.require(UndeclaredCallForm.self))?.byName == true
                 )
             )
         }
+
+    /// The available capability the input names: exactly, or through
+    /// `CapabilityReference.Raw` (aliases, `domain.name`, a bare name).
+    static func select(
+        _ input: Input,
+        among available: [CapabilityInspection],
+        domains: [DomainDefinition]
+    ) throws -> CapabilityInspection {
+        if input.domain == nil, let exact = available.first(where: {
+            $0.identifier == input.identifier && (input.kind == nil || $0.kind == input.kind?.rawValue)
+        }) {
+            return exact
+        }
+        let kinds: [CapabilityKind] = input.kind.map { [$0] }
+            ?? (try? CapabilityIdentity(input.identifier)).map { [$0.kind] }
+            ?? CapabilityKind.allCases
+        for kind in kinds {
+            do {
+                let reference = try CapabilityReference(.init(
+                    input.identifier,
+                    domain: input.domain,
+                    kind: kind,
+                    domains: domains,
+                    offered: available.map(\.reference)
+                ))
+                if let match = available.first(where: { $0.reference == reference }) {
+                    return match
+                }
+            } catch CapabilityReferenceError.notFound {
+                continue
+            }
+        }
+        throw InspectCapabilityError.notAvailable
+    }
 
     /// Nil for a declared capability, called by its name as usual. One
     /// outside the definitions is called by its provider name where the
@@ -109,7 +146,7 @@ public extension Standard.Tools {
         if byName {
             return reference.providerName
         }
-        return dispatcher ? CallCapability.identifier.rawValue : nil
+        return dispatcher ? Call.identifier.rawValue : nil
     }
     }
 }

@@ -10,25 +10,25 @@ public enum CallCapabilityError: Error, Sendable, CustomStringConvertible {
     public var description: String {
         switch self {
         case .notAvailable(let identifier):
-            "'\(identifier)' is not available to call: find it with standard_tool_list_capabilities or standard_tool_search_capabilities, then read its contract with standard_tool_inspect_capability."
+            "'\(identifier)' is not available to call: find it with \(Capabilities.Tools.Search.identifier.rawValue), then read its contract with \(Capabilities.Tools.Inspect.identifier.rawValue)."
         case .direct(let identifier):
             "'\(identifier)' is in your tool definitions: call it by its own name."
         }
     }
 }
 
-public extension Standard.Tools {
+public extension Capabilities.Tools {
     /// Calls an available capability that is not among the tool definitions.
     /// The provider's tool definitions stay as the conversation opened,
     /// because any change to them rewrites the whole cached prompt; the
     /// rest is called through this one definition instead. The runtime turns the
     /// call into a call of the capability itself, under its own approval,
     /// preflight and record, so this tool only runs when that fails.
-    @Tool
-    struct CallCapability: Tool {
+    @Tool("call")
+    struct Call: Tool {
         @JSONSchema
         public struct Input: HashableSource {
-            /// The capability, as standard_tool_inspect_capability named it. A shorter form
+            /// The capability, as `capabilities_tool_inspect` named it. A shorter form
             /// (`domain.name`, or a bare name) works when it is unambiguous.
             public let identifier: String
             /// Its domain, only when a bare name is shared by several domains.
@@ -53,7 +53,7 @@ public extension Standard.Tools {
         }
 
         public static let purpose =
-            "Only for a capability that is not among your tools: call it here with its identifier and its input as standard_tool_inspect_capability's contract describes. Call every tool you have by its own name, never through this one."
+            "Only for a capability that is not among your tools: call it here with its identifier and its input as \(Capabilities.Tools.Inspect.identifier.rawValue)'s contract describes. Call every tool you have by its own name, never through this one."
         public static let risk: ActionRisk = .observe
 
         public init() {}

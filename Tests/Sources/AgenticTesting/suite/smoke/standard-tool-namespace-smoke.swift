@@ -15,7 +15,7 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ReadArtifact.self
     )
     ContractProof.tool(
-        Standard.Tools.SearchCapabilities.self
+        Capabilities.Tools.Search.self
     )
     ContractProof.tool(
         Standard.Tools.SearchGuidelines.self
@@ -55,10 +55,10 @@ func runStandardToolNamespaceSmoke() throws {
         Standard.Tools.ReadArtifact.Output.self
     )
     ContractProof.source(
-        Standard.Tools.SearchCapabilities.Input.self
+        Capabilities.Tools.Search.Input.self
     )
     ContractProof.result(
-        Standard.Tools.SearchCapabilities.Output.self
+        Capabilities.Tools.Search.Output.self
     )
     ContractProof.source(
         Standard.Tools.SearchGuidelines.Input.self
@@ -213,16 +213,16 @@ func runStandardToolNamespaceSmoke() throws {
         expected: "standard_tool_read_artifact"
     )
     try ContractProof.identifier(
-        Standard.Tools.SearchCapabilities.definition.identifier.rawValue,
-        expected: "standard_tool_search_capabilities"
+        Capabilities.Tools.Search.definition.identifier.rawValue,
+        expected: "capabilities_tool_search"
     )
     try ContractProof.identifier(
-        Standard.Tools.ListCapabilities.definition.identifier.rawValue,
-        expected: "standard_tool_list_capabilities"
+        Capabilities.Tools.Search.definition.identifier.rawValue,
+        expected: "capabilities_tool_search"
     )
     try ContractProof.identifier(
-        Standard.Tools.CallCapability.definition.identifier.rawValue,
-        expected: "standard_tool_call_capability"
+        Capabilities.Tools.Call.definition.identifier.rawValue,
+        expected: "capabilities_tool_call"
     )
     try ContractProof.identifier(
         Standard.Tools.SearchGuidelines.definition.identifier.rawValue,

@@ -11,6 +11,6 @@ public enum AgentModelCapability: String, Sendable, Codable, Hashable, CaseItera
     /// The gateway passes a call to a tool outside the request's
     /// definitions back to the run, so a capability known only from its
     /// contract in the history can be called by its own name. Without it
-    /// (calls are dropped) such capabilities go through `standard_tool_call_capability`.
+    /// (calls are dropped) such capabilities go through `capabilities_tool_call`.
     case undeclared_calls
 }
