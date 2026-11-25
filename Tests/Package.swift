@@ -58,34 +58,34 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/leviouwendijk/Primitives.git",
+            url: "https://github.com/swift-lco/Primitives.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Schema.git",
+            url: "https://github.com/swift-lco/Schema.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Macros.git",
-            branch: "master"
-        ),
-
-        .package(
-            url: "https://github.com/leviouwendijk/Workspace.git",
+            url: "https://github.com/swift-lco/Macros.git",
             branch: "master"
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Difference.git",
+            url: "https://github.com/swift-lco/Workspace.git",
             branch: "master"
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Errors.git",
+            url: "https://github.com/swift-lco/Difference.git",
+            branch: "master"
+        ),
+
+        .package(
+            url: "https://github.com/swift-lco/Errors.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Search.git",
+            url: "https://github.com/swift-lco/Search.git",
             branch: "master"
         ),
 
@@ -94,7 +94,7 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Reporting.git",
+            url: "https://github.com/swift-lco/Reporting.git",
             branch: "master"
         ),
         .package(
@@ -102,19 +102,19 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Milieu.git",
+            url: "https://github.com/swift-lco/Milieu.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/IO.git",
+            url: "https://github.com/swift-lco/IO.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Writers.git",
+            url: "https://github.com/swift-lco/Writers.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Sensitivity.git",
+            url: "https://github.com/swift-lco/Sensitivity.git",
             branch: "master"
         ),
         .package(path: ".."),

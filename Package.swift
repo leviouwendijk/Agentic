@@ -111,15 +111,15 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/leviouwendijk/Primitives.git",
+            url: "https://github.com/swift-lco/Primitives.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Schema.git",
+            url: "https://github.com/swift-lco/Schema.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Macros.git",
+            url: "https://github.com/swift-lco/Macros.git",
             branch: "master"
         ),
 
@@ -133,25 +133,25 @@ let package = Package(
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Workspace.git",
+            url: "https://github.com/swift-lco/Workspace.git",
             branch: "master"
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Difference.git",
+            url: "https://github.com/swift-lco/Difference.git",
             branch: "master"
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Errors.git",
+            url: "https://github.com/swift-lco/Errors.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Search.git",
+            url: "https://github.com/swift-lco/Search.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Matching.git",
+            url: "https://github.com/swift-lco/Matching.git",
             branch: "master"
         ),
 
@@ -161,7 +161,7 @@ let package = Package(
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Version.git",
+            url: "https://github.com/swift-lco/Version.git",
             branch: "master"
         ),
         .package(
@@ -169,11 +169,11 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Math.git",
+            url: "https://github.com/swift-lco/Math.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Reporting.git",
+            url: "https://github.com/swift-lco/Reporting.git",
             branch: "master"
         ),
         .package(
@@ -185,7 +185,7 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/References.git",
+            url: "https://github.com/swift-lco/References.git",
             branch: "master"
         ),
         .package(
@@ -193,27 +193,27 @@ let package = Package(
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Path.git",
+            url: "https://github.com/swift-lco/Path.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Milieu.git",
+            url: "https://github.com/swift-lco/Milieu.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/IO.git",
+            url: "https://github.com/swift-lco/IO.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Readers.git",
+            url: "https://github.com/swift-lco/Readers.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Writers.git",
+            url: "https://github.com/swift-lco/Writers.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/Sensitivity.git",
+            url: "https://github.com/swift-lco/Sensitivity.git",
             branch: "master"
         ),
         .package(url: "https://github.com/swift-tooling/Testing.git", branch: "master"),
