@@ -124,11 +124,11 @@ let package = Package(
         ),
 
         .package(
-            url: "https://github.com/leviouwendijk/Guidelines.git",
+            url: "https://github.com/swift-tooling/Guidelines.git",
             branch: "master"
         ),
         .package(
-            url: "https://github.com/leviouwendijk/GuidelinesSearch.git",
+            url: "https://github.com/swift-tooling/GuidelinesSearch.git",
             branch: "master"
         ),
 
@@ -216,7 +216,7 @@ let package = Package(
             url: "https://github.com/leviouwendijk/Sensitivity.git",
             branch: "master"
         ),
-        .package(url: "https://github.com/leviouwendijk/Testing.git", branch: "master"),
+        .package(url: "https://github.com/swift-tooling/Testing.git", branch: "master"),
     ],
     targets: [
         .target(
