@@ -72,6 +72,9 @@ public struct AgentDerivation: Sendable {
     public let visible: AgentCapabilityScope
     /// Taken out of both the base's available and visible scopes.
     public let removing: AgentCapabilityScope
+    /// Taken out of the visible scope only: still callable from programs (a Loa run),
+    /// no longer offered to the model directly.
+    public let hiding: AgentCapabilityScope
     public let grants: AgentCapabilityGrants?
     public let modelSelection: AgentModelSelection?
     public let delegation: AgentDelegationPolicy?
@@ -82,6 +85,7 @@ public struct AgentDerivation: Sendable {
         available: AgentCapabilityScope = .none,
         visible: AgentCapabilityScope = .none,
         removing: AgentCapabilityScope = .none,
+        hiding: AgentCapabilityScope = .none,
         grants: AgentCapabilityGrants? = nil,
         modelSelection: AgentModelSelection? = nil,
         delegation: AgentDelegationPolicy? = nil
@@ -91,6 +95,7 @@ public struct AgentDerivation: Sendable {
         self.available = available
         self.visible = visible
         self.removing = removing
+        self.hiding = hiding
         self.grants = grants
         self.modelSelection = modelSelection
         self.delegation = delegation
@@ -100,7 +105,7 @@ public struct AgentDerivation: Sendable {
         let merged = base + AgentCapabilities(available: available, visible: visible)
         return AgentCapabilities(
             available: merged.available.removing(removing),
-            visible: merged.visible.removing(removing),
+            visible: merged.visible.removing(removing).removing(hiding),
             grants: grants ?? merged.grants
         )
     }
