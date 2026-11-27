@@ -1,6 +1,6 @@
 /// Canonical authored Tool contract.
 ///
-/// `preflight` and `call` receive an immutable `ToolContext` describing the
+/// `preflight` and `call` receive an immutable `CapabilityContext` describing the
 /// invocation environment (optional workspace, the application semantic
 /// Catalog, and the live Agent capability state). Tools remain application-
 /// level and reusable; agent/session state is reached only through the
@@ -16,18 +16,18 @@ where DefinitionType == ToolDefinition
 
     func preflight(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> ToolPreflight
 
     func call(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> Output
 
     /// The canonical preparation seam for Tools with inspectable effects.
     func prepare(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> CapabilityPreparation<ToolPreflight>
 
     /// Execute exactly the prepared operation (if supplied). A prepared Tool
@@ -35,7 +35,7 @@ where DefinitionType == ToolDefinition
     func call(
         _ input: Input,
         prepared operation: PreparedOperation.Envelope?,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> Output
 }
 
@@ -47,7 +47,7 @@ public enum ToolPreparationError: Error, Sendable {
 public extension Tool {
     func prepare(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> CapabilityPreparation<ToolPreflight> {
         .init(review: try await preflight(input, in: context))
     }
@@ -55,7 +55,7 @@ public extension Tool {
     func call(
         _ input: Input,
         prepared operation: PreparedOperation.Envelope?,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> Output {
         guard operation == nil else {
             throw ToolPreparationError.unexpected_prepared_operation
@@ -65,7 +65,7 @@ public extension Tool {
 
     func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         _ = input
 

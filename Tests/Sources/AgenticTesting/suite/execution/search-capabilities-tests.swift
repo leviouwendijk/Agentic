@@ -105,7 +105,7 @@ extension ExecutionTesting {
         )
         let tool =
             Capabilities.Tools.Search()
-        let context = ToolContext(
+        let context = CapabilityContext(
             catalog: catalog,
             capabilities: state,
             inspections: [

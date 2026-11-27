@@ -39,7 +39,7 @@ public extension Math.Tools {
 
         public init() {}
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             _ = try DecimalArithmetic.parse(input.lhs)
             _ = try DecimalArithmetic.parse(input.rhs)
             if let tolerance = input.tolerance {
@@ -53,7 +53,7 @@ public extension Math.Tools {
             )
         }
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             let lhs = try DecimalArithmetic.parse(input.lhs)
             let rhs = try DecimalArithmetic.parse(input.rhs)
             let exceeds: Bool?

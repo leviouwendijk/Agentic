@@ -1070,7 +1070,7 @@ private struct PlanRunFailureEvidenceTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         try await probe.invoke(
             input
@@ -1279,7 +1279,7 @@ private struct PlanRunProbeTool<
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         try await probe.invoke(
             input
@@ -1370,7 +1370,7 @@ extension ExecutionTesting {
                 ),
             ]
         )
-        let context = ToolContext(
+        let context = CapabilityContext(
             catalog: catalog,
             capabilities: capabilities
         )
@@ -1458,7 +1458,7 @@ extension ExecutionTesting {
         try Expect.equal(
             await probe.invocationLog(),
             "ordinary,retry",
-            "ordinary execution and the failed call both receive the full ToolContext"
+            "ordinary execution and the failed call both receive the full CapabilityContext"
         )
 
         let retried = try await executor.retry(
@@ -1494,7 +1494,7 @@ extension ExecutionTesting {
         try Expect.equal(
             await probe.invocationLog(),
             "ordinary,retry,retry,suffix",
-            "resume preserves the full ToolContext into the untouched continuation"
+            "resume preserves the full CapabilityContext into the untouched continuation"
         )
 
         let finalCapabilities = await capabilities.snapshot()
@@ -1539,7 +1539,7 @@ private struct ToolPlanContextPropagationTool: Tool {
     static let definition = ToolDefinition(
         identifier: "tool_plan_context_propagation_probe",
         purpose:
-            "Proves ToolPlan preserves the complete ToolContext across execution boundaries.",
+            "Proves ToolPlan preserves the complete CapabilityContext across execution boundaries.",
         risk: .observe
     )
 
@@ -1549,7 +1549,7 @@ private struct ToolPlanContextPropagationTool: Tool {
 
     func preflight(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> ToolPreflight {
         _ = input
 
@@ -1568,7 +1568,7 @@ private struct ToolPlanContextPropagationTool: Tool {
 
     func call(
         _ input: Input,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> Output {
         try await validate(
             context
@@ -1582,7 +1582,7 @@ private struct ToolPlanContextPropagationTool: Tool {
     }
 
     private func validate(
-        _ context: ToolContext
+        _ context: CapabilityContext
     ) async throws {
         guard context.catalog == expectedCatalog else {
             throw ToolPlanContextPropagationError

@@ -56,7 +56,7 @@ public extension Intents.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -68,7 +68,7 @@ public extension Intents.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let intents = try await context.intentManager().list(
                 statuses: input.statuses ?? [],
@@ -119,7 +119,7 @@ public extension Intents.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -131,7 +131,7 @@ public extension Intents.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             Output(
                 intent: try await context.intentManager().intent(input.id)
@@ -184,7 +184,7 @@ public extension Intents.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -201,7 +201,7 @@ public extension Intents.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             Output(
                 intent: try await context.intentManager().review(
@@ -248,7 +248,7 @@ public extension Intents.Tools {
 
         public func preflight(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> ToolPreflight {
             let intent = try await context.intentManager().intent(input.id)
             return .init(
@@ -261,7 +261,7 @@ public extension Intents.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             Output(
                 intent: try await context.intentExecutor().execute(

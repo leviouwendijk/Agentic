@@ -9,7 +9,7 @@ public enum DirectToolTest {
     ) async throws -> ToolPreflightTestResult<ToolType> {
         let preflight = try await tool.preflight(
             input,
-            in: ToolContext(
+            in: CapabilityContext(
                 workspace: workspace
             )
         )
@@ -28,7 +28,7 @@ public enum DirectToolTest {
     ) async throws -> ToolCallTestResult<ToolType> {
         let output = try await tool.call(
             input,
-            in: ToolContext(
+            in: CapabilityContext(
                 workspace: workspace
             )
         )
@@ -87,7 +87,7 @@ public enum DirectToolTest {
         let reconciliation = try await tool.reconcile(
             input,
             after: failure,
-            in: ToolContext(
+            in: CapabilityContext(
                 workspace: workspace
             )
         )
@@ -105,7 +105,7 @@ public enum DirectToolTest {
         input: ToolType.Input,
         workspace: WorkspaceContext? = nil
     ) async throws -> ToolTestResult<ToolType> {
-        let context = ToolContext(
+        let context = CapabilityContext(
             workspace: workspace
         )
         let preflight = try await tool.preflight(

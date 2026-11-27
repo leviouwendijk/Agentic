@@ -49,7 +49,7 @@ public extension Harness.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             .init()
         }
 

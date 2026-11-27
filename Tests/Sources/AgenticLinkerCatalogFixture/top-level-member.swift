@@ -22,7 +22,7 @@ public struct LinkerCatalogTopLevelTool: Tool {
         risk: risk
     )
     public init() {}
-    public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+    public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
         _ = input
         _ = context
         return Output(text: "linked")

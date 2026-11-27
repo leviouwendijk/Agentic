@@ -85,7 +85,7 @@ public extension Standard.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             guard !input.names.isEmpty else { throw EnvironmentSymbolFailure.noNames }
             guard input.names.count <= 16 else { throw EnvironmentSymbolFailure.tooManyNames }
 

@@ -71,7 +71,7 @@ public extension Harness.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let (findings, problems) = Harness.Improvements.store(in: context).findings()
             return .init(
                 entries: findings
@@ -161,7 +161,7 @@ public extension Harness.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let evidence = input.evidence
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }

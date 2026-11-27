@@ -5,7 +5,7 @@ import Agentic
 @Domain("tasks", aliases: ["task"])
 public enum Tasks {}
 
-extension ToolContext {
+extension CapabilityContext {
     func taskManager() throws -> AgentTaskManager {
         try require(AgentTaskManager.self)
     }

@@ -61,7 +61,7 @@ enum FrameLangTests {
 
     static let pets = Frame.Module("Pets", types: [.decodable(Pet.self, named: "Pet")])
 
-    static func fixture() throws -> (ToolContext, URL) {
+    static func fixture() throws -> (CapabilityContext, URL) {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("frame-modules-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -69,7 +69,7 @@ enum FrameLangTests {
             .write(to: directory.appendingPathComponent("Pets.frame"), atomically: true, encoding: .utf8)
         try "import Frame;\nlet Bed: Type = .{ .properties = [.{ .name = \"plant\", .type = .string, .required = true }] };\n"
             .write(to: directory.appendingPathComponent("Garden.frame"), atomically: true, encoding: .utf8)
-        let context = ToolContext(services: try ToolServices().inserting(
+        let context = CapabilityContext(services: try CapabilityServices().inserting(
             FrameLang.Modules(compiled: [pets], directory: directory)
         ))
         return (context, directory)

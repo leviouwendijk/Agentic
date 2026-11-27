@@ -75,7 +75,7 @@ public extension Capabilities.Tools {
         public static let risk: ActionRisk = .observe
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let (snapshot, available) = try await CapabilityDiscovery.available(in: context)
             let selected = try Self.select(input, among: available, domains: context.catalog.domains)
             let wasVisible = CapabilityDiscovery.contains(selected.reference, in: snapshot.visible)

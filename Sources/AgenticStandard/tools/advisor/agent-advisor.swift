@@ -74,7 +74,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             ToolPreflight(
                 tool: Self.definition.identifier,
@@ -94,7 +94,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
 
             let prompt = try Self.normalizedPrompt(

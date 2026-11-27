@@ -36,7 +36,7 @@ public extension Assertions.Tools {
             self.store = store
         }
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             guard let set = try await store.load(id: input.id) else {
                 throw AssertionSetStoreError.missing
             }

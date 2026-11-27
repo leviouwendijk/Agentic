@@ -248,11 +248,11 @@ private extension ExecutionTesting {
         )
         let services =
             try shield.map {
-                try ToolServices().inserting(
+                try CapabilityServices().inserting(
                     ToolPayloadGuarding($0)
                 )
             }
-            ?? ToolServices()
+            ?? CapabilityServices()
 
         let invocation = try await invoker.invoke(
             ToolInvocation(
@@ -265,7 +265,7 @@ private extension ExecutionTesting {
                     )
                 )
             ),
-            context: ToolContext(
+            context: CapabilityContext(
                 services: services
             ),
             approvalHandler: SemanticFailureApprovalHandler()
@@ -377,7 +377,7 @@ private struct SemanticFailureTool: Tool {
 
     func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         let risk = ActionRisk(rawValue: input.risk) ?? .observe
 
@@ -391,7 +391,7 @@ private struct SemanticFailureTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         switch SemanticFailureScenario(rawValue: input.scenario) {
         case .semantic:

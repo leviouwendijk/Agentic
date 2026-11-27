@@ -25,7 +25,7 @@ public extension Assertions.Tools {
             self.runner = runner
         }
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             try runner.validate(input.assertions)
             let paths = input.assertions.filter { $0.subject.kind == "workspace_file" }
             .map { $0.subject.value }
@@ -43,7 +43,7 @@ public extension Assertions.Tools {
             )
         }
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             .init(report: try await runner.run(input.assertions, in: context))
         }
     }

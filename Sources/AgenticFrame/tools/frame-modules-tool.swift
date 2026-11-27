@@ -41,7 +41,7 @@ public extension FrameLang.Tools {
 
         public init() {}
 
-        public func call(_: Input, in context: ToolContext) async throws -> Output {
+        public func call(_: Input, in context: CapabilityContext) async throws -> Output {
             let catalog = FrameLang.catalog(in: context)
             return .init(
                 modules: catalog.entries.map { entry in

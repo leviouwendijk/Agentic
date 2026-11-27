@@ -16,8 +16,8 @@ func runTaskLifecycleSmoke() async throws {
     let manager = AgentTaskManager(
         store: FileAgentTaskStore(tasksdir: tasksdir)
     )
-    let context = ToolContext(
-        services: try ToolServices()
+    let context = CapabilityContext(
+        services: try CapabilityServices()
             .inserting(manager)
             .inserting(AgentTaskScope(sessionID: "session.a"))
     )

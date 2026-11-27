@@ -62,7 +62,7 @@ public extension Standard.Tools {
 
     public func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         _ = try resolvedArea(
             input.area
@@ -80,7 +80,7 @@ public extension Standard.Tools {
 
     public func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         let area = try resolvedArea(
             input.area

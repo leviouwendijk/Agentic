@@ -107,7 +107,7 @@ struct AgenticStructuresSmoke {
         try await tracedReport()
         try CallTreeSmoke.run()
         try AgenticPreflightTests.run()
-        try ToolServicesSmoke.run()
+        try CapabilityServicesSmoke.run()
         print("AgenticStructures smoke: passed")
     }
 
@@ -126,7 +126,7 @@ struct AgenticStructuresSmoke {
         let archive = ResultArchive { call in
             call == "slots-1" ? .init(call: .init(id: call, name: "schedule_tool_find_slots"), output: slots) : nil
         }
-        let context = ToolContext(services: try ToolServices().inserting(archive))
+        let context = CapabilityContext(services: try CapabilityServices().inserting(archive))
         let input = ReportTool.Input(
             title: "Options",
             datasets: [.init(
@@ -195,7 +195,7 @@ struct AgenticStructuresSmoke {
             )],
             blocks: [.init(kind: .timeline, dataset: "entries", start: "start", end: "end",
                            lane: "who", label: "title", mark: "reading", time_zone: "Europe/Amsterdam")]
-        ), in: ToolContext(services: try ToolServices().inserting(teamArchive)))
+        ), in: CapabilityContext(services: try CapabilityServices().inserting(teamArchive)))
         try check(week.document.datasets[0].rows.count == 4, "rows flattened across participants")
         try check(week.document.datasets[0].rows[3].sources[0].identifier == "agenda-1#participants.1.entries.0", "flattened rows keep their path")
         guard case .timeline(let timeline) = week.document.blocks[0] else {
@@ -237,7 +237,7 @@ struct AgenticStructuresSmoke {
               "columns": [{"name": "title", "kind": "text"}]}],
              "blocks": [{"kind": "table", "dataset": "e", "columns": ["title"]}]}
             """.utf8))
-        let latest = try await ReportTool().call(decoded, in: ToolContext(services: try ToolServices().inserting(named)))
+        let latest = try await ReportTool().call(decoded, in: CapabilityContext(services: try CapabilityServices().inserting(named)))
         try check(latest.document.datasets[0].rows.count == 4, "tool name reads its latest result")
         try check(latest.document.datasets[0].rows[0].sources[0].identifier.hasPrefix("agenda-7#"), "traced to the concrete call")
 

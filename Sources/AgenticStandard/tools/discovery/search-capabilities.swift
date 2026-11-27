@@ -124,7 +124,7 @@ public extension Capabilities.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let (snapshot, available) = try await CapabilityDiscovery.available(in: context)
             let filter = input.filter.resolvingDomains(context.catalog.domains)
             let primaryNames = context.catalog.domains.primaryNames

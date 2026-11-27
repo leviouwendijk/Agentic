@@ -221,7 +221,7 @@ extension SmokeDomain.Tools {
 
         func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             .init(
                 value: input.value
@@ -254,7 +254,7 @@ extension SmokeDomain.Tools {
 
         func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             .init(
                 value: input.value

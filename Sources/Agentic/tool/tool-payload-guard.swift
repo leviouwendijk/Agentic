@@ -1,7 +1,7 @@
 import Primitives
 
 /// Keeps sensitive values out of what models read and sessions record
-/// while tools still work with them. A host inserts one into `ToolServices`
+/// while tools still work with them. A host inserts one into `CapabilityServices`
 /// as `ToolPayloadGuarding`; every tool call then passes it twice:
 ///
 /// - inbound, before preflight and the call, handles in the arguments are
@@ -23,7 +23,7 @@ public protocol ToolPayloadGuard: Sendable {
     func protecting(_ text: String, from tool: ToolIdentifier) async -> String
 }
 
-/// The `ToolServices` entry holding the session's guard.
+/// The `CapabilityServices` entry holding the session's guard.
 public struct ToolPayloadGuarding: Sendable {
     public let shield: any ToolPayloadGuard
 
@@ -32,7 +32,7 @@ public struct ToolPayloadGuarding: Sendable {
     }
 }
 
-public extension ToolContext {
+public extension CapabilityContext {
     /// The session's payload guard, if the host installed one.
     var payloadGuard: (any ToolPayloadGuard)? {
         (try? require(ToolPayloadGuarding.self))?.shield

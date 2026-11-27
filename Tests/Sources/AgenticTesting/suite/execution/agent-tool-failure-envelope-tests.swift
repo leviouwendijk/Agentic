@@ -491,7 +491,7 @@ private struct PhaseFailureTool<
 
     func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         if failurePhase == .preflight {
             throw PhaseFailureProbeError.preflight
@@ -506,7 +506,7 @@ private struct PhaseFailureTool<
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         if failurePhase == .call {
             throw PhaseFailureProbeError.call
@@ -545,7 +545,7 @@ private struct RecoveryFailureTool: Tool {
 
     func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         ToolPreflight(
             tool: Self.definition.identifier,
@@ -556,7 +556,7 @@ private struct RecoveryFailureTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         _ = input
         throw PhaseFailureProbeError.call
@@ -630,7 +630,7 @@ private struct EncodeFailureTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         _ = input
         return .init()
@@ -650,7 +650,7 @@ private struct ReportedFailureTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         _ = input
 

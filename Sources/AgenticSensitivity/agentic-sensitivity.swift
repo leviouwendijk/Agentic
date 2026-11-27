@@ -113,7 +113,7 @@ public extension Privacy {
     }
 
     /// The session's guard, for the privacy tools.
-    static func activeGuard(in context: ToolContext) throws -> Guard {
+    static func activeGuard(in context: CapabilityContext) throws -> Guard {
         guard let installed = context.payloadGuard as? Guard else {
             throw GuardUnavailable()
         }

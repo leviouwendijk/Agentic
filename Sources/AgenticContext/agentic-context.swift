@@ -17,7 +17,7 @@ public enum Context {}
 
 public extension Context {
     /// Where the context files live, the shared roots' context folders, and
-    /// where replaced files are kept. Insert one into `ToolServices` to
+    /// where replaced files are kept. Insert one into `CapabilityServices` to
     /// point the tools elsewhere; without one they use the resolved home's
     /// and the shared roots in `~/.config/roots.frame`.
     struct Store: Sendable {
@@ -129,7 +129,7 @@ public extension Context {
     }
 
     /// The session's store, or the resolved home's.
-    static func store(in context: ToolContext) -> Store {
+    static func store(in context: CapabilityContext) -> Store {
         (try? context.require(Store.self)) ?? Store(home: AgentHomeLocator().resolveHome())
     }
 }

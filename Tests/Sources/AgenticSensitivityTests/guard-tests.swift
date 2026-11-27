@@ -49,7 +49,7 @@ extension FixtureMail.Tools {
 
         init() {}
 
-        func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             .init(address: "sam@example.com", note: "Prefers calls on 06 00 00 00 00.")
         }
     }
@@ -72,12 +72,12 @@ extension FixtureMail.Tools {
 
         init() {}
 
-        func preflight(_ input: Input, in context: ToolContext) async throws -> ToolPreflight {
+        func preflight(_ input: Input, in context: CapabilityContext) async throws -> ToolPreflight {
             await Received.shared.append("preflight \(input.to)")
             return .init(tool: Self.identifier, risk: Self.risk, summary: "Send to \(input.to)", warnings: ["Recipient \(input.to) is external."])
         }
 
-        func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             await Received.shared.append(input.to)
             return .init(sent: "sent to \(input.to)")
         }
@@ -102,7 +102,7 @@ extension FixtureWeb.Tools {
 
         init() {}
 
-        func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             await Received.shared.append(input.url)
             return .init(fetched: true)
         }
@@ -110,12 +110,12 @@ extension FixtureWeb.Tools {
 }
 
 enum GuardTests {
-    static func context() throws -> (ToolContext, Privacy.Guard) {
+    static func context() throws -> (CapabilityContext, Privacy.Guard) {
         let installed = Privacy.Guard()
-        return (ToolContext(services: try ToolServices().inserting(ToolPayloadGuarding(installed))), installed)
+        return (CapabilityContext(services: try CapabilityServices().inserting(ToolPayloadGuarding(installed))), installed)
     }
 
-    static func run<T: Tool>(_ tool: T, _ arguments: JSONValue, in context: ToolContext) async throws -> FunctionCall.Response {
+    static func run<T: Tool>(_ tool: T, _ arguments: JSONValue, in context: CapabilityContext) async throws -> FunctionCall.Response {
         let binding = ToolBinding(tool)
         let call = ToolInvocation(id: UUID().uuidString, tool: binding.definition.identifier, arguments: arguments)
         return try await binding.execute(call, context: context).result

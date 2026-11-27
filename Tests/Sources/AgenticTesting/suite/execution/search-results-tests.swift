@@ -44,7 +44,7 @@ extension ExecutionTesting {
             { call in responses.first { $0.call.id == call } },
             recent: { limit in Array(responses.prefix(limit)) }
         )
-        let context = ToolContext(services: try ToolServices().inserting(archive))
+        let context = CapabilityContext(services: try CapabilityServices().inserting(archive))
         let search = Standard.Tools.SearchResults()
 
         // Segments derived from the record.

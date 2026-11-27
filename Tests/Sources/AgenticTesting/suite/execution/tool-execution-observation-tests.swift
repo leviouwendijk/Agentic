@@ -89,7 +89,7 @@ private struct ObservationFixtureTool: Tool {
 
     let barrier = ObservationFixtureBarrier()
 
-    func call(_ input: Input, in _: ToolContext) async throws -> Output {
+    func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
         if input.value == "first" || input.value == "second" {
             await barrier.arrive()
         }

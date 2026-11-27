@@ -125,7 +125,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let vault = try Privacy.activeGuard(in: context).vault
             let storage = AgentHomeLocator().resolveHome().layout.runtimeStorage
             guard Privacy.validSession(input.session), FileSystem.default.exists(storage.sessiondir(sessionID: input.session)) else {
@@ -159,7 +159,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let vault = try Privacy.activeGuard(in: context).vault
             let storage = AgentHomeLocator().resolveHome().layout.runtimeStorage
             guard Privacy.validSession(input.session) else {

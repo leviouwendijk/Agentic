@@ -8,7 +8,7 @@ public protocol ToolRecovery: Producer {
     func reconcile(
         _ input: Input,
         after failure: ToolExecution.Failure,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> ToolExecution.Reconciliation<Output>?
 }
 
@@ -24,7 +24,7 @@ public extension ToolRecovery {
     func reconcile(
         _ input: Input,
         after failure: ToolExecution.Failure,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolExecution.Reconciliation<Output>? {
         nil
     }

@@ -3,7 +3,7 @@
 /// Values are keyed by their concrete Swift type. Reference values such as
 /// actors retain their identity across copied service scopes.
 /// Services are neither model-visible nor serialized into tool results.
-public struct ToolServices: Sendable {
+public struct CapabilityServices: Sendable {
     public enum Failure: Error, Sendable, Equatable {
         case duplicate_type(String)
         case missing_type(String)

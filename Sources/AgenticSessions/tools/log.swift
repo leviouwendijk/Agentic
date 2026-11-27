@@ -59,7 +59,7 @@ public extension Sessions.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -71,7 +71,7 @@ public extension Sessions.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let log = try context.require((any Sessions.LogReading).self)
             let contents = try await log.lines()
@@ -121,7 +121,7 @@ public extension Sessions.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -133,7 +133,7 @@ public extension Sessions.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let log = try context.require((any Sessions.LogReading).self)
             guard let step = try await log.step(seq: input.seq) else {
@@ -172,7 +172,7 @@ public extension Sessions.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -184,7 +184,7 @@ public extension Sessions.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let log = try context.require((any Sessions.LogReading).self)
             return .init(

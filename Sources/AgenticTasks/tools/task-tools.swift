@@ -52,7 +52,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -69,7 +69,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let task = try await context.taskManager().create(
                 subject: input.subject,
@@ -141,7 +141,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -161,7 +161,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let task = try await context.taskManager().update(
                 id: input.id,
@@ -228,7 +228,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -240,7 +240,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let tasks = try await context.taskManager().list(
                 statuses: input.statuses ?? [],
@@ -291,7 +291,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -303,7 +303,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let task = try await context.taskManager().get(
                 input.id
@@ -351,7 +351,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -368,7 +368,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let task = try await context.taskManager().claim(
                 id: input.id,
@@ -414,7 +414,7 @@ public extension Tasks.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -432,7 +432,7 @@ public extension Tasks.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let task = try await context.taskManager().complete(
                 id: input.id

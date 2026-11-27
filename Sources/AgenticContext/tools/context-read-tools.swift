@@ -64,7 +64,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let library = Context.store(in: context).library()
             let selected = library.selecting(tags: input.tags, under: input.under)
             return .init(
@@ -125,7 +125,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let library = Context.store(in: context).library()
             var entries: [Item] = []
             var missing: [String] = []
@@ -175,7 +175,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let store = Context.store(in: context)
             return .init(
                 file: try store.url(input.file).path,

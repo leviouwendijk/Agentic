@@ -35,7 +35,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let check = Context.check(input.text, file: input.file, in: Context.store(in: context))
             return .init(valid: check.problems.isEmpty, problems: check.problems, entries: check.entries)
         }
@@ -73,7 +73,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let store = Context.store(in: context)
             let check = Context.check(input.text, file: input.file, in: store)
             let path = (try? store.url(input.file).path) ?? input.file

@@ -27,7 +27,7 @@ extension ContextFilesTests {
         """
 
     /// A store over `root/context` with `root/team/.agentic/context` as the shared root `team`.
-    static func sharedFixture(readOnly: Bool = false) throws -> (ToolContext, Context.Store, URL, URL) {
+    static func sharedFixture(readOnly: Bool = false) throws -> (CapabilityContext, Context.Store, URL, URL) {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("agentic-context-\(UUID().uuidString)", isDirectory: true)
         let shared = root.appendingPathComponent("team/.agentic/context", isDirectory: true)
@@ -37,7 +37,7 @@ extension ContextFilesTests {
             archiveDirectory: root.appendingPathComponent("archive/context", isDirectory: true),
             shared: [.init(folder: "team", directory: shared, readOnly: readOnly)]
         )
-        return (ToolContext(services: try ToolServices().inserting(store)), store, root, shared)
+        return (CapabilityContext(services: try CapabilityServices().inserting(store)), store, root, shared)
     }
 
     static func sharedRoots() async throws {

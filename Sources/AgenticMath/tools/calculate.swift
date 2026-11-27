@@ -55,7 +55,7 @@ public extension Math.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             try Math.Calculation.Evaluator.validate(input)
             return .init(
@@ -68,7 +68,7 @@ public extension Math.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             try Math.Calculation.Evaluator.evaluate(input)
         }

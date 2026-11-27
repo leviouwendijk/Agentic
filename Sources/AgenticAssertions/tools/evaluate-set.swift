@@ -44,7 +44,7 @@ public extension Assertions.Tools {
             self.store = store
         }
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             guard let set = try await store.load(id: input.id, revision: input.revision) else {
                 throw AssertionSetStoreError.missing
             }
@@ -64,7 +64,7 @@ public extension Assertions.Tools {
             )
         }
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             guard let set = try await store.load(id: input.id, revision: input.revision) else {
                 throw AssertionSetStoreError.missing
             }

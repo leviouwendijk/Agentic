@@ -36,7 +36,7 @@ public extension LinkerCatalogFixture.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             _ = input
             _ = context

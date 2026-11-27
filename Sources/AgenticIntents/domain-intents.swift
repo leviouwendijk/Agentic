@@ -25,7 +25,7 @@ public extension Intents {
     }
 }
 
-extension ToolContext {
+extension CapabilityContext {
     func intentManager() throws -> Intents.Manager {
         try require(Intents.Manager.self)
     }

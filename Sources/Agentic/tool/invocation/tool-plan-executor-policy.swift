@@ -6,7 +6,7 @@ public extension ToolPlan.Executor {
         runID: String = UUID().uuidString,
         relationship: ToolPlan.Run.Relationship = .root,
         executionPolicy: ToolPlan.ExecutionPolicy,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Run {
@@ -36,7 +36,7 @@ public extension ToolPlan.Executor {
     func resume(
         _ run: ToolPlan.Run,
         executionPolicy: ToolPlan.ExecutionPolicy,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Run {
@@ -79,7 +79,7 @@ private extension ToolPlan.Executor {
         _ plan: ToolPlan,
         runID: String,
         relationship: ToolPlan.Run.Relationship,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Run {
@@ -195,7 +195,7 @@ private extension ToolPlan.Executor {
     func resumeSingleStep(
         _ run: ToolPlan.Run,
         interruption: ToolPlan.Run.Interruption,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Run {

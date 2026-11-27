@@ -7,14 +7,14 @@ import Testing
 /// The context library over real files: identifiers from paths, the
 /// index and read tools, and a save that checks, archives and refuses.
 enum ContextFilesTests {
-    static func fixture() throws -> (ToolContext, Context.Store, URL) {
+    static func fixture() throws -> (CapabilityContext, Context.Store, URL) {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("agentic-context-\(UUID().uuidString)", isDirectory: true)
         let store = Context.Store(
             directory: root.appendingPathComponent("context", isDirectory: true),
             archiveDirectory: root.appendingPathComponent("archive/context", isDirectory: true)
         )
-        return (ToolContext(services: try ToolServices().inserting(store)), store, root)
+        return (CapabilityContext(services: try CapabilityServices().inserting(store)), store, root)
     }
 
     static let person = """

@@ -53,7 +53,7 @@ public extension Assertions.Tools {
             self.store = store
         }
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             try runner.validate(input.assertions)
             return .init(
                 tool: Self.identifier, risk: Self.risk,
@@ -63,7 +63,7 @@ public extension Assertions.Tools {
             )
         }
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             try runner.validate(input.assertions)
             let set = try await store.define(
                 id: input.id,

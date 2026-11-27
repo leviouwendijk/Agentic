@@ -58,7 +58,7 @@ public extension Capabilities.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             if let visible = await context.capabilities?.snapshot().visible,
                visible.tools.contains(ToolIdentifier(input.identifier)) {
                 throw CallCapabilityError.direct(input.identifier)

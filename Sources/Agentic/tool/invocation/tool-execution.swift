@@ -1,14 +1,14 @@
 internal struct ToolExecutionEngine: Sendable {
     internal let registry: ToolRegistry
     internal let recovery: Recovery.Policy?
-    internal let context: ToolContext
+    internal let context: CapabilityContext
     internal let observationHandler:
         ToolExecutionObservations.Observer?
 
     internal init(
         registry: ToolRegistry,
         recovery: Recovery.Policy? = nil,
-        context: ToolContext = .init(),
+        context: CapabilityContext = .init(),
         observationHandler:
             ToolExecutionObservations.Observer? = nil
     ) {

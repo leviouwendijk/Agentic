@@ -72,7 +72,7 @@ public extension Sessions.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             _ = try expression(for: input)
             return .init(
@@ -87,7 +87,7 @@ public extension Sessions.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let expression = try expression(for: input)
             let catalog = try context.require((any Sessions.CatalogReading).self)

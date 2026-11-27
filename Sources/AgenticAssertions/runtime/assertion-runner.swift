@@ -79,7 +79,7 @@ public struct AssertionRunner: Sendable {
 
     public func run(
         _ assertions: [Assertion],
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> AssertionReport {
         try validate(assertions)
         let collector = AssertionResultCollector()
@@ -128,7 +128,7 @@ public struct AssertionRunner: Sendable {
 
     private func observe(
         _ subject: Assertion.Subject,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async -> AssertionObservation {
         guard let provider = providers.first(where: { $0.kind == subject.kind }) else {
             return .init(error: "No registered provider for \(subject.kind)")

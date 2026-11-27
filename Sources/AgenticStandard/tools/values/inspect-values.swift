@@ -69,7 +69,7 @@ public extension Standard.Tools {
 
         public init() {}
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             let keys = try Self.selectedKeys(input)
             return .init(
                 tool: Self.definition.identifier,
@@ -79,7 +79,7 @@ public extension Standard.Tools {
             )
         }
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             let keys = try Self.selectedKeys(input)
             let entries = keys.map { key -> Entry in
                 guard let value = input.values[key] else {

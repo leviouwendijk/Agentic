@@ -236,7 +236,7 @@ private struct FunctionCallResolverProbeTool<
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         await probe.recordInvocation()
         return input

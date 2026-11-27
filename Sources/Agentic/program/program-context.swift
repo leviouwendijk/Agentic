@@ -49,6 +49,10 @@ public protocol UserInputProviding: Sendable {
 }
 
 public struct ProgramContext: Sendable {
+    /// The same context a Tool receives: workspace, catalog, the available capabilities'
+    /// inspections and the host's services.
+    public let capability: CapabilityContext
+
     private let inference: (any ProgramInferenceExecuting)?
     private let tools: (any ProgramToolExecuting)?
     private let programs: (any ProgramExecuting)?
@@ -58,6 +62,7 @@ public struct ProgramContext: Sendable {
     public let metadata: [String: String]
 
     public init(
+        capability: CapabilityContext = .init(),
         inference: (any ProgramInferenceExecuting)? = nil,
         tools: (any ProgramToolExecuting)? = nil,
         programs: (any ProgramExecuting)? = nil,
@@ -65,6 +70,7 @@ public struct ProgramContext: Sendable {
         artifacts: (any AgentArtifactStore)? = nil,
         metadata: [String: String] = [:]
     ) {
+        self.capability = capability
         self.inference = inference
         self.tools = tools
         self.programs = programs

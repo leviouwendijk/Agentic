@@ -200,7 +200,7 @@ public extension Standard.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             guard let archive = try? context.require(ResultArchive.self) else {
                 throw SearchResultsError.archiveUnavailable
             }

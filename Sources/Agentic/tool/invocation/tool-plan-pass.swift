@@ -16,7 +16,7 @@ extension ToolPlan {
 
         func execute(
             _ plan: ToolPlan,
-            in context: ToolContext,
+            in context: CapabilityContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Result {
@@ -61,7 +61,7 @@ private extension ToolPlan.Pass {
         _ node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -102,7 +102,7 @@ private extension ToolPlan.Pass {
         _ node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -198,7 +198,7 @@ private extension ToolPlan.Pass {
         path: String,
         pathComponent: String? = "sequence",
         navigator: ToolPlan.Navigator,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -260,7 +260,7 @@ private extension ToolPlan.Pass {
         _ nodes: [ToolPlan.Node],
         path: String,
         navigator: ToolPlan.Navigator,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> NodeExecution {
@@ -329,7 +329,7 @@ private extension ToolPlan.Pass {
         node: ToolPlan.Node,
         path: String,
         navigator: ToolPlan.Navigator,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async -> (

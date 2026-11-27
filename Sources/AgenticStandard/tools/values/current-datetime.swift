@@ -55,7 +55,7 @@ public extension Standard.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output {
             let zone: TimeZone
             if let identifier = input.time_zone {
                 guard let named = TimeZone(identifier: identifier) else {

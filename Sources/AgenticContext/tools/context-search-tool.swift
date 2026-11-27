@@ -150,7 +150,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let library = Context.store(in: context).library()
             let fields = try (input.fields ?? []).map { name in
                 guard let field = Context.Field(rawValue: name) else {

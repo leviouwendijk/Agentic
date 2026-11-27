@@ -27,7 +27,7 @@ public extension ToolRegistry {
 
     func execute(
         _ call: ToolInvocation,
-        context: ToolContext,
+        context: CapabilityContext,
         preparedOperation: PreparedOperation.Envelope? = nil,
         preflight: ToolPreflight? = nil
     ) async throws -> ToolExecution.Result {
@@ -52,7 +52,7 @@ public extension ToolRegistry {
     func reconcile(
         _ call: ToolInvocation,
         failure: ToolExecution.Failure,
-        context: ToolContext
+        context: CapabilityContext
     ) async throws -> ToolBinding.Reconciliation? {
         guard let registered =
             registeredTool(

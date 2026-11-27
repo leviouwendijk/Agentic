@@ -90,7 +90,7 @@ public struct ToolBinding: CapabilityBinding {
     private let preparationHandler:
         @Sendable (
             ToolInvocation,
-            ToolContext
+            CapabilityContext
         ) async throws -> CapabilityPreparation<ToolPreflight>
 
     private let callHandler:
@@ -98,7 +98,7 @@ public struct ToolBinding: CapabilityBinding {
             ToolInvocation,
             PreparedOperation.Envelope?,
             ToolPreflight?,
-            ToolContext
+            CapabilityContext
         ) async throws -> (
             output: JSONValue,
             projection: ToolExecution.Projection?,
@@ -111,7 +111,7 @@ public struct ToolBinding: CapabilityBinding {
         @Sendable (
             ToolInvocation,
             ToolExecution.Failure,
-            ToolContext
+            CapabilityContext
         ) async throws -> ReconciliationExecution?
 
     public init<T>(
@@ -453,7 +453,7 @@ public struct ToolBinding: CapabilityBinding {
 
     public func prepare(
         _ call: ToolInvocation,
-        context: ToolContext
+        context: CapabilityContext
     ) async throws -> CapabilityPreparation<ToolPreflight> {
         guard let shield = context.payloadGuard else {
             return try await preparationHandler(call, context)
@@ -469,7 +469,7 @@ public struct ToolBinding: CapabilityBinding {
 
     public func preflight(
         _ call: ToolInvocation,
-        context: ToolContext
+        context: CapabilityContext
     ) async throws -> ToolPreflight {
         try await prepare(call, context: context).review
     }
@@ -488,7 +488,7 @@ public struct ToolBinding: CapabilityBinding {
 
     public func execute(
         _ call: ToolInvocation,
-        context: ToolContext,
+        context: CapabilityContext,
         preparedOperation: PreparedOperation.Envelope? = nil,
         preflight: ToolPreflight? = nil
     ) async throws -> ToolExecution.Result {
@@ -507,7 +507,7 @@ public struct ToolBinding: CapabilityBinding {
 
     private func executeObserved(
         _ call: ToolInvocation,
-        context: ToolContext,
+        context: CapabilityContext,
         preparedOperation: PreparedOperation.Envelope?,
         preflight: ToolPreflight?
     ) async throws -> ToolExecution.Result {
@@ -540,7 +540,7 @@ public struct ToolBinding: CapabilityBinding {
     public func reconcile(
         _ call: ToolInvocation,
         failure: ToolExecution.Failure,
-        context: ToolContext
+        context: CapabilityContext
     ) async throws -> Reconciliation? {
         let (value, observations) = try await ToolExecutionObservations.capture(
             call: call.reference,
@@ -565,7 +565,7 @@ public struct ToolBinding: CapabilityBinding {
     private func reconcileObserved(
         _ call: ToolInvocation,
         failure: ToolExecution.Failure,
-        context: ToolContext
+        context: CapabilityContext
     ) async throws -> Reconciliation? {
         guard
             failure.call.tool == definition.identifier,

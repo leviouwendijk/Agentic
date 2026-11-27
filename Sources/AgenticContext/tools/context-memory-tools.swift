@@ -181,7 +181,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let store = Context.store(in: context)
             let file = Context.Memories.file(area: input.area, root: input.root)
             let path = (try? store.url(file).path) ?? file
@@ -260,7 +260,7 @@ public extension Context.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let store = Context.store(in: context)
             let file = Context.Memories.file(area: input.area, root: input.root)
             let path = (try? store.url(file).path) ?? file

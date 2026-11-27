@@ -47,7 +47,7 @@ enum HarnessTestSuite {
                     ],
                     identifier: "fixture.tool"
                 ),
-                in: ToolContext()
+                in: CapabilityContext()
             )
 
             try Expect.equal(
@@ -82,7 +82,7 @@ enum HarnessTestSuite {
                 .init(
                     includeHidden: true
                 ),
-                in: ToolContext()
+                in: CapabilityContext()
             )
 
             try Expect.equal(
@@ -114,7 +114,7 @@ enum HarnessTestSuite {
                 .appendingPathComponent("harness-findings-\(UUID().uuidString)", isDirectory: true)
             defer { try? FileSystem.default.remove(directory) }
             let store = Harness.Improvements(directory: directory)
-            let context = ToolContext(services: try ToolServices().inserting(store))
+            let context = CapabilityContext(services: try CapabilityServices().inserting(store))
 
             do {
                 _ = try await Harness.Tools.RecordFinding().call(

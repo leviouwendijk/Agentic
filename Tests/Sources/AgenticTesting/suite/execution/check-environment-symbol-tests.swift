@@ -31,7 +31,7 @@ extension ExecutionTesting {
         ])
         let output = try await Standard.Tools.CheckEnvironmentSymbol().call(
             .init(names: ["HOME", "PAHT", "CHECK_ENV_FIXTURE_TOKEN", "PATH"]),
-            in: ToolContext(services: try ToolServices().inserting(sources))
+            in: CapabilityContext(services: try CapabilityServices().inserting(sources))
         )
         let byName = Dictionary(uniqueKeysWithValues: output.entries.map { ($0.name, $0) })
 

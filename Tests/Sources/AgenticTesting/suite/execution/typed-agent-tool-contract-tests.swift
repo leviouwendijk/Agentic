@@ -207,7 +207,7 @@ private struct TypedAgentToolContractTool: Tool {
 
     func preflight(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolPreflight {
         await probe.recordPreflight(
             input.value
@@ -224,7 +224,7 @@ private struct TypedAgentToolContractTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         await probe.recordCall(
             input.value

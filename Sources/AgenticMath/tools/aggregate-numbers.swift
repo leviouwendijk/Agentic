@@ -77,11 +77,11 @@ public extension Math.Tools {
             }
             return .init(operation: input.operation, value: DecimalArithmetic.string(value), count: values.count)
         }
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             try Self.validate(input)
             return .init(tool: Self.definition.identifier, risk: Self.definition.risk,
                          summary: "Aggregate \(input.values.count) decimal values", sideEffects: [])
         }
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output { try Self.evaluate(input) }
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output { try Self.evaluate(input) }
     }
 }

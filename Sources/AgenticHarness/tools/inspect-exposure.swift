@@ -93,7 +93,7 @@ public extension Harness.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             _ = input
 
@@ -107,7 +107,7 @@ public extension Harness.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             try await source.inspect(
                 input

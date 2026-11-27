@@ -22,7 +22,7 @@ public extension ToolPlan {
             _ plan: ToolPlan,
             runID: String = UUID().uuidString,
             relationship: ToolPlan.Run.Relationship = .root,
-            in context: ToolContext,
+            in context: CapabilityContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
@@ -60,7 +60,7 @@ public extension ToolPlan {
         /// operation when that evidence is available.
         public func retry(
             _ run: ToolPlan.Run,
-            in context: ToolContext,
+            in context: CapabilityContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
@@ -198,7 +198,7 @@ public extension ToolPlan {
         /// Resume only the untouched serial continuation after a resolved node.
         public func resume(
             _ run: ToolPlan.Run,
-            in context: ToolContext,
+            in context: CapabilityContext,
             references: [Reference] = [],
             approvalHandler: (any ToolApprovalHandler)? = nil
         ) async throws -> ToolPlan.Run {
@@ -224,7 +224,7 @@ public extension ToolPlan {
             _ run: ToolPlan.Run,
             afterPath: String,
             afterCallID: String,
-            in context: ToolContext,
+            in context: CapabilityContext,
             references: [Reference],
             approvalHandler: (any ToolApprovalHandler)?
         ) async throws -> ToolPlan.Run {
@@ -439,7 +439,7 @@ private extension ToolPlan.Executor {
         _ continuation: [ToolPlan.Navigator.ContinuationStep],
         plan: ToolPlan,
         attemptNumber: Int,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference],
         approvalHandler: (any ToolApprovalHandler)?
     ) async throws -> ToolPlan.Result {

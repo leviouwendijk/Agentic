@@ -84,7 +84,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             let request = try input.request()
 
@@ -102,7 +102,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             .init(
                 request: try input.request()

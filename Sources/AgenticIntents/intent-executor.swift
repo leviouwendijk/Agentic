@@ -20,7 +20,7 @@ public extension Intents {
         /// The current policy still applies: a tool it now forbids fails.
         public func execute(
             _ id: Intent.ID,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Intent {
             let intent = try await manager.claim(id)
             guard let attempt = intent.attempt else {

@@ -44,11 +44,11 @@ public extension Math.Tools {
             let sum = try DecimalAggregation.sum(shares)
             return .init(allocations: shares.map(DecimalArithmetic.string), reconciled_total: DecimalArithmetic.string(sum))
         }
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             try Self.validate(input)
             return .init(tool: Self.definition.identifier, risk: Self.definition.risk,
                          summary: "Allocate decimal total across \(input.weights.count) weights", sideEffects: [])
         }
-        public func call(_ input: Input, in _: ToolContext) async throws -> Output { try Self.evaluate(input) }
+        public func call(_ input: Input, in _: CapabilityContext) async throws -> Output { try Self.evaluate(input) }
     }
 }

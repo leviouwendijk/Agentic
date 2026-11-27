@@ -28,7 +28,7 @@ public struct GovernedFunctionCallResolver:
     public let registry: ToolRegistry
     public let visibleToolIdentifiers: Set<ToolIdentifier>
     public let tools: ToolExecutor
-    public let context: ToolContext
+    public let context: CapabilityContext
     public let approvalHandler: (any ToolApprovalHandler)?
     public let resolutionObserver:
         (@Sendable (ToolInvocation.Result) async -> Void)?
@@ -38,7 +38,7 @@ public struct GovernedFunctionCallResolver:
         visibleToolIdentifiers: [ToolIdentifier],
         policy: ToolExecutionPolicy,
         recovery: Recovery.Policy? = nil,
-        context: ToolContext = .init(),
+        context: CapabilityContext = .init(),
         approvalHandler: (any ToolApprovalHandler)? = nil,
         observationHandler:
             ToolExecutionObservations.Observer? = nil,

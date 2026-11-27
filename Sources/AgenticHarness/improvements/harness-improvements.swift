@@ -114,7 +114,7 @@ public extension Harness {
         }
 
         /// The session's store, or the resolved home's.
-        public static func store(in context: ToolContext) -> Self {
+        public static func store(in context: CapabilityContext) -> Self {
             (try? context.require(Self.self)) ?? .init(home: AgentHomeLocator().resolveHome())
         }
 

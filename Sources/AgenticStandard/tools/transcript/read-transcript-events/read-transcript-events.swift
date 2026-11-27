@@ -71,7 +71,7 @@ public extension Standard.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -85,7 +85,7 @@ public extension Standard.Tools {
 
         public func call(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> Output {
             let events = try await store.loadEvents()
 

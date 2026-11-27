@@ -61,7 +61,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let vault = try Privacy.activeGuard(in: context).vault
             let wanted = Set((input.handles ?? []).flatMap { Sensitivity.Handle.occurrences(in: $0).map(\.handle.id) })
             let kinds = Set(input.kinds ?? [])
@@ -103,7 +103,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let vault = try Privacy.activeGuard(in: context).vault
             guard let handle = Sensitivity.Handle.occurrences(in: input.handle).first?.handle,
                   await vault.grant(handle, to: input.tool)

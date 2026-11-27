@@ -30,7 +30,7 @@ public struct ToolExecutor: Sendable {
 
     public func review(
         _ invocation: ToolInvocation,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference] = []
     ) async throws -> ToolInvocation.Review {
         let context = try targetedContext(
@@ -55,7 +55,7 @@ public struct ToolExecutor: Sendable {
 
     public func invoke(
         _ invocation: ToolInvocation,
-        context: ToolContext,
+        context: CapabilityContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
@@ -74,7 +74,7 @@ public struct ToolExecutor: Sendable {
 
     public func invoke(
         _ review: ToolInvocation.Review,
-        context: ToolContext,
+        context: CapabilityContext,
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolInvocation.Result {
         guard review.preflight.tool == review.invocation.tool else {
@@ -159,7 +159,7 @@ public struct ToolExecutor: Sendable {
 
     public func invoke(
         _ plan: ToolPlan,
-        in context: ToolContext,
+        in context: CapabilityContext,
         references: [Reference] = [],
         approvalHandler: (any ToolApprovalHandler)? = nil
     ) async throws -> ToolPlan.Result {
@@ -177,8 +177,8 @@ public struct ToolExecutor: Sendable {
 private extension ToolExecutor {
     func targetedContext(
         for invocation: ToolInvocation,
-        context: ToolContext
-    ) throws -> ToolContext {
+        context: CapabilityContext
+    ) throws -> CapabilityContext {
         guard let target = invocation.execution?.workspace else {
             return context
         }

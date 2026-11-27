@@ -51,7 +51,7 @@ enum IntentsTesting {
 
             let other = Intents.Manager(store: Intents.FileStore(directory: directory))
             let executed = try await Intents.Executor(manager: other, tools: tools)
-                .execute(intent.id, in: ToolContext())
+                .execute(intent.id, in: CapabilityContext())
 
             try Expect.equal(executed.status, .executed, "an approved intent runs")
             try Expect.equal(await probe.values(), ["alpha"], "the prepared plan ran exactly once")
@@ -70,7 +70,7 @@ enum IntentsTesting {
 
             try await expectIntentError("an executed intent does not run again") {
                 _ = try await Intents.Executor(manager: manager, tools: tools)
-                    .execute(intent.id, in: ToolContext())
+                    .execute(intent.id, in: CapabilityContext())
             } matching: {
                 if case .notApproved(_, .executed) = $0 { return true }
                 return false
@@ -186,7 +186,7 @@ enum IntentsTesting {
             policy: .init(autonomyMode: .auto_observe)
         ).invoke(
             appendInvocation("core"),
-            context: ToolContext(),
+            context: CapabilityContext(),
             approvalHandler: handler
         )
         try Expect.equal(
@@ -229,7 +229,7 @@ private extension IntentsTesting {
     ) async throws -> Intents.Intent {
         let review = try await tools.review(
             try appendInvocation(value),
-            context: ToolContext()
+            context: CapabilityContext()
         )
         try Expect.equal(review.requirement, .needs_human_review, "the fixture needs review")
         let operation = try Expect.notNil(review.preparedOperation, "the fixture prepares its plan")
@@ -329,7 +329,7 @@ private struct AppendTool: Tool {
 
     func prepare(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> CapabilityPreparation<ToolPreflight> {
         .init(
             review: .init(
@@ -343,7 +343,7 @@ private struct AppendTool: Tool {
 
     func call(
         _: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         throw ToolPreparationError.prepared_operation_required
     }
@@ -351,7 +351,7 @@ private struct AppendTool: Tool {
     func call(
         _: Input,
         prepared operation: PreparedOperation.Envelope?,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         guard let operation else {
             throw ToolPreparationError.prepared_operation_required

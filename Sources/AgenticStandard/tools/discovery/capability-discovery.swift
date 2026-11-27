@@ -4,7 +4,7 @@ import Agentic
 /// No operation on this helper changes availability, visibility or installation.
 enum CapabilityDiscovery {
     static func available(
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> (AgentCapabilityState.Snapshot, [CapabilityInspection]) {
         guard let state = context.capabilities else {
             throw CapabilityDiscoveryError.agentCapabilityStateRequired

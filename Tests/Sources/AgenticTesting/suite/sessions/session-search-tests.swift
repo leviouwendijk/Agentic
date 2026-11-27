@@ -9,7 +9,7 @@ enum SessionSearchTestSuite {
         title: "sessions_tool_search tests"
     ) {
         Test("search finds lines across sessions, newest first") {
-            let context = ToolContext(services: try ToolServices().inserting(
+            let context = CapabilityContext(services: try CapabilityServices().inserting(
                 SearchCatalog() as any Sessions.CatalogReading
             ))
             let tool = Sessions.Tools.Search()

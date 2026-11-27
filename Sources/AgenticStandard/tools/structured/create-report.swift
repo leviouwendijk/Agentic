@@ -628,7 +628,7 @@ public extension Standard.Tools {
             }
         }
 
-        public func preflight(_ input: Input, in _: ToolContext) async throws -> ToolPreflight {
+        public func preflight(_ input: Input, in _: CapabilityContext) async throws -> ToolPreflight {
             _ = try Self.evaluate(input)
             let traced = input.datasets.filter { $0.from_call != nil }.count
             return .init(
@@ -639,7 +639,7 @@ public extension Standard.Tools {
             )
         }
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let archive = try? context.require(ResultArchive.self)
             return try Self.evaluate(input, resolved: try await Self.resolve(input, archive: archive))
         }

@@ -7,7 +7,7 @@ public protocol AssertionObservationProvider: Sendable {
     var kind: String { get }
     func observe(
         _ subject: Assertion.Subject,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async -> AssertionObservation
 }
 
@@ -37,7 +37,7 @@ public struct LiteralTextAssertionProvider: AssertionObservationProvider {
 
     public func observe(
         _ subject: Assertion.Subject,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async -> AssertionObservation {
         .init(
             exists: true,
@@ -58,7 +58,7 @@ public struct WorkspaceFileAssertionProvider: AssertionObservationProvider {
 
     public func observe(
         _ subject: Assertion.Subject,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async -> AssertionObservation {
         do {
             guard let workspace = context.workspace else {

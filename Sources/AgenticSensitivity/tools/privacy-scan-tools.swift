@@ -45,7 +45,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let policy = (context.payloadGuard as? Privacy.Guard)?.shield.policy ?? .standard
             let presets = input.presets.map { $0.compactMap(Sensitivity.Preset.named) } ?? policy.presets
             let findings = Sensitivity.scan(input.text, presets: presets)
@@ -96,7 +96,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let shield = try Privacy.activeGuard(in: context).shield
             let source = input.source ?? "payload"
             if let json = input.json {

@@ -49,7 +49,7 @@ struct SmokeTool:
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         .init(
             value: input.rawValue
@@ -69,7 +69,7 @@ struct SmokeTool:
     func reconcile(
         _ input: Input,
         after failure: ToolExecution.Failure,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> ToolExecution.Reconciliation<Output>? {
         _ = input
         _ = failure

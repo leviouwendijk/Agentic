@@ -237,7 +237,7 @@ private struct TargetingTool: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         input
     }

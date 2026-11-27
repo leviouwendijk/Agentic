@@ -53,7 +53,7 @@ public extension Sessions.Tools {
 
         public func preflight(
             _ input: Input,
-            in _: ToolContext
+            in _: CapabilityContext
         ) async throws -> ToolPreflight {
             .init(
                 tool: Self.definition.identifier,
@@ -65,7 +65,7 @@ public extension Sessions.Tools {
 
         public func call(
             _ input: Input,
-            in context: ToolContext
+            in context: CapabilityContext
         ) async throws -> Output {
             let catalog = try context.require((any Sessions.CatalogReading).self)
             var events = try await catalog.transcript(

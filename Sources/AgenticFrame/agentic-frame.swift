@@ -91,7 +91,7 @@ public extension FrameLang {
 
     /// The catalog for a tool call; without the application's modules,
     /// only the module files.
-    static func catalog(in context: ToolContext) -> Catalog {
+    static func catalog(in context: CapabilityContext) -> Catalog {
         let modules = (try? context.require(Modules.self)) ?? Modules(compiled: [])
         return Catalog(modules)
     }

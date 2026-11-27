@@ -156,7 +156,7 @@ private struct ToolReconciliationFixture: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         _ = input
         throw ToolReconciliationFlowError.unexpectedCall
@@ -165,7 +165,7 @@ private struct ToolReconciliationFixture: Tool {
     func reconcile(
         _ input: Input,
         after failure: ToolExecution.Failure,
-        in context: ToolContext
+        in context: CapabilityContext
     ) async throws -> ToolExecution.Reconciliation<Output>? {
         try Expect.equal(
             failure.phase,
@@ -180,7 +180,7 @@ private struct ToolReconciliationFixture: Tool {
         try Expect.equal(
             context.capabilities != nil,
             true,
-            "reconciliation receives the same invocation ToolContext rather than a workspace-only projection"
+            "reconciliation receives the same invocation CapabilityContext rather than a workspace-only projection"
         )
 
         switch mode {
@@ -217,7 +217,7 @@ private struct ToolReconciliationUnsupportedFixture: Tool {
 
     func call(
         _ input: Input,
-        in _: ToolContext
+        in _: CapabilityContext
     ) async throws -> Output {
         Output(
             value: input.value
@@ -247,7 +247,7 @@ private func reconciliation(
             tool: tool.identifier,
             callID: call.id
         ),
-        context: ToolContext(
+        context: CapabilityContext(
             capabilities: capabilities
         )
     )
@@ -270,7 +270,7 @@ private func unsupportedReconciliation()
             tool: tool.identifier,
             callID: call.id
         ),
-        context: ToolContext()
+        context: CapabilityContext()
     )
 }
 

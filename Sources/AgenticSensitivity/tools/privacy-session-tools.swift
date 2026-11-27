@@ -62,7 +62,7 @@ public extension Privacy.Tools {
 
         public init() {}
 
-        public func call(_ input: Input, in context: ToolContext) async throws -> Output {
+        public func call(_ input: Input, in context: CapabilityContext) async throws -> Output {
             let shield = try Privacy.activeGuard(in: context).shield
             guard !input.session.isEmpty, !input.session.contains("/"), !input.session.contains("..") else {
                 throw ScrubFailure.invalidSession(input.session)
