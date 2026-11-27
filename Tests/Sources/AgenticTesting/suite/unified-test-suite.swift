@@ -1,6 +1,8 @@
 import Agentic
 import AgenticStandard
+import Foundation
 import Schema
+import Surface
 import Testing
 
 enum UnifiedAgenticTestSuite {
@@ -71,14 +73,14 @@ enum UserInputSchemaTestSuite {
         Test(
             "user-input-spec-discriminator-contract"
         ) {
-            guard case .oneOf(let variants) = UserInputSpec.jsonschema.form else {
+            guard case .oneOf(let variants) = SurfaceQuestion.jsonschema.form else {
                 throw UserInputSchemaTestError.expectedOneOf
             }
 
             try Expect.equal(
                 variants.count,
-                5,
-                "UserInputSpec exposes exactly its five semantic input kinds"
+                4,
+                "SurfaceQuestion exposes exactly its four semantic input kinds"
             )
 
             var observedKinds: [String] = []
@@ -132,12 +134,11 @@ enum UserInputSchemaTestSuite {
                 observedKinds,
                 [
                     "text",
-                    "single_choice",
-                    "multi_choice",
+                    "choice",
                     "confirmation",
                     "form",
                 ],
-                "UserInputSpec schema preserves the canonical semantic discriminator values"
+                "SurfaceQuestion schema preserves the canonical semantic discriminator values"
             )
             try Expect.equal(
                 observedKinds.contains("text_field"),
@@ -145,11 +146,11 @@ enum UserInputSchemaTestSuite {
                 "presentation control text_field is never exposed as a semantic input kind"
             )
             try Expect.equal(
-                UserInputSpec.jsonschema.description?.contains(
+                SurfaceQuestion.jsonschema.description?.contains(
                     "text_field"
                 ) ?? false,
                 true,
-                "UserInputSpec documentation explicitly distinguishes presentation controls from semantic kinds"
+                "SurfaceQuestion documentation explicitly distinguishes presentation controls from semantic kinds"
             )
         }
 
@@ -190,8 +191,125 @@ enum UserInputSchemaTestSuite {
 
             try Expect.equal(
                 variants.count,
-                5,
-                "standard_tool_clarify_with_user exposes the complete UserInputSpec discriminated union to the model"
+                4,
+                "standard_tool_clarify_with_user exposes the complete SurfaceQuestion discriminated union to the model"
+            )
+        }
+
+        Test(
+            "user-input-response-refines-choice-answers"
+        ) {
+            let options: [SurfaceChoice.Option] = [
+                .init(
+                    id: "a",
+                    label: "A",
+                    value: "a"
+                ),
+                .init(
+                    id: "b",
+                    label: "B",
+                    value: "b"
+                ),
+            ]
+            let one = try UserInputRequest(
+                prompt: "Pick one.",
+                input: .choice(
+                    .init(
+                        options: options,
+                        rule: .one
+                    )
+                )
+            )
+            let many = try UserInputRequest(
+                prompt: "Pick several.",
+                input: .choice(
+                    .init(
+                        options: options,
+                        rule: .many,
+                        minimum: 1
+                    )
+                )
+            )
+
+            try Expect.equal(
+                try UserInputResponse(
+                    .choice(
+                        .option(
+                            " b "
+                        )
+                    ),
+                    for: one
+                ).answer,
+                .choice(
+                    .option(
+                        "b"
+                    )
+                ),
+                "rule one accepts a declared option and trims its identifier"
+            )
+            try Expect.equal(
+                try UserInputResponse(
+                    .choice(
+                        .init(
+                            selected: [
+                                "b",
+                                "a",
+                                "a",
+                            ]
+                        )
+                    ),
+                    for: many
+                ).answer,
+                .choice(
+                    .init(
+                        selected: [
+                            "a",
+                            "b",
+                        ]
+                    )
+                ),
+                "rule many de-duplicates selections in option order"
+            )
+
+            var rejected = false
+
+            do {
+                _ = try UserInputResponse(
+                    .choice(
+                        .init(
+                            selected: [
+                                "a",
+                                "b",
+                            ]
+                        )
+                    ),
+                    for: one
+                )
+            } catch SurfaceQuestion.Error.tooManySelections {
+                rejected = true
+            }
+
+            try Expect.equal(
+                rejected,
+                true,
+                "rule one rejects more than one selection"
+            )
+
+            let decoded = try JSONDecoder().decode(
+                UserInputReply.self,
+                from: Data(
+                    #"{"kind":"answer","answer":{"kind":"choice","choice":{"selected":["a"]}}}"#.utf8
+                )
+            )
+
+            try Expect.equal(
+                decoded,
+                .choice(
+                    .option(
+                        "a"
+                    )
+                ),
+                "the model-facing choice answer shape decodes into a reply"
             )
         }
     }

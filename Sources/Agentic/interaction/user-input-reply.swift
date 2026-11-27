@@ -1,5 +1,7 @@
+import Surface
+
 public enum UserInputReply: Sendable, Codable, Hashable {
-    case answer(UserInputAnswer)
+    case answer(SurfaceAnswer)
     case skip
 
     private enum CodingKeys: String, CodingKey {
@@ -27,7 +29,7 @@ public enum UserInputReply: Sendable, Codable, Hashable {
         case .answer:
             self = .answer(
                 try container.decode(
-                    UserInputAnswer.self,
+                    SurfaceAnswer.self,
                     forKey: .answer
                 )
             )
@@ -75,21 +77,11 @@ public extension UserInputReply {
         )
     }
 
-    static func single_choice(
-        _ value: SingleChoiceUserInputAnswer
+    static func choice(
+        _ value: SurfaceChoice.Answer
     ) -> Self {
         .answer(
-            .single_choice(
-                value
-            )
-        )
-    }
-
-    static func multi_choice(
-        _ value: MultiChoiceUserInputAnswer
-    ) -> Self {
-        .answer(
-            .multi_choice(
+            .choice(
                 value
             )
         )
@@ -106,7 +98,7 @@ public extension UserInputReply {
     }
 
     static func form(
-        _ value: FormUserInputAnswer
+        _ value: SurfaceForm.Answer
     ) -> Self {
         .answer(
             .form(

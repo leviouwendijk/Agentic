@@ -122,6 +122,10 @@ let package = Package(
             url: "https://github.com/swift-lco/Macros.git",
             branch: "master"
         ),
+        .package(
+            url: "https://github.com/swift-lco/Surface.git",
+            branch: "master"
+        ),
 
         .package(
             url: "https://github.com/swift-tooling/Guidelines.git",
@@ -223,6 +227,10 @@ let package = Package(
             name: "Agentic",
             dependencies: [
                 .product(
+                    name: "Surface",
+                    package: "Surface"
+                ),
+                .product(
                     name: "Guidelines",
                     package: "Guidelines"
                 ),
@@ -310,6 +318,7 @@ let package = Package(
             name: "AgenticStandard",
             dependencies: [
                 "Agentic",
+                .product(name: "Surface", package: "Surface"),
                 .product(name: "Math", package: "Math"),
                 .product(name: "Milieu", package: "Milieu"),
                 .product(name: "Reporting", package: "Reporting"),

@@ -2,6 +2,7 @@ import Agentic
 import Macros
 import Primitives
 import Schema
+import Surface
 
 public extension Standard.Tools {
     @Tool
@@ -15,13 +16,13 @@ public extension Standard.Tools {
             public let reason: String?
 
             /// Whether the user must answer or may skip the request.
-            public let requirement: UserInputRequirement?
+            public let requirement: SurfaceQuestion.Requirement?
 
-            /// The semantic input shape the user should answer. This determines `UserInputSpec.kind`; `presentation.preferredControl` only controls rendering.
-            public let input: UserInputSpec
+            /// The semantic input shape the user should answer: `kind` is `text`, `choice`, `confirmation` or `form`, with its configuration under the same-named key. A choice lists `options` (each `id`, `label`, `value`) and sets `rule` to `one` (exactly one option, or a custom value when `allowsCustomValue`) or `many` (between `minimum` and `maximum` options); `defaults` holds initially selected option ids. The user's choice comes back as `{"kind":"choice","choice":{"selected":[ids],"custom":value?}}`. `presentation.preferredControl` only controls rendering.
+            public let input: SurfaceQuestion
 
             /// Optional rendering hints. Presentation controls such as `text_field` are not valid `input.kind` values.
-            public let presentation: UserInputPresentation?
+            public let presentation: SurfaceQuestion.Presentation?
 
             /// Additional application-defined metadata.
             public let metadata: [String: String]
@@ -29,11 +30,11 @@ public extension Standard.Tools {
             public init(
                 prompt: String,
                 reason: String? = nil,
-                requirement: UserInputRequirement? = nil,
-                input: UserInputSpec = .text(
+                requirement: SurfaceQuestion.Requirement? = nil,
+                input: SurfaceQuestion = .text(
                     .init()
                 ),
-                presentation: UserInputPresentation? = nil,
+                presentation: SurfaceQuestion.Presentation? = nil,
                 metadata: [String: String] = [:]
             ) {
                 self.prompt = prompt
