@@ -32,31 +32,6 @@ public protocol ProgramToolExecuting: Sendable {
     where
         Input: Encodable & Sendable,
         Output: Decodable & Sendable
-
-    /// The tools a program may invoke, described as the model's tool definitions
-    /// describe them, with their domains. A program that composes tools at run time
-    /// (a Loa run) reads its catalog here.
-    func toolCatalog() async -> ProgramToolCatalog
-}
-
-public extension ProgramToolExecuting {
-    func toolCatalog() async -> ProgramToolCatalog {
-        .init()
-    }
-}
-
-/// The tools a program may invoke and the domains they belong to.
-public struct ProgramToolCatalog: Sendable {
-    public let tools: [ToolDescriptor]
-    public let domains: [DomainDefinition]
-
-    public init(
-        tools: [ToolDescriptor] = [],
-        domains: [DomainDefinition] = []
-    ) {
-        self.tools = tools
-        self.domains = domains
-    }
 }
 
 public protocol ProgramExecuting: Sendable {
@@ -136,11 +111,6 @@ public struct ProgramContext: Sendable {
             input: input,
             as: output
         )
-    }
-
-    /// The tools this program may invoke; empty when the context runs no tools.
-    public func toolCatalog() async -> ProgramToolCatalog {
-        await tools?.toolCatalog() ?? .init()
     }
 
     public func ask(
